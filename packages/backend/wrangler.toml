@@ -1,0 +1,5 @@
+compatibility_date = "2022-06-30"
+
+[[r2_buckets]]
+binding = 'PKGS' # <~ valid JavaScript variable name
+bucket_name = 'PACKAGES'
