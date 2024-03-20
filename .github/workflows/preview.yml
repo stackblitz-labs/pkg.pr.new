@@ -28,3 +28,9 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           preCommands: pnpm build
           command: pages deploy dist --project-name=stackblitz-cr
+
+      - name: Deployment Url
+        env:
+          DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
+        run: echo $DEPLOYMENT_URL
+
