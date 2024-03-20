@@ -24,5 +24,8 @@
     "patchedDependencies": {
       "nitro-cloudflare-dev@0.1.2": "patches/nitro-cloudflare-dev@0.1.2.patch"
     }
+  },
+  "dependencies": {
+    "stackblitz-cr": "workspace:^"
   }
 }

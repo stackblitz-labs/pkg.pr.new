@@ -9,6 +9,7 @@ declare module "nitro-cloudflare-dev" {
 
 // https://nitro.unjs.io/config
 export default defineNitroConfig({
+  preset: 'cloudflare-pages',
   modules: [ncb],
   srcDir: "server",
 });
