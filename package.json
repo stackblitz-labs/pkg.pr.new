@@ -1,0 +1,28 @@
+{
+  "name": "stackblitz-cr",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "pnpm -r run dev",
+    "build": "pnpm -r run build",
+    "format": "prettier --write --cache .",
+    "lint": "eslint --cache .",
+    "typecheck": "tsc -p scripts --noEmit && pnpm -r --parallel run typecheck",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "eslint-config-unjs": "^0.2.1",
+    "prettier": "^3.2.5",
+    "typescript": "^5.4.2"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "nitro-cloudflare-dev@0.1.2": "patches/nitro-cloudflare-dev@0.1.2.patch"
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "cli",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "bin": {
+    "stackblitz": "bin/sb.js",
+    "sb": "bin/sb.js"
+  },
+  "scripts": {
+    "dev": "tsup --watch",
+    "build": "tsup"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@octokit/action": "^6.0.7"
+  },
+  "devDependencies": {
+    "citty": "^0.1.6",
+    "tsup": "^8.0.2"
+  }
+}
