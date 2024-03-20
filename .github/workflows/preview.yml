@@ -6,10 +6,18 @@ jobs:
     runs-on: ubuntu-latest
     name: Deploy
     steps:
+      # - uses: actions/checkout@v4
+      # - uses: pnpm/action-setup@v2
+      #   with:
+
+      #     version: 8.14.1
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v2
+      - run: corepack enable
+      - uses: actions/setup-node@v4
         with:
-          version: 8.14.1
+          node-version: 20
+          cache: "pnpm"
+
       - name: Deploy
         uses: cloudflare/wrangler-action@v3
         with:
