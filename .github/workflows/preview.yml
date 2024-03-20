@@ -26,6 +26,5 @@ jobs:
           workingDirectory: "packages/backend"
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: |
-            pnpm build
-            pages deploy dist --project-name=stackblitz-cr
+          preCommands: pnpm build
+          command: pages deploy dist --project-name=stackblitz-cr
