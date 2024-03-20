@@ -12,6 +12,10 @@ patchedDependencies:
 importers:
 
   .:
+    dependencies:
+      stackblitz-cr:
+        specifier: workspace:^
+        version: link:packages/cli
     devDependencies:
       eslint:
         specifier: ^8.57.0

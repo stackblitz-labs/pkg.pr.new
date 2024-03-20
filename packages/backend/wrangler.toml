@@ -1,4 +1,15 @@
-compatibility_date = "2022-06-30"
+# name = "stackblitz-cr"
+# compatibility_date = "2023-12-01"
+# main = "./.output/server/index.mjs"
+# workers_dev = true
+# compatibility_date = "2023-12-01"
+
+# rules = [
+#   { type = "ESModule", globs = ["**/*.js", "**/*.mjs"]},
+# ]
+
+# [site]
+# bucket = ".output/public"
 
 [[r2_buckets]]
 binding = 'PKGS' # <~ valid JavaScript variable name
