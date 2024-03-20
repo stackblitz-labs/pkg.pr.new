@@ -1,3 +1,4 @@
+name: Cloudflare Preview
 on: [push]
 
 jobs:

@@ -1,4 +1,4 @@
-name: My Node Action
+name: Continuous Releases
 on: [push]
 
 jobs:
