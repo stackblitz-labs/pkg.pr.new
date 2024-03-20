@@ -7,10 +7,13 @@ jobs:
     name: Deploy
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8.14.1
       - name: Deploy
         uses: cloudflare/wrangler-action@v3
         with:
-          wranglerVersion: "* -w"
+          # wranglerVersion: "* -w"
           packageManager: pnpm # you can omit this if you use npm
           workingDirectory: "packages/backend"
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
