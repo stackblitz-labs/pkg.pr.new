@@ -14,8 +14,9 @@ const eventPayload = await import(process.env.GITHUB_EVENT_PATH, {
   with: { type: "json" },
 });
 
-console.log(octokit)
-console.log(eventPayload)
+console.log(process.env)
+// console.log(octokit)
+// console.log(eventPayload)
 
 const main = defineCommand({
   meta: {
