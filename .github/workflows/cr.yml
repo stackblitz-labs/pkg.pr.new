@@ -14,4 +14,5 @@ jobs:
       - run: pnpm install
       - run: pnpm build
       - run: pnpm sb publish
-
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
