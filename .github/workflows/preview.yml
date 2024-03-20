@@ -10,6 +10,7 @@ jobs:
       - name: Deploy
         uses: cloudflare/wrangler-action@v3
         with:
+          wranglerVersion: "* -w"
           packageManager: pnpm # you can omit this if you use npm
           workingDirectory: "packages/backend"
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
