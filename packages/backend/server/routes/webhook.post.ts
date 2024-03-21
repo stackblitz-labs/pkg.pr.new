@@ -1,3 +1,4 @@
+import {objectHash} from 'ohash'
 import { App } from "octokit";
 
 export default eventHandler(async (event) => {
@@ -10,7 +11,14 @@ export default eventHandler(async (event) => {
     },
   });
   app.webhooks.on("workflow_job.queued", ({ octokit, payload }) => {
-    console.log(payload.workflow_job.node_id)
+    const token = {
+      url: payload.workflow_job.url,
+      attempt: payload.workflow_job.run_attempt,
+      actor: payload.sender.id
+    }
+    const hashedToken = objectHash(token)
+    console.log(token)
+    console.log(hashedToken)
   });
 
   type EmitterWebhookEvent = Parameters<typeof app.webhooks.receive>[0]

@@ -27,6 +27,7 @@
     }
   },
   "dependencies": {
-    "stackblitz-cr": "workspace:^"
+    "stackblitz-cr": "workspace:^",
+    "wrangler": "^3.36.0"
   }
 }

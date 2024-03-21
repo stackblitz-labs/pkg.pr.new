@@ -2,7 +2,7 @@
 # compatibility_date = "2023-12-01"
 # main = "./.output/server/index.mjs"
 # workers_dev = true
-# compatibility_date = "2023-12-01"
+compatibility_date = "2024-03-14"
 
 # rules = [
 #   { type = "ESModule", globs = ["**/*.js", "**/*.mjs"]},
@@ -13,4 +13,14 @@
 
 [[r2_buckets]]
 binding = 'PKGS' # <~ valid JavaScript variable name
-bucket_name = 'PACKAGES'
+bucket_name = 'Packages'
+
+[durable_objects]
+bindings = [
+  { name = "WORKFLOWS", class_name = "Workflows" }
+]
+
+[[migrations]]
+tag = "v1" # Should be unique for each entry
+new_classes = ["Workflows"]
+
