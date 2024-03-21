@@ -21,8 +21,15 @@ declare global {
       GITHUB_EVENT_PATH: string;
       // A unique number for each workflow run within a repository. This number does not change if you re-run the workflow run. For example, 1658821493.
       GITHUB_RUN_ID: string;
+      // A unique number for each attempt of a particular workflow run in a repository. This number begins at 1 for the workflow run's first attempt, and increments with each re-run. For example, 3.
+      GITHUB_RUN_ATTEMPT: string
     }
   }
 }
+
+// npm i https://pkg.sb.dev/dai-shi/waku/feature-a/54a65813/waku # stackblitz
+// npm i https://pkg.sb.dev/dai-shi/waku/feature-a/waku # stackblitz
+// npm i https://pkg.sb.dev/{GITHUB_REPOSITORY}/{GITHUB_REF_NAME}/{GITHUB_SHA}/{published-package} # stackblitz
+// npm i https://pkg.sb.dev/54a6581354a65813 # short-form stackblitz
 
 export {};
