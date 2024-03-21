@@ -1,6 +1,7 @@
 import { defineCommand, runMain } from "citty";
 // import { createRequire } from "module";
 import { version } from "./package.json";
+import {hash} from 'ohash'
 import { Octokit } from "@octokit/action";
 import "./environments";
 
@@ -13,6 +14,9 @@ const octokit = new Octokit();
 const eventPayload = await import(process.env.GITHUB_EVENT_PATH, {
   with: { type: "json" },
 });
+
+console.log(eventPayload)
+console.log(hash(eventPayload))
 
 // console.log(octokit)
 // console.log(eventPayload)

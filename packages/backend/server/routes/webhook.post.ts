@@ -9,17 +9,16 @@ export default eventHandler(async (event) => {
       secret: webhookSecret,
     },
   });
-  app.webhooks.on("workflow_job", ({ octokit, payload }) => {
-    console.log(payload)
+  app.webhooks.on("workflow_job.queued", ({ octokit, payload }) => {
+    console.log(payload.workflow_job.node_id)
   });
-  // event.context.cloudflare.request.
 
   type EmitterWebhookEvent = Parameters<typeof app.webhooks.receive>[0]
   const id: EmitterWebhookEvent['id'] = event.headers.get("x-github-delivery");
   const name = event.headers.get("x-github-event") as EmitterWebhookEvent['name'];
   const signature = event.headers.get("x-hub-signature-256") ?? "";
-  const payloadString = await event.context.cloudflare.request.text();
-  const payload: EmitterWebhookEvent['payload'] = JSON.parse(payloadString);
+  const payloadString = await readRawBody(event);
+  const payload = await readBody<EmitterWebhookEvent['payload']>(event);
 
   // Verify webhook signature
   try {
