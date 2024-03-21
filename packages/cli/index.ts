@@ -22,7 +22,7 @@ const main = defineCommand({
   meta: {
     version,
     name: "stackblitz",
-    description: "A CLI for stackblitz CR (Continuous Releases)",
+    description: "A CLI for Stackblitz CR (Continuous Releases)",
   },
   subCommands: {
     publish: () => {
