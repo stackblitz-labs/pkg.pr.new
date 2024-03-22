@@ -13,6 +13,7 @@ jobs:
           cache: "pnpm"
       - run: pnpm install
       - run: pnpm build
-      - run: cd playground && pnpm sb publish
+      - run: pnpm sb publish
+        working-directory: ./playground
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
