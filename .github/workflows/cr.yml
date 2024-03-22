@@ -13,7 +13,8 @@ jobs:
           cache: "pnpm"
       - run: pnpm install
       - run: pnpm build
-      - run: pnpm sb publish
+      - name: Stackblitz CR
+        run: pnpm sb publish
         working-directory: ./playground
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
