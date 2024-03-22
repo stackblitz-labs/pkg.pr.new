@@ -1,7 +1,7 @@
 import { defineCommand, runMain } from "citty";
 // import { createRequire } from "module";
 import { version } from "./package.json";
-import {objectHash} from 'ohash'
+import {objectHash, sha256} from 'ohash'
 import { Octokit } from "@octokit/action";
 import "./environments";
 
@@ -11,7 +11,7 @@ if (process.env.GITHUB_ACTIONS !== 'true') {
 }
 
 const {GITHUB_SERVER_URL, GITHUB_REPOSITORY, GITHUB_RUN_ID, GITHUB_RUN_ATTEMPT, GITHUB_ACTOR_ID} = process.env
-// const octokit = new Octokit();
+const octokit = new Octokit();
 // const eventPayload = await import(process.env.GITHUB_EVENT_PATH, {
 //   with: { type: "json" },
 // });
@@ -19,15 +19,16 @@ const {GITHUB_SERVER_URL, GITHUB_REPOSITORY, GITHUB_RUN_ID, GITHUB_RUN_ATTEMPT, 
 // Note: If you need to use a workflow run's URL from within a job, you can combine these variables: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
 const url = `${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}`
 
-const token = {
+const metadata = {
   url,
   attempt: GITHUB_RUN_ATTEMPT,
   actor: GITHUB_ACTOR_ID
 }
 
-const hashedToken = objectHash(token) 
+const key = sha256(objectHash(metadata))
 
-console.log(hashedToken)
+console.log(key)
+fetch('/',{body})
 
 // console.log(octokit)
 // console.log(eventPayload)

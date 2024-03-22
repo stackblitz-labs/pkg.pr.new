@@ -1,11 +1,10 @@
-import {fileURLToPath} from 'url'
-import { DurableObject, R2Bucket } from '@cloudflare/workers-types';
+import { KVNamespace, R2Bucket } from '@cloudflare/workers-types';
 import ncb from 'nitro-cloudflare-dev'
 
 declare module "nitro-cloudflare-dev" {
     interface Env {
       PKGS: R2Bucket
-      WORKFLOWS: DurableObject
+      WORKFLOWS: KVNamespace
     }
 }
 
@@ -22,7 +21,20 @@ export default defineNitroConfig({
   preset: 'cloudflare-pages',
   modules: [ncb],
   srcDir: "server",
-  entry: fileURLToPath(new URL('./preset/entry.ts', import.meta.url)),
+  storage: {
+    'workflows': {
+      driver: 'cloudflare-kv-binding',
+      base: 'workflows',
+      binding: 'WORKFLOWS'
+    },
+  },
+  devStorage: {
+    'workflows': {
+      driver: 'cloudflare-kv-binding',
+      base: 'workflows',
+      binding: 'WORKFLOWS'
+    }
+  },
 
   runtimeConfig: {
     appId: "",

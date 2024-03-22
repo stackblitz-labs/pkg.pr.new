@@ -11,16 +11,12 @@ compatibility_date = "2024-03-14"
 # [site]
 # bucket = ".output/public"
 
+kv_namespaces = [
+    { binding = "WORKFLOWS", id = "Workflows" }
+]
+
 [[r2_buckets]]
 binding = 'PKGS' # <~ valid JavaScript variable name
 bucket_name = 'Packages'
 
-[durable_objects]
-bindings = [
-  { name = "WORKFLOWS", class_name = "Workflows" }
-]
-
-[[migrations]]
-tag = "v1" # Should be unique for each entry
-new_classes = ["Workflows"]
 
