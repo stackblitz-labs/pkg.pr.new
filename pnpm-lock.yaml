@@ -68,6 +68,12 @@ importers:
         specifier: ^8.0.2
         version: 8.0.2(typescript@5.4.2)
 
+  playground:
+    devDependencies:
+      stackblitz-cr:
+        specifier: workspace:^
+        version: link:../packages/cli
+
 packages:
 
   /@aashutoshrathi/word-wrap@1.2.6:
