@@ -1,10 +1,9 @@
-import { KVNamespace, R2Bucket } from '@cloudflare/workers-types';
+import { R2Bucket } from '@cloudflare/workers-types';
 import ncb from 'nitro-cloudflare-dev'
 
 declare module "nitro-cloudflare-dev" {
     interface Env {
-      PKGS: R2Bucket
-      WORKFLOWS: KVNamespace
+      BUCKET: R2Bucket
     }
 }
 
@@ -22,20 +21,19 @@ export default defineNitroConfig({
   modules: [ncb],
   srcDir: "server",
   storage: {
-    'workflows': {
-      driver: 'cloudflare-kv-binding',
-      base: 'workflows',
-      binding: 'WORKFLOWS'
+    'bucket': {
+      driver: 'cloudflareR2Binding',
+      base: 'bucket',
+      binding: 'BUCKET'
     },
   },
   devStorage: {
-    'workflows': {
-      driver: 'cloudflare-kv-binding',
-      base: 'workflows',
-      binding: 'WORKFLOWS'
-    }
+    'bucket': {
+      driver: 'cloudflareR2Binding',
+      base: 'bucket',
+      binding: 'BUCKET'
+    },
   },
-
   runtimeConfig: {
     appId: "",
     webhookSecret: "",

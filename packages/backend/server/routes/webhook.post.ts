@@ -1,7 +1,7 @@
 import type { HandlerFunction } from "@octokit/webhooks/dist-types/types";
 import { objectHash, sha256 } from "ohash";
 import { App } from "octokit";
-import { useWorkflows } from "../../utils/workflows";
+import { WorkflowData } from "../types";
 
 export default eventHandler(async (event) => {
   const { appId, privateKey, webhookSecret } = useRuntimeConfig(event);
@@ -12,7 +12,7 @@ export default eventHandler(async (event) => {
       secret: webhookSecret,
     },
   });
-  const { setItem, removeItem } = useWorkflows();
+  const { setItem, removeItem } = useBucket();
 
   const workflowHandler: HandlerFunction<"workflow_job", unknown> = async ({
     payload,
@@ -24,8 +24,15 @@ export default eventHandler(async (event) => {
     };
     const key = sha256(objectHash(metadata));
     if (payload.action === 'queued') {
+      const [orgOrAuthor, repo]  = payload.repository.full_name.split('/')
+      const data: WorkflowData = {
+        orgOrAuthor,
+        repo,
+        sha: payload.workflow_job.head_sha,
+        branch: payload.workflow_job.head_branch
+      }
       // Publishing is only available throughout the lifetime of a worklow_job
-      await setItem(key, {});
+      await setItem(key, JSON.stringify(data));
     } else if (payload.action === 'completed') {
       // Publishing is not available anymore
       await removeItem(key);

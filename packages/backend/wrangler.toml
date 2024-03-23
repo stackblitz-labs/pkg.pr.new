@@ -11,12 +11,12 @@ compatibility_date = "2024-03-14"
 # [site]
 # bucket = ".output/public"
 
-kv_namespaces = [
-    { binding = "WORKFLOWS", id = "Workflows" }
-]
+# kv_namespaces = [
+#     { binding = "WORKFLOWS", id = "Workflows" }
+# ]
 
 [[r2_buckets]]
-binding = 'PKGS' # <~ valid JavaScript variable name
-bucket_name = 'Packages'
+binding = 'BUCKET' # <~ valid JavaScript variable name
+bucket_name = 'Bucket'
 
 
