@@ -19,6 +19,7 @@ jobs:
           cache: "pnpm"
 
       - name: Deploy
+        id: deploy
         uses: cloudflare/wrangler-action@v3
         with:
           wranglerVersion: "* -w"
