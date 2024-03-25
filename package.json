@@ -10,18 +10,23 @@
     "format": "prettier --write --cache .",
     "lint": "eslint --cache .",
     "typecheck": "tsc -p scripts --noEmit && pnpm -r --parallel run typecheck",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "tsx e2e/publish.test.mts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@jsdevtools/ez-spawn": "^3.0.4",
+    "cross-env": "^7.0.3",
     "eslint": "^8.57.0",
     "eslint-config-unjs": "^0.2.1",
+    "kill-port": "^2.0.1",
     "ohash": "^1.1.3",
     "prettier": "^3.2.5",
+    "tsx": "^4.7.1",
     "typescript": "^5.4.2",
-    "uncrypto": "^0.1.3"
+    "uncrypto": "^0.1.3",
+    "wait-port": "^1.1.0"
   },
   "pnpm": {
     "patchedDependencies": {

@@ -4,8 +4,11 @@
   "description": "",
   "main": "index.js",
   "type": "module",
+  "bin": {
+    "playground": "index.js"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "publish": "sb publish"
   },
   "keywords": [],
   "author": "",

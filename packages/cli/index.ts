@@ -1,43 +1,52 @@
 import { defineCommand, runMain } from "citty";
+import path from "path";
+import ezSpawn from "@jsdevtools/ez-spawn";
 // import { createRequire } from "module";
 import { version } from "./package.json";
-import {objectHash, sha256} from 'ohash'
+import { hash, objectHash, sha256 } from "ohash";
+import fs from "fs/promises";
 import { Octokit } from "@octokit/action";
 import "./environments";
 
+const {
+  default: { name, version },
+} = await import(path.resolve(process.cwd(), "package.json"), {
+  with: { type: "json" },
+});
+console.log(name, version);
+
 declare global {
-  var API_URL: string
+  var API_URL: string;
 }
 
-const publishUrl = new URL('/publish', API_URL)
+const publishUrl = new URL("/publish", API_URL);
 
-if (process.env.GITHUB_ACTIONS !== 'true') {
-  console.error('Stackblitz Continuous Releases are only available in Github Actions.')
-  process.exit(1)
+if (!process.env.TEST && process.env.GITHUB_ACTIONS !== "true") {
+  console.error(
+    "Stackblitz Continuous Releases are only available in Github Actions."
+  );
+  process.exit(1);
 }
 
-const {GITHUB_SERVER_URL, GITHUB_REPOSITORY, GITHUB_RUN_ID, GITHUB_RUN_ATTEMPT, GITHUB_ACTOR_ID} = process.env
-// const octokit = new Octokit();
-// const eventPayload = await import(process.env.GITHUB_EVENT_PATH, {
-//   with: { type: "json" },
-// });
-console.log(process.env)
+const {
+  GITHUB_SERVER_URL,
+  GITHUB_REPOSITORY,
+  GITHUB_RUN_ID,
+  GITHUB_RUN_ATTEMPT,
+  GITHUB_ACTOR_ID,
+} = process.env;
 
 // Note: If you need to use a workflow run's URL from within a job, you can combine these variables: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
-const url = `${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}`
+const url = `${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}`;
 
 const metadata = {
   url,
-  attempt: GITHUB_RUN_ATTEMPT,
-  actor: GITHUB_ACTOR_ID
-}
+  attempt: Number(GITHUB_RUN_ATTEMPT),
+  actor: Number(GITHUB_ACTOR_ID),
+};
 
-const key = sha256(objectHash(metadata))
-
-
-
-// console.log(octokit)
-// console.log(eventPayload)
+const key = hash(metadata);
+console.log('publish cli', metadata, key)
 
 const main = defineCommand({
   meta: {
@@ -50,18 +59,19 @@ const main = defineCommand({
       return {
         meta: {},
         run: async () => {
-          await fetch(publishUrl,{
+          await ezSpawn.async("npm pack", { stdio: "inherit" });
+          const file = await fs.readFile(`${name}-${version}.tgz`);
+          console.log(file);
+
+          await fetch(publishUrl, {
             method: "POST",
             headers: {
-             'sb-key': key 
+              "sb-key": key,
+              "sb-package-name": name,
+              "sb-package-version": version,
             },
-            body: new ReadableStream({
-              start(c) {
-                c.enqueue(new Uint8Array([1,2,3]))
-                c.close()
-              }
-            })
-          })
+            body: file,
+          });
         },
       };
     },

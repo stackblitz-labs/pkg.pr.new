@@ -16,6 +16,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@jsdevtools/ez-spawn": "^3.0.4",
     "@octokit/action": "^6.0.7"
   },
   "devDependencies": {

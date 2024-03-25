@@ -1,18 +1,19 @@
 {
+  "name": "backend",
   "private": true,
+  "type": "module",
   "scripts": {
     "build": "nitro build",
     "dev": "nitro dev",
     "prepare": "nitro prepare",
-    "preview": "node .output/server/index.mjs"
+    "preview": "wrangler pages dev dist"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240314.0",
+    "@octokit/app": "^14.0.2",
     "nitro-cloudflare-dev": "0.1.2",
     "nitropack": "latest",
+    "octokit": "^3.1.2",
     "wrangler": "^3.35.0"
-  },
-  "dependencies": {
-    "octokit": "^3.1.2"
   }
 }

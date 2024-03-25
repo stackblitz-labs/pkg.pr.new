@@ -1,47 +1,51 @@
 import type { HandlerFunction } from "@octokit/webhooks/dist-types/types";
-import { objectHash, sha256 } from "ohash";
-import { App } from "octokit";
-import { WorkflowData } from "../types";
+import type { WorkflowData } from "../types";
+import { hash, objectHash, sha256 } from "ohash";
 
 export default eventHandler(async (event) => {
-  const { appId, privateKey, webhookSecret } = useRuntimeConfig(event);
-  const app = new App({
-    appId,
-    privateKey,
-    webhooks: {
-      secret: webhookSecret,
-    },
-  });
-  const { setItem, removeItem } = useBucket();
+  const app = useOctokitApp(event)
+
+  const { test } = useRuntimeConfig(event)
+  const { setItem, removeItem, getItem } = useWorkflowsBucket();
 
   const workflowHandler: HandlerFunction<"workflow_job", unknown> = async ({
     payload,
   }) => {
     const metadata = {
-      url: payload.workflow_job.url,
+      url: payload.workflow_job.html_url.split('/job/')[0], // run url: (https://github.com/stackblitz-labs/stackblitz-ci/actions/runs/8390507718)/job/23004786296
       attempt: payload.workflow_job.run_attempt,
       actor: payload.sender.id,
     };
-    const key = sha256(objectHash(metadata));
-    if (payload.action === 'queued') {
-      const [orgOrAuthor, repo]  = payload.repository.full_name.split('/')
+    const key = hash(metadata);
+    console.log('webhook', metadata, key)
+    if (payload.action === "queued") {
+      const [orgOrAuthor, repo] = payload.repository.full_name.split("/");
       const data: WorkflowData = {
         orgOrAuthor,
         repo,
         sha: payload.workflow_job.head_sha,
-        branch: payload.workflow_job.head_branch
-      }
+        ref: payload.workflow_job.head_branch,
+      };
+
+      // octokit.request('POST /repos/{owner}/{repo}/pulls/{pull_number}/comments', {
+      //   body: '',
+      //   owner: payload.repository.owner,
+      //   repo: payload.repository.repo
+   
+      // })
       // Publishing is only available throughout the lifetime of a worklow_job
-      await setItem(key, JSON.stringify(data));
-    } else if (payload.action === 'completed') {
+      await setItem(key, data);
+    } else if (payload.action === "completed") {
       // Publishing is not available anymore
       await removeItem(key);
     }
   };
-  
-  app.webhooks.on("workflow_job", workflowHandler)
 
-  type EmitterWebhookEvent = Parameters<typeof app.webhooks.receive>[0];
+  app.webhooks.on("workflow_job", workflowHandler);
+
+  type EmitterWebhookEvent = Parameters<
+    typeof app.webhooks.receive | typeof app.webhooks.verifyAndReceive
+  >[0];
   const id: EmitterWebhookEvent["id"] = event.headers.get("x-github-delivery");
   const name = event.headers.get(
     "x-github-event"
@@ -50,18 +54,25 @@ export default eventHandler(async (event) => {
   const payload = await readRawBody(event);
 
   try {
-    await app.webhooks.verifyAndReceive({ id, name, payload, signature });
+    if (test) {
+      // TODO: fix typing with infer
+      await app.webhooks.receive({
+        id: id,
+        name: name,
+        payload: JSON.parse(payload),
+      } as any);
+    } else {
+      await app.webhooks.verifyAndReceive({ id, name, payload, signature });
+    }
 
-    return new Response(`{ "ok": true }`, {
-      headers: { "content-type": "application/json" },
-    });
+    return {ok: true}
   } catch (error) {
-    app.log.error(error.message);
-    return new Response(`{ "error": "${error.message}" }`, {
+    // app.log.error(error.message);
+    throw createError({
       status: 500,
-      headers: { "content-type": "application/json" },
-    });
+      message: error.message
+    })
   } finally {
-    app.webhooks.removeListener("workflow_job", workflowHandler)
+    app.webhooks.removeListener("workflow_job", workflowHandler);
   }
 });
