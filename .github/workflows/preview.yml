@@ -34,3 +34,21 @@ jobs:
           DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
         run: echo $DEPLOYMENT_URL
 
+  cr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+      - run: pnpm install
+      - run: pnpm build
+        env:
+          API_URL: ${{ steps.deploy.outputs.deployment-url }}
+      - name: Stackblitz CR
+        run: pnpm sb publish
+        working-directory: ./playground
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
