@@ -26,7 +26,6 @@ import { Octokit as OctokitCore } from "@octokit/core";
 import { createAppAuth } from "@octokit/auth-app";
 import { OAuthApp } from "@octokit/oauth-app";
 import { Webhooks, type EmitterWebhookEvent } from "@octokit/webhooks";
-console.log('here')
 
 type Constructor<T> = new (...args: any[]) => T;
 

@@ -75,20 +75,28 @@ await wp({ port: PORT });
 
 {
   // install
-    const playgroundUrl = new URL('/stackblitz-labs/stackblitz-ci/main/41cc8072abe146bb7eddc4b39de644a77acd1e9d/playground', serverUrl)
+    const playgroundShaUrl = new URL('/stackblitz-labs/stackblitz-ci/main/41cc8072abe146bb7eddc4b39de644a77acd1e9d/playground', serverUrl)
   {
-    const data = await fetch(playgroundUrl, {
+    const playgroundShaData = await fetch(playgroundShaUrl, {
       method: 'GET',
     })
   
-    const blob =await data.blob() 
-    console.log(blob)
-    assert.ok(!!blob.size, "playground size should not be zero")
-    assert.equal(data.status, 200, "playground response should be 200")
+    const playgroundShaBlob =await playgroundShaData.blob() 
+    console.log(playgroundShaBlob)
+    assert.ok(!!playgroundShaBlob.size, "playground size should not be zero")
+    assert.equal(playgroundShaData.status, 200, "playground response should be 200")
+
+    // const playgroundWithoutShaUrl = new URL('/stackblitz-labs/stackblitz-ci/main/playground', serverUrl)
+    // const playgroundWithoutShaData = await fetch(playgroundWithoutShaUrl, {
+    //   method: 'GET',
+    // })
+    // const playgroundWithoutShaBlob = await playgroundWithoutShaData.blob()
+    // console.log('sha url and non-sha url', playgroundShaBlob.arrayBuffer, playgroundWithoutShaBlob.arrayBuffer)
+    // assert.deepEqual(await playgroundShaBlob.arrayBuffer(), await playgroundWithoutShaBlob.arrayBuffer(), "sha urls and non-sha urls should not give different results")
   }
   {
-    playgroundUrl.searchParams.set('id', Date.now().toString())
-    const playgroundProcess = await ezSpawn.async(`yes | npx -f playground@${playgroundUrl}`,{
+    playgroundShaUrl.searchParams.set('id', Date.now().toString())
+    const playgroundProcess = await ezSpawn.async(`yes | npx -f playground@${playgroundShaUrl}`,{
       stdio: 'overlapped',
       shell: true,
     })

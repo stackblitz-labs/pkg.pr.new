@@ -18,7 +18,6 @@ export default eventHandler(async (event) => {
     });
   }
   const buffer = await packagesBucket.getItemRaw<ArrayBuffer>(packageKey);
-  console.log("buffer", buffer);
 
   setResponseHeader(event, "content-type", "application/tar+gzip");
   // add caching

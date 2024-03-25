@@ -38,4 +38,6 @@ export default defineNitroConfig({
     privateKey: "",
     test: "",
   },
+
+  timing: true
 });

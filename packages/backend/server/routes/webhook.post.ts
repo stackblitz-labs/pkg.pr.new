@@ -1,12 +1,12 @@
 import type { HandlerFunction } from "@octokit/webhooks/dist-types/types";
 import type { WorkflowData } from "../types";
-import { hash, objectHash, sha256 } from "ohash";
+import { hash } from "ohash";
 
 export default eventHandler(async (event) => {
   const app = useOctokitApp(event)
 
   const { test } = useRuntimeConfig(event)
-  const { setItem, removeItem, getItem } = useWorkflowsBucket();
+  const { setItem, removeItem } = useWorkflowsBucket();
 
   const workflowHandler: HandlerFunction<"workflow_job", unknown> = async ({
     payload,
@@ -17,7 +17,6 @@ export default eventHandler(async (event) => {
       actor: payload.sender.id,
     };
     const key = hash(metadata);
-    console.log('webhook', metadata, key)
     if (payload.action === "queued") {
       const [orgOrAuthor, repo] = payload.repository.full_name.split("/");
       const data: WorkflowData = {
