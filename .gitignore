@@ -5,4 +5,5 @@ dist
 .cache
 .output
 .env*
+.dev.vars
 .wrangler

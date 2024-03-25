@@ -92,7 +92,7 @@ await wp({ port: PORT });
       stdio: 'overlapped',
       shell: true,
     })
-    assert.equal(playgroundProcess.stdout, ("playground installed successfully!"), "installation failed")
+    assert.ok(playgroundProcess.stdout.includes("playground installed successfully!"), "installation failed")
   }
   
 }
