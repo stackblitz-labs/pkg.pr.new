@@ -1,4 +1,5 @@
 import { defineCommand, runMain } from "citty";
+import assert from 'node:assert'
 import path from "path";
 import ezSpawn from "@jsdevtools/ez-spawn";
 // import { createRequire } from "module";
@@ -13,7 +14,6 @@ const {
 } = await import(path.resolve(process.cwd(), "package.json"), {
   with: { type: "json" },
 });
-console.log(name, version);
 
 declare global {
   var API_URL: string;
@@ -48,7 +48,6 @@ const metadata = {
 };
 
 const key = hash(metadata);
-console.log("publish cli", metadata, key);
 
 const main = defineCommand({
   meta: {
@@ -63,9 +62,8 @@ const main = defineCommand({
         run: async () => {
           await ezSpawn.async("npm pack", { stdio: "inherit" });
           const file = await fs.readFile(`${name}-${version}.tgz`);
-          console.log(file);
 
-          await fetch(publishUrl, {
+          const data = await fetch(publishUrl, {
             method: "POST",
             headers: {
               "sb-key": key,
@@ -74,6 +72,7 @@ const main = defineCommand({
             },
             body: file,
           });
+          assert.equal(data.status, 200, `publishing failed: ${await data.text()}`)
 
           const url = new URL(
             `/${GITHUB_REPOSITORY}/${GITHUB_REF_NAME}/${GITHUB_SHA}/${name}`,
