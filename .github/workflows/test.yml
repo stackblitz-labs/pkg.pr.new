@@ -1,4 +1,4 @@
-name: Continuous Releases
+name: E2E Test
 on: [push]
 
 jobs:
