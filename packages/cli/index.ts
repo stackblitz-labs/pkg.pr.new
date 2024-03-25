@@ -34,6 +34,8 @@ const {
   GITHUB_RUN_ID,
   GITHUB_RUN_ATTEMPT,
   GITHUB_ACTOR_ID,
+  GITHUB_REF_NAME,
+  GITHUB_SHA,
 } = process.env;
 
 // Note: If you need to use a workflow run's URL from within a job, you can combine these variables: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
@@ -46,7 +48,7 @@ const metadata = {
 };
 
 const key = hash(metadata);
-console.log('publish cli', metadata, key)
+console.log("publish cli", metadata, key);
 
 const main = defineCommand({
   meta: {
@@ -72,6 +74,13 @@ const main = defineCommand({
             },
             body: file,
           });
+
+          const url = new URL(
+            `/${GITHUB_REPOSITORY}/${GITHUB_REF_NAME}/${GITHUB_SHA}/${name}`,
+            origin
+          );
+
+          console.log(`⚡️ Your npm package is published: \`npm i ${url}\``);
         },
       };
     },
