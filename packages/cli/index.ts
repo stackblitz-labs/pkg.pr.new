@@ -77,7 +77,7 @@ const main = defineCommand({
 
           const url = new URL(
             `/${GITHUB_REPOSITORY}/${GITHUB_REF_NAME}/${GITHUB_SHA}/${name}`,
-            origin
+            API_URL
           );
 
           console.log(`⚡️ Your npm package is published: \`npm i ${url}\``);
