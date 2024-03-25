@@ -5,6 +5,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     name: Deploy
+    outputs:
+      deployment-url: ${{ steps.deploy.outputs.deployment-url}}
     steps:
       # - uses: actions/checkout@v4
       # - uses: pnpm/action-setup@v2
@@ -48,7 +50,7 @@ jobs:
       - run: pnpm install
       - run: pnpm build
         env:
-          API_URL: ${{ steps.deploy.outputs.deployment-url }}
+          API_URL: ${{ needs.deploy.outputs.deployment-url }}
       - name: Stackblitz CR
         run: pnpm sb publish
         working-directory: ./playground
