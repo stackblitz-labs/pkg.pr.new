@@ -16,3 +16,8 @@ jobs:
         env:
           NITRO_TEST: true
       - run: pnpm test
+        env:
+          NITRO_TEST: true
+          NITRO_WEBHOOK_SECRET: ${{ secrets.NITRO_WEBHOOK_SECRET }}
+          NITRO_APP_ID: ${{ secrets.NITRO_APP_ID }}
+          NITRO_PRIVATE_KEY: ${{ secrets.NITRO_PRIVATE_KEY }}
