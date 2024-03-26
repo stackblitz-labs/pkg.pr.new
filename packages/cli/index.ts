@@ -27,6 +27,7 @@ if (!process.env.TEST && process.env.GITHUB_ACTIONS !== "true") {
   );
   process.exit(1);
 }
+const octokit = new Octokit();
 
 const {
   GITHUB_SERVER_URL,
@@ -38,8 +39,17 @@ const {
   GITHUB_SHA,
 } = process.env;
 
+const [owner, repo] = GITHUB_REPOSITORY.split("/");
+
+const commit = await octokit.git.getCommit({
+  owner,
+  repo,
+  commit_sha: GITHUB_SHA,
+});
+console.log("commit", commit);
+
 // Note: If you need to use a workflow run's URL from within a job, you can combine these variables: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
-const url = `${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}`;
+const url = `${GITHUB_SERVER_URL}/${owner}/${repo}/actions/runs/${GITHUB_RUN_ID}`;
 
 const metadata = {
   url,
@@ -90,7 +100,7 @@ const main = defineCommand({
           );
 
           const url = new URL(
-            `/${GITHUB_REPOSITORY}/${GITHUB_REF_NAME}/${GITHUB_SHA}/${name}`,
+            `/${owner}/${repo}/${GITHUB_REF_NAME}/${GITHUB_SHA}/${name}`,
             API_URL
           );
 
