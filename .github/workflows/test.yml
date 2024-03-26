@@ -12,6 +12,7 @@ jobs:
           node-version: 20
           cache: "pnpm"
       - run: pnpm install
+      - run: git status
       - run: pnpm tsx script/ci.ts
         working-directory: ./packages/backend
         env:
