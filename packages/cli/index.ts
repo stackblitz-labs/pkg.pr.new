@@ -63,11 +63,9 @@ const main = defineCommand({
           await ezSpawn.async("npm pack", { stdio: "inherit" });
           const p = await ezSpawn.async(
             `git show -s --format=\%ct ${GITHUB_SHA}`,
-            { stdio: "overlapped" }
+            { shell: true, stdio: "overlapped" }
           );
-          console.log(p.stdout, p.stderr)
           const commitTimestamp = Number(p.stdout);
-          console.log("commit timestamp", commitTimestamp);
           assert.ok(
             !Number.isNaN(commitTimestamp),
             "failed at getting commit timestamp"
@@ -81,7 +79,7 @@ const main = defineCommand({
               "sb-key": key,
               "sb-package-name": name,
               "sb-package-version": version,
-              "sb-commit-timestamp": commitTimestamp,
+              "sb-commit-timestamp": commitTimestamp.toString(),
             },
             body: file,
           });
