@@ -8,11 +8,6 @@ jobs:
     outputs:
       deployment-url: ${{ steps.deploy.outputs.deployment-url}}
     steps:
-      # - uses: actions/checkout@v4
-      # - uses: pnpm/action-setup@v2
-      #   with:
-
-      #     version: 8.14.1
       - uses: actions/checkout@v4
       - run: corepack enable
       - uses: actions/setup-node@v4
