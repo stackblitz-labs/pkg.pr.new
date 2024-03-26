@@ -9,11 +9,11 @@
     "preview": "wrangler pages dev dist"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20240314.0",
+    "@cloudflare/workers-types": "^4.20240320.1",
     "@octokit/app": "^14.0.2",
     "nitro-cloudflare-dev": "0.1.2",
     "nitropack": "latest",
     "octokit": "^3.1.2",
-    "wrangler": "^3.35.0"
+    "wrangler": "^3.37.0"
   }
 }
