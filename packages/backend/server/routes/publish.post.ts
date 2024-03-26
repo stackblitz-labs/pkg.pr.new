@@ -1,5 +1,5 @@
 import { objectHash, sha256 } from "ohash";
-import {generateCommitPublishMessage} from '../utils/markdown'
+import { generateCommitPublishMessage } from "../utils/markdown";
 
 export default eventHandler(async (event) => {
   const contentLength = Number(getHeader(event, "content-length"));
@@ -8,29 +8,58 @@ export default eventHandler(async (event) => {
     // Payload too large
     return new Response("Max size limit is 5mb", { status: 413 });
   }
-  const key = getRequestHeader(event, "sb-key");
+  const {
+    "sb-package-name": packageName,
+    "sb-commit-timestamp": commitTimestampStr,
+    "sb-key": key
+  } = getHeaders(event);
+  if (!key || !packageName || !commitTimestampStr) {
+    throw createError({
+      statusCode: 400,
+      message: "sb-package-name, sb-commit-timestamp, sb-key headers are required"
+    })
+  }
+
   const workflowsBucket = useWorkflowsBucket();
   const packagesBucket = usePackagesBucket();
-
+  const cursorBucket = useCursorBucket();
   if (!(await workflowsBucket.hasItem(key))) {
-    return new Response("", { status: 401 });
+    throw createError({
+      statusCode: 401,
+      message: "Try publishing from a github workflow"
+    })
   }
 
   const binary = await readRawBody(event, false);
-  const { "sb-package-name": packageName, "sb-package-version": _ } =
-    getHeaders(event);
+  
+  if (!packageName || !commitTimestampStr) {
+    throw createError({
+      statusCode: 400,
+      message: "sb-key header is missing"
+    })
+    
+  }
+  const commitTimestamp = Number(commitTimestampStr);
 
-  const workflowData = await workflowsBucket.getItem(key);
+  const workflowData = (await workflowsBucket.getItem(key))!;
   const { sha, ...hashPrefixMetadata } = workflowData;
   const metadataHash = sha256(objectHash(hashPrefixMetadata));
   const packageKey = `${metadataHash}:${sha}:${packageName}`;
 
+  const currentCursor = await cursorBucket.getItem(metadataHash);
+
   await packagesBucket.setItemRaw(packageKey, binary);
+  if (!currentCursor || currentCursor.timestamp < commitTimestamp) {
+    await cursorBucket.setItem(metadataHash, {
+      sha,
+      timestamp: commitTimestamp,
+    });
+  }
 
   await workflowsBucket.removeItem(key);
 
   const app = useOctokitApp(event);
-  const origin = getRequestURL(event).origin
+  const origin = getRequestURL(event).origin;
 
   app.octokit.request("POST /repos/{owner}/{repo}/check-runs", {
     name: "Stackblitz CR (Publish)",
@@ -38,9 +67,9 @@ export default eventHandler(async (event) => {
     repo: workflowData.repo,
     head_sha: sha,
     output: {
-      title: 'Stackblitz CR',
-      summary: 'Published successfully.',
-      text: generateCommitPublishMessage(origin, packageName, workflowData)
+      title: "Stackblitz CR",
+      summary: "Published successfully.",
+      text: generateCommitPublishMessage(origin, packageName, workflowData),
     },
     conclusion: "success",
   });

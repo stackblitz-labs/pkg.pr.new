@@ -1,6 +1,6 @@
-import { R2Bucket } from "@cloudflare/workers-types";
-import {prefixStorage} from 'unstorage'
-import { WorkflowData } from "../types";
+import type { R2Bucket } from "@cloudflare/workers-types";
+import { prefixStorage } from "unstorage";
+import { WorkflowData, Cursor } from "../types";
 
 type Binary = Parameters<R2Bucket["put"]>[1];
 
@@ -9,11 +9,19 @@ export function useBucket() {
 }
 
 export function useWorkflowsBucket() {
-  const storage = useBucket()
-  return prefixStorage<WorkflowData>(storage, 'workflows')
+  const storage = useBucket();
+  return prefixStorage<WorkflowData>(
+    storage,
+    "workflows"
+  );
 }
 
 export function usePackagesBucket() {
-  const storage = useBucket()
-  return prefixStorage<ArrayBuffer>(storage, 'packages')
+  const storage = useBucket();
+  return prefixStorage<ArrayBuffer>(storage, "packages");
+}
+
+export function useCursorBucket() {
+  const storage = useBucket();
+  return prefixStorage<Cursor>(storage, "cursor");
 }

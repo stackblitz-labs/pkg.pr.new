@@ -65,7 +65,8 @@ await wp({ port: PORT });
     GITHUB_REPOSITORY: workflowJobQueuedFixture.payload.repository.full_name,
     GITHUB_RUN_ID: workflowJobQueuedFixture.payload.workflow_job.run_id,
     GITHUB_RUN_ATTEMPT: workflowJobQueuedFixture.payload.workflow_job.run_attempt,
-    GITHUB_ACTOR_ID:workflowJobQueuedFixture.payload.sender.id ,
+    GITHUB_ACTOR_ID:workflowJobQueuedFixture.payload.sender.id,
+    GITHUB_SHA:workflowJobQueuedFixture.payload.workflow_job.head_sha,
   }).map(([k, v]) => `${k}=${v}`).join(' ') 
   await ezSpawn.async(`${env} pnpm --filter=playground run publish`, [], {
     stdio: 'inherit',
@@ -82,17 +83,15 @@ await wp({ port: PORT });
     })
   
     const playgroundShaBlob =await playgroundShaData.blob() 
-    console.log(playgroundShaBlob)
     assert.ok(!!playgroundShaBlob.size, "playground size should not be zero")
     assert.equal(playgroundShaData.status, 200, "playground response should be 200")
 
-    // const playgroundWithoutShaUrl = new URL('/stackblitz-labs/stackblitz-ci/main/playground', serverUrl)
-    // const playgroundWithoutShaData = await fetch(playgroundWithoutShaUrl, {
-    //   method: 'GET',
-    // })
-    // const playgroundWithoutShaBlob = await playgroundWithoutShaData.blob()
-    // console.log('sha url and non-sha url', playgroundShaBlob.arrayBuffer, playgroundWithoutShaBlob.arrayBuffer)
-    // assert.deepEqual(await playgroundShaBlob.arrayBuffer(), await playgroundWithoutShaBlob.arrayBuffer(), "sha urls and non-sha urls should not give different results")
+    const playgroundWithoutShaUrl = new URL('/stackblitz-labs/stackblitz-ci/main/playground', serverUrl)
+    const playgroundWithoutShaData = await fetch(playgroundWithoutShaUrl, {
+      method: 'GET',
+    })
+    const playgroundWithoutShaBlob = await playgroundWithoutShaData.blob()
+    assert.deepEqual(await playgroundShaBlob.arrayBuffer(), await playgroundWithoutShaBlob.arrayBuffer(), "sha urls and non-sha urls should not give different results")
   }
   {
     playgroundShaUrl.searchParams.set('id', Date.now().toString())
@@ -104,14 +103,3 @@ await wp({ port: PORT });
   }
   
 }
-
-
-
-
-
-// // c.abort();
-// // await p
-
-// process.on('beforeExit', () => {
-//   c.abort()
-// })

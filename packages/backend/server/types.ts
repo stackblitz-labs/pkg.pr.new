@@ -6,3 +6,8 @@ export type WorkflowData = {
   sha: string,
   ref: string // branch
 }
+
+export type Cursor = {
+  timestamp: number
+  sha: string
+}

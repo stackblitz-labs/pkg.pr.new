@@ -7,21 +7,20 @@ type Params = Omit<WorkflowData, "sha"> & {
 
 export default eventHandler(async (event) => {
   const params = getRouterParams(event) as Params;
-  const packagesBucket = usePackagesBucket();
 
   const { package: packageName, ...hashPrefixMetadata } = params;
   const metadataHash = sha256(objectHash(hashPrefixMetadata));
-  const keys = await packagesBucket.getKeys(metadataHash)
-  console.log(keys)
-  // const packageKey = `${metadataHash}:${sha}:${packageName.split('.tgz')[0]}`;
-  // if (!(await packagesBucket.hasItem(packageKey))) {
-  //   throw createError({
-  //     status: 404,
-  //   });
-  // }
-  // const buffer = await packagesBucket.getItemRaw<ArrayBuffer>(packageKey);
 
-  // setResponseHeader(event, "content-type", "application/tar+gzip");
-  // // add caching
-  // return new Response(buffer);
+  const cursorBucket = useCursorBucket();
+  if (!(await cursorBucket.hasItem(metadataHash))) {
+    throw createError({
+      status: 404,
+    });
+  }
+  const currentCursor = (await cursorBucket.getItem(metadataHash))!;
+
+  sendRedirect(
+    event,
+    `/${params.orgOrAuthor}/${params.repo}/${params.ref}/${currentCursor.sha}/${params.package}`
+  );
 });

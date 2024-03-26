@@ -1,5 +1,5 @@
 import { defineCommand, runMain } from "citty";
-import assert from 'node:assert'
+import assert from "node:assert";
 import path from "path";
 import ezSpawn from "@jsdevtools/ez-spawn";
 // import { createRequire } from "module";
@@ -61,6 +61,18 @@ const main = defineCommand({
         meta: {},
         run: async () => {
           await ezSpawn.async("npm pack", { stdio: "inherit" });
+          const p = await ezSpawn.async(
+            `git show -s --format=\%ct ${GITHUB_SHA}`,
+            { stdio: "overlapped" }
+          );
+          console.log(p.stdout, p.stderr)
+          const commitTimestamp = Number(p.stdout);
+          console.log("commit timestamp", commitTimestamp);
+          assert.ok(
+            !Number.isNaN(commitTimestamp),
+            "failed at getting commit timestamp"
+          );
+
           const file = await fs.readFile(`${name}-${version}.tgz`);
 
           const data = await fetch(publishUrl, {
@@ -69,10 +81,15 @@ const main = defineCommand({
               "sb-key": key,
               "sb-package-name": name,
               "sb-package-version": version,
+              "sb-commit-timestamp": commitTimestamp,
             },
             body: file,
           });
-          assert.equal(data.status, 200, `publishing failed: ${await data.text()}`)
+          assert.equal(
+            data.status,
+            200,
+            `publishing failed: ${await data.text()}`
+          );
 
           const url = new URL(
             `/${GITHUB_REPOSITORY}/${GITHUB_REF_NAME}/${GITHUB_SHA}/${name}`,
