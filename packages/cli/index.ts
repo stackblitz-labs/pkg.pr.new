@@ -46,7 +46,7 @@ const commit = await octokit.git.getCommit({
   repo,
   commit_sha: GITHUB_SHA,
 });
-console.log("commit", commit);
+const commitTimestamp = Date.parse(commit.data.committer.date);
 
 // Note: If you need to use a workflow run's URL from within a job, you can combine these variables: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
 const url = `${GITHUB_SERVER_URL}/${owner}/${repo}/actions/runs/${GITHUB_RUN_ID}`;
@@ -71,15 +71,6 @@ const main = defineCommand({
         meta: {},
         run: async () => {
           await ezSpawn.async("npm pack", { stdio: "inherit" });
-          const p = await ezSpawn.async(
-            `git show -s --format=\%ct ${GITHUB_SHA}`,
-            { shell: true, stdio: "overlapped" }
-          );
-          const commitTimestamp = Number(p.stdout);
-          assert.ok(
-            !Number.isNaN(commitTimestamp),
-            "failed at getting commit timestamp"
-          );
 
           const file = await fs.readFile(`${name}-${version}.tgz`);
 
