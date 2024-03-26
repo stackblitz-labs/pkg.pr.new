@@ -13,4 +13,6 @@ jobs:
           cache: "pnpm"
       - run: pnpm install
       - run: pnpm build
+        env:
+          NITRO_TEST: true
       - run: pnpm test
