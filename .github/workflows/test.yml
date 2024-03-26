@@ -12,9 +12,12 @@ jobs:
           node-version: 20
           cache: "pnpm"
       - run: pnpm install
-      - run: pnpm build
+      - run: echo $NITRO_WEBHOOK_SECRET && pnpm build
         env:
           NITRO_TEST: true
+          NITRO_WEBHOOK_SECRET: ${{ secrets.NITRO_WEBHOOK_SECRET }}
+          NITRO_APP_ID: ${{ secrets.NITRO_APP_ID }}
+          NITRO_PRIVATE_KEY: ${{ secrets.NITRO_PRIVATE_KEY }}
       - run: pnpm test
         env:
           NITRO_TEST: true
