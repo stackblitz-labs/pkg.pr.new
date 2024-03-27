@@ -14,9 +14,10 @@ compatibility_date = "2024-03-14"
 # kv_namespaces = [
 #     { binding = "WORKFLOWS", id = "Workflows" }
 # ]
+account_id = "957152a16327bd0e5d72d085adb31b8d"
 
 [[r2_buckets]]
-binding = 'BUCKET' # <~ valid JavaScript variable name
+binding = 'CR_BUCKET' # <~ valid JavaScript variable name
 bucket_name = 'cr-bucket'
 
 

@@ -20,7 +20,7 @@ const storage = {
   bucket: {
     driver: "cloudflareR2Binding",
     base: "bucket",
-    binding: "BUCKET",
+    binding: "CR_BUCKET",
   },
 };
 
