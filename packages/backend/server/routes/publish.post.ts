@@ -24,9 +24,10 @@ export default eventHandler(async (event) => {
   const packagesBucket = usePackagesBucket(event);
   const cursorBucket = useCursorBucket(event);
   if (!(await workflowsBucket.hasItem(key))) {
+    console.log('key', key)
     throw createError({
       statusCode: 401,
-      message: "Try publishing from a github workflow"
+      message: "Try publishing from a github workflow or install Stackblitz CR Github app on this repo"
     })
   }
 
