@@ -62,7 +62,7 @@ export default eventHandler(async (event) => {
   const app = useOctokitApp(event);
   const origin = getRequestURL(event).origin;
 
-  app.octokit.request("POST /repos/{owner}/{repo}/check-runs", {
+  await app.octokit.request("POST /repos/{owner}/{repo}/check-runs", {
     name: "Stackblitz CR (Publish)",
     owner: workflowData.orgOrAuthor,
     repo: workflowData.repo,
