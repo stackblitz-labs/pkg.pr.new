@@ -30,8 +30,8 @@ export default defineNitroConfig({
   preset: "cloudflare-pages",
   modules: [ncb],
   srcDir: "server",
-  storage,
-  devStorage: storage,
+  // storage,
+  // devStorage: storage,
   runtimeConfig: {
     appId: "",
     webhookSecret: "",
