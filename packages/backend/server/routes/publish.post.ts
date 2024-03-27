@@ -20,9 +20,9 @@ export default eventHandler(async (event) => {
     })
   }
 
-  const workflowsBucket = useWorkflowsBucket();
-  const packagesBucket = usePackagesBucket();
-  const cursorBucket = useCursorBucket();
+  const workflowsBucket = useWorkflowsBucket(event);
+  const packagesBucket = usePackagesBucket(event);
+  const cursorBucket = useCursorBucket(event);
   if (!(await workflowsBucket.hasItem(key))) {
     throw createError({
       statusCode: 401,

@@ -11,7 +11,7 @@ export default eventHandler(async (event) => {
   const { package: packageName, ...hashPrefixMetadata } = params;
   const metadataHash = sha256(objectHash(hashPrefixMetadata));
 
-  const cursorBucket = useCursorBucket();
+  const cursorBucket = useCursorBucket(event);
   if (!(await cursorBucket.hasItem(metadataHash))) {
     throw createError({
       status: 404,

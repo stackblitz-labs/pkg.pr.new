@@ -3,16 +3,16 @@ import type { WorkflowData } from "../types";
 import { hash } from "ohash";
 
 export default eventHandler(async (event) => {
-  const app = useOctokitApp(event)
+  const app = useOctokitApp(event);
 
-  const { test } = useRuntimeConfig(event)
-  const { setItem, removeItem } = useWorkflowsBucket();
+  const { test } = useRuntimeConfig(event);
+  const { setItem, removeItem } = useWorkflowsBucket(event);
 
   const workflowHandler: HandlerFunction<"workflow_job", unknown> = async ({
     payload,
   }) => {
     const metadata = {
-      url: payload.workflow_job.html_url.split('/job/')[0], // run url: (https://github.com/stackblitz-labs/stackblitz-ci/actions/runs/8390507718)/job/23004786296
+      url: payload.workflow_job.html_url.split("/job/")[0], // run url: (https://github.com/stackblitz-labs/stackblitz-ci/actions/runs/8390507718)/job/23004786296
       attempt: payload.workflow_job.run_attempt,
       actor: payload.sender.id,
     };
@@ -23,14 +23,14 @@ export default eventHandler(async (event) => {
         orgOrAuthor,
         repo,
         sha: payload.workflow_job.head_sha,
-        ref: payload.workflow_job.head_branch,
+        ref: payload.workflow_job.head_branch!,
       };
 
       // octokit.request('POST /repos/{owner}/{repo}/pulls/{pull_number}/comments', {
       //   body: '',
       //   owner: payload.repository.owner,
       //   repo: payload.repository.repo
-   
+
       // })
       // Publishing is only available throughout the lifetime of a worklow_job
       await setItem(key, data);
@@ -45,12 +45,12 @@ export default eventHandler(async (event) => {
   type EmitterWebhookEvent = Parameters<
     typeof app.webhooks.receive | typeof app.webhooks.verifyAndReceive
   >[0];
-  const id: EmitterWebhookEvent["id"] = event.headers.get("x-github-delivery");
+  const id: EmitterWebhookEvent["id"] = event.headers.get("x-github-delivery")!;
   const name = event.headers.get(
     "x-github-event"
   ) as EmitterWebhookEvent["name"];
   const signature = event.headers.get("x-hub-signature-256") ?? "";
-  const payload = await readRawBody(event);
+  const payload = (await readRawBody(event))!;
 
   try {
     if (test) {
@@ -64,13 +64,15 @@ export default eventHandler(async (event) => {
       await app.webhooks.verifyAndReceive({ id, name, payload, signature });
     }
 
-    return {ok: true}
+    return { ok: true };
   } catch (error) {
-    // app.log.error(error.message);
-    throw createError({
-      status: 500,
-      message: error.message
-    })
+    if (error instanceof Error) {
+      app.log.error(error.message);
+      throw createError({
+        status: 500,
+        message: error?.message,
+      });
+    }
   } finally {
     app.webhooks.removeListener("workflow_job", workflowHandler);
   }

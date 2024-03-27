@@ -7,7 +7,7 @@ type Params = WorkflowData & {
 
 export default eventHandler(async (event) => {
   const params = getRouterParams(event) as Params;
-  const packagesBucket = usePackagesBucket();
+  const packagesBucket = usePackagesBucket(event);
 
   const { sha, package: packageName, ...hashPrefixMetadata } = params;
   const metadataHash = sha256(objectHash(hashPrefixMetadata));
