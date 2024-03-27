@@ -4,7 +4,6 @@ import { App } from "../vendor/octokit.mjs";
 
 export function useOctokitApp(event: H3Event): AppType {
   const { appId, privateKey, webhookSecret } = useRuntimeConfig(event);
-  console.log('env variables', appId, privateKey, webhookSecret)
 
   return new App({
     appId,

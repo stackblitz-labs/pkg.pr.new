@@ -19,7 +19,7 @@ export default eventHandler(async (event) => {
       actor: payload.sender.id,
     };
     const key = hash(metadata);
-    if (payload.action === "queued") {
+    if (payload.action === "in_progress") {
       const [orgOrAuthor, repo] = payload.repository.full_name.split("/");
       const data: WorkflowData = {
         orgOrAuthor,
