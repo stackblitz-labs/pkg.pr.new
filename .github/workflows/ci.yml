@@ -43,7 +43,7 @@ jobs:
           node-version: 20
           cache: "pnpm"
       - run: pnpm install
-      - run: pnpm build
+      - run: echo $API_URL ; pnpm build
         env:
           API_URL: ${{ needs.deploy.outputs.deployment-url }}
       - name: Stackblitz CR
