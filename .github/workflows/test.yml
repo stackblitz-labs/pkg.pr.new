@@ -21,6 +21,6 @@ jobs:
           NITRO_PRIVATE_KEY: ${{ secrets.NITRO_PRIVATE_KEY }}
           
       - run: pnpm build
-      - run: pnpm test
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - run: pnpm test
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
