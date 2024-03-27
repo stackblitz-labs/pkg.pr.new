@@ -8,9 +8,11 @@ export default eventHandler(async (event) => {
   const { test } = useRuntimeConfig(event);
   const { setItem, removeItem } = useWorkflowsBucket(event);
 
+  console.log('start')
   const workflowHandler: HandlerFunction<"workflow_job", unknown> = async ({
     payload,
   }) => {
+    console.log('payload', payload)
     const metadata = {
       url: payload.workflow_job.html_url.split("/job/")[0], // run url: (https://github.com/stackblitz-labs/stackblitz-ci/actions/runs/8390507718)/job/23004786296
       attempt: payload.workflow_job.run_attempt,

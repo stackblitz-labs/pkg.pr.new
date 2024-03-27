@@ -7,7 +7,6 @@ import type { H3Event } from "h3";
 type Binary = Parameters<R2Bucket["put"]>[1];
 
 export function useBucket(event: H3Event) {
-  console.log('useBucket', event.context.cloudflare.env)
   return createStorage<Binary>({
     driver: cloudflareR2BindingDriver({
       base: "bucket",
