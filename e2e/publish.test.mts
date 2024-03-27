@@ -68,6 +68,8 @@ await wp({ port: PORT });
     GITHUB_RUN_ATTEMPT: workflowJobQueuedFixture.payload.workflow_job.run_attempt,
     GITHUB_ACTOR_ID:workflowJobQueuedFixture.payload.sender.id,
     GITHUB_SHA:workflowJobQueuedFixture.payload.workflow_job.head_sha,
+    GITHUB_ACTION: workflowJobQueuedFixture.payload.workflow_job.id,
+    GITHUB_TOKEN: process.env.GITHUB_TOKEN
   }).map(([k, v]) => `${k}=${v}`).join(' ') 
   await ezSpawn.async(`${env} pnpm --filter=playground run publish`, [], {
     stdio: 'inherit',

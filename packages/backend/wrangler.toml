@@ -17,6 +17,6 @@ compatibility_date = "2024-03-14"
 
 [[r2_buckets]]
 binding = 'BUCKET' # <~ valid JavaScript variable name
-bucket_name = 'Bucket'
+bucket_name = 'cr-bucket'
 
 
