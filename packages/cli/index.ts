@@ -46,6 +46,7 @@ const commit = await octokit.git.getCommit({
   repo,
   commit_sha: GITHUB_SHA,
 });
+console.log('commit', commit)
 const commitTimestamp = Date.parse(commit.data.committer.date);
 
 // Note: If you need to use a workflow run's URL from within a job, you can combine these variables: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
