@@ -62,18 +62,18 @@ export default eventHandler(async (event) => {
   const app = useOctokitApp(event);
   const origin = getRequestURL(event).origin;
 
-  await app.octokit.request("POST /repos/{owner}/{repo}/check-runs", {
-    name: "Stackblitz CR (Publish)",
-    owner: workflowData.orgOrAuthor,
-    repo: workflowData.repo,
-    head_sha: sha,
-    output: {
-      title: "Stackblitz CR",
-      summary: "Published successfully.",
-      text: generateCommitPublishMessage(origin, packageName, workflowData),
-    },
-    conclusion: "success",
-  });
+  // await app.octokit.request("POST /repos/{owner}/{repo}/check-runs", {
+  //   name: "Stackblitz CR (Publish)",
+  //   owner: workflowData.orgOrAuthor,
+  //   repo: workflowData.repo,
+  //   head_sha: sha,
+  //   output: {
+  //     title: "Stackblitz CR",
+  //     summary: "Published successfully.",
+  //     text: generateCommitPublishMessage(origin, packageName, workflowData),
+  //   },
+  //   conclusion: "success",
+  // });
 
   return { ok: true };
 });
