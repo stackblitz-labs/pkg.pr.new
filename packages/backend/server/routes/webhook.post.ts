@@ -26,6 +26,7 @@ export default eventHandler(async (event) => {
         ref: payload.workflow_job.head_branch!,
       };
 
+      console.log('queued', metadata, key)
       // octokit.request('POST /repos/{owner}/{repo}/pulls/{pull_number}/comments', {
       //   body: '',
       //   owner: payload.repository.owner,
