@@ -8,33 +8,24 @@ export default eventHandler(async (event) => {
   const { test } = useRuntimeConfig(event);
   const { setItem, removeItem } = useWorkflowsBucket(event);
 
-  console.log('start')
   const workflowHandler: HandlerFunction<"workflow_job", unknown> = async ({
     payload,
   }) => {
-    console.log('payload', payload)
     const metadata = {
       url: payload.workflow_job.html_url.split("/job/")[0], // run url: (https://github.com/stackblitz-labs/stackblitz-ci/actions/runs/8390507718)/job/23004786296
       attempt: payload.workflow_job.run_attempt,
       actor: payload.sender.id,
     };
     const key = hash(metadata);
-    if (payload.action === "in_progress") {
-      const [orgOrAuthor, repo] = payload.repository.full_name.split("/");
+    if (payload.action === "queued") {
+      const [owner, repo] = payload.repository.full_name.split("/");
       const data: WorkflowData = {
-        orgOrAuthor,
+        owner,
         repo,
         sha: payload.workflow_job.head_sha,
         ref: payload.workflow_job.head_branch!,
       };
 
-      console.log('queued', metadata, key)
-      // octokit.request('POST /repos/{owner}/{repo}/pulls/{pull_number}/comments', {
-      //   body: '',
-      //   owner: payload.repository.owner,
-      //   repo: payload.repository.repo
-
-      // })
       // Publishing is only available throughout the lifetime of a worklow_job
       await setItem(key, data);
     } else if (payload.action === "completed") {

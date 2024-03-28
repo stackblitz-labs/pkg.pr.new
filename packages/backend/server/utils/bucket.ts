@@ -18,15 +18,25 @@ export function useBucket(event: H3Event) {
 
 export function useWorkflowsBucket(event: H3Event) {
   const storage = useBucket(event);
-  return prefixStorage<WorkflowData>(storage, "workflows");
+  return prefixStorage<WorkflowData>(storage, "workflow");
 }
 
 export function usePackagesBucket(event: H3Event) {
   const storage = useBucket(event);
-  return prefixStorage<ArrayBuffer>(storage, "packages");
+  return prefixStorage<ArrayBuffer>(storage, "package");
 }
 
-export function useCursorBucket(event: H3Event) {
+export function useCursorsBucket(event: H3Event) {
   const storage = useBucket(event);
   return prefixStorage<Cursor>(storage, "cursor");
+}
+
+export function useCheckRunsBucket(event: H3Event) {
+  const storage = useBucket(event);
+  return prefixStorage<number>(storage, "check-run");
+}
+
+export function usePullRequestCommentsBucket(event: H3Event) {
+  const storage = useBucket(event);
+  return prefixStorage<number>(storage, "pr-comment");
 }

@@ -1,5 +1,6 @@
 import { objectHash, sha256 } from "ohash";
 import { generateCommitPublishMessage } from "../utils/markdown";
+import { useCheckRunBucket } from "../utils/bucket";
 
 export default eventHandler(async (event) => {
   const contentLength = Number(getHeader(event, "content-length"));
@@ -11,34 +12,36 @@ export default eventHandler(async (event) => {
   const {
     "sb-package-name": packageName,
     "sb-commit-timestamp": commitTimestampStr,
-    "sb-key": key
+    "sb-key": key,
   } = getHeaders(event);
   if (!key || !packageName || !commitTimestampStr) {
     throw createError({
       statusCode: 400,
-      message: "sb-package-name, sb-commit-timestamp, sb-key headers are required"
-    })
+      message:
+        "sb-package-name, sb-commit-timestamp, sb-key headers are required",
+    });
   }
 
   const workflowsBucket = useWorkflowsBucket(event);
   const packagesBucket = usePackagesBucket(event);
   const cursorBucket = useCursorBucket(event);
+  const checkRunBucket = useCheckRunBucket(event);
   if (!(await workflowsBucket.hasItem(key))) {
-    console.log('key', key)
+    console.log("key", key);
     throw createError({
       statusCode: 401,
-      message: "Try publishing from a github workflow or install Stackblitz CR Github app on this repo"
-    })
+      message:
+        "Try publishing from a github workflow or install Stackblitz CR Github app on this repo",
+    });
   }
 
   const binary = await readRawBody(event, false);
-  
+
   if (!packageName || !commitTimestampStr) {
     throw createError({
       statusCode: 400,
-      message: "sb-key header is missing"
-    })
-    
+      message: "sb-key header is missing",
+    });
   }
   const commitTimestamp = Number(commitTimestampStr);
 
@@ -62,18 +65,36 @@ export default eventHandler(async (event) => {
   const app = useOctokitApp(event);
   const origin = getRequestURL(event).origin;
 
-  // await app.octokit.request("POST /repos/{owner}/{repo}/check-runs", {
-  //   name: "Stackblitz CR (Publish)",
-  //   owner: workflowData.orgOrAuthor,
-  //   repo: workflowData.repo,
-  //   head_sha: sha,
-  //   output: {
-  //     title: "Stackblitz CR",
-  //     summary: "Published successfully.",
-  //     text: generateCommitPublishMessage(origin, packageName, workflowData),
-  //   },
-  //   conclusion: "success",
-  // });
+  const { data: installationData } = await app.octokit.request(
+    "GET /repos/{owner}/{repo}/installation",
+    {
+      owner: workflowData.owner,
+      repo: workflowData.repo,
+    }
+  );
+
+  const installation = await app.getInstallationOctokit(installationData.id);
+
+  const checkRunKey = `${metadataHash}:${sha}`;
+
+  if (!(await checkRunBucket.hasItem(checkRunKey))) {
+    const checkRun = await installation.request(
+      "POST /repos/{owner}/{repo}/check-runs",
+      {
+        name: "Stackblitz CR",
+        owner: workflowData.owner,
+        repo: workflowData.repo,
+        head_sha: sha,
+        output: {
+          title: "Successful",
+          summary: "Published successfully.",
+          text: generateCommitPublishMessage(origin, packageName, workflowData),
+        },
+        conclusion: "success",
+      }
+    );
+    checkRunBucket.setItem(checkRunKey, checkRun.data.id);
+  }
 
   return { ok: true };
 });

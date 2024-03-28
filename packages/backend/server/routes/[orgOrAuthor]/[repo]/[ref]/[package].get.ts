@@ -21,6 +21,6 @@ export default eventHandler(async (event) => {
 
   sendRedirect(
     event,
-    `/${params.orgOrAuthor}/${params.repo}/${params.ref}/${currentCursor.sha}/${params.package}`
+    `/${params.owner}/${params.repo}/${params.ref}/${currentCursor.sha}/${params.package}`
   );
 });
