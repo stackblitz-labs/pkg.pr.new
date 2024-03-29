@@ -39,6 +39,9 @@ const {
   GITHUB_SHA,
 } = process.env;
 
+const ref = GITHUB_REF_NAME.split('/merge')[0]
+const isPullRequest = GITHUB_REF_NAME.startsWith('/merge')
+
 const [owner, repo] = GITHUB_REPOSITORY.split("/");
 
 const commit = await octokit.git.getCommit({
@@ -58,7 +61,6 @@ const metadata = {
 };
 
 const key = hash(metadata);
-console.log('publish', metadata, key)
 
 const main = defineCommand({
   meta: {
@@ -79,6 +81,8 @@ const main = defineCommand({
             method: "POST",
             headers: {
               "sb-key": key,
+              "sb-ref": ref,
+              "sb-is-pr": isPullRequest.toString(),
               "sb-package-name": name,
               "sb-package-version": version,
               "sb-commit-timestamp": commitTimestamp.toString(),
@@ -92,7 +96,7 @@ const main = defineCommand({
           );
 
           const url = new URL(
-            `/${owner}/${repo}/${GITHUB_REF_NAME}/${GITHUB_SHA}/${name}`,
+            `/${owner}/${repo}/${ref}/${GITHUB_SHA}/${name}`,
             API_URL
           );
 

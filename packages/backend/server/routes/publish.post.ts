@@ -1,6 +1,4 @@
 import { objectHash, sha256 } from "ohash";
-import { generateCommitPublishMessage } from "../utils/markdown";
-import { useCheckRunBucket } from "../utils/bucket";
 
 export default eventHandler(async (event) => {
   const contentLength = Number(getHeader(event, "content-length"));
@@ -10,6 +8,8 @@ export default eventHandler(async (event) => {
     return new Response("Max size limit is 5mb", { status: 413 });
   }
   const {
+    "sb-ref": ref,
+    "sb-is-pr": isPullRequestStr,
     "sb-package-name": packageName,
     "sb-commit-timestamp": commitTimestampStr,
     "sb-key": key,
@@ -21,13 +21,14 @@ export default eventHandler(async (event) => {
         "sb-package-name, sb-commit-timestamp, sb-key headers are required",
     });
   }
+  const isPullRequest = isPullRequestStr === "true";
 
   const workflowsBucket = useWorkflowsBucket(event);
   const packagesBucket = usePackagesBucket(event);
-  const cursorBucket = useCursorBucket(event);
-  const checkRunBucket = useCheckRunBucket(event);
+  const cursorBucket = useCursorsBucket(event);
+  const checkRunBucket = useCheckRunsBucket(event);
+  const pullRequestCommentsBucket = usePullRequestCommentsBucket(event);
   if (!(await workflowsBucket.hasItem(key))) {
-    console.log("key", key);
     throw createError({
       statusCode: 401,
       message:
@@ -94,6 +95,40 @@ export default eventHandler(async (event) => {
       }
     );
     checkRunBucket.setItem(checkRunKey, checkRun.data.id);
+  }
+  if (isPullRequest) {
+    const alreadyCommented = await checkRunBucket.hasItem(metadataHash);
+    if (!alreadyCommented) {
+      const comment = await installation.request(
+        "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
+        {
+          owner: workflowData.owner,
+          repo: workflowData.repo,
+          issue_number: Number(ref),
+          body: generatePullRequestPublishMessage(
+            origin,
+            packageName,
+            workflowData
+          ),
+        }
+      );
+      pullRequestCommentsBucket.setItem(metadataHash, comment.data.id);
+    } else {
+      const prevCommentId = (await checkRunBucket.getItem(metadataHash))!;
+      await installation.request(
+        "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}",
+        {
+          owner: workflowData.owner,
+          repo: workflowData.repo,
+          comment_id: prevCommentId,
+          body: generatePullRequestPublishMessage(
+            origin,
+            packageName,
+            workflowData
+          ),
+        }
+      );
+    }
   }
 
   return { ok: true };
