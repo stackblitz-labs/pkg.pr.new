@@ -6,13 +6,13 @@
     "build": "nitro build",
     "dev": "nitro dev",
     "prepare": "nitro prepare",
-    "preview": "wrangler pages dev dist"
+    "preview": "wrangler pages dev dist "
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20240320.1",
+    "@cloudflare/workers-types": "^4.20240329.0",
     "@octokit/app": "^14.0.2",
     "nitro-cloudflare-dev": "0.1.2",
-    "nitropack": "latest",
+    "nitropack": "^2.9.5",
     "octokit": "^3.1.2",
     "wrangler": "^3.37.0"
   }

@@ -1,0 +1,16 @@
+on:
+  schedule:
+    # - At 3PM on first day of the month
+    - cron: '0 15 1 * *'
+
+jobs:
+  test_schedule:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send POST request with sb-rm-stale-key header
+        run: |
+          curl -X POST \
+            -H "sb-rm-stale-key: ${{ secrets.NITRO_RM_STALE_KEY }}" \
+            https://stackblitz-cr.pages.dev/rm/stale
+
+

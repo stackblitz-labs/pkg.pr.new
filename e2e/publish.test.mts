@@ -42,24 +42,6 @@ await wp({ port: PORT });
 }
 
 {
-  const metadata = {
-    url: workflowJobQueuedFixture.payload.workflow_job.url,
-    attempt: workflowJobQueuedFixture.payload.workflow_job.run_attempt,
-    actor: workflowJobQueuedFixture.payload.sender.id,
-  };
-  const key = sha256(objectHash(metadata))
-  // publish
-  const publishUrl = new URL('/publish', serverUrl)
-  fetch(publishUrl, {
-    method: 'POST',
-    headers: [
-     ["sb-key", key],
-    ],
-    body: new Uint8Array(new Array(100).fill(1)),
-  })
-}
-
-{
   const env = Object.entries({
     TEST: true,
     GITHUB_SERVER_URL: new URL(workflowJobQueuedFixture.payload.workflow_job.html_url).origin,
@@ -69,6 +51,7 @@ await wp({ port: PORT });
     GITHUB_ACTOR_ID:workflowJobQueuedFixture.payload.sender.id,
     GITHUB_SHA:workflowJobQueuedFixture.payload.workflow_job.head_sha,
     GITHUB_ACTION: workflowJobQueuedFixture.payload.workflow_job.id,
+    GITHUB_REF_NAME: workflowJobQueuedFixture.payload.workflow_job.head_branch,
     GITHUB_TOKEN: process.env.GITHUB_TOKEN
   }).map(([k, v]) => `${k}=${v}`).join(' ') 
   await ezSpawn.async(`${env} pnpm --filter=playground run publish`, [], {

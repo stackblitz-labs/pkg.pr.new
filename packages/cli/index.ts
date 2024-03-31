@@ -39,8 +39,8 @@ const {
   GITHUB_SHA,
 } = process.env;
 
-const ref = GITHUB_REF_NAME.split('/merge')[0]
-const isPullRequest = GITHUB_REF_NAME.startsWith('/merge')
+const ref = GITHUB_REF_NAME.split("/merge")[0];
+const isPullRequest = GITHUB_REF_NAME.startsWith("/merge");
 
 const [owner, repo] = GITHUB_REPOSITORY.split("/");
 

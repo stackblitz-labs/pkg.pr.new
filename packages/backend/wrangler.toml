@@ -19,5 +19,3 @@ account_id = "957152a16327bd0e5d72d085adb31b8d"
 [[r2_buckets]]
 binding = 'CR_BUCKET' # <~ valid JavaScript variable name
 bucket_name = 'cr-bucket'
-
-

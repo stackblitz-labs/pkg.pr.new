@@ -12,32 +12,29 @@ declare module "nitropack" {
     appId: string;
     webhookSecret: string;
     privateKey: string;
+    rmStaleKey: string;
     test: "" | true;
   }
 }
 
-const storage = {
-  bucket: {
-    driver: "cloudflareR2Binding",
-    base: "bucket",
-    binding: "CR_BUCKET",
-  },
-};
-
 // https://nitro.unjs.io/config
 export default defineNitroConfig({
-  sourceMap: 'inline',
+  sourceMap: "inline",
   preset: "cloudflare-pages",
   modules: [ncb],
   srcDir: "server",
-  // storage,
-  // devStorage: storage,
+  experimental: {
+    tasks: true,
+  },
+  scheduledTasks: {
+    '0 15 1 * *': ['rm:stale']
+  },
   runtimeConfig: {
     appId: "",
     webhookSecret: "",
     privateKey: "",
+    rmStaleKey: "",
     test: "",
   },
-
-  timing: true
+  timing: true,
 });

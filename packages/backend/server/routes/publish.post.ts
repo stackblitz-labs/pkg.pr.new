@@ -14,7 +14,13 @@ export default eventHandler(async (event) => {
     "sb-commit-timestamp": commitTimestampStr,
     "sb-key": key,
   } = getHeaders(event);
-  if (!key || !packageName || !commitTimestampStr) {
+  if (
+    !ref ||
+    !isPullRequestStr ||
+    !key ||
+    !packageName ||
+    !commitTimestampStr
+  ) {
     throw createError({
       statusCode: 400,
       message:
@@ -53,6 +59,7 @@ export default eventHandler(async (event) => {
 
   const currentCursor = await cursorBucket.getItem(metadataHash);
 
+  console.log('publish', hashPrefixMetadata, packageKey)
   await packagesBucket.setItemRaw(packageKey, binary);
   if (!currentCursor || currentCursor.timestamp < commitTimestamp) {
     await cursorBucket.setItem(metadataHash, {
@@ -97,7 +104,9 @@ export default eventHandler(async (event) => {
     checkRunBucket.setItem(checkRunKey, checkRun.data.id);
   }
   if (isPullRequest) {
-    const alreadyCommented = await checkRunBucket.hasItem(metadataHash);
+    const alreadyCommented = await pullRequestCommentsBucket.hasItem(
+      metadataHash
+    );
     if (!alreadyCommented) {
       const comment = await installation.request(
         "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
@@ -114,7 +123,9 @@ export default eventHandler(async (event) => {
       );
       pullRequestCommentsBucket.setItem(metadataHash, comment.data.id);
     } else {
-      const prevCommentId = (await checkRunBucket.getItem(metadataHash))!;
+      const prevCommentId = (await pullRequestCommentsBucket.getItem(
+        metadataHash
+      ))!;
       await installation.request(
         "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}",
         {
