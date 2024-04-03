@@ -1,4 +1,4 @@
-name: Cloudflare Preview
+name: Preview & Release
 on: [push]
 
 jobs:

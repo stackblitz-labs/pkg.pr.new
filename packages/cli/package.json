@@ -1,6 +1,6 @@
 {
   "name": "stackblitz-cr",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "",
   "main": "index.js",
   "type": "module",
@@ -10,7 +10,8 @@
   },
   "scripts": {
     "dev": "tsup --watch",
-    "build": "tsup"
+    "build": "tsup",
+    "build:publish": "API_URL=https://stackblitz-cr.pages.dev/ tsup"
   },
   "keywords": [],
   "author": "",

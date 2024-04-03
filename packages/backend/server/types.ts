@@ -3,6 +3,7 @@ export type WorkflowData = {
   repo: string,
   sha: string,
   ref: string // branch
+  isPullRequest?: true
 }
 
 export type Cursor = {

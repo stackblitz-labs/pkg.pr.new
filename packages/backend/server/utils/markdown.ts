@@ -41,7 +41,7 @@ Pull Request Build: \`${workflowData.ref}\`
 
 __${packageName}(${workflowData.ref})__:
 \`\`\`
-npm i ${url}    
+npm i ${url.href.replace(`/${workflowData.sha}`, '')}    
 \`\`\`
 
 `;

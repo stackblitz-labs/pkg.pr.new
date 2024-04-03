@@ -5,6 +5,7 @@
   "scripts": {
     "build": "nitro build",
     "dev": "nitro dev",
+    "kill": "kill -9 $(pgrep -f workerd)",
     "prepare": "nitro prepare",
     "preview": "wrangler pages dev dist "
   },

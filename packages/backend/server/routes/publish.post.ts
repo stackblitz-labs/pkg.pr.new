@@ -8,15 +8,11 @@ export default eventHandler(async (event) => {
     return new Response("Max size limit is 5mb", { status: 413 });
   }
   const {
-    "sb-ref": ref,
-    "sb-is-pr": isPullRequestStr,
     "sb-package-name": packageName,
     "sb-commit-timestamp": commitTimestampStr,
     "sb-key": key,
   } = getHeaders(event);
   if (
-    !ref ||
-    !isPullRequestStr ||
     !key ||
     !packageName ||
     !commitTimestampStr
@@ -27,8 +23,6 @@ export default eventHandler(async (event) => {
         "sb-package-name, sb-commit-timestamp, sb-key headers are required",
     });
   }
-  const isPullRequest = isPullRequestStr === "true";
-
   const workflowsBucket = useWorkflowsBucket(event);
   const packagesBucket = usePackagesBucket(event);
   const cursorBucket = useCursorsBucket(event);
@@ -44,22 +38,15 @@ export default eventHandler(async (event) => {
 
   const binary = await readRawBody(event, false);
 
-  if (!packageName || !commitTimestampStr) {
-    throw createError({
-      statusCode: 400,
-      message: "sb-key header is missing",
-    });
-  }
   const commitTimestamp = Number(commitTimestampStr);
 
   const workflowData = (await workflowsBucket.getItem(key))!;
-  const { sha, ...hashPrefixMetadata } = workflowData;
+  const { sha, isPullRequest, ...hashPrefixMetadata } = workflowData;
   const metadataHash = sha256(objectHash(hashPrefixMetadata));
   const packageKey = `${metadataHash}:${sha}:${packageName}`;
 
   const currentCursor = await cursorBucket.getItem(metadataHash);
 
-  console.log('publish', hashPrefixMetadata, packageKey)
   await packagesBucket.setItemRaw(packageKey, binary);
   if (!currentCursor || currentCursor.timestamp < commitTimestamp) {
     await cursorBucket.setItem(metadataHash, {
@@ -101,7 +88,7 @@ export default eventHandler(async (event) => {
         conclusion: "success",
       }
     );
-    checkRunBucket.setItem(checkRunKey, checkRun.data.id);
+    await checkRunBucket.setItem(checkRunKey, checkRun.data.id);
   }
   if (isPullRequest) {
     const alreadyCommented = await pullRequestCommentsBucket.hasItem(
@@ -113,7 +100,7 @@ export default eventHandler(async (event) => {
         {
           owner: workflowData.owner,
           repo: workflowData.repo,
-          issue_number: Number(ref),
+          issue_number: Number(workflowData.ref.slice("pr-".length)),
           body: generatePullRequestPublishMessage(
             origin,
             packageName,
@@ -121,7 +108,7 @@ export default eventHandler(async (event) => {
           ),
         }
       );
-      pullRequestCommentsBucket.setItem(metadataHash, comment.data.id);
+      await pullRequestCommentsBucket.setItem(metadataHash, comment.data.id);
     } else {
       const prevCommentId = (await pullRequestCommentsBucket.getItem(
         metadataHash

@@ -75,3 +75,13 @@ useDownloadedAtBucket.base = joinKeys(
   useBucket.base,
   useDownloadedAtBucket.key
 );
+
+export function usePullRequestNumbersBucket(event: Event) {
+  const storage = useBucket(event);
+  return prefixStorage<number>(storage, useDownloadedAtBucket.key);
+}
+usePullRequestNumbersBucket.key = "pr-number";
+usePullRequestNumbersBucket.base = joinKeys(
+  useBucket.base,
+  usePullRequestNumbersBucket.key
+);
