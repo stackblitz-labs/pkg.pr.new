@@ -57,7 +57,9 @@ export default eventHandler(async (event) => {
 
   await workflowsBucket.removeItem(key);
 
+  console.log('event', event)
   const app = useOctokitApp(event);
+  console.log('app', app)
   const origin = getRequestURL(event).origin;
 
   const { data: installationData } = await app.octokit.request(
