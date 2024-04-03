@@ -11,7 +11,7 @@ export default eventHandler(async (event) => {
   const { package: packageName, ...hashPrefixMetadata } = params;
   const metadataHash = sha256(objectHash(hashPrefixMetadata));
 
-  const cursorBucket = useCursorBucket(event);
+  const cursorBucket = useCursorsBucket(event);
   if (!(await cursorBucket.hasItem(metadataHash))) {
     throw createError({
       status: 404,
@@ -21,6 +21,6 @@ export default eventHandler(async (event) => {
 
   sendRedirect(
     event,
-    `/${params.orgOrAuthor}/${params.repo}/${params.ref}/${currentCursor.sha}/${params.package}`
+    `/${params.owner}/${params.repo}/${params.ref}/${currentCursor.sha}/${params.package}`
   );
 });

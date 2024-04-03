@@ -3,8 +3,7 @@ import assert from "node:assert";
 import path from "path";
 import ezSpawn from "@jsdevtools/ez-spawn";
 // import { createRequire } from "module";
-import { version } from "./package.json";
-import { hash, objectHash, sha256 } from "ohash";
+import { hash } from "ohash";
 import fs from "fs/promises";
 import { Octokit } from "@octokit/action";
 import "./environments";
@@ -28,6 +27,7 @@ if (!process.env.TEST && process.env.GITHUB_ACTIONS !== "true") {
   process.exit(1);
 }
 const octokit = new Octokit();
+octokit.pulls.list
 
 const {
   GITHUB_SERVER_URL,
@@ -38,6 +38,13 @@ const {
   GITHUB_REF_NAME,
   GITHUB_SHA,
 } = process.env;
+
+let ref = GITHUB_REF_NAME.split("/merge")[0];
+const isPullRequest = GITHUB_REF_NAME.endsWith("/merge");
+
+if (isPullRequest) {
+  ref = "pr-" + ref
+}
 
 const [owner, repo] = GITHUB_REPOSITORY.split("/");
 
@@ -58,7 +65,6 @@ const metadata = {
 };
 
 const key = hash(metadata);
-console.log('publish', metadata, key)
 
 const main = defineCommand({
   meta: {
@@ -92,7 +98,7 @@ const main = defineCommand({
           );
 
           const url = new URL(
-            `/${owner}/${repo}/${GITHUB_REF_NAME}/${GITHUB_SHA}/${name}`,
+            `/${owner}/${repo}/${ref}/${GITHUB_SHA}/${name}`,
             API_URL
           );
 

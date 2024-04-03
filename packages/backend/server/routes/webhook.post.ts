@@ -1,49 +1,73 @@
 import type { HandlerFunction } from "@octokit/webhooks/dist-types/types";
 import type { WorkflowData } from "../types";
 import { hash } from "ohash";
+import { usePullRequestNumbersBucket } from "../utils/bucket";
 
 export default eventHandler(async (event) => {
   const app = useOctokitApp(event);
 
   const { test } = useRuntimeConfig(event);
   const { setItem, removeItem } = useWorkflowsBucket(event);
+  const pullRequestNumbersBucket = usePullRequestNumbersBucket(event)
 
-  console.log('start')
   const workflowHandler: HandlerFunction<"workflow_job", unknown> = async ({
     payload,
   }) => {
-    console.log('payload', payload)
+    const [owner, repo] = payload.repository.full_name.split("/");
+    // const {} = await app.octokit.request('GET /repos/{owner}/{repo}/commits/{ref}/status', {
+    //   owner,
+    //   repo,
+    //   head
+    // })
+
     const metadata = {
       url: payload.workflow_job.html_url.split("/job/")[0], // run url: (https://github.com/stackblitz-labs/stackblitz-ci/actions/runs/8390507718)/job/23004786296
       attempt: payload.workflow_job.run_attempt,
       actor: payload.sender.id,
     };
-    const key = hash(metadata);
-    if (payload.action === "in_progress") {
-      const [orgOrAuthor, repo] = payload.repository.full_name.split("/");
+    const hashKey = hash(metadata);
+    if (payload.action === "queued") {
       const data: WorkflowData = {
-        orgOrAuthor,
+        owner,
         repo,
         sha: payload.workflow_job.head_sha,
         ref: payload.workflow_job.head_branch!,
       };
+      const prNumber = await pullRequestNumbersBucket.getItem(hash(data))
+      if (prNumber) {
+        // it's a pull request workflow
+        data.ref = `pr-${prNumber}`
+        data.isPullRequest = true
+      }
 
-      console.log('queued', metadata, key)
-      // octokit.request('POST /repos/{owner}/{repo}/pulls/{pull_number}/comments', {
-      //   body: '',
-      //   owner: payload.repository.owner,
-      //   repo: payload.repository.repo
-
-      // })
       // Publishing is only available throughout the lifetime of a worklow_job
-      await setItem(key, data);
+      await setItem(hashKey, data);
     } else if (payload.action === "completed") {
       // Publishing is not available anymore
-      await removeItem(key);
+      await removeItem(hashKey);
     }
   };
 
+  const pullRequestHandler: HandlerFunction<"pull_request", unknown> = async ({
+    payload
+  }) => {
+    if (payload.action === 'synchronize') {
+      const [owner, repo] = payload.repository.full_name.split("/");
+      const key: WorkflowData = {
+        owner,
+        repo,
+        sha: payload.pull_request.head.sha,
+        ref: payload.pull_request.head.ref,
+      }
+      const hashKey = hash(key)
+      console.log('pullRequestHandler', key, payload.number)
+      await pullRequestNumbersBucket.setItem(hashKey, payload.number)
+      console.log('just set')
+    } 
+  }
+
   app.webhooks.on("workflow_job", workflowHandler);
+  app.webhooks.on("pull_request", pullRequestHandler)
 
   type EmitterWebhookEvent = Parameters<
     typeof app.webhooks.receive | typeof app.webhooks.verifyAndReceive
@@ -78,5 +102,6 @@ export default eventHandler(async (event) => {
     }
   } finally {
     app.webhooks.removeListener("workflow_job", workflowHandler);
+    app.webhooks.removeListener("pull_request", pullRequestHandler);
   }
 });

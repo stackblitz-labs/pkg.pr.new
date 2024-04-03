@@ -1,10 +1,9 @@
-import { R2Bucket } from "@cloudflare/workers-types"
-
 export type WorkflowData = {
-  orgOrAuthor: string,
+  owner: string,
   repo: string,
   sha: string,
   ref: string // branch
+  isPullRequest?: true
 }
 
 export type Cursor = {

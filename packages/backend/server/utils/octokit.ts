@@ -1,5 +1,6 @@
 import type { H3Event } from "h3";
 import type { App as AppType } from "octokit";
+// @ts-ignore
 import { App } from "../vendor/octokit.mjs";
 
 export function useOctokitApp(event: H3Event): AppType {
@@ -9,5 +10,5 @@ export function useOctokitApp(event: H3Event): AppType {
     appId,
     privateKey,
     webhooks: { secret: webhookSecret },
-  });
+  }) as unknown as AppType;
 }
