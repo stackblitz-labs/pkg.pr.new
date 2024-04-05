@@ -21,9 +21,13 @@ The Github Application is available [here](https://github.com/apps/stackblitz-cr
 
 After installing on your repository, you can run `npx stackblitz-cr pulibsh` with `GITHUB_TOKEN` in your workflows and then you have continuous releases!  
 
+```sh
+npm install --save-dev stackblitz-cr
+```
+
 ### Examples
 
-- Release for each commit and pull request:
+- Release each commit and pull request:
 
 ```yml
 name: Publish Any Commit
@@ -54,7 +58,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # GITHUB_TOKEN is provided automatically in any repository
 ```
 
-- Release on approved pull requests only:
+- Release approved pull requests only:
 ```yml
 name: Publish Approved Pull Requests
 on:
