@@ -1,3 +1,6 @@
+
+<p align="center"><img src="https://github.com/stackblitz-labs/stackblitz-ci/assets/37929992/e8ed1abd-693a-407f-9f29-2204e90e4b7b" /></p>
+
 # Continuous Releases <span><img src="https://emoji.slack-edge.com/TFHDVN56F/stackblitz/fd010078dcccebca.png" width="35" /></span>
 
 With Stackblitz CR, each of your commits and pull-requests would trigger an instant build and a release. This enables users to access features and bug-fixes without the need to wait for release cycles using npm or pull-request merges. 
@@ -92,10 +95,6 @@ jobs:
 
 Publishing is only available in workflows and it supports any workflow trigger event, more information [here](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#about-events-that-trigger-workflows).
 
-Check Runs:
-
 <p align="center"><img src="https://github.com/stackblitz-labs/stackblitz-ci/assets/37929992/ede770a3-a911-4e24-99d6-cd307b44fd87" /></p>
 
-Pull Request Comments:
 
-<p align="center"><img src="https://github.com/stackblitz-labs/stackblitz-ci/assets/37929992/e8ed1abd-693a-407f-9f29-2204e90e4b7b" /></p>
