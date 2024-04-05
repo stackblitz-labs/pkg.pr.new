@@ -94,7 +94,9 @@ Publishing is only available in workflows and it supports any workflow trigger e
 
 <p align="center">
   <img src="https://github.com/stackblitz-labs/stackblitz-ci/assets/37929992/ede770a3-a911-4e24-99d6-cd307b44fd87" />
+
+  <img src="https://github.com/stackblitz-labs/stackblitz-ci/assets/37929992/e8ed1abd-693a-407f-9f29-2204e90e4b7b" />
 </p>
-![github com_stackblitz-labs_temporary-test_pull_1 (6)](https://github.com/stackblitz-labs/stackblitz-ci/assets/37929992/e8ed1abd-693a-407f-9f29-2204e90e4b7b)
+![github com_stackblitz-labs_temporary-test_pull_1 (6)]()
 
 
