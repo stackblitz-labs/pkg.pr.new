@@ -92,11 +92,10 @@ jobs:
 
 Publishing is only available in workflows and it supports any workflow trigger event, more information [here](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#about-events-that-trigger-workflows).
 
-<p align="center">
-  <img src="https://github.com/stackblitz-labs/stackblitz-ci/assets/37929992/ede770a3-a911-4e24-99d6-cd307b44fd87" />
+Check Runs:
 
-  <img src="https://github.com/stackblitz-labs/stackblitz-ci/assets/37929992/e8ed1abd-693a-407f-9f29-2204e90e4b7b" />
-</p>
-![github com_stackblitz-labs_temporary-test_pull_1 (6)]()
+<p align="center"><img src="https://github.com/stackblitz-labs/stackblitz-ci/assets/37929992/ede770a3-a911-4e24-99d6-cd307b44fd87" /></p>
 
+Pull Request Comments:
 
+<p align="center"><img src="https://github.com/stackblitz-labs/stackblitz-ci/assets/37929992/e8ed1abd-693a-407f-9f29-2204e90e4b7b" /></p>
