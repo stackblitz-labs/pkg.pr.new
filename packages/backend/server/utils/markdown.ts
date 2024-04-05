@@ -33,9 +33,9 @@ __${packageName}(${workflowData.sha})__:
 npm i ${shaUrl}    
 \`\`\`
 
-Pull Request Build: \`${workflowData.ref}\`
+Pull Request Build: #${workflowData.ref.replace('pr-', '')}
 
-__${packageName}(${workflowData.ref})__:
+__${packageName}(#${workflowData.ref.replace('pr-', '')})__:
 \`\`\`
 npm i ${refUrl}    
 \`\`\`
