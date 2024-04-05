@@ -80,7 +80,7 @@ for (const [{ payload }, pr] of [[pushWorkflowJobQueuedFixture], [prWorkflowJobQ
     const [owner, repo] = payload.repository.full_name.split("/");
     const ref = pr?.payload.number ? 'pr-' + pr?.payload.number  :payload.workflow_job.head_branch
     // install
-      const playgroundShaUrl = new URL(`/${owner}/${repo}/${ref}/${payload.workflow_job.head_sha}/playground`, serverUrl)
+      const playgroundShaUrl = new URL(`/${owner}/${repo}/${ref}/${payload.workflow_job.head_sha.substring(0, 7)}/playground`, serverUrl)
     {
       const playgroundShaData = await fetch(playgroundShaUrl, {
         method: 'GET',

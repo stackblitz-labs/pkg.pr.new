@@ -5,10 +5,7 @@ export function generateCommitPublishMessage(
   packageName: string,
   workflowData: WorkflowData
 ) {
-  const url = new URL(
-    `/${workflowData.owner}/${workflowData.repo}/${workflowData.ref}/${workflowData.sha}/${packageName}`,
-    origin
-  );
+  const url = generatePublishUrl(origin, packageName, workflowData);
   return `
 Last Commit: \`${workflowData.sha}\`
 
@@ -25,10 +22,8 @@ export function generatePullRequestPublishMessage(
   packageName: string,
   workflowData: WorkflowData
 ) {
-  const url = new URL(
-    `/${workflowData.owner}/${workflowData.repo}/${workflowData.ref}/${workflowData.sha}/${packageName}`,
-    origin
-  );
+  const url = generatePublishUrl(origin, packageName, workflowData);
+
   return `
 Last Commit Build: \`${workflowData.sha}\`
 
@@ -41,8 +36,20 @@ Pull Request Build: \`${workflowData.ref}\`
 
 __${packageName}(${workflowData.ref})__:
 \`\`\`
-npm i ${url.href.replace(`/${workflowData.sha}`, '')}    
+npm i ${url.href.replace(`/${workflowData.sha}`, "")}    
 \`\`\`
 
 `;
+}
+
+export function generatePublishUrl(
+  origin: string,
+  packageName: string,
+  workflowData: WorkflowData
+) {
+  const url = new URL(
+    `/${workflowData.owner}/${workflowData.repo}/${workflowData.ref}/${workflowData.sha}/${packageName}`,
+    origin
+  );
+  return url;
 }

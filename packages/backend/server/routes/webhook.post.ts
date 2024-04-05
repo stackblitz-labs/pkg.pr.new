@@ -1,7 +1,6 @@
 import type { HandlerFunction } from "@octokit/webhooks/dist-types/types";
 import type { WorkflowData } from "../types";
 import { hash } from "ohash";
-import { usePullRequestNumbersBucket } from "../utils/bucket";
 
 export default eventHandler(async (event) => {
   const app = useOctokitApp(event);
@@ -14,11 +13,6 @@ export default eventHandler(async (event) => {
     payload,
   }) => {
     const [owner, repo] = payload.repository.full_name.split("/");
-    // const {} = await app.octokit.request('GET /repos/{owner}/{repo}/commits/{ref}/status', {
-    //   owner,
-    //   repo,
-    //   head
-    // })
 
     const metadata = {
       url: payload.workflow_job.html_url.split("/job/")[0], // run url: (https://github.com/stackblitz-labs/stackblitz-ci/actions/runs/8390507718)/job/23004786296
@@ -30,7 +24,7 @@ export default eventHandler(async (event) => {
       const data: WorkflowData = {
         owner,
         repo,
-        sha: payload.workflow_job.head_sha,
+        sha: abbreviateCommitHash(payload.workflow_job.head_sha),
         ref: payload.workflow_job.head_branch!,
       };
       const prNumber = await pullRequestNumbersBucket.getItem(hash(data))
@@ -56,13 +50,11 @@ export default eventHandler(async (event) => {
       const key: WorkflowData = {
         owner,
         repo,
-        sha: payload.pull_request.head.sha,
+        sha: abbreviateCommitHash(payload.pull_request.head.sha),
         ref: payload.pull_request.head.ref,
       }
       const hashKey = hash(key)
-      console.log('pullRequestHandler', key, payload.number)
       await pullRequestNumbersBucket.setItem(hashKey, payload.number)
-      console.log('just set')
     } 
   }
 

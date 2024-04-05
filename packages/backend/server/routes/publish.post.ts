@@ -12,11 +12,7 @@ export default eventHandler(async (event) => {
     "sb-commit-timestamp": commitTimestampStr,
     "sb-key": key,
   } = getHeaders(event);
-  if (
-    !key ||
-    !packageName ||
-    !commitTimestampStr
-  ) {
+  if (!key || !packageName || !commitTimestampStr) {
     throw createError({
       statusCode: 400,
       message:
@@ -41,7 +37,8 @@ export default eventHandler(async (event) => {
   const commitTimestamp = Number(commitTimestampStr);
 
   const workflowData = (await workflowsBucket.getItem(key))!;
-  const { sha, isPullRequest, ...hashPrefixMetadata } = workflowData;
+  let { sha, isPullRequest, ...hashPrefixMetadata } = workflowData;
+  sha = abbreviateCommitHash(sha);
   const metadataHash = sha256(objectHash(hashPrefixMetadata));
   const packageKey = `${metadataHash}:${sha}:${packageName}`;
 
@@ -57,9 +54,7 @@ export default eventHandler(async (event) => {
 
   await workflowsBucket.removeItem(key);
 
-  console.log('event', event)
   const app = useOctokitApp(event);
-  console.log('app', app)
   const origin = getRequestURL(event).origin;
 
   const { data: installationData } = await app.octokit.request(
@@ -131,5 +126,8 @@ export default eventHandler(async (event) => {
     }
   }
 
-  return { ok: true };
+  return {
+    ok: true,
+    url: generatePublishUrl(origin, packageName, workflowData).href,
+  };
 });

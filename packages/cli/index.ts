@@ -81,7 +81,7 @@ const main = defineCommand({
 
           const file = await fs.readFile(`${name}-${version}.tgz`);
 
-          const data = await fetch(publishUrl, {
+          const res = await fetch(publishUrl, {
             method: "POST",
             headers: {
               "sb-key": key,
@@ -91,18 +91,14 @@ const main = defineCommand({
             },
             body: file,
           });
+          const laterRes = res.clone()
           assert.equal(
-            data.status,
+            res.status,
             200,
-            `publishing failed: ${await data.text()}`
+            `publishing failed: ${await res.text()}`
           );
 
-          const url = new URL(
-            `/${owner}/${repo}/${ref}/${GITHUB_SHA}/${name}`,
-            API_URL
-          );
-
-          console.log(`⚡️ Your npm package is published: \`npm i ${url}\``);
+          console.log(`⚡️ Your npm package is published: \`npm i ${(await laterRes.json()).url}\``);
         },
       };
     },
