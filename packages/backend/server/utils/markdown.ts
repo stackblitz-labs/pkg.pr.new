@@ -7,7 +7,7 @@ export function generateCommitPublishMessage(
 ) {
   const shaUrl = generatePublishUrl("sha", origin, packageName, workflowData);
   return `
-Last Commit: \`${workflowData.sha}\`
+Last Commit: ${workflowData.sha}
 
 __${packageName}__:
 \`\`\`
@@ -26,7 +26,7 @@ export function generatePullRequestPublishMessage(
   const refUrl = generatePublishUrl("ref", origin, packageName, workflowData);
 
   return `
-Last Commit Build: \`${workflowData.sha}\`
+Last Commit Build: ${workflowData.sha}
 
 __${packageName}(${workflowData.sha})__:
 \`\`\`
