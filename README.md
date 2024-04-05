@@ -23,7 +23,7 @@ After installing on your repository, you can run `npx stackblitz-cr pulibsh` wit
 
 ### Examples
 
-Release for each commit and pull request:
+- Release for each commit and pull request:
 
 ```yml
 name: Publish Any Commit
@@ -54,13 +54,12 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # GITHUB_TOKEN is provided automatically in any repository
 ```
 
-Release on approved pull requests only:
+- Release on approved pull requests only:
 ```yml
 name: Publish Approved Pull Requests
 on:
   pull_request_review:
     types: [submitted]
-
 
 jobs:
   approved:
@@ -85,7 +84,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-> Running only on approved pull requests is the recommended way of having continuous releases. This ensures users always install approved and safe packages. 
+> Releasing approved pull requests is the recommended way of having continuous releases. This ensures users always install approved and safe packages. 
 
 Publishing is only available in workflows and it supports any workflow trigger event, more information [here](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#about-events-that-trigger-workflows).
 
