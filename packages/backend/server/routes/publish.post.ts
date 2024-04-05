@@ -1,5 +1,3 @@
-import { objectHash, sha256 } from "ohash";
-
 export default eventHandler(async (event) => {
   const contentLength = Number(getHeader(event, "content-length"));
   // 5mb limits for now
@@ -37,16 +35,16 @@ export default eventHandler(async (event) => {
   const commitTimestamp = Number(commitTimestampStr);
 
   const workflowData = (await workflowsBucket.getItem(key))!;
-  let { sha, isPullRequest, ...hashPrefixMetadata } = workflowData;
-  sha = abbreviateCommitHash(sha);
-  const metadataHash = sha256(objectHash(hashPrefixMetadata));
-  const packageKey = `${metadataHash}:${sha}:${packageName}`;
+  const sha = abbreviateCommitHash(workflowData.sha);
+  const baseKey = `${workflowData.owner}:${workflowData.repo}`
+  const packageKey = `${baseKey}:${sha}:${packageName}`;
+  const cursorKey = `${baseKey}:${workflowData.ref}`
 
-  const currentCursor = await cursorBucket.getItem(metadataHash);
+  const currentCursor = await cursorBucket.getItem(cursorKey);
 
   await packagesBucket.setItemRaw(packageKey, binary);
   if (!currentCursor || currentCursor.timestamp < commitTimestamp) {
-    await cursorBucket.setItem(metadataHash, {
+    await cursorBucket.setItem(cursorKey, {
       sha,
       timestamp: commitTimestamp,
     });
@@ -67,7 +65,7 @@ export default eventHandler(async (event) => {
 
   const installation = await app.getInstallationOctokit(installationData.id);
 
-  const checkRunKey = `${metadataHash}:${sha}`;
+  const checkRunKey = `${baseKey}:${sha}`;
 
   if (!(await checkRunBucket.hasItem(checkRunKey))) {
     const checkRun = await installation.request(
@@ -87,9 +85,9 @@ export default eventHandler(async (event) => {
     );
     await checkRunBucket.setItem(checkRunKey, checkRun.data.id);
   }
-  if (isPullRequest) {
+  if (workflowData.isPullRequest) {
     const alreadyCommented = await pullRequestCommentsBucket.hasItem(
-      metadataHash
+      baseKey
     );
     if (!alreadyCommented) {
       const comment = await installation.request(
@@ -105,10 +103,10 @@ export default eventHandler(async (event) => {
           ),
         }
       );
-      await pullRequestCommentsBucket.setItem(metadataHash, comment.data.id);
+      await pullRequestCommentsBucket.setItem(baseKey, comment.data.id);
     } else {
       const prevCommentId = (await pullRequestCommentsBucket.getItem(
-        metadataHash
+        baseKey
       ))!;
       await installation.request(
         "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}",

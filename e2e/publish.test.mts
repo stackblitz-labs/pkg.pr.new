@@ -80,7 +80,7 @@ for (const [{ payload }, pr] of [[pushWorkflowJobQueuedFixture], [prWorkflowJobQ
     const [owner, repo] = payload.repository.full_name.split("/");
     const ref = pr?.payload.number ? 'pr-' + pr?.payload.number  :payload.workflow_job.head_branch
     // install
-      const playgroundShaUrl = new URL(`/${owner}/${repo}/${ref}/${payload.workflow_job.head_sha.substring(0, 7)}/playground`, serverUrl)
+      const playgroundShaUrl = new URL(`/${owner}/${repo}/playground@${payload.workflow_job.head_sha.substring(0, 7)}`, serverUrl)
     {
       const playgroundShaData = await fetch(playgroundShaUrl, {
         method: 'GET',
@@ -90,7 +90,7 @@ for (const [{ payload }, pr] of [[pushWorkflowJobQueuedFixture], [prWorkflowJobQ
       assert.ok(!!playgroundShaBlob.size, "playground size should not be zero")
       assert.equal(playgroundShaData.status, 200, "playground response should be 200")
 
-      const playgroundWithoutShaUrl = new URL(`/${owner}/${repo}/${ref}/playground`, serverUrl)
+      const playgroundWithoutShaUrl = new URL(`/${owner}/${repo}/playground@${ref}`, serverUrl)
       const playgroundWithoutShaData = await fetch(playgroundWithoutShaUrl, {
         method: 'GET',
       })
