@@ -6,6 +6,8 @@ With Stackblitz CR, each of your commits and pull-requests would trigger an inst
 - 🛠️ Github Workflows Friendly
 - 📦️ No Configuration
 - 🔩 Single Command
+- ✉️ Pull Request Comments
+- 🔥 Check Runs
 
 CR is aiming to reduce the number of these comments :) 
 
@@ -17,4 +19,76 @@ CR is aiming to reduce the number of these comments :)
 
 The Github Application is available [here](https://github.com/apps/stackblitz-cr).
 
-After installing on your repository 
+After installing on your repository, you can run `npx stackblitz-cr pulibsh` with `GITHUB_TOKEN` in your workflows and then you have continuous releases!  
+
+### Examples
+
+Release for each commit and pull request:
+
+```yml
+name: Publish Any Commit
+on: [push, pull_reuqest]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - run: corepack enable
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: "pnpm"
+
+    - name: Install dependencies
+      run: pnpm install
+
+    - name: Build 
+      run: pnpm build
+
+    - run: pnpm sb publish # or pnpm stackblitz-cr publish 
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # GITHUB_TOKEN is provided automatically in any repository
+```
+
+Release on approved pull requests only:
+```yml
+name: Publish Approved Pull Requests
+on:
+  pull_request_review:
+    types: [submitted]
+
+
+jobs:
+  approved:
+    if: github.event.review.state == 'APPROVED'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - run: corepack enable
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: "pnpm"
+
+    - name: Install dependencies
+      run: pnpm install
+
+    - run: pnpm sb publish 
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+> Running only on approved pull requests is the recommended way of having continuous releases. This ensures users always install approved and safe packages. 
+
+Publishing is only available in workflows and it supports any workflow trigger event, more information [here](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#about-events-that-trigger-workflows).
+
+<p align="center">
+  
+</p>
