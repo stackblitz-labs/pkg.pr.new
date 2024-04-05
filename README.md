@@ -4,6 +4,11 @@
 
 With Stackblitz CR, each of your commits and pull-requests would trigger an instant build and a release. This enables users to access features and bug-fixes without the need to wait for release cycles using npm or pull-request merges. 
 
+- 🚀 Instant Builds
+- 📦️ No Configuration
+- 🛠️ Github Workflows Friendly
+
+
 The Github Application is available [here](https://github.com/apps/stackblitz-cr).
 
 CR is aiming to reduce the number of these comments :) 
