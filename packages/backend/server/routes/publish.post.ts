@@ -126,6 +126,6 @@ export default eventHandler(async (event) => {
 
   return {
     ok: true,
-    url: generatePublishUrl(origin, packageName, workflowData).href,
+    url: generatePublishUrl('sha', origin, packageName, workflowData).href,
   };
 });
