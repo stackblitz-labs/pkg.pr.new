@@ -1,4 +1,4 @@
-<p align="center"><span><img src="https://emoji.slack-edge.com/TFHDVN56F/stackblitz/fd010078dcccebca.png" width="90" /></span></p>
+<p align="center"><span><img src="https://emoji.slack-edge.com/TFHDVN56F/stackblitz/fd010078dcccebca.png" width="60" /></span></p>
 
 # Stackblitz Continuous Releases <span><img src="https://emoji.slack-edge.com/TFHDVN56F/stackblitz/fd010078dcccebca.png" width="35" /></span>
 
