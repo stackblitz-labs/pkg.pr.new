@@ -28,6 +28,8 @@ After installing on your repository, you can run `npx stackblitz-cr pulibsh` wit
 npm install --save-dev stackblitz-cr
 ```
 
+<p align="center"><img src="https://github.com/stackblitz-labs/stackblitz-ci/assets/37929992/1ec45036-ebfb-4f6d-812b-1b8fdade2c62" /></p>
+
 ### Examples
 
 - Release each commit and pull request:
