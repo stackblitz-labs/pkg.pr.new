@@ -1,7 +1,7 @@
 
 <p align="center"><img src="https://github.com/stackblitz-labs/stackblitz-ci/assets/37929992/3f37601d-1963-4038-a822-97ef056be667" /></p>
 
-# Continuous Releases <span><img src="https://emoji.slack-edge.com/TFHDVN56F/stackblitz/fd010078dcccebca.png" width="35" /></span>
+# Continuous Releases <span><img src="https://emoji.slack-edge.com/TFHDVN56F/stackblitz/fd010078dcccebca.png" width="30" /></span>
 
 With Stackblitz CR, each of your commits and pull-requests would trigger an instant build and a release. This enables users to access features and bug-fixes without the need to wait for release cycles using npm or pull-request merges. 
 
@@ -28,7 +28,7 @@ After installing on your repository, you can run `npx stackblitz-cr pulibsh` wit
 npm install --save-dev stackblitz-cr
 ```
 
-<p align="center"><img src="https://github.com/stackblitz-labs/stackblitz-ci/assets/37929992/1ec45036-ebfb-4f6d-812b-1b8fdade2c62" /></p>
+<img width="100%" src="https://github.com/stackblitz-labs/stackblitz-ci/assets/37929992/1ec45036-ebfb-4f6d-812b-1b8fdade2c62" />
 
 ### Examples
 
