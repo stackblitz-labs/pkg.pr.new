@@ -1,5 +1,5 @@
 
-<p align="center"><img src="https://github.com/stackblitz-labs/stackblitz-ci/assets/37929992/e8ed1abd-693a-407f-9f29-2204e90e4b7b" /></p>
+<p align="center"><img src="https://github.com/stackblitz-labs/stackblitz-ci/assets/37929992/3f37601d-1963-4038-a822-97ef056be667" /></p>
 
 # Continuous Releases <span><img src="https://emoji.slack-edge.com/TFHDVN56F/stackblitz/fd010078dcccebca.png" width="35" /></span>
 
