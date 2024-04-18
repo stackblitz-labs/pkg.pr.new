@@ -1,3 +1,8 @@
+import { sendRedirect } from "h3";
+
 export default eventHandler((event) => {
-  return "Start by editing <code>server/routes/index.ts</code>.";
+  return sendRedirect(
+    event,
+    "https://github.com/stackblitz-labs/stackblitz-ci",
+  );
 });
