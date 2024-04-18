@@ -16,5 +16,8 @@
     "nitropack": "^2.9.5",
     "octokit": "^3.1.2",
     "wrangler": "^3.37.0"
+  },
+  "dependencies": {
+    "h3": "^1.11.1"
   }
 }
