@@ -7,3 +7,4 @@ dist
 .env*
 .dev.vars
 .wrangler
+vendor
