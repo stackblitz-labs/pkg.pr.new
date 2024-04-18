@@ -26,6 +26,9 @@ importers:
       esbuild:
         specifier: ^0.20.2
         version: 0.20.2
+      esbuild-plugin-polyfill-node:
+        specifier: ^0.3.0
+        version: 0.3.0(esbuild@0.20.2)
       eslint:
         specifier: ^8.57.0
         version: 8.57.0
@@ -66,9 +69,6 @@ importers:
       '@octokit/app':
         specifier: ^14.0.2
         version: 14.0.2
-      esbuild-plugin-polyfill-node:
-        specifier: ^0.3.0
-        version: 0.3.0(esbuild@0.20.2)
       nitro-cloudflare-dev:
         specifier: 0.1.2
         version: 0.1.2(patch_hash=ohlyzk6s4d4tp4huqq6lzvge7i)
@@ -78,9 +78,6 @@ importers:
       octokit:
         specifier: ^3.1.2
         version: 3.1.2
-      os-browserify:
-        specifier: ^0.3.0
-        version: 0.3.0
       wrangler:
         specifier: ^3.37.0
         version: 3.37.0(@cloudflare/workers-types@4.20240329.0)
@@ -4841,10 +4838,6 @@ packages:
       levn: 0.4.1
       prelude-ls: 1.2.1
       type-check: 0.4.0
-    dev: true
-
-  /os-browserify@0.3.0:
-    resolution: {integrity: sha512-gjcpUc3clBf9+210TRaDWbf+rZZZEshZ+DlXMRCeAjp0xhTrnQsKHypIy1J3d5hKdUzj69t708EHtU8P6bUn0A==}
     dev: true
 
   /p-limit@2.3.0:
