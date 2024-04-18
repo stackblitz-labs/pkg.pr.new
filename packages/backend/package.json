@@ -6,17 +6,16 @@
     "build": "nitro build",
     "dev": "nitro dev",
     "kill": "kill -9 $(pgrep -f workerd)",
-    "prepare": "nitro prepare",
+    "vendor:octokit": "tsx script/octokit.ts",
+    "prepare": "nitro prepare && pnpm vendor:octokit",
     "preview": "wrangler pages dev dist "
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240329.0",
     "@octokit/app": "^14.0.2",
-    "esbuild-plugin-polyfill-node": "^0.3.0",
     "nitro-cloudflare-dev": "0.1.2",
     "nitropack": "^2.9.5",
     "octokit": "^3.1.2",
-    "os-browserify": "^0.3.0",
     "wrangler": "^3.37.0"
   }
 }
