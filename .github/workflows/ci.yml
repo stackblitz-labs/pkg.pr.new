@@ -25,7 +25,7 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           preCommands: pnpm install && pnpm build
-          command: pages deploy dist --project-name=pkg.pr.new
+          command: pages deploy dist --project-name=pkg-pr-new
 
       - name: Deployment Url
         env:
@@ -46,7 +46,7 @@ jobs:
       - run: echo $API_URL ; pnpm build
         env:
           API_URL: ${{ needs.deploy.outputs.deployment-url }}
-      - name: Stackblitz CR
+      - name: pkg-pr-new
         run: pnpm sb publish
         working-directory: ./playground
         env:
