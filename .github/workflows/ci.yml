@@ -24,7 +24,7 @@ jobs:
           workingDirectory: "packages/backend"
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          preCommands: pnpm install && pnpm build
+          preCommands: pnpm build
           command: pages deploy dist --project-name=pkg-pr-new
 
       - name: Deployment Url
