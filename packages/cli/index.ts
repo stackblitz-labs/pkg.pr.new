@@ -22,12 +22,12 @@ const publishUrl = new URL("/publish", API_URL);
 
 if (!process.env.TEST && process.env.GITHUB_ACTIONS !== "true") {
   console.error(
-    "Stackblitz Continuous Releases are only available in Github Actions."
+    "Stackblitz Continuous Releases are only available in Github Actions.",
   );
   process.exit(1);
 }
 const octokit = new Octokit();
-octokit.pulls.list
+octokit.pulls.list;
 
 const {
   GITHUB_SERVER_URL,
@@ -43,7 +43,7 @@ let ref = GITHUB_REF_NAME.split("/merge")[0];
 const isPullRequest = GITHUB_REF_NAME.endsWith("/merge");
 
 if (isPullRequest) {
-  ref = "pr-" + ref
+  ref = "pr-" + ref;
 }
 
 const [owner, repo] = GITHUB_REPOSITORY.split("/");
@@ -70,7 +70,7 @@ const main = defineCommand({
   meta: {
     version,
     name: "stackblitz",
-    description: "A CLI for Stackblitz CR (Continuous Releases)",
+    description: "A CLI for pkg-pr-new (Continuous Releases)",
   },
   subCommands: {
     publish: () => {
@@ -91,14 +91,16 @@ const main = defineCommand({
             },
             body: file,
           });
-          const laterRes = res.clone()
+          const laterRes = res.clone();
           assert.equal(
             res.status,
             200,
-            `publishing failed: ${await res.text()}`
+            `publishing failed: ${await res.text()}`,
           );
 
-          console.log(`⚡️ Your npm package is published: \`npm i ${(await laterRes.json()).url}\``);
+          console.log(
+            `⚡️ Your npm package is published: \`npm i ${(await laterRes.json()).url}\``,
+          );
         },
       };
     },

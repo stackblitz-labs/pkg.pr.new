@@ -2,7 +2,7 @@
 
 # Continuous Releases <span><img src="https://emoji.slack-edge.com/TFHDVN56F/stackblitz/fd010078dcccebca.png" width="30" /></span>
 
-With Stackblitz CR, each of your commits and pull requests would trigger an instant release. This enables users to access features and bug-fixes without the need to wait for release cycles using npm or pull request merges.
+With pkg-pr-new, each of your commits and pull requests would trigger an instant release. This enables users to access features and bug-fixes without the need to wait for release cycles using npm or pull request merges.
 
 - 🚀 Instant Builds
 - 🛠️ Github Workflows Friendly
@@ -24,7 +24,7 @@ The Github Application is available [here](https://github.com/apps/pkg.pr.new).
 After installing on your repository, you can run `npx stackblitz-cr pulibsh` with `GITHUB_TOKEN` in your workflows and then you have continuous releases!
 
 ```sh
-npm install --save-dev pkg.pr.new
+npm install --save-dev pkg-pr-new
 ```
 
 <img width="100%" src="https://github.com/stackblitz-labs/stackblitz-ci/assets/37929992/1ec45036-ebfb-4f6d-812b-1b8fdade2c62" />
