@@ -1,4 +1,4 @@
-# name = "stackblitz-cr"
+# name = "pkg.pr.new"
 # compatibility_date = "2023-12-01"
 # main = "./.output/server/index.mjs"
 # workers_dev = true
