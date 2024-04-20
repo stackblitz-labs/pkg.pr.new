@@ -71,7 +71,7 @@ export default eventHandler(async (event) => {
     const checkRun = await installation.request(
       "POST /repos/{owner}/{repo}/check-runs",
       {
-        name: "pkg-pr-new",
+        name: "Continuous Releases",
         owner: workflowData.owner,
         repo: workflowData.repo,
         head_sha: sha,

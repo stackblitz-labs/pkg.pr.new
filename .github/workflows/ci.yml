@@ -46,7 +46,7 @@ jobs:
       - run: echo $API_URL ; pnpm build
         env:
           API_URL: ${{ needs.deploy.outputs.deployment-url }}
-      - name: Continuous Releases
+      - name: pkg-pr-new
         run: pnpm sb publish
         working-directory: ./playground
         env:
