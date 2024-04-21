@@ -22,7 +22,7 @@ const publishUrl = new URL("/publish", API_URL);
 
 if (!process.env.TEST && process.env.GITHUB_ACTIONS !== "true") {
   console.error(
-    "Stackblitz Continuous Releases are only available in Github Actions.",
+    "Continuous Releases are only available in Github Actions.",
   );
   process.exit(1);
 }
@@ -70,7 +70,7 @@ const main = defineCommand({
   meta: {
     version,
     name: "stackblitz",
-    description: "A CLI for pkg-pr-new (Continuous Releases)",
+    description: "A CLI for pkg.pr.new (Continuous Releases)",
   },
   subCommands: {
     publish: () => {

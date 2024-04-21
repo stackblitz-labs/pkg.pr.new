@@ -26,7 +26,7 @@ export default eventHandler(async (event) => {
     throw createError({
       statusCode: 401,
       message:
-        "Try publishing from a github workflow or install pkg-pr-new Github app on this repo",
+        "Try publishing from a github workflow or install pkg.pr.new Github app on this repo",
     });
   }
 
@@ -85,38 +85,61 @@ export default eventHandler(async (event) => {
     );
     await checkRunBucket.setItem(checkRunKey, checkRun.data.id);
   }
+
+  const postComment = async () => {
+    const comment = await installation.request(
+      "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
+      {
+        owner: workflowData.owner,
+        repo: workflowData.repo,
+        issue_number: Number(workflowData.ref.slice("pr-".length)),
+        body: generatePullRequestPublishMessage(
+          origin,
+          packageName,
+          workflowData,
+        ),
+      },
+    );
+    await pullRequestCommentsBucket.setItem(baseKey, comment.data.id);
+  };
+
   if (workflowData.isPullRequest) {
     const alreadyCommented = await pullRequestCommentsBucket.hasItem(baseKey);
     if (!alreadyCommented) {
-      const comment = await installation.request(
-        "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
-        {
-          owner: workflowData.owner,
-          repo: workflowData.repo,
-          issue_number: Number(workflowData.ref.slice("pr-".length)),
-          body: generatePullRequestPublishMessage(
-            origin,
-            packageName,
-            workflowData,
-          ),
-        },
-      );
-      await pullRequestCommentsBucket.setItem(baseKey, comment.data.id);
+      await postComment();
     } else {
       const prevCommentId = (await pullRequestCommentsBucket.getItem(baseKey))!;
-      await installation.request(
-        "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}",
-        {
-          owner: workflowData.owner,
-          repo: workflowData.repo,
-          comment_id: prevCommentId,
-          body: generatePullRequestPublishMessage(
-            origin,
-            packageName,
-            workflowData,
-          ),
-        },
-      );
+      let exists = false;
+      try {
+        await installation.request(
+          "GET /repos/{owner}/{repo}/issues/comments/{comment_id}",
+          {
+            owner: workflowData.owner,
+            repo: workflowData.repo,
+            comment_id: prevCommentId,
+          },
+        );
+        exists = true
+      } catch {
+      }
+      if (exists) {
+        await installation.request(
+          "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}",
+          {
+            owner: workflowData.owner,
+            repo: workflowData.repo,
+            comment_id: prevCommentId,
+            body: generatePullRequestPublishMessage(
+              origin,
+              packageName,
+              workflowData,
+            ),
+          },
+        );
+      } else {
+        // deleted comment
+        await postComment();
+      }
     }
   }
 
