@@ -100,7 +100,7 @@ importers:
 
   playground:
     devDependencies:
-      stackblitz-cr:
+      pkg-pr-new:
         specifier: workspace:^
         version: link:../packages/cli
 

@@ -15,7 +15,7 @@ export default eventHandler(async (event) => {
     const [owner, repo] = payload.repository.full_name.split("/");
 
     const metadata = {
-      url: payload.workflow_job.html_url.split("/job/")[0], // run url: (https://github.com/stackblitz-labs/stackblitz-ci/actions/runs/8390507718)/job/23004786296
+      url: payload.workflow_job.html_url.split("/job/")[0], // run url: (https://github.com/stackblitz-labs/pkg.pr.new/actions/runs/8390507718)/job/23004786296
       attempt: payload.workflow_job.run_attempt,
       actor: payload.sender.id,
     };
