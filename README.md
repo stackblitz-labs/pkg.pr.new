@@ -1,8 +1,10 @@
 <p align="center"><img src="https://github.com/stackblitz-labs/stackblitz-ci/assets/37929992/3f37601d-1963-4038-a822-97ef056be667" /></p>
 
-# Continuous Releases <span><img src="https://emoji.slack-edge.com/TFHDVN56F/stackblitz/fd010078dcccebca.png" width="30" /></span>
+# pkg.pr.new <span><img src="https://emoji.slack-edge.com/TFHDVN56F/stackblitz/fd010078dcccebca.png" width="30" /></span>
 
-With pkg-pr-new, each of your commits and pull requests would trigger an instant release. This enables users to access features and bug-fixes without the need to wait for release cycles using npm or pull request merges.
+> We call it "Continuous Releases" too.
+
+With pkg.pr.new, each of your commits and pull requests would trigger an instant release. This enables users to access features and bug-fixes without the need to wait for release cycles using npm or pull request merges.
 
 - 🚀 Instant Builds
 - 🛠️ Github Workflows Friendly
@@ -11,7 +13,7 @@ With pkg-pr-new, each of your commits and pull requests would trigger an instant
 - ✉️ Pull Request Comments
 - 🔥 Check Runs
 
-CR is aiming to reduce the number of these comments :)
+pkg.pr.new is aiming to reduce the number of these comments :)
 
 > This was fixed in #18. Can we release that fix?
 
