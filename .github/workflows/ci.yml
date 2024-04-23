@@ -48,7 +48,7 @@ jobs:
         env:
           API_URL: ${{ needs.deploy.outputs.deployment-url }}
       - name: pkg.pr.new
-        run: pnpm sb publish
+        run: pnpm pkg-pr-new publish
         working-directory: ./playground
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
