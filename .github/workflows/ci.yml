@@ -5,6 +5,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     name: Deploy
+    environment: ${{ github.ref_name == 'release' && 'Production' || 'Staging' }}
     outputs:
       deployment-url: ${{ steps.deploy.outputs.deployment-url}}
     steps:
