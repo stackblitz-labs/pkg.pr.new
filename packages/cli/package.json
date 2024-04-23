@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "bin": {
-    "pkg-pr-new": "bin/sb.js"
+    "pkg-pr-new": "bin/cli.js"
   },
   "scripts": {
     "dev": "tsup --watch",
