@@ -5,8 +5,7 @@
   "main": "index.js",
   "type": "module",
   "bin": {
-    "stackblitz": "bin/sb.js",
-    "sb": "bin/sb.js"
+    "pkg-pr-new": "bin/sb.js"
   },
   "scripts": {
     "dev": "tsup --watch",

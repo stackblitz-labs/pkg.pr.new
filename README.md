@@ -23,7 +23,7 @@ pkg.pr.new is aiming to reduce the number of these comments :)
 
 The Github Application is available [here](https://github.com/apps/pkg.pr.new).
 
-After installing on your repository, you can run `npx stackblitz-cr pulibsh` with `GITHUB_TOKEN` in your workflows and then you have continuous releases!
+After installing on your repository, you can run `npx pkg-pr-new pulibsh` with `GITHUB_TOKEN` in your workflows and then you have continuous releases!
 
 ```sh
 npm install --save-dev pkg-pr-new
@@ -59,7 +59,7 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - run: pnpm sb publish # or pnpm stackblitz-cr publish
+      - run: pnpm pkg-pr-new publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # GITHUB_TOKEN is provided automatically in any repository
 ```
