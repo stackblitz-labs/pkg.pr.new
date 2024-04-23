@@ -26,7 +26,7 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           preCommands: pnpm install && pnpm build
-          command: pages deploy dist --project-name=pkg-pr-new
+          command: pages deploy dist --project-name=pkg-pr-new --env ${{ github.ref_name == 'release' && 'production' || 'staging' }}
 
       - name: Deployment Url
         env:
