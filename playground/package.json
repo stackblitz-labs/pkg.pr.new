@@ -8,7 +8,7 @@
     "playground": "index.js"
   },
   "scripts": {
-    "publish": "sb publish"
+    "publish": "pkg-pr-new publish"
   },
   "keywords": [],
   "author": "",
