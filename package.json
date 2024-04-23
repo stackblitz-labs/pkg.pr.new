@@ -18,8 +18,8 @@
   "devDependencies": {
     "@jsdevtools/ez-spawn": "^3.0.4",
     "cross-env": "^7.0.3",
-    "esbuild-plugin-polyfill-node": "^0.3.0",
     "esbuild": "^0.20.2",
+    "esbuild-plugin-polyfill-node": "^0.3.0",
     "eslint": "^8.57.0",
     "eslint-config-unjs": "^0.2.1",
     "kill-port": "^2.0.1",
