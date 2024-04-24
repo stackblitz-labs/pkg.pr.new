@@ -21,7 +21,7 @@ pkg.pr.new is aiming to reduce the number of these comments :)
 
 ## Setup
 
-The Github Application is available [here](https://github.com/apps/pkg.pr.new).
+The Github Application is available [here](https://github.com/apps/pkg-pr-new).
 
 After installing on your repository, you can run `npx pkg-pr-new pulibsh` with `GITHUB_TOKEN` in your workflows and then you have continuous releases!
 
