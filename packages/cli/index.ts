@@ -80,6 +80,14 @@ const main = defineCommand({
           await ezSpawn.async("npm pack", { stdio: "inherit" });
 
           const file = await fs.readFile(`${name}-${version}.tgz`);
+          console.log('headers', {
+            headers: {
+              "sb-key": key,
+              "sb-package-name": name,
+              "sb-package-version": version,
+              "sb-commit-timestamp": commitTimestamp.toString(),
+            },
+          })
 
           const res = await fetch(publishUrl, {
             method: "POST",
