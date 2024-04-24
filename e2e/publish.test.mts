@@ -1,10 +1,8 @@
+import { exec } from "child_process";
+import { platform } from "os";
 import wp from "wait-port";
 import assert from "node:assert";
 import ezSpawn from "@jsdevtools/ez-spawn";
-import fkill from "fkill";
-import { objectHash, sha256 } from "ohash";
-
-import kill from "kill-port";
 import pushWorkflowJobQueuedFixture from "./fixtures/workflow_job.queued.json" with { type: "json" };
 import prWorkflowJobQueuedFixture from "./fixtures/pr.workflow_job.queued.json" with { type: "json" };
 import prPullRequestSynchronizeFixture from "./fixtures/pr.pull_request.json" with { type: "json" };
@@ -147,15 +145,36 @@ for (const [{ payload }, pr] of [
   }
 }
 
-try {
-  await ezSpawn.async("pnpm --filter=backend run kill", [], {
-    stdio: "inherit",
-    shell: true,
-    signal: c.signal,
-    killSignal: "SIGINT",
-  });
-} catch {}
+killPort();
 
-c.abort();
-
-process.exit(0);
+async function killPort() {
+  const os = platform();
+  // checks the operating system
+  if (os === "win32") {
+    exec(
+      "powershell.exe -Command \"Get-Process -Name 'workerd' | Stop-Process -Force\"",
+      (error, stdout, stderr) => {
+        if (error) {
+          console.error(`Error stopping process on Windows: ${error.message}`);
+          return;
+        }
+        if (stderr) {
+          console.error(`Error stopping process on Windows: ${stderr}`);
+          return;
+        }
+        console.log(`Process stopped on Windows: ${stdout}`);
+      },
+    );
+  } else {
+    try {
+      await ezSpawn.async("pnpm --filter=backend run kill", [], {
+        stdio: "inherit",
+        shell: true,
+        signal: c.signal,
+        killSignal: "SIGINT",
+      });
+    } catch (error) {
+      console.error(`Error killing process: ${error}`);
+    }
+  }
+}
