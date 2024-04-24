@@ -147,6 +147,10 @@ for (const [{ payload }, pr] of [
 
 killPort();
 
+c.abort();
+
+process.exit(0);
+
 async function killPort() {
   const os = platform();
   // checks the operating system
