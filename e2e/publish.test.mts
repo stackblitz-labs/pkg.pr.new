@@ -147,10 +147,6 @@ for (const [{ payload }, pr] of [
 
 killPort();
 
-c.abort();
-
-process.exit(0);
-
 async function killPort() {
   const os = platform();
   // checks the operating system
@@ -160,13 +156,16 @@ async function killPort() {
       (error, stdout, stderr) => {
         if (error) {
           console.error(`Error stopping process on Windows: ${error.message}`);
+          process.exit(0);
           return;
         }
         if (stderr) {
           console.error(`Error stopping process on Windows: ${stderr}`);
+          process.exit(0);
           return;
         }
         console.log(`Process stopped on Windows: ${stdout}`);
+        process.exit(0);
       },
     );
   } else {
@@ -180,5 +179,7 @@ async function killPort() {
     } catch (error) {
       console.error(`Error killing process: ${error}`);
     }
+    c.abort();
+    process.exit(0);
   }
 }
