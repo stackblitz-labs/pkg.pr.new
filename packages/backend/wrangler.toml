@@ -1,20 +1,16 @@
-# name = "pkg-pr-new"
-# compatibility_date = "2023-12-01"
-# main = "./.output/server/index.mjs"
-# workers_dev = true
 compatibility_date = "2024-03-14"
 
-# rules = [
-#   { type = "ESModule", globs = ["**/*.js", "**/*.mjs"]},
-# ]
-
-# [site]
-# bucket = ".output/public"
-
-# kv_namespaces = [
-#     { binding = "WORKFLOWS", id = "Workflows" }
-# ]
+[vars]
+ENV = "staging"
 
 [[r2_buckets]]
-binding = 'CR_BUCKET' # <~ valid JavaScript variable name
+binding = 'CR_BUCKET'
 bucket_name = 'cr-bucket'
+
+[env.production.vars]
+ENV = "production"
+
+[env.production]
+[[r2_buckets]]
+binding = 'PROD_CR_BUCKET'
+bucket_name = 'prod-cr-bucket'

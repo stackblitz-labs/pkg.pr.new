@@ -5,13 +5,12 @@
   "main": "index.js",
   "type": "module",
   "bin": {
-    "stackblitz": "bin/sb.js",
-    "sb": "bin/sb.js"
+    "pkg-pr-new": "bin/cli.js"
   },
   "scripts": {
     "dev": "tsup --watch",
     "build": "tsup",
-    "build:publish": "API_URL=https://pkg.stackblitz.dev/ tsup"
+    "build:publish": "API_URL=https://pkg.pr.new/ tsup"
   },
   "keywords": [],
   "author": "",

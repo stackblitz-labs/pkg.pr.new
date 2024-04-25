@@ -5,6 +5,5 @@ if (process.env.CI) {
     .map(([k, v]) => `${k}="${v}"`)
     .concat(['NITRO_TEST=true', 'GITHUB_TOKEN=' + process.env.GITHUB_TOKEN!])
     .join("\n");
-  console.log(content)
   await fs.writeFile(".dev.vars", content);
 }

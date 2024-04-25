@@ -62,9 +62,18 @@ importers:
       '@cloudflare/workers-types':
         specifier: ^4.20240329.0
         version: 4.20240329.0
+      '@octokit/action':
+        specifier: ^6.0.7
+        version: 6.0.7
       '@octokit/app':
         specifier: ^14.0.2
         version: 14.0.2
+      dotenv:
+        specifier: ^16.4.5
+        version: 16.4.5
+      jsonwebtoken:
+        specifier: ^9.0.2
+        version: 9.0.2
       nitro-cloudflare-dev:
         specifier: 0.1.2
         version: 0.1.2(patch_hash=ohlyzk6s4d4tp4huqq6lzvge7i)
@@ -991,7 +1000,6 @@ packages:
       '@octokit/plugin-rest-endpoint-methods': 10.4.1(@octokit/core@5.1.0)
       '@octokit/types': 12.6.0
       undici: 6.10.1
-    dev: false
 
   /@octokit/app@14.0.2:
     resolution: {integrity: sha512-NCSCktSx+XmjuSUVn2dLfqQ9WIYePGP95SDJs4I9cn/0ZkeXcPkaoCLl64Us3dRKL2ozC7hArwze5Eu+/qt1tg==}
@@ -1012,7 +1020,6 @@ packages:
     dependencies:
       '@octokit/auth-token': 4.0.0
       '@octokit/types': 12.6.0
-    dev: false
 
   /@octokit/auth-app@6.0.4:
     resolution: {integrity: sha512-TPmJYgd05ok3nzHj7Y6we/V7Ez1wU3ztLFW3zo/afgYFtqYZg0W7zb6Kp5ag6E85r8nCE1JfS6YZoZusa14o9g==}
@@ -5970,7 +5977,6 @@ packages:
   /undici@6.10.1:
     resolution: {integrity: sha512-kSzmWrOx3XBKTgPm4Tal8Hyl3yf+hzlA00SAf4goxv8LZYafKmS6gJD/7Fe5HH/DMNiFTRXvkwhLo7mUn5fuQQ==}
     engines: {node: '>=18.0'}
-    dev: false
 
   /unenv@1.9.0:
     resolution: {integrity: sha512-QKnFNznRxmbOF1hDgzpqrlIf6NC5sbZ2OJ+5Wl3OX8uM+LUJXbj4TXvLJCtwbPTmbMHCLIz6JLKNinNsMShK9g==}

@@ -27,7 +27,6 @@ if (!process.env.TEST && process.env.GITHUB_ACTIONS !== "true") {
   process.exit(1);
 }
 const octokit = new Octokit();
-octokit.pulls.list;
 
 const {
   GITHUB_SERVER_URL,
@@ -53,6 +52,7 @@ const commit = await octokit.git.getCommit({
   repo,
   commit_sha: GITHUB_SHA,
 });
+
 const commitTimestamp = Date.parse(commit.data.committer.date);
 
 // Note: If you need to use a workflow run's URL from within a job, you can combine these variables: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
@@ -80,6 +80,14 @@ const main = defineCommand({
           await ezSpawn.async("npm pack", { stdio: "inherit" });
 
           const file = await fs.readFile(`${name}-${version}.tgz`);
+          console.log('headers', {
+            headers: {
+              "sb-key": key,
+              "sb-package-name": name,
+              "sb-package-version": version,
+              "sb-commit-timestamp": commitTimestamp.toString(),
+            },
+          })
 
           const res = await fetch(publishUrl, {
             method: "POST",

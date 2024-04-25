@@ -14,7 +14,10 @@ export function useBucket(event: Event) {
     driver: cloudflareR2BindingDriver({
       base: useBucket.key,
       // @ts-ignore TODO(upstream): fix type mismatch
-      binding: event.context.cloudflare.env.CR_BUCKET,
+      binding:
+        event.context.cloudflare.env.ENV === "production"
+          ? event.context.cloudflare.env.PROD_CR_BUCKET
+          : event.context.cloudflare.env.CR_BUCKET,
     }),
   });
 }
@@ -62,18 +65,18 @@ export function usePullRequestCommentsBucket(event: Event) {
 usePullRequestCommentsBucket.key = "pr-comment";
 usePullRequestCommentsBucket.base = joinKeys(
   useBucket.base,
-  usePullRequestCommentsBucket.key
+  usePullRequestCommentsBucket.key,
 );
 
 export function useDownloadedAtBucket(event: Event) {
   const storage = useBucket(event);
   return prefixStorage<number>(storage, useDownloadedAtBucket.key);
-} 
+}
 
 useDownloadedAtBucket.key = "downloaded-at";
 useDownloadedAtBucket.base = joinKeys(
   useBucket.base,
-  useDownloadedAtBucket.key
+  useDownloadedAtBucket.key,
 );
 
 export function usePullRequestNumbersBucket(event: Event) {
@@ -83,5 +86,5 @@ export function usePullRequestNumbersBucket(event: Event) {
 usePullRequestNumbersBucket.key = "pr-number";
 usePullRequestNumbersBucket.base = joinKeys(
   useBucket.base,
-  usePullRequestNumbersBucket.key
+  usePullRequestNumbersBucket.key,
 );
