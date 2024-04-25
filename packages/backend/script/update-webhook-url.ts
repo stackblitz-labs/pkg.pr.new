@@ -1,9 +1,10 @@
-import { Octokit } from "octokit";
+// import { Octokit } from "";
+import { Octokit } from "@octokit/action";
 
 const octokit = new Octokit({
   // appId: process.env.NITRO_APP_ID!,
   // privateKey: process.env.NITRO_PRIVATE_KEY!,
-  auth: process.env.GITHUB_TOKEN
+  // auth: process.env.GITHUB_TOKEN
 });
 
 let {
