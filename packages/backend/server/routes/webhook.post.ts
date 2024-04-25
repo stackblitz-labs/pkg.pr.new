@@ -20,6 +20,7 @@ export default eventHandler(async (event) => {
       actor: payload.sender.id,
     };
     const hashKey = hash(metadata);
+    console.log('data', metadata, hashKey)
     if (payload.action === "queued") {
       const data: WorkflowData = {
         owner,
