@@ -47,9 +47,20 @@ jobs:
       - run: echo $API_URL ; pnpm build
         env:
           API_URL: ${{ needs.deploy.outputs.deployment-url }}
+
+      - run: pnpm tsx script/ci.ts
+        working-directory: ./packages/backend
+        env:
+          NITRO_WEBHOOK_SECRET: ${{ secrets.NITRO_WEBHOOK_SECRET }}
+          NITRO_APP_ID: ${{ secrets.NITRO_APP_ID }}
+          NITRO_PRIVATE_KEY: ${{ secrets.NITRO_PRIVATE_KEY }}
+          NITRO_RM_STALE_KEY: ${{ secrets.NITRO_RM_STALE_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - run: pnpm tsx script/update-webhook-url.ts
         working-directory: ./packages/backend
         env:
+          API_URL: ${{ needs.deploy.outputs.deployment-url }}
           # NITRO_WEBHOOK_SECRET: ${{ secrets.NITRO_WEBHOOK_SECRET }}
           NITRO_APP_ID: ${{ secrets.NITRO_APP_ID }}
           NITRO_PRIVATE_KEY: ${{ secrets.NITRO_PRIVATE_KEY }}
