@@ -149,36 +149,36 @@ killPort();
 
 async function killPort() {
   const os = platform();
-  // checks the operating system
-  if (os === "win32") {
-    exec(
-      "powershell.exe -Command \"Get-Process -Name 'workerd' | Stop-Process -Force\"",
-      (error, stdout, stderr) => {
-        if (error) {
-          console.error(`Error stopping process on Windows: ${error.message}`);
-          process.exit(0);
-          return;
-        }
-        if (stderr) {
-          console.error(`Error stopping process on Windows: ${stderr}`);
-          process.exit(0);
-          return;
-        }
-        console.log(`Process stopped on Windows: ${stdout}`);
-        process.exit(0);
-      },
-    );
-  } else {
-    try {
-      await ezSpawn.async("pnpm --filter=backend run kill", [], {
+  try {
+    // checks the operating system
+    if (os === "win32") {
+      exec(
+        "powershell.exe -Command \"Get-Process -Name 'workerd' | Stop-Process -Force\"",
+        (error, stdout, stderr) => {
+          if (error) {
+            console.error(
+              `Error stopping process on Windows: ${error.message}`,
+            );
+            throw error;
+          }
+          if (stderr) {
+            throw stderr;
+          }
+        },
+      );
+    } else {
+      await ezSpawn.async("kill -9 $(pgrep -f workerd)", [], {
         stdio: "inherit",
         shell: true,
         signal: c.signal,
         killSignal: "SIGINT",
       });
-    } catch (error) {
-      console.error(`Error killing process: ${error}`);
     }
+  } catch (e) {
+    console.error(e);
+    c.abort();
+    process.exit(1);
+  } finally {
     c.abort();
     process.exit(0);
   }
