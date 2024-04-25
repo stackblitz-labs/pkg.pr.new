@@ -12,8 +12,9 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240329.0",
-    "@octokit/app": "^14.0.2",
     "@octokit/action": "^6.0.7",
+    "@octokit/app": "^14.0.2",
+    "jsonwebtoken": "^9.0.2",
     "nitro-cloudflare-dev": "0.1.2",
     "nitropack": "^2.9.5",
     "octokit": "^3.1.2",
