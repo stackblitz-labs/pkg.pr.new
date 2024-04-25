@@ -5,7 +5,6 @@
   "scripts": {
     "build": "nitro build",
     "dev": "nitro dev",
-    "kill": "kill -9 $(pgrep -f workerd)",
     "vendor:octokit": "tsx script/octokit.ts",
     "prepare": "nitro prepare && pnpm vendor:octokit",
     "preview": "wrangler pages dev dist "

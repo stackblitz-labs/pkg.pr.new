@@ -6,13 +6,15 @@ import ezSpawn from "@jsdevtools/ez-spawn";
 import { hash } from "ohash";
 import fs from "fs/promises";
 import { Octokit } from "@octokit/action";
+import { pathToFileURL } from "node:url";
 import "./environments";
 
 const {
   default: { name, version },
-} = await import(path.resolve(process.cwd(), "package.json"), {
-  with: { type: "json" },
-});
+} = await import(
+  pathToFileURL(path.resolve(process.cwd(), "package.json")).href,
+  { with: { type: "json" } }
+);
 
 declare global {
   var API_URL: string;
@@ -21,9 +23,7 @@ declare global {
 const publishUrl = new URL("/publish", API_URL);
 
 if (!process.env.TEST && process.env.GITHUB_ACTIONS !== "true") {
-  console.error(
-    "Continuous Releases are only available in Github Actions.",
-  );
+  console.error("Continuous Releases are only available in Github Actions.");
   process.exit(1);
 }
 const octokit = new Octokit();
