@@ -1,6 +1,7 @@
 // import { Octokit } from "";
 import { Octokit } from "@octokit/action";
 
+console.log('token', process.env.GITHUB_TOKEN)
 const octokit = new Octokit();
 
 let {
