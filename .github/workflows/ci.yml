@@ -54,7 +54,7 @@ jobs:
           NITRO_APP_ID: ${{ secrets.NITRO_APP_ID }}
           NITRO_PRIVATE_KEY: ${{ secrets.NITRO_PRIVATE_KEY }}
           # NITRO_RM_STALE_KEY: ${{ secrets.NITRO_RM_STALE_KEY }}
-          # GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: pkg.pr.new
         run: pnpm pkg-pr-new publish
