@@ -26,11 +26,7 @@ export default eventHandler(async (event) => {
     throw createError({
       statusCode: 401,
       message:
-        "Try publishing from a github workflow or install https://github.com/apps/pkg-pr-new Github app on this repo" + JSON.stringify({
-        packageName,
-        commitTimestampStr,
-        key
-      }, null, 2),
+        "Try publishing from a github workflow or install https://github.com/apps/pkg-pr-new Github app on this repo",
     });
   }
 
