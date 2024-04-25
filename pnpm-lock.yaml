@@ -68,6 +68,9 @@ importers:
       '@octokit/app':
         specifier: ^14.0.2
         version: 14.0.2
+      dotenv:
+        specifier: ^16.4.5
+        version: 16.4.5
       jsonwebtoken:
         specifier: ^9.0.2
         version: 9.0.2

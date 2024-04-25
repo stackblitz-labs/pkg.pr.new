@@ -14,6 +14,7 @@
     "@cloudflare/workers-types": "^4.20240329.0",
     "@octokit/action": "^6.0.7",
     "@octokit/app": "^14.0.2",
+    "dotenv": "^16.4.5",
     "jsonwebtoken": "^9.0.2",
     "nitro-cloudflare-dev": "0.1.2",
     "nitropack": "^2.9.5",
