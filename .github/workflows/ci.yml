@@ -27,7 +27,7 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           preCommands: pnpm install && pnpm build
           environment: ${{ github.ref_name == 'release' && 'production' || 'staging' }}
-          command: wrangler -c ${{ github.ref_name == 'release' && 'wrangler.prod.toml' || 'wrangler.toml' }} pages deploy dist --project-name=pkg-pr-new 
+          command: -c ${{ github.ref_name == 'release' && 'wrangler.prod.toml' || 'wrangler.toml' }} pages deploy dist --project-name=pkg-pr-new 
 
       - name: Deployment Url
         env:
