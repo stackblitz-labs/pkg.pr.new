@@ -9,7 +9,7 @@ config({ path: ".dev.vars" });
 function generateJWT() {
   const payload = {
     iat: Math.floor(Date.now() / 1000), // Issued at time
-    exp: Math.floor(Date.now() / 1000) + 10 * 60, // JWT expiration time (10 minutes from now)
+    exp: Math.floor(Date.now() / 1000) + 15, // JWT expiration time (15 secs)
     iss: process.env.NITRO_APP_ID!, // Issuer (GitHub App ID)
   };
 
@@ -42,10 +42,10 @@ const newUrl = new URL(
   process.env.API_URL ?? "https://stackblitz-cr.pages.dev/",
 );
 
-({
-  data: { url },
-} = await octokit.request("PATCH /app/hook/config", {
-  url: newUrl.href,
-}));
+const result = await octokit.request({
+  method: "PATCH",
+  url: "/app/hook/config",
+  data: { url: newUrl.href },
+});
 
-console.log(`webhook url is ${url} now!`);
+console.log(`webhook url is ${result.data.url} now!`);

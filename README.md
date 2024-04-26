@@ -90,7 +90,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - run: pnpm sb publish
+      - run: pnpm pkg-pr-new publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
