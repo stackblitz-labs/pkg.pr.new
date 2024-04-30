@@ -16,8 +16,8 @@ export function useBucket(event: Event) {
       // @ts-ignore TODO(upstream): fix type mismatch
       binding:
         event.context.cloudflare.env.ENV === "production"
-          ? event.context.cloudflare.env.PROD_CR_BUCKET
-          : event.context.cloudflare.env.CR_BUCKET,
+          ? 'PROD_CR_BUCKET'
+          : 'CR_BUCKET',
     }),
   });
 }
