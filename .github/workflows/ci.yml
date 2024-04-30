@@ -60,6 +60,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - run: pnpm tsx script/update-webhook-url.ts
+        if: ${{ github.ref_name != 'release' }}
         working-directory: ./packages/backend
         env:
           API_URL: ${{ needs.deploy.outputs.deployment-url }}

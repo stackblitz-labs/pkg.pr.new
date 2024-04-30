@@ -20,6 +20,10 @@ export default eventHandler(async (event) => {
       status: 403,
     });
   }
+  const binding =
+    event.context.cloudflare.env.ENV === "production"
+      ? event.context.cloudflare.env.PROD_CR_BUCKET
+      : event.context.cloudflare.env.CR_BUCKET;
 
   const downloadedAtBucket = useDownloadedAtBucket(event);
   const today = Date.parse(new Date().toString());
@@ -28,7 +32,7 @@ export default eventHandler(async (event) => {
 
   while (truncated) {
     // TODO: Avoid using context.cloudflare and migrate to unstorage, but it does not have truncated for now
-    const next = await event.context.cloudflare.env.CR_BUCKET.list({
+    const next = await binding.list({
       ...options,
       cursor: cursor,
     });
@@ -36,11 +40,9 @@ export default eventHandler(async (event) => {
       const uploaded = Date.parse(object.uploaded.toString());
       // remove the object anyway if it's 6 months old already
       if ((today - uploaded) / (1000 * 3600 * 24 * 30 * 6) >= 1) {
+        event.context.cloudflare.context.waitUntil(binding.delete(object.key));
         event.context.cloudflare.context.waitUntil(
-          event.context.cloudflare.env.CR_BUCKET.delete(object.key)
-        );
-        event.context.cloudflare.context.waitUntil(
-          downloadedAtBucket.removeItem(object.key)
+          downloadedAtBucket.removeItem(object.key),
         );
       }
       const downloadedAt = (await downloadedAtBucket.getItem(object.key))!;
@@ -49,11 +51,9 @@ export default eventHandler(async (event) => {
         !((today - downloadedAt) / (1000 * 3600 * 24 * 30) < 1) &&
         (today - uploaded) / (1000 * 3600 * 24 * 30) >= 1
       ) {
+        event.context.cloudflare.context.waitUntil(binding.delete(object.key));
         event.context.cloudflare.context.waitUntil(
-          event.context.cloudflare.env.CR_BUCKET.delete(object.key)
-        );
-        event.context.cloudflare.context.waitUntil(
-          downloadedAtBucket.removeItem(object.key)
+          downloadedAtBucket.removeItem(object.key),
         );
       }
     }
