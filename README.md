@@ -37,7 +37,7 @@ npm install --save-dev pkg-pr-new
 
 ```yml
 name: Publish Any Commit
-on: [push, pull_reuqest]
+on: [push, pull_request]
 
 jobs:
   build:
