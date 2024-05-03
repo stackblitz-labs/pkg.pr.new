@@ -3,7 +3,7 @@ import { WorkflowData } from "../types";
 export function generateCommitPublishMessage(
   origin: string,
   packageName: string,
-  workflowData: WorkflowData
+  workflowData: WorkflowData,
 ) {
   const shaUrl = generatePublishUrl("sha", origin, packageName, workflowData);
   return `
@@ -20,7 +20,7 @@ npm i ${shaUrl}
 export function generatePullRequestPublishMessage(
   origin: string,
   packageName: string,
-  workflowData: WorkflowData
+  workflowData: WorkflowData,
 ) {
   const shaUrl = generatePublishUrl("sha", origin, packageName, workflowData);
   const refUrl = generatePublishUrl("ref", origin, packageName, workflowData);
@@ -33,9 +33,9 @@ __${packageName}(${workflowData.sha})__:
 npm i ${shaUrl}    
 \`\`\`
 
-Pull Request Build: #${workflowData.ref.replace('pr-', '')}
+Pull Request Build: #${workflowData.ref.replace("pr-", "")}
 
-__${packageName}(#${workflowData.ref.replace('pr-', '')})__:
+__${packageName}(#${workflowData.ref.replace("pr-", "")})__:
 \`\`\`
 npm i ${refUrl}    
 \`\`\`
@@ -47,13 +47,15 @@ export function generatePublishUrl(
   base: "sha" | "ref",
   origin: string,
   packageName: string,
-  workflowData: WorkflowData
+  workflowData: WorkflowData,
 ) {
+  const shorter = workflowData.repo === packageName;
+
   const url = new URL(
-    `/${workflowData.owner}/${workflowData.repo}/${packageName}@${
+    `/${workflowData.owner}/${workflowData.repo}${shorter ? "" : "/" + packageName}@${
       base === "sha" ? workflowData.sha : workflowData.ref
     }`,
-    origin
+    origin,
   );
   return url;
 }
