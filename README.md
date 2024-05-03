@@ -4,20 +4,21 @@
 
 > We call it "Continuous Releases" too.
 
-With pkg.pr.new, each of your commits and pull requests would trigger an instant release. This enables users to access features and bug-fixes without the need to wait for release cycles using npm or pull request merges.
+With pkg.pr.new, each of your commits and pull requests would trigger an instant preview release. This enables users to access features and bug-fixes without the need to wait for release cycles using npm or pull request merges.
 
 - 🚀 Instant Builds
+- 🍕 No Need for NPM Access
 - 🛠️ Github Workflows Friendly
 - 📦️ No Configuration
 - 🔩 Single Command
 - ✉️ Pull Request Comments
 - 🔥 Check Runs
 
+pkg.pr.new won't publish anything to NPM; instead, it leverages its own URLs, which are npm-compatible.
+
 pkg.pr.new is aiming to reduce the number of these comments :)
 
 > This was fixed in #18. Can we release that fix?
-
-> Will ask the maintainer to release ;)
 
 ## Setup
 
@@ -26,14 +27,14 @@ The Github Application is available [here](https://github.com/apps/pkg-pr-new).
 After installing on your repository, you can run `npx pkg-pr-new publish` with `GITHUB_TOKEN` in your workflows and then you have continuous releases!
 
 ```sh
-npm install --save-dev pkg-pr-new
+npm install --save-dev pkg-pr-new # or `npx pkg-pr-new publish`
 ```
 
 <img width="100%" src="https://github.com/stackblitz-labs/stackblitz-ci/assets/37929992/1ec45036-ebfb-4f6d-812b-1b8fdade2c62" />
 
 ### Examples
 
-- Release each commit and pull request:
+#### Release each commit and pull request:
 
 ```yml
 name: Publish Any Commit
@@ -59,12 +60,12 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - run: pnpm pkg-pr-new publish
+      - run: pnpx pkg-pr-new publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # GITHUB_TOKEN is provided automatically in any repository
 ```
 
-- Release approved pull requests only:
+#### Release approved pull requests only:
 
 ```yml
 name: Publish Approved Pull Requests
@@ -90,7 +91,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - run: pnpm pkg-pr-new publish
+      - run: pnpx pkg-pr-new publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
