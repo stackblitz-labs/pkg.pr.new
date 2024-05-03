@@ -1,23 +1,31 @@
-<p align="center"><img src="https://github.com/stackblitz-labs/stackblitz-ci/assets/37929992/3f37601d-1963-4038-a822-97ef056be667" /></p>
+<p align="center"><img src="https://github.com/stackblitz-labs/pkg.pr.new/assets/37929992/ade1bc5d-1b76-43d1-a74a-7b2f5882f331" /></p>
+
 
 # pkg.pr.new <span><img src="https://emoji.slack-edge.com/TFHDVN56F/stackblitz/fd010078dcccebca.png" width="30" /></span>
 
 > We call it "Continuous Releases" too.
 
-With pkg.pr.new, each of your commits and pull requests would trigger an instant release. This enables users to access features and bug-fixes without the need to wait for release cycles using npm or pull request merges.
+With pkg.pr.new, each of your commits and pull requests would trigger an instant preview release. This enables users to access features and bug-fixes without the need to wait for release cycles using npm or pull request merges.
 
 - 🚀 Instant Builds
+- 🍕 No Need for NPM Access
 - 🛠️ Github Workflows Friendly
 - 📦️ No Configuration
 - 🔩 Single Command
 - ✉️ Pull Request Comments
 - 🔥 Check Runs
 
-pkg.pr.new is aiming to reduce the number of these comments :)
+pkg.pr.new won't publish anything to NPM; instead, it leverages its own URLs, which are npm-compatible.
+
+```sh
+npm i https://pkg.pr.new/tinylibs/tinybench/tinybench@a832a55    
+
+# npm i https://pkg.pr.new/${owner}/${repo}/${package}@{commit}    
+```
+
+It is aiming to reduce the number of these comments :)
 
 > This was fixed in #18. Can we release that fix?
-
-> Will ask the maintainer to release ;)
 
 ## Setup
 
@@ -26,14 +34,16 @@ The Github Application is available [here](https://github.com/apps/pkg-pr-new).
 After installing on your repository, you can run `npx pkg-pr-new publish` with `GITHUB_TOKEN` in your workflows and then you have continuous releases!
 
 ```sh
-npm install --save-dev pkg-pr-new
+npm install --save-dev pkg-pr-new # or `npx pkg-pr-new publish`
 ```
 
-<img width="100%" src="https://github.com/stackblitz-labs/stackblitz-ci/assets/37929992/1ec45036-ebfb-4f6d-812b-1b8fdade2c62" />
+<img width="100%" src="https://github.com/stackblitz-labs/pkg.pr.new/assets/37929992/2fc03b94-ebae-4c47-a271-03a4ad5d2449" />
+
+pkg.pr.new is not available in your local environment and it only works in workflows.
 
 ### Examples
 
-- Release each commit and pull request:
+#### Release each commit and pull request:
 
 ```yml
 name: Publish Any Commit
@@ -59,12 +69,12 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - run: pnpm pkg-pr-new publish
+      - run: pnpx pkg-pr-new publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # GITHUB_TOKEN is provided automatically in any repository
 ```
 
-- Release approved pull requests only:
+#### Release approved pull requests only:
 
 ```yml
 name: Publish Approved Pull Requests
@@ -90,7 +100,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - run: pnpm pkg-pr-new publish
+      - run: pnpx pkg-pr-new publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -99,4 +109,4 @@ jobs:
 
 Publishing is only available in workflows and it supports any workflow trigger event, more information [here](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#about-events-that-trigger-workflows).
 
-<p align="center"><img src="https://github.com/stackblitz-labs/stackblitz-ci/assets/37929992/ede770a3-a911-4e24-99d6-cd307b44fd87" /></p>
+<p align="center"><img src="https://github.com/stackblitz-labs/pkg.pr.new/assets/37929992/e15abdc6-aaeb-4895-b2e9-0b73a019c1d0" /></p>
