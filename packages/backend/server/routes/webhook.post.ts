@@ -27,11 +27,13 @@ export default eventHandler(async (event) => {
         sha: abbreviateCommitHash(payload.workflow_job.head_sha),
         ref: payload.workflow_job.head_branch!,
       };
-      const prNumber = await pullRequestNumbersBucket.getItem(hash(data))
+      const dataHash = hash(data)
+      const prNumber = await pullRequestNumbersBucket.getItem(dataHash)
       if (prNumber) {
         // it's a pull request workflow
         data.ref = `pr-${prNumber}`
         data.isPullRequest = true
+        pullRequestNumbersBucket.removeItem(dataHash)
       }
 
       // Publishing is only available throughout the lifetime of a worklow_job
