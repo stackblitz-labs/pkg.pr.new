@@ -1,4 +1,5 @@
-<p align="center"><img src="https://github.com/stackblitz-labs/pkg.pr.new/assets/37929992/3cd8bab5-c1b5-4223-9e78-a85119ab1c29" /></p>
+<p align="center"><img src="https://github.com/stackblitz-labs/pkg.pr.new/assets/37929992/ade1bc5d-1b76-43d1-a74a-7b2f5882f331" /></p>
+
 
 # pkg.pr.new <span><img src="https://emoji.slack-edge.com/TFHDVN56F/stackblitz/fd010078dcccebca.png" width="30" /></span>
 
