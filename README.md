@@ -39,7 +39,7 @@ npm install --save-dev pkg-pr-new # or `npx pkg-pr-new publish`
 
 <img width="100%" src="https://github.com/stackblitz-labs/stackblitz-ci/assets/37929992/1ec45036-ebfb-4f6d-812b-1b8fdade2c62" />
 
-pkg.pr.new is not available in your local environment and it only works in your workflows.
+pkg.pr.new is not available in your local environment and it only works in workflows.
 
 ### Examples
 
