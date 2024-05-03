@@ -1,4 +1,4 @@
-<p align="center"><img src="https://github.com/stackblitz-labs/stackblitz-ci/assets/37929992/3f37601d-1963-4038-a822-97ef056be667" /></p>
+<p align="center"><img src="https://github.com/stackblitz-labs/pkg.pr.new/assets/37929992/3cd8bab5-c1b5-4223-9e78-a85119ab1c29" /></p>
 
 # pkg.pr.new <span><img src="https://emoji.slack-edge.com/TFHDVN56F/stackblitz/fd010078dcccebca.png" width="30" /></span>
 
