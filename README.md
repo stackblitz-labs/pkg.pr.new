@@ -23,7 +23,7 @@ npm i https://pkg.pr.new/tinylibs/tinybench/tinybench@a832a55
 # npm i https://pkg.pr.new/${owner}/${repo}/${package}@{commit}    
 ```
 
-pkg.pr.new is aiming to reduce the number of these comments :)
+It is aiming to reduce the number of these comments :)
 
 > This was fixed in #18. Can we release that fix?
 
