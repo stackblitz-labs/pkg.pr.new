@@ -17,6 +17,12 @@ With pkg.pr.new, each of your commits and pull requests would trigger an instant
 
 pkg.pr.new won't publish anything to NPM; instead, it leverages its own URLs, which are npm-compatible.
 
+```sh
+npm i https://pkg.pr.new/tinylibs/tinybench/tinybench@a832a55    
+
+# npm i https://pkg.pr.new/${owner}/${repo}/${package}@{commit}    
+```
+
 pkg.pr.new is aiming to reduce the number of these comments :)
 
 > This was fixed in #18. Can we release that fix?
