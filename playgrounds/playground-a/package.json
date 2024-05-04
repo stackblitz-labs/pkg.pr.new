@@ -1,0 +1,19 @@
+{
+  "name": "playground-a",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "bin": {
+    "playground-a": "index.js"
+  },
+  "scripts": {
+    "publish": "pkg-pr-new publish"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "pkg-pr-new": "workspace:^"
+  }
+}

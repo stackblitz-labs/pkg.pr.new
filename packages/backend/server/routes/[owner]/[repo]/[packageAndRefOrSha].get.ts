@@ -6,19 +6,24 @@ type Params = Omit<WorkflowData, "sha" | "isPullRequest" | "ref"> & {
 
 export default eventHandler(async (event) => {
   const params = getRouterParams(event) as Params;
-  const [packageName, refOrSha] = params.packageAndRefOrSha.split('@')
-  const packageKey = `${params.owner}:${params.repo}:${refOrSha}:${packageName.split('.tgz')[0]}`;
+  const [packageName, refOrSha] = params.packageAndRefOrSha.split("@");
+  const packageKey = `${params.owner}:${params.repo}:${refOrSha}:${packageName.split(".tgz")[0]}`;
   const cursorKey = `${params.owner}:${params.repo}:${refOrSha}`;
 
   const packagesBucket = usePackagesBucket(event);
-  const downloadedAtBucket = useDownloadedAtBucket(event)
-    const cursorBucket = useCursorsBucket(event);
+  const downloadedAtBucket = useDownloadedAtBucket(event);
+  const cursorBucket = useCursorsBucket(event);
 
   if (await packagesBucket.hasItem(packageKey)) {
     const buffer = await packagesBucket.getItemRaw<ArrayBuffer>(packageKey);
-    const obj = (await packagesBucket.getMeta(packageKey)) as unknown as R2Object
+    const obj = (await packagesBucket.getMeta(
+      packageKey,
+    )) as unknown as R2Object;
     // TODO: less writes
-    await downloadedAtBucket.setItem(obj.key, Date.parse(new Date().toString()))
+    await downloadedAtBucket.setItem(
+      obj.key,
+      Date.parse(new Date().toString()),
+    );
 
     setResponseHeader(event, "content-type", "application/tar+gzip");
     // add caching
@@ -28,12 +33,12 @@ export default eventHandler(async (event) => {
 
     sendRedirect(
       event,
-      `/${params.owner}/${params.repo}/${packageName}@${currentCursor.sha}`
+      `/${params.owner}/${params.repo}/${packageName}@${currentCursor.sha}`,
     );
-    return
+    return;
   }
-  
+
   throw createError({
     status: 404,
   });
-})
+});

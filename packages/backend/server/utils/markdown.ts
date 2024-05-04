@@ -2,44 +2,54 @@ import { WorkflowData } from "../types";
 
 export function generateCommitPublishMessage(
   origin: string,
-  packageName: string,
+  packages: string[],
   workflowData: WorkflowData,
 ) {
-  const shaUrl = generatePublishUrl("sha", origin, packageName, workflowData);
+  const shaMessages = packages.map((packageName) => {
+    const shaUrl = generatePublishUrl("sha", origin, packageName, workflowData);
+    return `__${packageName}__:
+\`\`\`
+npm i ${shaUrl}    
+\`\`\``;
+  });
+
   return `
 Last Commit: ${workflowData.sha}
 
-__${packageName}__:
-\`\`\`
-npm i ${shaUrl}    
-\`\`\`
-    
-    `;
+${shaMessages}
+`;
 }
 
 export function generatePullRequestPublishMessage(
   origin: string,
-  packageName: string,
+  packages: string[],
   workflowData: WorkflowData,
 ) {
-  const shaUrl = generatePublishUrl("sha", origin, packageName, workflowData);
-  const refUrl = generatePublishUrl("ref", origin, packageName, workflowData);
+  const shaMessages = packages.map((packageName) => {
+    const shaUrl = generatePublishUrl("sha", origin, packageName, workflowData);
+    return `__${packageName}(${workflowData.sha})__:
+\`\`\`
+npm i ${shaUrl}    
+\`\`\``;
+  });
+
+  const refMessages = packages.map((packageName) => {
+    const refUrl = generatePublishUrl("ref", origin, packageName, workflowData);
+    return `__${packageName}(#${workflowData.ref})__:
+\`\`\`
+npm i ${refUrl}    
+\`\`\``;
+  });
 
   return `
 Last Commit Build: ${workflowData.sha}
 
-__${packageName}(${workflowData.sha})__:
-\`\`\`
-npm i ${shaUrl}    
-\`\`\`
+${shaMessages.join("\n")}
+    
 
-Pull Request Build: #${workflowData.ref.replace("pr-", "")}
+Pull Request Build: #${workflowData.ref}
 
-__${packageName}(#${workflowData.ref.replace("pr-", "")})__:
-\`\`\`
-npm i ${refUrl}    
-\`\`\`
-
+${refMessages.join("\n")}
 `;
 }
 
