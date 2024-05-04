@@ -36,6 +36,12 @@ After installing on your repository, you can run `npx pkg-pr-new publish` with `
 npm install --save-dev pkg-pr-new # or `npx pkg-pr-new publish`
 ```
 
+For workspaces:
+
+```sh
+npx pkg-pr-new publish ./packages/A ./packages/B 
+```
+
 <img width="100%" src="https://github.com/stackblitz-labs/pkg.pr.new/assets/37929992/2fc03b94-ebae-4c47-a271-03a4ad5d2449" />
 
 pkg.pr.new is not available in your local environment and it only works in workflows.
