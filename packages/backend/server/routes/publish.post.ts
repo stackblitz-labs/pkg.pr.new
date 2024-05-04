@@ -18,6 +18,7 @@ export default eventHandler(async (event) => {
   const cursorBucket = useCursorsBucket(event);
   const checkRunBucket = useCheckRunsBucket(event);
   const pullRequestCommentsBucket = usePullRequestCommentsBucket(event);
+
   if (!(await workflowsBucket.hasItem(key))) {
     throw createError({
       statusCode: 401,
