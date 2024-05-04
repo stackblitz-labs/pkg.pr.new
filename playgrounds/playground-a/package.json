@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "bin": {
-    "playground": "index.js"
+    "playground-a": "index.js"
   },
   "scripts": {
     "publish": "pkg-pr-new publish"

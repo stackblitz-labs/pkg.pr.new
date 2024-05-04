@@ -128,7 +128,7 @@ for (const [{ payload }, pr] of [
     {
       playgroundShaUrl.searchParams.set("id", Date.now().toString());
       const playgroundProcess = await ezSpawn.async(
-        `npx -f playground-a@${playgroundShaUrl}`,
+        `pnpm cross-env CI=true npx -f playground-a@${playgroundShaUrl}`,
         {
           stdio: "overlapped",
           shell: true,
@@ -142,13 +142,13 @@ for (const [{ payload }, pr] of [
       );
     }
     {
-      playgroundShaUrl.searchParams.set("id", Date.now().toString());
       const playgroundBShaUrl = new URL(
-        `/${owner}/${repo}/playground-a@${payload.workflow_job.head_sha.substring(0, 7)}`,
+        `/${owner}/${repo}/playground-b@${payload.workflow_job.head_sha.substring(0, 7)}`,
         serverUrl,
       );
+      playgroundBShaUrl.searchParams.set("id", Date.now().toString());
       const playgroundProcess = await ezSpawn.async(
-        `npx -f playground-b@${playgroundBShaUrl}`,
+        `pnpm cross-env CI=true npx -f playground-b@${playgroundBShaUrl}`,
         {
           stdio: "overlapped",
           shell: true,
