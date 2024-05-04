@@ -40,6 +40,7 @@ type OctokitClassType<TOptions extends Options> =
     : typeof OctokitCore;
 
 export class App<TOptions extends Options = Options> {
+
   static defaults<
     TDefaults extends Options,
     S extends Constructor<App<TDefaults>>,
@@ -200,6 +201,7 @@ export function webhooks(
     },
   });
 }
+
 
 // https://github.com/octokit/app.js/blob/main/src/types.ts
 import type { Endpoints } from "@octokit/types";

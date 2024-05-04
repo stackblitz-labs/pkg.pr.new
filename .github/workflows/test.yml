@@ -20,7 +20,7 @@ jobs:
           NITRO_PRIVATE_KEY: ${{ secrets.NITRO_PRIVATE_KEY }}
           NITRO_RM_STALE_KEY: ${{ secrets.NITRO_RM_STALE_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+          
       - run: pnpm build
       - run: pnpm test
         env:

@@ -7,7 +7,7 @@ export default defineConfig({
   splitting: false,
   sourcemap: "inline",
   define: {
-    API_URL: JSON.stringify(process.env.API_URL ?? "https://localhost:3000"),
+    API_URL: JSON.stringify(process.env.API_URL ?? 'https://localhost:3000')
   },
   clean: true,
   bundle: true,

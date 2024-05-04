@@ -81,7 +81,7 @@ for (const [{ payload }, pr] of [
       .map(([k, v]) => `${k}=${v}`)
       .join(" ");
     await ezSpawn.async(
-      `pnpm cross-env ${env} pnpm run publish:playgrounds`,
+      `pnpm cross-env ${env} pnpm --filter=playground run publish`,
       [],
       {
         stdio: "inherit",
@@ -92,10 +92,12 @@ for (const [{ payload }, pr] of [
 
   {
     const [owner, repo] = payload.repository.full_name.split("/");
-    const ref = pr?.payload.number ?? payload.workflow_job.head_branch;
+    const ref = pr?.payload.number
+      ? "pr-" + pr?.payload.number
+      : payload.workflow_job.head_branch;
     // install
     const playgroundShaUrl = new URL(
-      `/${owner}/${repo}/playground-a@${payload.workflow_job.head_sha.substring(0, 7)}`,
+      `/${owner}/${repo}/playground@${payload.workflow_job.head_sha.substring(0, 7)}`,
       serverUrl,
     );
     {
@@ -112,7 +114,7 @@ for (const [{ payload }, pr] of [
       );
 
       const playgroundWithoutShaUrl = new URL(
-        `/${owner}/${repo}/playground-a@${ref}`,
+        `/${owner}/${repo}/playground@${ref}`,
         serverUrl,
       );
       const playgroundWithoutShaData = await fetch(playgroundWithoutShaUrl, {
@@ -128,43 +130,14 @@ for (const [{ payload }, pr] of [
     {
       playgroundShaUrl.searchParams.set("id", Date.now().toString());
       const playgroundProcess = await ezSpawn.async(
-        `pnpm cross-env CI=true npx -f playground-a@${playgroundShaUrl}`,
+        `npx -f playground@${playgroundShaUrl}`,
         {
           stdio: "overlapped",
           shell: true,
         },
       );
       assert.ok(
-        playgroundProcess.stdout.includes(
-          "playground-a installed successfully!",
-        ),
-        "installation failed",
-      );
-    }
-    {
-      const playgroundBShaUrl = new URL(
-        `/${owner}/${repo}/playground-b@${payload.workflow_job.head_sha.substring(0, 7)}`,
-        serverUrl,
-      );
-      playgroundBShaUrl.searchParams.set("id", Date.now().toString());
-      const playgroundProcess = await ezSpawn.async(
-        `pnpm cross-env CI=true npx -f playground-b@${playgroundBShaUrl}`,
-        {
-          stdio: "overlapped",
-          shell: true,
-        },
-      );
-      assert.ok(
-        // should import playground-a as well
-        playgroundProcess.stdout.includes(
-          "playground-a installed successfully!",
-        ),
-        "installation failed",
-      );
-      assert.ok(
-        playgroundProcess.stdout.includes(
-          "playground-b installed successfully!",
-        ),
+        playgroundProcess.stdout.includes("playground installed successfully!"),
         "installation failed",
       );
     }

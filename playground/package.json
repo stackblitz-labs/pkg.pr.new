@@ -1,11 +1,11 @@
 {
-  "name": "playground-b",
+  "name": "playground",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "type": "module",
   "bin": {
-    "playground-b": "index.js"
+    "playground": "index.js"
   },
   "scripts": {
     "publish": "pkg-pr-new publish"
@@ -15,8 +15,5 @@
   "license": "ISC",
   "devDependencies": {
     "pkg-pr-new": "workspace:^"
-  },
-  "dependencies": {
-    "playground-a": "workspace:^"
   }
 }

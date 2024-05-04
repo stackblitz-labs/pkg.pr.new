@@ -8,4 +8,3 @@ dist
 .dev.vars
 .wrangler
 vendor
-*.tgz

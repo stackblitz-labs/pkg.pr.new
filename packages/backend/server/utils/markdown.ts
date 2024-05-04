@@ -2,67 +2,44 @@ import { WorkflowData } from "../types";
 
 export async function generateCommitPublishMessage(
   origin: string,
-  packages: string[],
+  packageName: string,
   workflowData: WorkflowData,
 ) {
-  const shaUrlsPromises = packages.map((packageName) =>
-    generatePublishUrl("sha", origin, packageName, workflowData),
-  );
-  const shaUrls = await Promise.all(shaUrlsPromises);
-
-  const shaMessages = packages.map((packageName, index) => {
-    return `__${packageName}__:
-\`\`\`
-npm i ${shaUrls[index]}    
-\`\`\``;
-  });
-
+  const shaUrl = generatePublishUrl("sha", origin, packageName, workflowData);
   return `
 Last Commit: ${workflowData.sha}
 
-${shaMessages.join("\n")}
-`;
+__${packageName}__:
+\`\`\`
+npm i ${shaUrl}    
+\`\`\`
+    
+    `;
 }
 
 export async function generatePullRequestPublishMessage(
   origin: string,
-  packages: string[],
+  packageName: string,
   workflowData: WorkflowData,
 ) {
-  const shaUrlsPromises = packages.map((packageName) =>
-    generatePublishUrl("sha", origin, packageName, workflowData),
-  );
-  const refUrlsPromises = packages.map((packageName) =>
-    generatePublishUrl("ref", origin, packageName, workflowData),
-  );
-  const [shaUrls, refUrls] = await Promise.all([
-    Promise.all(shaUrlsPromises),
-    Promise.all(refUrlsPromises),
-  ]);
-
-  const shaMessages = packages.map((packageName, index) => {
-    return `__${packageName}(${workflowData.sha})__:
-\`\`\`
-npm i ${shaUrls[index]}    
-\`\`\``;
-  });
-
-  const refMessages = packages.map((packageName, index) => {
-    return `__${packageName}(#${workflowData.ref})__:
-\`\`\`
-npm i ${refUrls[index]}    
-\`\`\``;
-  });
+  const shaUrl = generatePublishUrl("sha", origin, packageName, workflowData);
+  const refUrl = generatePublishUrl("ref", origin, packageName, workflowData);
 
   return `
 Last Commit Build: ${workflowData.sha}
 
-${shaMessages.join("\n")}
-    
+__${packageName}(${workflowData.sha})__:
+\`\`\`
+npm i ${shaUrl}    
+\`\`\`
 
-Pull Request Build: #${workflowData.ref}
+Pull Request Build: #${workflowData.ref.replace("pr-", "")}
 
-${refMessages.join("\n")}
+__${packageName}(#${workflowData.ref.replace("pr-", "")})__:
+\`\`\`
+npm i ${refUrl}    
+\`\`\`
+
 `;
 }
 
