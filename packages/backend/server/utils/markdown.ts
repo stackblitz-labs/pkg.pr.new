@@ -53,19 +53,31 @@ ${refMessages.join("\n")}
 `;
 }
 
-export function generatePublishUrl(
+export async function generatePublishUrl(
   base: "sha" | "ref",
   origin: string,
   packageName: string,
   workflowData: WorkflowData,
 ) {
-  const shorter = workflowData.repo === packageName;
+  const npmRegistryUrl = `https://registry.npmjs.org/${packageName}`;
+  const response = await fetch(npmRegistryUrl);
+  const packageInfo: any = await response.json();
+  const githubRepoUrl = packageInfo.repository?.url;
+  if (!githubRepoUrl) {
+    throw new Error(
+      `GitHub repository URL not found for package: ${packageName}`,
+    );
+  }
 
-  const url = new URL(
-    `/${workflowData.owner}/${workflowData.repo}${shorter ? "" : "/" + packageName}@${
-      base === "sha" ? workflowData.sha : workflowData.ref
-    }`,
-    origin,
-  );
+  // const shorter = workflowData.repo === packageName;
+  const ref = base === "sha" ? workflowData.sha : workflowData.ref;
+  const url = new URL(`${githubRepoUrl}/tree/${ref}`, origin);
+
+  // const url = new URL(
+  //   `/${workflowData.owner}/${workflowData.repo}${shorter ? "" : "/" + packageName}@${
+  //     base === "sha" ? workflowData.sha : workflowData.ref
+  //   }`,
+  //   origin,
+  // );
   return url;
 }
