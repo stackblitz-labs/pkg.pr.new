@@ -5,12 +5,9 @@ export default eventHandler(async (event) => {
     // Payload too large
     return new Response("Max size limit is 5mb", { status: 413 });
   }
-  const {
-    "sb-package-name": packageName,
-    "sb-commit-timestamp": commitTimestampStr,
-    "sb-key": key,
-  } = getHeaders(event);
-  if (!key || !packageName || !commitTimestampStr) {
+  const { "sb-commit-timestamp": commitTimestampStr, "sb-key": key } =
+    getHeaders(event);
+  if (!key || !commitTimestampStr) {
     throw createError({
       statusCode: 400,
       message:
@@ -30,19 +27,26 @@ export default eventHandler(async (event) => {
     });
   }
 
-  const binary = await readRawBody(event, false);
-
   const commitTimestamp = Number(commitTimestampStr);
 
   const workflowData = (await workflowsBucket.getItem(key))!;
+
   const sha = abbreviateCommitHash(workflowData.sha);
   const baseKey = `${workflowData.owner}:${workflowData.repo}`;
-  const packageKey = `${baseKey}:${sha}:${packageName}`;
   const cursorKey = `${baseKey}:${workflowData.ref}`;
 
   const currentCursor = await cursorBucket.getItem(cursorKey);
 
-  await packagesBucket.setItemRaw(packageKey, binary);
+  const formData = await readFormData(event);
+
+  const packages = [...formData.keys()];
+  for (const packageName of packages) {
+    const file = formData.get(packageName)! as File;
+    const packageKey = `${baseKey}:${sha}:${packageName}`;
+
+    await packagesBucket.setItemRaw(packageKey, await file.arrayBuffer());
+  }
+
   if (!currentCursor || currentCursor.timestamp < commitTimestamp) {
     await cursorBucket.setItem(cursorKey, {
       sha,
@@ -78,7 +82,7 @@ export default eventHandler(async (event) => {
         output: {
           title: "Successful",
           summary: "Published successfully.",
-          text: generateCommitPublishMessage(origin, packageName, workflowData),
+          text: generateCommitPublishMessage(origin, packages, workflowData),
         },
         conclusion: "success",
       },
@@ -86,24 +90,24 @@ export default eventHandler(async (event) => {
     await checkRunBucket.setItem(checkRunKey, checkRun.data.id);
   }
 
-  const postComment = async () => {
-    const comment = await installation.request(
-      "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
-      {
-        owner: workflowData.owner,
-        repo: workflowData.repo,
-        issue_number: Number(workflowData.ref.slice("pr-".length)),
-        body: generatePullRequestPublishMessage(
-          origin,
-          packageName,
-          workflowData,
-        ),
-      },
-    );
-    await pullRequestCommentsBucket.setItem(baseKey, comment.data.id);
-  };
-
   if (workflowData.isPullRequest) {
+    const postComment = async () => {
+      const comment = await installation.request(
+        "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
+        {
+          owner: workflowData.owner,
+          repo: workflowData.repo,
+          issue_number: Number(workflowData.ref),
+          body: generatePullRequestPublishMessage(
+            origin,
+            packages,
+            workflowData,
+          ),
+        },
+      );
+      await pullRequestCommentsBucket.setItem(baseKey, comment.data.id);
+    };
+
     const alreadyCommented = await pullRequestCommentsBucket.hasItem(baseKey);
     if (!alreadyCommented) {
       await postComment();
@@ -119,9 +123,8 @@ export default eventHandler(async (event) => {
             comment_id: prevCommentId,
           },
         );
-        exists = true
-      } catch {
-      }
+        exists = true;
+      } catch {}
       if (exists) {
         await installation.request(
           "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}",
@@ -131,7 +134,7 @@ export default eventHandler(async (event) => {
             comment_id: prevCommentId,
             body: generatePullRequestPublishMessage(
               origin,
-              packageName,
+              packages,
               workflowData,
             ),
           },
@@ -145,6 +148,9 @@ export default eventHandler(async (event) => {
 
   return {
     ok: true,
-    url: generatePublishUrl("sha", origin, packageName, workflowData).href,
+    urls: packages.map(
+      (packageName) =>
+        generatePublishUrl("sha", origin, packageName, workflowData).href,
+    ),
   };
 });

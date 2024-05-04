@@ -31,7 +31,7 @@ export default eventHandler(async (event) => {
       const prNumber = await pullRequestNumbersBucket.getItem(dataHash)
       if (prNumber) {
         // it's a pull request workflow
-        data.ref = `pr-${prNumber}`
+        data.ref = `${prNumber}`
         data.isPullRequest = true
         pullRequestNumbersBucket.removeItem(dataHash)
       }
