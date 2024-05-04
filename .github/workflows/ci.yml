@@ -71,7 +71,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: pkg.pr.new
-        run: pnpm pkg-pr-new publish
-        working-directory: ./playground
+        run: pnpm publish:playgrounds
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
