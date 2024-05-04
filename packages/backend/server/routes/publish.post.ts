@@ -82,7 +82,11 @@ export default eventHandler(async (event) => {
         output: {
           title: "Successful",
           summary: "Published successfully.",
-          text: generateCommitPublishMessage(origin, packages, workflowData),
+          text: await generateCommitPublishMessage(
+            origin,
+            packages,
+            workflowData,
+          ),
         },
         conclusion: "success",
       },
@@ -98,7 +102,7 @@ export default eventHandler(async (event) => {
           owner: workflowData.owner,
           repo: workflowData.repo,
           issue_number: Number(workflowData.ref),
-          body: generatePullRequestPublishMessage(
+          body: await generatePullRequestPublishMessage(
             origin,
             packages,
             workflowData,
@@ -132,7 +136,7 @@ export default eventHandler(async (event) => {
             owner: workflowData.owner,
             repo: workflowData.repo,
             comment_id: prevCommentId,
-            body: generatePullRequestPublishMessage(
+            body: await generatePullRequestPublishMessage(
               origin,
               packages,
               workflowData,
@@ -146,11 +150,20 @@ export default eventHandler(async (event) => {
     }
   }
 
+  const urls = await Promise.all(
+    packages.map(async (packageName) => {
+      const url = await generatePublishUrl(
+        "sha",
+        origin,
+        packageName,
+        workflowData,
+      );
+      return url.href;
+    }),
+  );
+
   return {
     ok: true,
-    urls: packages.map(
-      (packageName) =>
-        generatePublishUrl("sha", origin, packageName, workflowData).href,
-    ),
+    urls,
   };
 });

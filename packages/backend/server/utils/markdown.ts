@@ -1,43 +1,56 @@
 import { WorkflowData } from "../types";
 
-export function generateCommitPublishMessage(
+export async function generateCommitPublishMessage(
   origin: string,
   packages: string[],
   workflowData: WorkflowData,
 ) {
-  const shaMessages = packages.map((packageName) => {
-    const shaUrl = generatePublishUrl("sha", origin, packageName, workflowData);
+  const shaUrlsPromises = packages.map((packageName) =>
+    generatePublishUrl("sha", origin, packageName, workflowData),
+  );
+  const shaUrls = await Promise.all(shaUrlsPromises);
+
+  const shaMessages = packages.map((packageName, index) => {
     return `__${packageName}__:
 \`\`\`
-npm i ${shaUrl}    
+npm i ${shaUrls[index]}    
 \`\`\``;
   });
 
   return `
 Last Commit: ${workflowData.sha}
 
-${shaMessages}
+${shaMessages.join("\n")}
 `;
 }
 
-export function generatePullRequestPublishMessage(
+export async function generatePullRequestPublishMessage(
   origin: string,
   packages: string[],
   workflowData: WorkflowData,
 ) {
-  const shaMessages = packages.map((packageName) => {
-    const shaUrl = generatePublishUrl("sha", origin, packageName, workflowData);
+  const shaUrlsPromises = packages.map((packageName) =>
+    generatePublishUrl("sha", origin, packageName, workflowData),
+  );
+  const refUrlsPromises = packages.map((packageName) =>
+    generatePublishUrl("ref", origin, packageName, workflowData),
+  );
+  const [shaUrls, refUrls] = await Promise.all([
+    Promise.all(shaUrlsPromises),
+    Promise.all(refUrlsPromises),
+  ]);
+
+  const shaMessages = packages.map((packageName, index) => {
     return `__${packageName}(${workflowData.sha})__:
 \`\`\`
-npm i ${shaUrl}    
+npm i ${shaUrls[index]}    
 \`\`\``;
   });
 
-  const refMessages = packages.map((packageName) => {
-    const refUrl = generatePublishUrl("ref", origin, packageName, workflowData);
+  const refMessages = packages.map((packageName, index) => {
     return `__${packageName}(#${workflowData.ref})__:
 \`\`\`
-npm i ${refUrl}    
+npm i ${refUrls[index]}    
 \`\`\``;
   });
 
