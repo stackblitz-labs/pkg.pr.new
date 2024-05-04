@@ -10,7 +10,5 @@ await esbuild.build({
   platform: "browser",
   write: true,
   outfile: "vendor/octokit.build.mjs",
-	plugins: [
-  	polyfillNode(),
-	],
+  plugins: [polyfillNode()],
 });

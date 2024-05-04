@@ -1,1 +1,22 @@
-{"name":"playground-b","version":"1.0.0","description":"","main":"index.js","type":"module","bin":{"playground":"index.js"},"scripts":{"publish":"pkg-pr-new publish"},"keywords":[],"author":"","license":"ISC","devDependencies":{"pkg-pr-new":"workspace:^"},"dependencies":{"playground-a":"http://localhost:8788/stackblitz-labs/pkg.pr.new/playground-a@41cc807"}}
+{
+  "name": "playground-b",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "bin": {
+    "playground": "index.js"
+  },
+  "scripts": {
+    "publish": "pkg-pr-new publish"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "pkg-pr-new": "workspace:^"
+  },
+  "dependencies": {
+    "playground-a": "workspace:^"
+  }
+}

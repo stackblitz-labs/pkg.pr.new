@@ -1,6 +1,5 @@
 <p align="center"><img src="https://github.com/stackblitz-labs/pkg.pr.new/assets/37929992/ade1bc5d-1b76-43d1-a74a-7b2f5882f331" /></p>
 
-
 # pkg.pr.new <span><img src="https://emoji.slack-edge.com/TFHDVN56F/stackblitz/fd010078dcccebca.png" width="30" /></span>
 
 > We call it "Continuous Releases" too.
@@ -18,9 +17,9 @@ With pkg.pr.new, each of your commits and pull requests would trigger an instant
 pkg.pr.new won't publish anything to NPM; instead, it leverages its own URLs, which are npm-compatible.
 
 ```sh
-npm i https://pkg.pr.new/tinylibs/tinybench/tinybench@a832a55    
+npm i https://pkg.pr.new/tinylibs/tinybench/tinybench@a832a55
 
-# npm i https://pkg.pr.new/${owner}/${repo}/${package}@{commit}    
+# npm i https://pkg.pr.new/${owner}/${repo}/${package}@{commit}
 ```
 
 It is aiming to reduce the number of these comments :)

@@ -4,7 +4,7 @@ export type WorkflowData = {
   sha: string;
   isPullRequest?: true;
   ref: string;
-}
+};
 
 export type Cursor = {
   timestamp: number;

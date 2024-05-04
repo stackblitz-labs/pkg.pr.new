@@ -10,8 +10,7 @@ export default eventHandler(async (event) => {
   if (!key || !commitTimestampStr) {
     throw createError({
       statusCode: 400,
-      message:
-        "sb-package-name, sb-commit-timestamp, sb-key headers are required",
+      message: "sb-commit-timestamp and sb-key headers are required",
     });
   }
   const workflowsBucket = useWorkflowsBucket(event);
