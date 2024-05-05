@@ -182,7 +182,7 @@ function hijackDeps(
 
 async function verifyCompactMode(packageName: string) {
   const error = new Error(
-    `pkg-pr-new cannot resolve ${packageName} from npm. --compact flag depends on the package being available in npm.\n
+    `pkg-pr-new cannot resolve ${packageName} from npm. --compact flag depends on the package being available in npm.
 Make sure to have your package on npm first or configure the 'repository' field in your package.json properly.`,
   );
   try {
