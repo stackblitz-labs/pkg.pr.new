@@ -20,7 +20,9 @@
     "@octokit/action": "^6.0.7"
   },
   "devDependencies": {
+    "@pkg-pr-new/utils": "workspace:^",
     "citty": "^0.1.6",
+    "query-registry": "^3.0.0",
     "tsup": "^8.0.2"
   }
 }
