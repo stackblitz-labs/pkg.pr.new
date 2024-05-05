@@ -42,6 +42,22 @@ For workspaces:
 npx pkg-pr-new publish ./packages/A ./packages/B 
 ```
 
+For shorter urls, `--compact` can be useful: 
+```sh
+npx pkg-pr-new publish --compact ./packages/A ./packages/B 
+```
+> `--compact` requires your package to be a valid (published) package on npm with a specified `repository` field in the package.json 
+
+With `--compact`:
+```sh
+npm i https://pkg.pr.new/tinybench@a832a55
+```
+
+Without `--compact`:
+```sh
+npm i https://pkg.pr.new/tinylibs/tinybench/tinybench@a832a55
+```
+
 <img width="100%" src="https://github.com/stackblitz-labs/pkg.pr.new/assets/37929992/2fc03b94-ebae-4c47-a271-03a4ad5d2449" />
 
 pkg.pr.new is not available in your local environment and it only works in workflows.

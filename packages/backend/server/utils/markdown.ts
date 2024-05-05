@@ -4,9 +4,16 @@ export function generateCommitPublishMessage(
   origin: string,
   packages: string[],
   workflowData: WorkflowData,
+  compact: boolean,
 ) {
   const shaMessages = packages.map((packageName) => {
-    const shaUrl = generatePublishUrl("sha", origin, packageName, workflowData);
+    const shaUrl = generatePublishUrl(
+      "sha",
+      origin,
+      packageName,
+      workflowData,
+      compact,
+    );
     return `__${packageName}__:
 \`\`\`
 npm i ${shaUrl}    
@@ -24,9 +31,16 @@ export function generatePullRequestPublishMessage(
   origin: string,
   packages: string[],
   workflowData: WorkflowData,
+  compact: boolean,
 ) {
   const shaMessages = packages.map((packageName) => {
-    const shaUrl = generatePublishUrl("sha", origin, packageName, workflowData);
+    const shaUrl = generatePublishUrl(
+      "sha",
+      origin,
+      packageName,
+      workflowData,
+      compact,
+    );
     return `__${packageName}(${workflowData.sha})__:
 \`\`\`
 npm i ${shaUrl}    
@@ -34,7 +48,13 @@ npm i ${shaUrl}
   });
 
   const refMessages = packages.map((packageName) => {
-    const refUrl = generatePublishUrl("ref", origin, packageName, workflowData);
+    const refUrl = generatePublishUrl(
+      "ref",
+      origin,
+      packageName,
+      workflowData,
+      compact,
+    );
     return `__${packageName}(#${workflowData.ref})__:
 \`\`\`
 npm i ${refUrl}    
@@ -58,14 +78,14 @@ export function generatePublishUrl(
   origin: string,
   packageName: string,
   workflowData: WorkflowData,
+  compact: boolean,
 ) {
+  const tag = base === "sha" ? workflowData.sha : workflowData.ref;
   const shorter = workflowData.repo === packageName;
 
-  const url = new URL(
-    `/${workflowData.owner}/${workflowData.repo}${shorter ? "" : "/" + packageName}@${
-      base === "sha" ? workflowData.sha : workflowData.ref
-    }`,
-    origin,
-  );
-  return url;
+  const urlPath = compact
+    ? `/${packageName}@${tag}`
+    : `/${workflowData.owner}${shorter ? "" : `/${workflowData.repo}`}/${packageName}@${tag}`;
+
+  return new URL(urlPath, origin);
 }

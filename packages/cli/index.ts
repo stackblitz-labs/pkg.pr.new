@@ -7,6 +7,8 @@ import { hash } from "ohash";
 import fs from "fs/promises";
 import { Octokit } from "@octokit/action";
 import { pathToFileURL } from "node:url";
+import { getPackageManifest } from "query-registry";
+import { extractOwnerAndRepo, extractRepository } from "@pkg-pr-new/utils";
 import "./environments";
 import pkg from "./package.json" with { type: "json" };
 
@@ -65,19 +67,26 @@ const main = defineCommand({
           compact: {
             type: "boolean",
             description:
-              "compact mode (The shortest form of urls like pkg.pr.new/tinybench@a832a55)",
+              "compact urls. The shortest form of urls like pkg.pr.new/tinybench@a832a55)",
           },
         },
         run: async ({ args }) => {
-          console.log(args);
+          const compact = !!args.compact;
+
           const paths = (args._.length ? args._ : ["."]).map((p) =>
             path.resolve(p),
           );
+
           const deps: Map<string, string> = new Map();
           const pJsonContent: Map<string, string> = new Map();
           for (const p of paths) {
             const pJsonPath = path.resolve(p, "package.json");
             const { name } = await importPackageJson(pJsonPath);
+
+            if (compact) {
+              await verifyCompactMode(name);
+            }
+
             deps.set(
               name,
               new URL(
@@ -118,6 +127,7 @@ const main = defineCommand({
           const res = await fetch(publishUrl, {
             method: "POST",
             headers: {
+              "sb-compact": `${compact}`,
               "sb-key": key,
               "sb-commit-timestamp": commitTimestamp.toString(),
             },
@@ -167,5 +177,27 @@ function hijackDeps(
     if (newDep in oldDeps) {
       oldDeps[newDep] = url;
     }
+  }
+}
+
+async function verifyCompactMode(packageName: string) {
+  const error = new Error(
+    `pkg-pr-new cannot resolve ${packageName} from npm. --compact flag depends on the package being available in npm.\n
+Make sure to have your package on npm first or configure the 'repository' field in your package.json properly.`,
+  );
+  try {
+    const manifest = await getPackageManifest(packageName);
+
+    const repository = extractRepository(manifest);
+    if (!repository) {
+      throw error;
+    }
+
+    const match = extractOwnerAndRepo(repository);
+    if (!match) {
+      throw error;
+    }
+  } catch {
+    throw error;
   }
 }

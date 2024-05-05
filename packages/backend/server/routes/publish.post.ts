@@ -5,9 +5,14 @@ export default eventHandler(async (event) => {
     // Payload too large
     return new Response("Max size limit is 5mb", { status: 413 });
   }
-  const { "sb-commit-timestamp": commitTimestampStr, "sb-key": key } =
-    getHeaders(event);
-  if (!key || !commitTimestampStr) {
+  const {
+    "sb-commit-timestamp": commitTimestampHeader,
+    "sb-key": key,
+    "sb-compact": compactHeader,
+  } = getHeaders(event);
+  const compact = compactHeader === "true";
+
+  if (!key || !commitTimestampHeader) {
     throw createError({
       statusCode: 400,
       message: "sb-commit-timestamp and sb-key headers are required",
@@ -27,7 +32,7 @@ export default eventHandler(async (event) => {
     });
   }
 
-  const commitTimestamp = Number(commitTimestampStr);
+  const commitTimestamp = Number(commitTimestampHeader);
 
   const workflowData = (await workflowsBucket.getItem(key))!;
 
@@ -82,7 +87,12 @@ export default eventHandler(async (event) => {
         output: {
           title: "Successful",
           summary: "Published successfully.",
-          text: generateCommitPublishMessage(origin, packages, workflowData),
+          text: generateCommitPublishMessage(
+            origin,
+            packages,
+            workflowData,
+            compact,
+          ),
         },
         conclusion: "success",
       },
@@ -102,6 +112,7 @@ export default eventHandler(async (event) => {
             origin,
             packages,
             workflowData,
+            compact,
           ),
         },
       );
@@ -136,6 +147,7 @@ export default eventHandler(async (event) => {
               origin,
               packages,
               workflowData,
+              compact,
             ),
           },
         );
@@ -150,7 +162,8 @@ export default eventHandler(async (event) => {
     ok: true,
     urls: packages.map(
       (packageName) =>
-        generatePublishUrl("sha", origin, packageName, workflowData).href,
+        generatePublishUrl("sha", origin, packageName, workflowData, compact)
+          .href,
     ),
   };
 });
