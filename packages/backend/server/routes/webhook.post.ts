@@ -36,7 +36,7 @@ export default eventHandler(async (event) => {
         pullRequestNumbersBucket.removeItem(dataHash);
       }
 
-      // Publishing is only available throughout the lifetime of a worklow_job
+      // Publishing is only available throughout the lifetime of a workflow_job
       await setItem(hashKey, data);
     } else if (payload.action === "completed") {
       // Publishing is not available anymore
