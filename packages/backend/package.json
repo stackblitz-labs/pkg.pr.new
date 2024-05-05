@@ -18,6 +18,7 @@
     "nitro-cloudflare-dev": "0.1.2",
     "nitropack": "^2.9.5",
     "octokit": "^3.1.2",
+    "query-registry": "^3.0.0",
     "wrangler": "^3.37.0"
   }
 }

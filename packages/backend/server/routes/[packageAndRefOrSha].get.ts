@@ -1,26 +1,21 @@
 import { WorkflowData } from "../types";
+import { getPackageManifest } from "query-registry";
 
 type Params = Omit<WorkflowData, "sha" | "isPullRequest" | "ref"> & {
   packageAndRefOrSha: string;
 };
 
-interface PackageData {
-  repository?: {
-    type: string;
-    url: string;
-  };
-}
+const githubUrlRegex =
+  /(?:git\+)?https?:\/\/github\.com\/([^\/]+\/[^\/]+)\.git/; // TODO: Don't trust this, it's chatgbd :)
 
-function extractOwnerAndRepo(repositoryUrl: string): [string, string] {
-  const url = new URL(repositoryUrl);
-  const parts = url.pathname.split("/").filter(Boolean);
-  const ownerAndRepo = parts.slice(1, 3);
-  if (ownerAndRepo.length === 2) {
-    return ownerAndRepo;
+function extractOwnerAndRepo(repositoryUrl: string): [string, string] | null {
+  const match = repositoryUrl.match(githubUrlRegex);
+
+  if (match) {
+    const [owner, repo] = match[1].split("/");
+    return [owner, repo];
   } else {
-    throw createError({
-      status: 404,
-    });
+    return null;
   }
 }
 
@@ -28,19 +23,29 @@ export default eventHandler(async (event) => {
   const params = getRouterParams(event) as Params;
   const [packageName, refOrSha] = params.packageAndRefOrSha.split("@");
 
-  const data: PackageData = await $fetch(
-    `https://registry.npmjs.org/${packageName}`,
-  );
+  const manifest = await getPackageManifest(packageName);
 
-  const repositoryUrl = data.repository?.url;
+  const repository =
+    typeof manifest.repository === "string"
+      ? manifest.repository
+      : manifest.repository?.url;
 
-  if (!repositoryUrl) {
+  if (!repository) {
     throw createError({
       status: 404,
     });
   }
 
-  const [owner, repo] = extractOwnerAndRepo(repositoryUrl);
+  const match = extractOwnerAndRepo(repository);
+  if (!match) {
+    throw createError({
+      status: 404,
+    });
+  }
+  const [owner, repo] = match;
 
-  return { owner, repo };
+  sendRedirect(
+    event,
+    `/${owner}/${repo}/${packageName}@${refOrSha}`,
+  );
 });
