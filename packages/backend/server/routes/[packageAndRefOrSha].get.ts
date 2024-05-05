@@ -14,11 +14,13 @@ interface PackageData {
 function extractOwnerAndRepo(repositoryUrl: string): [string, string] {
   const url = new URL(repositoryUrl);
   const parts = url.pathname.split("/").filter(Boolean);
-  if (parts.length >= 2) {
-    // first one is the owner, the second one is the repo name
-    return [parts[1], parts[2]];
+  const ownerAndRepo = parts.slice(1, 3);
+  if (ownerAndRepo.length === 2) {
+    return ownerAndRepo;
   } else {
-    throw new Error("Invalid GitHub repository URL");
+    throw createError({
+      status: 404,
+    });
   }
 }
 
@@ -32,8 +34,10 @@ export default eventHandler(async (event) => {
 
   const repositoryUrl = data.repository?.url;
 
-  if (!repositoryUrl || !repositoryUrl.startsWith("https://github.com")) {
-    throw new Error("GitHub repository not found in package data");
+  if (!repositoryUrl) {
+    throw createError({
+      status: 404,
+    });
   }
 
   const [owner, repo] = extractOwnerAndRepo(repositoryUrl);
