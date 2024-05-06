@@ -46,7 +46,7 @@ For shorter urls, `--compact` can be useful:
 ```sh
 npx pkg-pr-new publish --compact ./packages/A ./packages/B 
 ```
-> `--compact` requires your package to be a valid (published) package on npm with a specified `repository` field in the package.json 
+> `--compact` requires your package to be a valid (published) package on npm with a specified `repository` field in the package.json! See [this](https://docs.npmjs.com/cli/v7/configuring-npm/package-json#repository). 
 
 With `--compact`:
 ```sh
