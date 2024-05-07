@@ -57,7 +57,7 @@ export default eventHandler(async (event) => {
       ref: payload.pull_request.head.ref,
     };
     const hashKey = hash(key);
-    if (payload.action === "synchronize") {
+    if (payload.action === "synchronize" || payload.action === "opened") {
       await pullRequestNumbersBucket.setItem(hashKey, payload.number);
     } else if (payload.action === 'closed') {
       await pullRequestNumbersBucket.removeItem(hashKey);
