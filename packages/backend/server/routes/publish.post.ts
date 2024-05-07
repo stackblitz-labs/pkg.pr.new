@@ -21,7 +21,6 @@ export default eventHandler(async (event) => {
   const workflowsBucket = useWorkflowsBucket(event);
   const packagesBucket = usePackagesBucket(event);
   const cursorBucket = useCursorsBucket(event);
-  const checkRunBucket = useCheckRunsBucket(event);
   const pullRequestCommentsBucket = usePullRequestCommentsBucket(event);
 
   if (!(await workflowsBucket.hasItem(key))) {
@@ -74,30 +73,38 @@ export default eventHandler(async (event) => {
 
   const installation = await app.getInstallationOctokit(installationData.id);
 
-  const checkRunKey = `${baseKey}:${sha}`;
+  const checkName = "Continuous Releases";
+  const {
+    data: { check_runs },
+  } = await installation.request(
+    "GET /repos/{owner}/{repo}/commits/{ref}/check-runs",
+    {
+      check_name: checkName,
+      owner: workflowData.owner,
+      repo: workflowData.repo,
+      ref: workflowData.ref,
+    },
+  );
+  const hasCheckRun = check_runs.some((c) => c.head_sha === sha);
 
-  if (!(await checkRunBucket.hasItem(checkRunKey))) {
-    const checkRun = await installation.request(
-      "POST /repos/{owner}/{repo}/check-runs",
-      {
-        name: "Continuous Releases",
-        owner: workflowData.owner,
-        repo: workflowData.repo,
-        head_sha: sha,
-        output: {
-          title: "Successful",
-          summary: "Published successfully.",
-          text: generateCommitPublishMessage(
-            origin,
-            packages,
-            workflowData,
-            compact,
-          ),
-        },
-        conclusion: "success",
+  if (!hasCheckRun) {
+    await installation.request("POST /repos/{owner}/{repo}/check-runs", {
+      name: checkName,
+      owner: workflowData.owner,
+      repo: workflowData.repo,
+      head_sha: sha,
+      output: {
+        title: "Successful",
+        summary: "Published successfully.",
+        text: generateCommitPublishMessage(
+          origin,
+          packages,
+          workflowData,
+          compact,
+        ),
       },
-    );
-    await checkRunBucket.setItem(checkRunKey, checkRun.data.id);
+      conclusion: "success",
+    });
   }
 
   if (workflowData.isPullRequest) {
@@ -116,14 +123,15 @@ export default eventHandler(async (event) => {
           ),
         },
       );
-      await pullRequestCommentsBucket.setItem(baseKey, comment.data.id);
+      await pullRequestCommentsBucket.setItem(cursorKey, comment.data.id);
     };
 
-    const alreadyCommented = await pullRequestCommentsBucket.hasItem(baseKey);
+    const alreadyCommented = await pullRequestCommentsBucket.hasItem(cursorKey);
     if (!alreadyCommented) {
       await postComment();
     } else {
-      const prevCommentId = (await pullRequestCommentsBucket.getItem(baseKey))!;
+      const prevCommentId =
+        (await pullRequestCommentsBucket.getItem(cursorKey))!;
       let exists = false;
       try {
         await installation.request(

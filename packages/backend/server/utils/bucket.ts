@@ -49,14 +49,6 @@ export function useCursorsBucket(event: Event) {
 useCursorsBucket.key = "cursor";
 useCursorsBucket.base = joinKeys(useBucket.base, useCursorsBucket.key);
 
-export function useCheckRunsBucket(event: Event) {
-  const storage = useBucket(event);
-  return prefixStorage<number>(storage, useCheckRunsBucket.key);
-}
-
-useCheckRunsBucket.key = "check-run";
-useCheckRunsBucket.base = joinKeys(useBucket.base, useCheckRunsBucket.key);
-
 export function usePullRequestCommentsBucket(event: Event) {
   const storage = useBucket(event);
   return prefixStorage<number>(storage, usePullRequestCommentsBucket.key);

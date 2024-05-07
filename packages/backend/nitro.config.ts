@@ -25,12 +25,6 @@ export default defineNitroConfig({
   preset: "cloudflare-pages",
   modules: [ncb],
   srcDir: "server",
-  experimental: {
-    tasks: true,
-  },
-  scheduledTasks: {
-    "0 15 1 * *": ["rm:stale"],
-  },
   runtimeConfig: {
     appId: "",
     webhookSecret: "",

@@ -8,6 +8,8 @@ export default eventHandler(async (event) => {
   const { test } = useRuntimeConfig(event);
   const { setItem, removeItem } = useWorkflowsBucket(event);
   const pullRequestNumbersBucket = usePullRequestNumbersBucket(event);
+  const cursorBucket = useCursorsBucket(event);
+  const pullRequestCommentsBucket = usePullRequestCommentsBucket(event);
 
   const workflowHandler: HandlerFunction<"workflow_job", unknown> = async ({
     payload,
@@ -47,16 +49,24 @@ export default eventHandler(async (event) => {
   const pullRequestHandler: HandlerFunction<"pull_request", unknown> = async ({
     payload,
   }) => {
+    const [owner, repo] = payload.repository.full_name.split("/");
+    const key: WorkflowData = {
+      owner,
+      repo,
+      sha: abbreviateCommitHash(payload.pull_request.head.sha),
+      ref: payload.pull_request.head.ref,
+    };
+    const hashKey = hash(key);
     if (payload.action === "synchronize") {
-      const [owner, repo] = payload.repository.full_name.split("/");
-      const key: WorkflowData = {
-        owner,
-        repo,
-        sha: abbreviateCommitHash(payload.pull_request.head.sha),
-        ref: payload.pull_request.head.ref,
-      };
-      const hashKey = hash(key);
       await pullRequestNumbersBucket.setItem(hashKey, payload.number);
+    } else if (payload.action === 'closed') {
+      await pullRequestNumbersBucket.removeItem(hashKey);
+
+      const baseKey = `${owner}:${repo}`;
+      const cursorKey = `${baseKey}:${payload.pull_request.head.ref}`;
+      
+      await cursorBucket.removeItem(cursorKey)
+      await pullRequestCommentsBucket.removeItem(cursorKey)
     }
   };
 
