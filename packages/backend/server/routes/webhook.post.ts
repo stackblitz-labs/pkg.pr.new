@@ -1,12 +1,13 @@
 import type { HandlerFunction } from "@octokit/webhooks/dist-types/types";
 import type { WorkflowData } from "../types";
 import { hash } from "ohash";
+import { abbreviateCommitHash } from "@pkg-pr-new/utils";
 
 export default eventHandler(async (event) => {
   const app = useOctokitApp(event);
 
   const { test } = useRuntimeConfig(event);
-  const { setItem, removeItem } = useWorkflowsBucket(event);
+  const workflowsBucket = useWorkflowsBucket(event);
   const pullRequestNumbersBucket = usePullRequestNumbersBucket(event);
   const cursorBucket = useCursorsBucket(event);
 
@@ -33,15 +34,14 @@ export default eventHandler(async (event) => {
       if (prNumber) {
         // it's a pull request workflow
         data.ref = `${prNumber}`;
-        data.isPullRequest = true;
         pullRequestNumbersBucket.removeItem(dataHash);
       }
 
       // Publishing is only available throughout the lifetime of a workflow_job
-      await setItem(hashKey, data);
+      await workflowsBucket.setItem(hashKey, data);
     } else if (payload.action === "completed") {
       // Publishing is not available anymore
-      await removeItem(hashKey);
+      await workflowsBucket.removeItem(hashKey);
     }
   };
 
@@ -58,13 +58,13 @@ export default eventHandler(async (event) => {
     const hashKey = hash(key);
     if (payload.action === "synchronize" || payload.action === "opened") {
       await pullRequestNumbersBucket.setItem(hashKey, payload.number);
-    } else if (payload.action === 'closed') {
+    } else if (payload.action === "closed") {
       await pullRequestNumbersBucket.removeItem(hashKey);
 
       const baseKey = `${owner}:${repo}`;
       const cursorKey = `${baseKey}:${payload.pull_request.head.ref}`;
-      
-      await cursorBucket.removeItem(cursorKey)
+
+      await cursorBucket.removeItem(cursorKey);
     }
   };
 

@@ -1,3 +1,5 @@
+import { abbreviateCommitHash, isPullRequest } from "@pkg-pr-new/utils";
+
 export default eventHandler(async (event) => {
   const contentLength = Number(getHeader(event, "content-length"));
   // 5mb limits for now
@@ -107,7 +109,7 @@ export default eventHandler(async (event) => {
     });
   }
 
-  if (workflowData.isPullRequest) {
+  if (isPullRequest(workflowData.ref)) {
     const { data: comments } = await installation.request(
       "GET /repos/{owner}/{repo}/issues/{issue_number}/comments",
       {

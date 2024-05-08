@@ -1,6 +1,6 @@
 import { WorkflowData } from "../../../types";
 
-type Params = Omit<WorkflowData, "sha" | "isPullRequest" | "ref"> & {
+type Params = Omit<WorkflowData, "sha" | "ref"> & {
   packageAndRefOrSha: string;
 };
 
