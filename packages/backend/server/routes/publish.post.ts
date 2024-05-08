@@ -120,7 +120,7 @@ export default eventHandler(async (event) => {
     );
     const appComments = data.filter((comment) => comment.performed_via_github_app?.id === Number(appId))
 
-    if (appComments.length) {
+    if (false) {
       const prevComment = appComments[0];
       await installation.request(
         "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}",
