@@ -109,7 +109,8 @@ export default eventHandler(async (event) => {
     });
   }
 
-  if (isPullRequest(workflowData.ref)) {
+  // if (isPullRequest(workflowData.ref)) {
+  if (true) {
     const { data } = await installation.request(
       "GET /repos/{owner}/{repo}/issues/{issue_number}/comments",
       {
