@@ -108,8 +108,7 @@ export default eventHandler(async (event) => {
     });
   }
 
-  // if (isPullRequest(workflowData.ref)) {
-  if (true) {
+  if (isPullRequest(workflowData.ref)) {
     const { data } = await installation.request(
       "GET /repos/{owner}/{repo}/issues/{issue_number}/comments",
       {
@@ -122,7 +121,7 @@ export default eventHandler(async (event) => {
       (comment) => comment.performed_via_github_app?.id === Number(appId),
     );
 
-    if (false) {
+    if (appComments.length) {
       const prevComment = appComments[0];
       await installation.request(
         "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}",
