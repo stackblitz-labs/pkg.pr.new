@@ -18,6 +18,7 @@ export default eventHandler(async (event) => {
       message: "sb-commit-timestamp and sb-key headers are required",
     });
   }
+  const { appId } = useRuntimeConfig(event);
   const workflowsBucket = useWorkflowsBucket(event);
   const packagesBucket = usePackagesBucket(event);
   const cursorBucket = useCursorsBucket(event);
@@ -82,12 +83,12 @@ export default eventHandler(async (event) => {
       check_name: checkName,
       owner: workflowData.owner,
       repo: workflowData.repo,
-      ref: workflowData.ref,
+      ref: sha,
+      app_id: Number(appId)
     },
   );
-  const hasCheckRun = check_runs.some((c) => c.head_sha === sha);
 
-  if (!hasCheckRun) {
+  if (!check_runs.length) {
     await installation.request("POST /repos/{owner}/{repo}/check-runs", {
       name: checkName,
       owner: workflowData.owner,
