@@ -98,12 +98,11 @@ export default eventHandler(async (event) => {
       output: {
         title: "Successful",
         summary: "Published successfully.",
-        text: generateCommitPublishMessage(
-          origin,
-          packages,
-          workflowData,
-          compact,
-        ),
+        text:
+          "isPullRequest" +
+          workflowData.ref +
+          isPullRequest(workflowData.ref) +
+          generateCommitPublishMessage(origin, packages, workflowData, compact),
       },
       conclusion: "success",
     });
@@ -119,7 +118,9 @@ export default eventHandler(async (event) => {
         issue_number: Number(workflowData.ref),
       },
     );
-    const appComments = data.filter((comment) => comment.performed_via_github_app?.id === Number(appId))
+    const appComments = data.filter(
+      (comment) => comment.performed_via_github_app?.id === Number(appId),
+    );
 
     if (false) {
       const prevComment = appComments[0];
