@@ -29,13 +29,14 @@ export default eventHandler(async (event) => {
         ref: payload.workflow_job.head_branch!,
       };
       const prDataHash = hash(prData);
+      const isPullRequest = await pullRequestNumbersBucket.hasItem(prDataHash)
       const prNumber = await pullRequestNumbersBucket.getItem(prDataHash);
 
       const data: WorkflowData = {
         owner,
         repo,
         sha: abbreviateCommitHash(payload.workflow_job.head_sha),
-        ref: prNumber !== null
+        ref: isPullRequest
           ? // it's a pull request workflow
             `${prNumber}`
           : payload.workflow_job.head_branch!,

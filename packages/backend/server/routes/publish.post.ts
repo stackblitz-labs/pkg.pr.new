@@ -39,6 +39,7 @@ export default eventHandler(async (event) => {
 
   const sha = abbreviateCommitHash(workflowData.sha);
   const baseKey = `${workflowData.owner}:${workflowData.repo}`;
+  
   const cursorKey = `${baseKey}:${workflowData.ref}`;
 
   const currentCursor = await cursorBucket.getItem(cursorKey);
