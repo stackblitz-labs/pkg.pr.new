@@ -9,7 +9,6 @@ export default eventHandler(async (event) => {
   const { setItem, removeItem } = useWorkflowsBucket(event);
   const pullRequestNumbersBucket = usePullRequestNumbersBucket(event);
   const cursorBucket = useCursorsBucket(event);
-  const pullRequestCommentsBucket = usePullRequestCommentsBucket(event);
 
   const workflowHandler: HandlerFunction<"workflow_job", unknown> = async ({
     payload,
@@ -66,7 +65,6 @@ export default eventHandler(async (event) => {
       const cursorKey = `${baseKey}:${payload.pull_request.head.ref}`;
       
       await cursorBucket.removeItem(cursorKey)
-      await pullRequestCommentsBucket.removeItem(cursorKey)
     }
   };
 

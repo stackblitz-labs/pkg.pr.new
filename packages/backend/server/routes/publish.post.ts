@@ -22,7 +22,6 @@ export default eventHandler(async (event) => {
   const workflowsBucket = useWorkflowsBucket(event);
   const packagesBucket = usePackagesBucket(event);
   const cursorBucket = useCursorsBucket(event);
-  const pullRequestCommentsBucket = usePullRequestCommentsBucket(event);
 
   if (!(await workflowsBucket.hasItem(key))) {
     throw createError({
@@ -84,7 +83,7 @@ export default eventHandler(async (event) => {
       owner: workflowData.owner,
       repo: workflowData.repo,
       ref: sha,
-      app_id: Number(appId)
+      app_id: Number(appId),
     },
   );
 
@@ -109,8 +108,33 @@ export default eventHandler(async (event) => {
   }
 
   if (workflowData.isPullRequest) {
-    const postComment = async () => {
-      const comment = await installation.request(
+    const { data: comments } = await installation.request(
+      "GET /repos/{owner}/{repo}/issues/{issue_number}/comments",
+      {
+        owner: workflowData.owner,
+        repo: workflowData.repo,
+        issue_number: Number(workflowData.ref),
+      },
+    );
+
+    if (comments.length) {
+      const prevComment = comments[0];
+      await installation.request(
+        "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}",
+        {
+          owner: workflowData.owner,
+          repo: workflowData.repo,
+          comment_id: prevComment.id,
+          body: generatePullRequestPublishMessage(
+            origin,
+            packages,
+            workflowData,
+            compact,
+          ),
+        },
+      );
+    } else {
+      await installation.request(
         "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
         {
           owner: workflowData.owner,
@@ -124,46 +148,6 @@ export default eventHandler(async (event) => {
           ),
         },
       );
-      await pullRequestCommentsBucket.setItem(cursorKey, comment.data.id);
-    };
-
-    const alreadyCommented = await pullRequestCommentsBucket.hasItem(cursorKey);
-    if (!alreadyCommented) {
-      await postComment();
-    } else {
-      const prevCommentId =
-        (await pullRequestCommentsBucket.getItem(cursorKey))!;
-      let exists = false;
-      try {
-        await installation.request(
-          "GET /repos/{owner}/{repo}/issues/comments/{comment_id}",
-          {
-            owner: workflowData.owner,
-            repo: workflowData.repo,
-            comment_id: prevCommentId,
-          },
-        );
-        exists = true;
-      } catch {}
-      if (exists) {
-        await installation.request(
-          "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}",
-          {
-            owner: workflowData.owner,
-            repo: workflowData.repo,
-            comment_id: prevCommentId,
-            body: generatePullRequestPublishMessage(
-              origin,
-              packages,
-              workflowData,
-              compact,
-            ),
-          },
-        );
-      } else {
-        // deleted comment
-        await postComment();
-      }
     }
   }
 
