@@ -20,13 +20,7 @@ function generateJWT() {
 
 // Generate JWT
 const jwtToken = generateJWT();
-console.log(jwtToken);
 
-// console.log("token", createTokenAuth(process.env.GITHUB_TOKEN!)());
-// const { octokit } = new App({
-//   appId: process.env.NITRO_APP_ID,
-//   p
-// });
 const octokit = new Octokit({
   auth: jwtToken,
 });

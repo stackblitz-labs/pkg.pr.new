@@ -2,7 +2,7 @@ import { WorkflowData } from "../types";
 import { getPackageManifest } from "query-registry";
 import { extractOwnerAndRepo, extractRepository } from "@pkg-pr-new/utils";
 
-type Params = Omit<WorkflowData, "sha" | "isPullRequest" | "ref"> & {
+type Params = Omit<WorkflowData, "sha" | "ref"> & {
   packageAndRefOrSha: string;
 };
 

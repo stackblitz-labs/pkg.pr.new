@@ -1,6 +1,6 @@
 import { WorkflowData } from "../../../types";
 
-type Params = Omit<WorkflowData, "sha" | "isPullRequest" | "ref">;
+type Params = Omit<WorkflowData, "sha" | "ref">;
 
 // https://pkg.pr.new/tinylibs/tinybench@a832a55
 export default eventHandler(async (event) => {

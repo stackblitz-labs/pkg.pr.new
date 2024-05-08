@@ -6,19 +6,22 @@ export function generateCommitPublishMessage(
   workflowData: WorkflowData,
   compact: boolean,
 ) {
-  const shaMessages = packages.map((packageName) => {
-    const shaUrl = generatePublishUrl(
-      "sha",
-      origin,
-      packageName,
-      workflowData,
-      compact,
-    );
-    return `__${packageName}__:
+  const shaMessages = packages
+    .map((packageName) => {
+      const shaUrl = generatePublishUrl(
+        "sha",
+        origin,
+        packageName,
+        workflowData,
+        compact,
+      );
+      return `__${packageName}__:
 \`\`\`
 npm i ${shaUrl}    
-\`\`\``;
-  });
+\`\`\`
+`;
+    })
+    .join("\n");
 
   return `
 Last Commit: ${workflowData.sha}
@@ -33,43 +36,47 @@ export function generatePullRequestPublishMessage(
   workflowData: WorkflowData,
   compact: boolean,
 ) {
-  const shaMessages = packages.map((packageName) => {
-    const shaUrl = generatePublishUrl(
-      "sha",
-      origin,
-      packageName,
-      workflowData,
-      compact,
-    );
-    return `__${packageName}(${workflowData.sha})__:
+  const shaMessages = packages
+    .map((packageName) => {
+      const shaUrl = generatePublishUrl(
+        "sha",
+        origin,
+        packageName,
+        workflowData,
+        compact,
+      );
+      return `__${packageName}(${workflowData.sha})__:
 \`\`\`
 npm i ${shaUrl}    
 \`\`\``;
-  });
+    })
+    .join("\n");
 
-  const refMessages = packages.map((packageName) => {
-    const refUrl = generatePublishUrl(
-      "ref",
-      origin,
-      packageName,
-      workflowData,
-      compact,
-    );
-    return `__${packageName}(#${workflowData.ref})__:
+  const refMessages = packages
+    .map((packageName) => {
+      const refUrl = generatePublishUrl(
+        "ref",
+        origin,
+        packageName,
+        workflowData,
+        compact,
+      );
+      return `__${packageName}(#${workflowData.ref})__:
 \`\`\`
 npm i ${refUrl}    
 \`\`\``;
-  });
+    })
+    .join("\n");
 
   return `
 Last Commit Build: ${workflowData.sha}
 
-${shaMessages.join("\n")}
+${shaMessages}
     
 
 Pull Request Build: #${workflowData.ref}
 
-${refMessages.join("\n")}
+${refMessages}
 `;
 }
 

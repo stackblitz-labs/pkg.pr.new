@@ -1,7 +1,7 @@
 {
   "event": "pull_request",
   "payload": {
-    "action": "synchronize",
+    "action": "opened",
     "number": 1,
     "pull_request": {
       "url": "https://api.github.com/repos/stackblitz-labs/temporary-test/pulls/1",

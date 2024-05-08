@@ -1,3 +1,5 @@
+import { abbreviateCommitHash, isPullRequest } from "@pkg-pr-new/utils";
+
 export default eventHandler(async (event) => {
   const contentLength = Number(getHeader(event, "content-length"));
   // 5mb limits for now
@@ -18,11 +20,10 @@ export default eventHandler(async (event) => {
       message: "sb-commit-timestamp and sb-key headers are required",
     });
   }
+  const { appId } = useRuntimeConfig(event);
   const workflowsBucket = useWorkflowsBucket(event);
   const packagesBucket = usePackagesBucket(event);
   const cursorBucket = useCursorsBucket(event);
-  const checkRunBucket = useCheckRunsBucket(event);
-  const pullRequestCommentsBucket = usePullRequestCommentsBucket(event);
 
   if (!(await workflowsBucket.hasItem(key))) {
     throw createError({
@@ -38,6 +39,7 @@ export default eventHandler(async (event) => {
 
   const sha = abbreviateCommitHash(workflowData.sha);
   const baseKey = `${workflowData.owner}:${workflowData.repo}`;
+  
   const cursorKey = `${baseKey}:${workflowData.ref}`;
 
   const currentCursor = await cursorBucket.getItem(cursorKey);
@@ -74,35 +76,70 @@ export default eventHandler(async (event) => {
 
   const installation = await app.getInstallationOctokit(installationData.id);
 
-  const checkRunKey = `${baseKey}:${sha}`;
+  const checkName = "Continuous Releases";
+  const {
+    data: { check_runs },
+  } = await installation.request(
+    "GET /repos/{owner}/{repo}/commits/{ref}/check-runs",
+    {
+      check_name: checkName,
+      owner: workflowData.owner,
+      repo: workflowData.repo,
+      ref: sha,
+      app_id: Number(appId),
+    },
+  );
 
-  if (!(await checkRunBucket.hasItem(checkRunKey))) {
-    const checkRun = await installation.request(
-      "POST /repos/{owner}/{repo}/check-runs",
+  if (!check_runs.length) {
+    await installation.request("POST /repos/{owner}/{repo}/check-runs", {
+      name: checkName,
+      owner: workflowData.owner,
+      repo: workflowData.repo,
+      head_sha: sha,
+      output: {
+        title: "Successful",
+        summary: "Published successfully.",
+        text:
+          "isPullRequest" +
+          workflowData.ref +
+          isPullRequest(workflowData.ref) +
+          generateCommitPublishMessage(origin, packages, workflowData, compact),
+      },
+      conclusion: "success",
+    });
+  }
+
+  if (isPullRequest(workflowData.ref)) {
+    const { data } = await installation.request(
+      "GET /repos/{owner}/{repo}/issues/{issue_number}/comments",
       {
-        name: "Continuous Releases",
         owner: workflowData.owner,
         repo: workflowData.repo,
-        head_sha: sha,
-        output: {
-          title: "Successful",
-          summary: "Published successfully.",
-          text: generateCommitPublishMessage(
+        issue_number: Number(workflowData.ref),
+      },
+    );
+    const appComments = data.filter(
+      (comment) => comment.performed_via_github_app?.id === Number(appId),
+    );
+
+    if (appComments.length) {
+      const prevComment = appComments[0];
+      await installation.request(
+        "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}",
+        {
+          owner: workflowData.owner,
+          repo: workflowData.repo,
+          comment_id: prevComment.id,
+          body: generatePullRequestPublishMessage(
             origin,
             packages,
             workflowData,
             compact,
           ),
         },
-        conclusion: "success",
-      },
-    );
-    await checkRunBucket.setItem(checkRunKey, checkRun.data.id);
-  }
-
-  if (workflowData.isPullRequest) {
-    const postComment = async () => {
-      const comment = await installation.request(
+      );
+    } else {
+      await installation.request(
         "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
         {
           owner: workflowData.owner,
@@ -116,47 +153,9 @@ export default eventHandler(async (event) => {
           ),
         },
       );
-      await pullRequestCommentsBucket.setItem(baseKey, comment.data.id);
-    };
-
-    const alreadyCommented = await pullRequestCommentsBucket.hasItem(baseKey);
-    if (!alreadyCommented) {
-      await postComment();
-    } else {
-      const prevCommentId = (await pullRequestCommentsBucket.getItem(baseKey))!;
-      let exists = false;
-      try {
-        await installation.request(
-          "GET /repos/{owner}/{repo}/issues/comments/{comment_id}",
-          {
-            owner: workflowData.owner,
-            repo: workflowData.repo,
-            comment_id: prevCommentId,
-          },
-        );
-        exists = true;
-      } catch {}
-      if (exists) {
-        await installation.request(
-          "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}",
-          {
-            owner: workflowData.owner,
-            repo: workflowData.repo,
-            comment_id: prevCommentId,
-            body: generatePullRequestPublishMessage(
-              origin,
-              packages,
-              workflowData,
-              compact,
-            ),
-          },
-        );
-      } else {
-        // deleted comment
-        await postComment();
-      }
     }
   }
+
 
   return {
     ok: true,
