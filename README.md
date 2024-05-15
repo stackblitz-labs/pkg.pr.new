@@ -4,7 +4,7 @@
 
 > We call it "Continuous Releases" too.
 
-With pkg.pr.new, each of your commits and pull requests would trigger an instant preview release. This enables users to access features and bug-fixes without the need to wait for release cycles using npm or pull request merges.
+With pkg.pr.new, each of your commits and pull requests would trigger an instant preview release without publishing anything to NPM. This enables users to access features and bug-fixes without the need to wait for release cycles using npm or pull request merges.
 
 - 🚀 Instant Builds
 - 🍕 No Need for NPM Access
