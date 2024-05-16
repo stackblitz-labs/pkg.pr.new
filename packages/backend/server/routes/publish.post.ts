@@ -29,7 +29,7 @@ export default eventHandler(async (event) => {
     throw createError({
       statusCode: 401,
       message:
-        "Try publishing from a github workflow or install https://github.com/apps/pkg-pr-new Github app on this repo",
+        "Try publishing from a github workflow! Also make sure you install https://github.com/apps/pkg-pr-new Github app on the repo",
     });
   }
 
@@ -39,7 +39,7 @@ export default eventHandler(async (event) => {
 
   const sha = abbreviateCommitHash(workflowData.sha);
   const baseKey = `${workflowData.owner}:${workflowData.repo}`;
-  
+
   const cursorKey = `${baseKey}:${workflowData.ref}`;
 
   const currentCursor = await cursorBucket.getItem(cursorKey);
@@ -155,7 +155,6 @@ export default eventHandler(async (event) => {
       );
     }
   }
-
 
   return {
     ok: true,
