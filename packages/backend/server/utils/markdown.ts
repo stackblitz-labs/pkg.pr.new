@@ -2,44 +2,81 @@ import { WorkflowData } from "../types";
 
 export function generateCommitPublishMessage(
   origin: string,
-  packageName: string,
-  workflowData: WorkflowData
+  packages: string[],
+  workflowData: WorkflowData,
+  compact: boolean,
 ) {
-  const shaUrl = generatePublishUrl("sha", origin, packageName, workflowData);
-  return `
-Last Commit: ${workflowData.sha}
-
-__${packageName}__:
+  const shaMessages = packages
+    .map((packageName) => {
+      const shaUrl = generatePublishUrl(
+        "sha",
+        origin,
+        packageName,
+        workflowData,
+        compact,
+      );
+      return `__${packageName}__:
 \`\`\`
 npm i ${shaUrl}    
 \`\`\`
-    
-    `;
+`;
+    })
+    .join("\n");
+
+  return `
+Last Commit: ${workflowData.sha}
+
+${shaMessages}
+`;
 }
 
 export function generatePullRequestPublishMessage(
   origin: string,
-  packageName: string,
-  workflowData: WorkflowData
+  packages: string[],
+  workflowData: WorkflowData,
+  compact: boolean,
 ) {
-  const shaUrl = generatePublishUrl("sha", origin, packageName, workflowData);
-  const refUrl = generatePublishUrl("ref", origin, packageName, workflowData);
+  const shaMessages = packages
+    .map((packageName) => {
+      const shaUrl = generatePublishUrl(
+        "sha",
+        origin,
+        packageName,
+        workflowData,
+        compact,
+      );
+      return `__${packageName}(${workflowData.sha})__:
+\`\`\`
+npm i ${shaUrl}    
+\`\`\``;
+    })
+    .join("\n");
+
+  const refMessages = packages
+    .map((packageName) => {
+      const refUrl = generatePublishUrl(
+        "ref",
+        origin,
+        packageName,
+        workflowData,
+        compact,
+      );
+      return `__${packageName}(#${workflowData.ref})__:
+\`\`\`
+npm i ${refUrl}    
+\`\`\``;
+    })
+    .join("\n");
 
   return `
 Last Commit Build: ${workflowData.sha}
 
-__${packageName}(${workflowData.sha})__:
-\`\`\`
-npm i ${shaUrl}    
-\`\`\`
+${shaMessages}
+    
 
-Pull Request Build: #${workflowData.ref.replace('pr-', '')}
+Pull Request Build: #${workflowData.ref}
 
-__${packageName}(#${workflowData.ref.replace('pr-', '')})__:
-\`\`\`
-npm i ${refUrl}    
-\`\`\`
-
+${refMessages}
 `;
 }
 
@@ -47,13 +84,15 @@ export function generatePublishUrl(
   base: "sha" | "ref",
   origin: string,
   packageName: string,
-  workflowData: WorkflowData
+  workflowData: WorkflowData,
+  compact: boolean,
 ) {
-  const url = new URL(
-    `/${workflowData.owner}/${workflowData.repo}/${packageName}@${
-      base === "sha" ? workflowData.sha : workflowData.ref
-    }`,
-    origin
-  );
-  return url;
+  const tag = base === "sha" ? workflowData.sha : workflowData.ref;
+  const shorter = workflowData.repo === packageName;
+
+  const urlPath = compact
+    ? `/${packageName}@${tag}`
+    : `/${workflowData.owner}${shorter ? "" : `/${workflowData.repo}`}/${packageName}@${tag}`;
+
+  return new URL(urlPath, origin);
 }

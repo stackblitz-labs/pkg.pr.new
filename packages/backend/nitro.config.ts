@@ -3,7 +3,7 @@ import ncb from "nitro-cloudflare-dev";
 
 declare module "nitro-cloudflare-dev" {
   interface Env {
-    ENV: "production" | "staging"
+    ENV: "production" | "staging";
     PROD_CR_BUCKET: R2Bucket;
     CR_BUCKET: R2Bucket;
   }
@@ -25,12 +25,6 @@ export default defineNitroConfig({
   preset: "cloudflare-pages",
   modules: [ncb],
   srcDir: "server",
-  experimental: {
-    tasks: true,
-  },
-  scheduledTasks: {
-    '0 15 1 * *': ['rm:stale']
-  },
   runtimeConfig: {
     appId: "",
     webhookSecret: "",

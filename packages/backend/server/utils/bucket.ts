@@ -16,8 +16,8 @@ export function useBucket(event: Event) {
       // @ts-ignore TODO(upstream): fix type mismatch
       binding:
         event.context.cloudflare.env.ENV === "production"
-          ? 'PROD_CR_BUCKET'
-          : 'CR_BUCKET',
+          ? "PROD_CR_BUCKET"
+          : "CR_BUCKET",
     }),
   });
 }
@@ -48,25 +48,6 @@ export function useCursorsBucket(event: Event) {
 
 useCursorsBucket.key = "cursor";
 useCursorsBucket.base = joinKeys(useBucket.base, useCursorsBucket.key);
-
-export function useCheckRunsBucket(event: Event) {
-  const storage = useBucket(event);
-  return prefixStorage<number>(storage, useCheckRunsBucket.key);
-}
-
-useCheckRunsBucket.key = "check-run";
-useCheckRunsBucket.base = joinKeys(useBucket.base, useCheckRunsBucket.key);
-
-export function usePullRequestCommentsBucket(event: Event) {
-  const storage = useBucket(event);
-  return prefixStorage<number>(storage, usePullRequestCommentsBucket.key);
-}
-
-usePullRequestCommentsBucket.key = "pr-comment";
-usePullRequestCommentsBucket.base = joinKeys(
-  useBucket.base,
-  usePullRequestCommentsBucket.key,
-);
 
 export function useDownloadedAtBucket(event: Event) {
   const storage = useBucket(event);

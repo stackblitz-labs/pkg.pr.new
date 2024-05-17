@@ -1,13 +1,15 @@
 import type { HandlerFunction } from "@octokit/webhooks/dist-types/types";
-import type { WorkflowData } from "../types";
+import type { PullRequestData, WorkflowData } from "../types";
 import { hash } from "ohash";
+import { abbreviateCommitHash } from "@pkg-pr-new/utils";
 
 export default eventHandler(async (event) => {
   const app = useOctokitApp(event);
 
   const { test } = useRuntimeConfig(event);
-  const { setItem, removeItem } = useWorkflowsBucket(event);
-  const pullRequestNumbersBucket = usePullRequestNumbersBucket(event)
+  const workflowsBucket = useWorkflowsBucket(event);
+  const pullRequestNumbersBucket = usePullRequestNumbersBucket(event);
+  const cursorBucket = useCursorsBucket(event);
 
   const workflowHandler: HandlerFunction<"workflow_job", unknown> = async ({
     payload,
@@ -21,52 +23,66 @@ export default eventHandler(async (event) => {
     };
     const hashKey = hash(metadata);
     if (payload.action === "queued") {
+      const prData: PullRequestData = {
+        owner,
+        repo,
+        ref: payload.workflow_job.head_branch!,
+      };
+      const prDataHash = hash(prData);
+      const isPullRequest = await pullRequestNumbersBucket.hasItem(prDataHash)
+      const prNumber = await pullRequestNumbersBucket.getItem(prDataHash);
+
       const data: WorkflowData = {
         owner,
         repo,
         sha: abbreviateCommitHash(payload.workflow_job.head_sha),
-        ref: payload.workflow_job.head_branch!,
+        ref: isPullRequest
+          ? // it's a pull request workflow
+            `${prNumber}`
+          : payload.workflow_job.head_branch!,
       };
-      const prNumber = await pullRequestNumbersBucket.getItem(hash(data))
-      if (prNumber) {
-        // it's a pull request workflow
-        data.ref = `pr-${prNumber}`
-        data.isPullRequest = true
-      }
 
-      // Publishing is only available throughout the lifetime of a worklow_job
-      await setItem(hashKey, data);
+      // Publishing is only available throughout the lifetime of a workflow_job
+      await workflowsBucket.setItem(hashKey, data);
     } else if (payload.action === "completed") {
       // Publishing is not available anymore
-      await removeItem(hashKey);
+      await workflowsBucket.removeItem(hashKey);
     }
   };
 
   const pullRequestHandler: HandlerFunction<"pull_request", unknown> = async ({
-    payload
+    payload,
   }) => {
-    if (payload.action === 'synchronize') {
-      const [owner, repo] = payload.repository.full_name.split("/");
-      const key: WorkflowData = {
-        owner,
-        repo,
-        sha: abbreviateCommitHash(payload.pull_request.head.sha),
-        ref: payload.pull_request.head.ref,
-      }
-      const hashKey = hash(key)
-      await pullRequestNumbersBucket.setItem(hashKey, payload.number)
-    } 
-  }
+    const [owner, repo] = payload.repository.full_name.split("/");
+    // TODO: functions that generate these kinda keys
+    const key: PullRequestData = {
+      owner,
+      repo,
+      ref: payload.pull_request.head.ref,
+    };
+    const prDataHash = hash(key);
+    if (payload.action === "opened") {
+      await pullRequestNumbersBucket.setItem(prDataHash, payload.number);
+      // TODO: send comment here if the workflow was run before (for in repo pull requests) 
+    } else if (payload.action === "closed") {
+      await pullRequestNumbersBucket.removeItem(prDataHash);
+
+      const baseKey = `${owner}:${repo}`;
+      const cursorKey = `${baseKey}:${payload.pull_request.head.ref}`;
+
+      await cursorBucket.removeItem(cursorKey);
+    }
+  };
 
   app.webhooks.on("workflow_job", workflowHandler);
-  app.webhooks.on("pull_request", pullRequestHandler)
+  app.webhooks.on("pull_request", pullRequestHandler);
 
   type EmitterWebhookEvent = Parameters<
     typeof app.webhooks.receive | typeof app.webhooks.verifyAndReceive
   >[0];
   const id: EmitterWebhookEvent["id"] = event.headers.get("x-github-delivery")!;
   const name = event.headers.get(
-    "x-github-event"
+    "x-github-event",
   ) as EmitterWebhookEvent["name"];
   const signature = event.headers.get("x-hub-signature-256") ?? "";
   const payload = (await readRawBody(event))!;
