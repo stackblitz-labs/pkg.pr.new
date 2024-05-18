@@ -28,7 +28,11 @@ It is aiming to reduce the number of these comments :)
 
 ## Setup
 
-The Github Application is available [here](https://github.com/apps/pkg-pr-new). Make sure it's installed on the repository before trying to publish a package.
+The Github Application is available [here](https://github.com/apps/pkg-pr-new). 
+
+> [!IMPORTANT]
+> Make sure it's installed on the repository before trying to publish a package.
+
 
 After installing on your repository, you can run `npx pkg-pr-new publish` with `GITHUB_TOKEN` in your workflows and then you have continuous releases!
 
