@@ -99,11 +99,7 @@ export default eventHandler(async (event) => {
       output: {
         title: "Successful",
         summary: "Published successfully.",
-        text:
-          "isPullRequest" +
-          workflowData.ref +
-          isPullRequest(workflowData.ref) +
-          generateCommitPublishMessage(origin, packages, workflowData, compact),
+        text: generateCommitPublishMessage(origin, packages, workflowData, compact),
       },
       conclusion: "success",
     });
