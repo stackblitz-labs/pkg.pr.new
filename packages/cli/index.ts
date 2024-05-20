@@ -25,8 +25,6 @@ if (!process.env.TEST && process.env.GITHUB_ACTIONS !== "true") {
 }
 const octokit = new Octokit();
 
-console.log('installations', octokit.apps.listInstallations())
-
 const {
   GITHUB_SERVER_URL,
   GITHUB_REPOSITORY,
@@ -37,6 +35,17 @@ const {
 } = process.env;
 
 const [owner, repo] = GITHUB_REPOSITORY.split("/");
+
+const checkResponse = await fetch(new URL('/check', API_URL), {
+  body: JSON.stringify({
+    owner: "hwerwe",
+    repo
+  })
+})
+if (!checkResponse.ok) {
+  console.log(await checkResponse.text())
+  process.exit(1)
+}
 
 const commit = await octokit.git.getCommit({
   owner,
