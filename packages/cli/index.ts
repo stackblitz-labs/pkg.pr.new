@@ -36,15 +36,17 @@ const {
 
 const [owner, repo] = GITHUB_REPOSITORY.split("/");
 
-const checkResponse = await fetch(new URL('/check', API_URL), {
+const checkResponse = await fetch(new URL("/check", API_URL), {
+  method: "POST",
   body: JSON.stringify({
     owner: "hwerwe",
-    repo
-  })
-})
+    repo,
+  }),
+});
+
 if (!checkResponse.ok) {
-  console.log(await checkResponse.text())
-  process.exit(1)
+  console.log(await checkResponse.text());
+  process.exit(1);
 }
 
 const commit = await octokit.git.getCommit({
