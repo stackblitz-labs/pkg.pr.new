@@ -2,7 +2,6 @@ export default eventHandler(async (event) => {
   const data = await readRawBody(event);
   const { owner, repo } = JSON.parse(data!);
 
-  return { a: "hello", owner, repo };
   const app = useOctokitApp(event);
 
   const { status } = await app.octokit.request(
