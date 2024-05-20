@@ -17,6 +17,7 @@
   "license": "ISC",
   "dependencies": {
     "@jsdevtools/ez-spawn": "^3.0.4",
+    "fast-glob": "^3.3.2",
     "@octokit/action": "^6.0.7"
   },
   "devDependencies": {

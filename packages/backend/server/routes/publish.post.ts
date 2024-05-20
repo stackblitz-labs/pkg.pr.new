@@ -20,6 +20,18 @@ export default eventHandler(async (event) => {
       message: "sb-commit-timestamp and sb-key headers are required",
     });
   }
+
+  const formData = await readFormData(event);
+  const packages = [...formData.keys()];
+
+  if (!packages.length) {
+    throw createError({
+      statusCode: 400,
+      message:
+        "No packages",
+    });
+  }
+
   const { appId } = useRuntimeConfig(event);
   const workflowsBucket = useWorkflowsBucket(event);
   const packagesBucket = usePackagesBucket(event);
@@ -43,10 +55,7 @@ export default eventHandler(async (event) => {
   const cursorKey = `${baseKey}:${workflowData.ref}`;
 
   const currentCursor = await cursorBucket.getItem(cursorKey);
-
-  const formData = await readFormData(event);
-
-  const packages = [...formData.keys()];
+  
   for (const packageName of packages) {
     const file = formData.get(packageName)! as File;
     const packageKey = `${baseKey}:${sha}:${packageName}`;
