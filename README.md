@@ -4,7 +4,7 @@
 
 > We call it "Continuous Releases" too.
 
-With pkg.pr.new, each of your commits and pull requests would trigger an instant preview release without publishing anything to NPM. This enables users to access features and bug-fixes without the need to wait for release cycles using npm or pull request merges.
+With pkg.pr.new, each of your commits and pull requests will trigger an instant preview release without publishing anything to NPM. This enables users to access features and bug-fixes without the need to wait for release cycles using npm or pull request merges.
 
 - 🚀 Instant Builds
 - 🍕 No Need for NPM Access
@@ -28,11 +28,10 @@ It is aiming to reduce the number of these comments :)
 
 ## Setup
 
-The Github Application is available [here](https://github.com/apps/pkg-pr-new). 
+The Github Application is available [here](https://github.com/apps/pkg-pr-new).
 
 > [!IMPORTANT]
 > Make sure it's installed on the repository before trying to publish a package.
-
 
 After installing on your repository, you can run `npx pkg-pr-new publish` with `GITHUB_TOKEN` in your workflows and then you have continuous releases!
 
@@ -43,21 +42,25 @@ npm install --save-dev pkg-pr-new # or `npx pkg-pr-new publish`
 For workspaces:
 
 ```sh
-npx pkg-pr-new publish ./packages/A ./packages/B # or `npx pkg-pr-new publish ./packages/*` 
+npx pkg-pr-new publish ./packages/A ./packages/B # or `npx pkg-pr-new publish ./packages/*`
 ```
 
-For shorter urls, `--compact` can be useful: 
+For shorter urls, `--compact` can be useful:
+
 ```sh
-npx pkg-pr-new publish --compact ./packages/A ./packages/B 
+npx pkg-pr-new publish --compact ./packages/A ./packages/B
 ```
-> `--compact` requires your package to be a valid (published) package on npm with a specified `repository` field in the package.json! See [this](https://docs.npmjs.com/cli/v7/configuring-npm/package-json#repository). 
+
+> `--compact` requires your package to be a valid (published) package on npm with a specified `repository` field in the package.json! See [this](https://docs.npmjs.com/cli/v7/configuring-npm/package-json#repository).
 
 With `--compact`:
+
 ```sh
 npm i https://pkg.pr.new/tinybench@a832a55
 ```
 
 Without `--compact`:
+
 ```sh
 npm i https://pkg.pr.new/tinylibs/tinybench/tinybench@a832a55
 ```
