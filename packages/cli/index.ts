@@ -77,6 +77,7 @@ const main = defineCommand({
           const paths = (args._.length ? args._ : ["."]).flatMap((p) => fg.sync(p)).map((p) =>
             path.resolve(p),
           );
+          console.log('paths', paths)
 
           const deps: Map<string, string> = new Map();
           const pJsonContent: Map<string, string> = new Map();
