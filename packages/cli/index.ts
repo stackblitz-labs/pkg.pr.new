@@ -39,7 +39,7 @@ const [owner, repo] = GITHUB_REPOSITORY.split("/");
 const checkResponse = await fetch(new URL("/check", API_URL), {
   method: "POST",
   body: JSON.stringify({
-    owner: "hllkjlkj",
+    owner,
     repo,
   }),
 });
