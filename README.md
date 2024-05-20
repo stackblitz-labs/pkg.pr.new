@@ -43,7 +43,7 @@ npm install --save-dev pkg-pr-new # or `npx pkg-pr-new publish`
 For workspaces:
 
 ```sh
-npx pkg-pr-new publish ./packages/A ./packages/B 
+npx pkg-pr-new publish ./packages/A ./packages/B # or `npx pkg-pr-new publish ./packages/*` 
 ```
 
 For shorter urls, `--compact` can be useful: 
