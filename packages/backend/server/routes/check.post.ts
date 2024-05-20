@@ -1,7 +1,7 @@
 export default eventHandler(async (event) => {
-  const { owner, repo } = await readBody(event);
+  const data = await readBody(event);
 
-  return {a: 'hello'}
+  return {a: 'hello', data}
   const app = useOctokitApp(event);
 
   const { status } = await app.octokit.request(
