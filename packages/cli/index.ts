@@ -44,7 +44,7 @@ const checkResponse = await fetch(new URL("/check", API_URL), {
   }),
 });
 
-console.log(checkResponse);
+console.log(checkResponse, await checkResponse.json());
 process.exit(1)
 if (!checkResponse.ok) {
   console.log(await checkResponse.text());
