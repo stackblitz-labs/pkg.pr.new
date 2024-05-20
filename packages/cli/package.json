@@ -17,12 +17,12 @@
   "license": "ISC",
   "dependencies": {
     "@jsdevtools/ez-spawn": "^3.0.4",
+    "fast-glob": "^3.3.2",
     "@octokit/action": "^6.0.7"
   },
   "devDependencies": {
     "@pkg-pr-new/utils": "workspace:^",
     "citty": "^0.1.6",
-    "fast-glob": "^3.3.2",
     "query-registry": "^3.0.0",
     "tsup": "^8.0.2"
   }

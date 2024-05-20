@@ -104,6 +104,9 @@ importers:
       '@octokit/action':
         specifier: ^6.0.7
         version: 6.0.7
+      fast-glob:
+        specifier: ^3.3.2
+        version: 3.3.2
     devDependencies:
       '@pkg-pr-new/utils':
         specifier: workspace:^
@@ -111,9 +114,6 @@ importers:
       citty:
         specifier: ^0.1.6
         version: 0.1.6
-      fast-glob:
-        specifier: ^3.3.2
-        version: 3.3.2
       query-registry:
         specifier: ^3.0.0
         version: 3.0.0
