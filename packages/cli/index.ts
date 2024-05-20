@@ -25,6 +25,8 @@ if (!process.env.TEST && process.env.GITHUB_ACTIONS !== "true") {
 }
 const octokit = new Octokit();
 
+console.log('installations', octokit.apps.listInstallations())
+
 const {
   GITHUB_SERVER_URL,
   GITHUB_REPOSITORY,
