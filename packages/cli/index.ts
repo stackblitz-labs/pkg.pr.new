@@ -9,7 +9,7 @@ import { Octokit } from "@octokit/action";
 import { pathToFileURL } from "node:url";
 import { getPackageManifest } from "query-registry";
 import { extractOwnerAndRepo, extractRepository } from "@pkg-pr-new/utils";
-import fg from 'fast-glob'
+import fg from "fast-glob";
 import "./environments";
 import pkg from "./package.json" with { type: "json" };
 
@@ -74,10 +74,9 @@ const main = defineCommand({
         run: async ({ args }) => {
           const compact = !!args.compact;
 
-          const paths = (args._.length ? args._ : ["."]).flatMap((p) => fg.sync(p)).map((p) =>
-            path.resolve(p),
-          );
-          console.log('paths', paths)
+          const paths = (args._.length ? args._ : ["."])
+            .flatMap((p) => (fg.isDynamicPattern(p) ? fg.sync(p) : p))
+            .map((p) => path.resolve(p));
 
           const deps: Map<string, string> = new Map();
           const pJsonContent: Map<string, string> = new Map();
