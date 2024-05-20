@@ -1,6 +1,8 @@
 export default eventHandler(async (event) => {
   const { owner, repo } = await readBody(event);
+  return {owner, repo}
   const app = useOctokitApp(event);
+
   const { status } = await app.octokit.request(
     "GET /repos/{owner}/{repo}/installation",
     {
