@@ -173,6 +173,17 @@ for (const [{ payload }, pr] of [
 }
 
 {
+  // redirect with short urls that have the same package name as repo name
+  const url = new URL(`/tinylibs/tinybench@a832a55`, serverUrl);
+  const response = await fetch(url);
+  assert.ok(response.redirected, "did not redirect");
+  assert.equal(
+    response.url,
+    new URL("/tinylibs/tinybench/tinybench@a832a55", serverUrl).href,
+    "not the correct redirect",
+  );
+}
+{
   // redirect with compact mode
   const url = new URL(`/tinybench@a832a55`, serverUrl);
   const response = await fetch(url);

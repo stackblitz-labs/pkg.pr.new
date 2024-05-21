@@ -1,0 +1,38 @@
+diff --git a/dist/index.mjs b/dist/index.mjs
+index b7226be2b178e92bafb87c912cb7e3780171cadc..a31ce9668e1ee080f2c4db1d0c47f22e69196630 100644
+--- a/dist/index.mjs
++++ b/dist/index.mjs
+@@ -44,7 +44,21 @@ function lookup(ctx, path) {
+     if (nextNode === void 0) {
+       if (node && node.placeholderChildren.length > 1) {
+         const remaining = sections.length - i;
+-        node = node.placeholderChildren.find((c) => c.maxDepth === remaining) || null;
++        // prioritize items with the exact maxDepth as remaining
++        const sortedPlaceholderChildren = [...node.placeholderChildren].sort(
++          (a, b) => {
++            if (a.maxDepth === remaining && b.maxDepth === remaining) {
++              return 0;
++            } else if (a.maxDepth === remaining) {
++              return -1;
++            } else if (b.maxDepth === remaining) {
++              return 1;
++            } else {
++              return b.maxDepth - a.maxDepth;
++            }
++          },
++        );
++        node = sortedPlaceholderChildren.find((c) => c.maxDepth >= remaining) || null;
+       } else {
+         node = node.placeholderChildren[0] || null;
+       }
+@@ -101,9 +115,9 @@ function insert(ctx, path, data) {
+         ) || "_";
+         isStaticRoute = false;
+       }
+-      matchedNodes.push(childNode);
+       node = childNode;
+     }
++    matchedNodes.push(childNode);
+   }
+   for (const [depth, node2] of matchedNodes.entries()) {
+     node2.maxDepth = Math.max(matchedNodes.length - depth, node2.maxDepth || 0);

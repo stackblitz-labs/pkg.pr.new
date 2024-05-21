@@ -10,6 +10,6 @@ export default eventHandler(async (event) => {
   // -> https://pkg.pr.new/tinylibs/tinybench/tinybench@a832a55
   sendRedirect(
     event,
-    `/${params.owner}/${params.repo}/${packageName}@${refOrSha}`,
+    `/${params.owner}/${packageName}/${packageName}@${refOrSha}`,
   );
 });
