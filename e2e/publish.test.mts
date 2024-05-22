@@ -195,17 +195,33 @@ for (const [{ payload }, pr] of [
   );
 }
 
-// {
-//   // redirect with compact mode for scoped packages. This tests the scoped packages behaviour
-//   const url = new URL(`/@stackblitz/sdk@a832a55`, serverUrl);
-//   const response = await fetch(url);
-//   assert.ok(response.redirected, "did not redirect");
-//   assert.equal(
-//     response.url,
-//     new URL("/stackblitz/sdk/@stackblitz/sdk@a832a55", serverUrl).href,
-//     "not the correct redirect",
-//   );
-// }
+{
+  const expectedUrl = new URL(
+    `/stackblitz/sdk/${encodeURIComponent("@stackblitz/sdk")}@a832a55`,
+    serverUrl,
+  );
+
+  // test for scoped packages
+  const redirectedUrlResponse = await fetch(
+    new URL("/stackblitz/sdk/@stackblitz/sdk@a832a55", serverUrl),
+  );
+  assert.ok(redirectedUrlResponse.redirected, "did not redirect");
+  assert.equal(
+    redirectedUrlResponse.url,
+    expectedUrl.href,
+    "not the correct redirect",
+  );
+
+  // redirect with compact mode for scoped packages.
+  const url = new URL(`/@stackblitz/sdk@a832a55`, serverUrl);
+  const response = await fetch(url);
+  assert.ok(response.redirected, "did not redirect");
+  assert.equal(
+    response.url,
+    expectedUrl.href,
+    "not the correct redirect",
+  );
+}
 
 killPort();
 
