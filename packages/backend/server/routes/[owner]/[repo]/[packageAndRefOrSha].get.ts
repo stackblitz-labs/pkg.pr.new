@@ -8,7 +8,7 @@ export default eventHandler(async (event) => {
   const params = getRouterParams(event) as Params;
   const [encodedPackageName, refOrSha] = params.packageAndRefOrSha.split("@");
   const packageName = decodeURIComponent(encodedPackageName)
-  console.log('packageName', packageName)
+
   const packageKey = `${params.owner}:${params.repo}:${refOrSha}:${packageName.split(".tgz")[0]}`;
   const cursorKey = `${params.owner}:${params.repo}:${refOrSha}`;
 
