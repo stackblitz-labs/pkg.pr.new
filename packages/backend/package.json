@@ -10,7 +10,7 @@
     "preview": "wrangler pages dev dist "
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20240502.0",
+    "@cloudflare/workers-types": "^4.20240512.0",
     "@octokit/action": "^6.1.0",
     "@octokit/app": "^14.1.0",
     "@pkg-pr-new/utils": "workspace:^",
@@ -20,6 +20,6 @@
     "nitropack": "^2.9.6",
     "octokit": "^3.2.1",
     "query-registry": "^3.0.0",
-    "wrangler": "^3.53.1"
+    "wrangler": "^3.57.1"
   }
 }

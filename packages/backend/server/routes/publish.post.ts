@@ -1,11 +1,15 @@
 import { abbreviateCommitHash, isPullRequest } from "@pkg-pr-new/utils";
+import { setItemStream } from "~/utils/bucket";
 
 export default eventHandler(async (event) => {
   const contentLength = Number(getHeader(event, "content-length"));
-  // 5mb limits for now
-  if (contentLength > 1024 * 1024 * 5) {
+  // 15mb limits for now
+  if (contentLength > 1024 * 1024 * 15) {
     // Payload too large
-    return new Response("Max size limit is 5mb", { status: 413 });
+    throw createError({
+      statusCode: 413,
+      message: "Max size limit is 15mb",
+    });
   }
   const {
     "sb-commit-timestamp": commitTimestampHeader,
@@ -30,14 +34,12 @@ export default eventHandler(async (event) => {
   if (!packages.length) {
     throw createError({
       statusCode: 400,
-      message:
-        "No packages",
+      message: "No packages",
     });
   }
 
   const { appId } = useRuntimeConfig(event);
   const workflowsBucket = useWorkflowsBucket(event);
-  const packagesBucket = usePackagesBucket(event);
   const cursorBucket = useCursorsBucket(event);
 
   if (!(await workflowsBucket.hasItem(key))) {
@@ -58,15 +60,18 @@ export default eventHandler(async (event) => {
   const cursorKey = `${baseKey}:${workflowData.ref}`;
 
   const currentCursor = await cursorBucket.getItem(cursorKey);
-  
-  for (const packageName of packages) {
-    const file = formData.get(packageName)! as File;
-    const packageKey = `${baseKey}:${sha}:${packageName}`;
 
-    await packagesBucket.setItemRaw(packageKey, await file.arrayBuffer(), {
-      sha1: shasums[packageName],
-    } as R2PutOptions);
-  }
+  await Promise.all(
+    packages.map(async (packageName) => {
+      const file = formData.get(packageName)! as File;
+      const packageKey = `${baseKey}:${sha}:${packageName}`;
+
+      const stream = file.stream();
+      return setItemStream(event, usePackagesBucket.base, packageKey, stream, {
+        sha1: shasums[packageName],
+      });
+    }),
+  );
 
   if (!currentCursor || currentCursor.timestamp < commitTimestamp) {
     await cursorBucket.setItem(cursorKey, {
@@ -113,7 +118,12 @@ export default eventHandler(async (event) => {
       output: {
         title: "Successful",
         summary: "Published successfully.",
-        text: generateCommitPublishMessage(origin, packages, workflowData, compact),
+        text: generateCommitPublishMessage(
+          origin,
+          packages,
+          workflowData,
+          compact,
+        ),
       },
       conclusion: "success",
     });
