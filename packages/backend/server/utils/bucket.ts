@@ -1,23 +1,55 @@
-import type { R2Bucket } from "@cloudflare/workers-types";
 import { prefixStorage, createStorage, joinKeys } from "unstorage";
 import cloudflareR2BindingDriver from "unstorage/drivers/cloudflare-r2-binding";
 import { WorkflowData, Cursor } from "../types";
-import type { H3Event, H3EventContext } from "h3";
+import type { H3EventContext } from "h3";
 
 type Binary = Parameters<R2Bucket["put"]>[1];
 type Event = { context: { cloudflare: H3EventContext["cloudflare"] } };
 
 export const baseKey = "bucket";
 
+export function useBinding(event: Event) {
+  return getBinding(
+    event.context.cloudflare.env.ENV === "production"
+      ? "PROD_CR_BUCKET"
+      : "CR_BUCKET",
+  ) as unknown as R2Bucket;
+}
+
+export async function setItemStream(
+  event: Event,
+  base: string,
+  key: string,
+  stream: ReadableStream,
+  opts?: R2PutOptions,
+) {
+  const binding = useBinding(event);
+  key = joinKeys(base, key);
+
+  await binding.put(key, stream, opts);
+}
+
+export async function getItemStream(
+  event: Event,
+  base: string,
+  key: string,
+  opts?: R2GetOptions,
+) {
+  const binding = useBinding(event);
+  key = joinKeys(base, key);
+
+  const value = await binding.get(key, opts)
+  return value?.body;
+}
+
 export function useBucket(event: Event) {
+  const binding = useBinding(event);
+
   return createStorage<Binary>({
     driver: cloudflareR2BindingDriver({
       base: useBucket.key,
       // @ts-ignore TODO(upstream): fix type mismatch
-      binding:
-        event.context.cloudflare.env.ENV === "production"
-          ? "PROD_CR_BUCKET"
-          : "CR_BUCKET",
+      binding,
     }),
   });
 }
@@ -35,7 +67,7 @@ useWorkflowsBucket.base = joinKeys(useBucket.base, useWorkflowsBucket.key);
 
 export function usePackagesBucket(event: Event) {
   const storage = useBucket(event);
-  return prefixStorage<ArrayBuffer>(storage, usePackagesBucket.key);
+  return prefixStorage<Uint8Array>(storage, usePackagesBucket.key);
 }
 
 usePackagesBucket.key = "package";
