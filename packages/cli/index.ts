@@ -120,19 +120,27 @@ const main = defineCommand({
             await fs.writeFile(pJsonPath, JSON.stringify(pJson));
           }
           const formData = new FormData();
+          const shasums: Record<string, string> = {};
           for (const p of paths) {
             const pJsonPath = path.resolve(p, "package.json");
             try {
-              const { name, version } = await importPackageJson(pJsonPath);
-              await ezSpawn.async("npm pack", { stdio: "inherit", cwd: p });
+              const { name } = await importPackageJson(pJsonPath);
+              const { stdout } = await ezSpawn.async("npm pack --json", {
+                stdio: "overlapped",
+                cwd: p,
+              });
+              const { filename, shasum }: { filename: string; shasum: string } =
+                JSON.parse(stdout)[0];
 
-              const fileName = `${name}-${version}.tgz`;
-              const file = await fs.readFile(path.resolve(p, fileName));
+              shasums[name] = shasum;
+              console.log(`shasum for ${name}(${filename}): ${shasum}`);
+
+              const file = await fs.readFile(path.resolve(p, filename));
 
               const blob = new Blob([file], {
                 type: "application/octet-stream",
               });
-              formData.append(name, blob, fileName);
+              formData.append(name, blob, filename);
             } finally {
               await fs.writeFile(pJsonPath, pJsonContent.get(pJsonPath)!);
             }
@@ -143,6 +151,7 @@ const main = defineCommand({
             headers: {
               "sb-compact": `${compact}`,
               "sb-key": key,
+              "sb-shasums": JSON.stringify(shasums),
               "sb-commit-timestamp": commitTimestamp.toString(),
             },
             body: formData,
@@ -154,6 +163,7 @@ const main = defineCommand({
             `publishing failed: ${await res.text()}`,
           );
 
+          console.log("\n");
           console.log(
             `⚡️ Your npm packages are published.\n${[...formData.keys()].map((name, i) => `${name}: \`npm i ${laterRes.urls[i]}\``).join("\n")}`,
           );

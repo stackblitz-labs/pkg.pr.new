@@ -27,8 +27,8 @@
     "ohash": "^1.1.3",
     "pkg-pr-new": "workspace:^",
     "prettier": "^3.2.5",
-    "tsx": "^4.7.1",
-    "typescript": "^5.4.3",
+    "tsx": "^4.9.3",
+    "typescript": "^5.4.5",
     "uncrypto": "^0.1.3",
     "wait-port": "^1.1.0"
   },
@@ -39,6 +39,6 @@
     }
   },
   "dependencies": {
-    "wrangler": "^3.37.0"
+    "wrangler": "^3.53.1"
   }
 }

@@ -10,17 +10,20 @@ export default eventHandler(async (event) => {
   const {
     "sb-commit-timestamp": commitTimestampHeader,
     "sb-key": key,
+    "sb-shasums": shasumsHeader,
     "sb-compact": compactHeader,
   } = getHeaders(event);
   const compact = compactHeader === "true";
 
-  if (!key || !commitTimestampHeader) {
+  if (!key || !commitTimestampHeader || !shasumsHeader) {
     throw createError({
       statusCode: 400,
-      message: "sb-commit-timestamp and sb-key headers are required",
+      message:
+        "sb-commit-timestamp, sb-key and sb-shasums headers are required",
     });
   }
 
+  const shasums: Record<string, string> = JSON.parse(shasumsHeader);
   const formData = await readFormData(event);
   const packages = [...formData.keys()];
 
@@ -60,7 +63,9 @@ export default eventHandler(async (event) => {
     const file = formData.get(packageName)! as File;
     const packageKey = `${baseKey}:${sha}:${packageName}`;
 
-    await packagesBucket.setItemRaw(packageKey, await file.arrayBuffer());
+    await packagesBucket.setItemRaw(packageKey, await file.arrayBuffer(), {
+      sha1: shasums[packageName],
+    } as R2PutOptions);
   }
 
   if (!currentCursor || currentCursor.timestamp < commitTimestamp) {
