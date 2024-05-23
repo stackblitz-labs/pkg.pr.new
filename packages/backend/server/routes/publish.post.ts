@@ -1,28 +1,45 @@
 import { abbreviateCommitHash, isPullRequest } from "@pkg-pr-new/utils";
+import { setItemStream } from "~/utils/bucket";
 
 export default eventHandler(async (event) => {
   const contentLength = Number(getHeader(event, "content-length"));
-  // 5mb limits for now
-  if (contentLength > 1024 * 1024 * 5) {
+  // 15mb limits for now
+  if (contentLength > 1024 * 1024 * 15) {
     // Payload too large
-    return new Response("Max size limit is 5mb", { status: 413 });
+    throw createError({
+      statusCode: 413,
+      message: "Max size limit is 15mb",
+    });
   }
   const {
     "sb-commit-timestamp": commitTimestampHeader,
     "sb-key": key,
+    "sb-shasums": shasumsHeader,
     "sb-compact": compactHeader,
   } = getHeaders(event);
   const compact = compactHeader === "true";
 
-  if (!key || !commitTimestampHeader) {
+  if (!key || !commitTimestampHeader || !shasumsHeader) {
     throw createError({
       statusCode: 400,
-      message: "sb-commit-timestamp and sb-key headers are required",
+      message:
+        "sb-commit-timestamp, sb-key and sb-shasums headers are required",
     });
   }
+
+  const shasums: Record<string, string> = JSON.parse(shasumsHeader);
+  const formData = await readFormData(event);
+  const packages = [...formData.keys()];
+
+  if (!packages.length) {
+    throw createError({
+      statusCode: 400,
+      message: "No packages",
+    });
+  }
+
   const { appId } = useRuntimeConfig(event);
   const workflowsBucket = useWorkflowsBucket(event);
-  const packagesBucket = usePackagesBucket(event);
   const cursorBucket = useCursorsBucket(event);
 
   if (!(await workflowsBucket.hasItem(key))) {
@@ -44,15 +61,17 @@ export default eventHandler(async (event) => {
 
   const currentCursor = await cursorBucket.getItem(cursorKey);
 
-  const formData = await readFormData(event);
+  await Promise.all(
+    packages.map(async (packageName) => {
+      const file = formData.get(packageName)! as File;
+      const packageKey = `${baseKey}:${sha}:${packageName}`;
 
-  const packages = [...formData.keys()];
-  for (const packageName of packages) {
-    const file = formData.get(packageName)! as File;
-    const packageKey = `${baseKey}:${sha}:${packageName}`;
-
-    await packagesBucket.setItemRaw(packageKey, await file.arrayBuffer());
-  }
+      const stream = file.stream();
+      return setItemStream(event, usePackagesBucket.base, packageKey, stream, {
+        sha1: shasums[packageName],
+      });
+    }),
+  );
 
   if (!currentCursor || currentCursor.timestamp < commitTimestamp) {
     await cursorBucket.setItem(cursorKey, {
@@ -99,11 +118,12 @@ export default eventHandler(async (event) => {
       output: {
         title: "Successful",
         summary: "Published successfully.",
-        text:
-          "isPullRequest" +
-          workflowData.ref +
-          isPullRequest(workflowData.ref) +
-          generateCommitPublishMessage(origin, packages, workflowData, compact),
+        text: generateCommitPublishMessage(
+          origin,
+          packages,
+          workflowData,
+          compact,
+        ),
       },
       conclusion: "success",
     });

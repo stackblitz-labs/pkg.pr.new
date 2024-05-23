@@ -9,6 +9,7 @@ import { Octokit } from "@octokit/action";
 import { pathToFileURL } from "node:url";
 import { getPackageManifest } from "query-registry";
 import { extractOwnerAndRepo, extractRepository } from "@pkg-pr-new/utils";
+import fg from "fast-glob";
 import "./environments";
 import pkg from "./package.json" with { type: "json" };
 
@@ -34,6 +35,19 @@ const {
 } = process.env;
 
 const [owner, repo] = GITHUB_REPOSITORY.split("/");
+
+const checkResponse = await fetch(new URL("/check", API_URL), {
+  method: "POST",
+  body: JSON.stringify({
+    owner,
+    repo,
+  }),
+});
+
+if (!checkResponse.ok) {
+  console.log(await checkResponse.text());
+  process.exit(1);
+}
 
 const commit = await octokit.git.getCommit({
   owner,
@@ -73,9 +87,9 @@ const main = defineCommand({
         run: async ({ args }) => {
           const compact = !!args.compact;
 
-          const paths = (args._.length ? args._ : ["."]).map((p) =>
-            path.resolve(p),
-          );
+          const paths = (args._.length ? args._ : ["."])
+            .flatMap((p) => (fg.isDynamicPattern(p) ? fg.sync(p) : p))
+            .map((p) => path.resolve(p));
 
           const deps: Map<string, string> = new Map();
           const pJsonContent: Map<string, string> = new Map();
@@ -106,19 +120,27 @@ const main = defineCommand({
             await fs.writeFile(pJsonPath, JSON.stringify(pJson));
           }
           const formData = new FormData();
+          const shasums: Record<string, string> = {};
           for (const p of paths) {
             const pJsonPath = path.resolve(p, "package.json");
             try {
-              const { name, version } = await importPackageJson(pJsonPath);
-              await ezSpawn.async("npm pack", { stdio: "inherit", cwd: p });
+              const { name } = await importPackageJson(pJsonPath);
+              const { stdout } = await ezSpawn.async("npm pack --json", {
+                stdio: "overlapped",
+                cwd: p,
+              });
+              const { filename, shasum }: { filename: string; shasum: string } =
+                JSON.parse(stdout)[0];
 
-              const fileName = `${name}-${version}.tgz`;
-              const file = await fs.readFile(path.resolve(p, fileName));
+              shasums[name] = shasum;
+              console.log(`shasum for ${name}(${filename}): ${shasum}`);
+
+              const file = await fs.readFile(path.resolve(p, filename));
 
               const blob = new Blob([file], {
                 type: "application/octet-stream",
               });
-              formData.append(name, blob, fileName);
+              formData.append(name, blob, filename);
             } finally {
               await fs.writeFile(pJsonPath, pJsonContent.get(pJsonPath)!);
             }
@@ -129,6 +151,7 @@ const main = defineCommand({
             headers: {
               "sb-compact": `${compact}`,
               "sb-key": key,
+              "sb-shasums": JSON.stringify(shasums),
               "sb-commit-timestamp": commitTimestamp.toString(),
             },
             body: formData,
@@ -140,9 +163,9 @@ const main = defineCommand({
             `publishing failed: ${await res.text()}`,
           );
 
+          console.log("\n");
           console.log(
-            `⚡️ Your npm packages are published.
-            ${[...formData.keys()].map((name, i) => `${name}: \`npm i ${laterRes.urls[i]}\``).join("\n")}`,
+            `⚡️ Your npm packages are published.\n${[...formData.keys()].map((name, i) => `${name}: \`npm i ${laterRes.urls[i]}\``).join("\n")}`,
           );
         },
       };

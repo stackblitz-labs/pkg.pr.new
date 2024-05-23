@@ -2,7 +2,8 @@
 {
   "compilerOptions": {
     "strict": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["@cloudflare/workers-types"]
   },
   "extends": "./.nitro/types/tsconfig.json"
 }

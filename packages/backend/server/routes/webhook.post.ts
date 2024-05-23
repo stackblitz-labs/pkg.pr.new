@@ -1,7 +1,15 @@
+import type { PullRequestEvent } from "@octokit/webhooks-types";
 import type { HandlerFunction } from "@octokit/webhooks/dist-types/types";
 import type { PullRequestData, WorkflowData } from "../types";
 import { hash } from "ohash";
 import { abbreviateCommitHash } from "@pkg-pr-new/utils";
+
+// mark a PR as a PR :)
+const prMarkEvents: PullRequestEvent["action"][] = [
+  "opened",
+  "reopened",
+  "synchronize",
+];
 
 export default eventHandler(async (event) => {
   const app = useOctokitApp(event);
@@ -29,7 +37,7 @@ export default eventHandler(async (event) => {
         ref: payload.workflow_job.head_branch!,
       };
       const prDataHash = hash(prData);
-      const isPullRequest = await pullRequestNumbersBucket.hasItem(prDataHash)
+      const isPullRequest = await pullRequestNumbersBucket.hasItem(prDataHash);
       const prNumber = await pullRequestNumbersBucket.getItem(prDataHash);
 
       const data: WorkflowData = {
@@ -61,9 +69,9 @@ export default eventHandler(async (event) => {
       ref: payload.pull_request.head.ref,
     };
     const prDataHash = hash(key);
-    if (payload.action === "opened") {
+    if (prMarkEvents.includes(payload.action)) {
       await pullRequestNumbersBucket.setItem(prDataHash, payload.number);
-      // TODO: send comment here if the workflow was run before (for in repo pull requests) 
+      // TODO: send comment here if the workflow was run before (for in repo pull requests)
     } else if (payload.action === "closed") {
       await pullRequestNumbersBucket.removeItem(prDataHash);
 
