@@ -17,7 +17,7 @@ export function generateCommitPublishMessage(
       );
       return `__${packageName}__:
 \`\`\`
-npm i ${shaUrl}    
+npm i ${shaUrl}
 \`\`\`
 `;
     })
@@ -47,7 +47,7 @@ export function generatePullRequestPublishMessage(
       );
       return `__${packageName}(${workflowData.sha})__:
 \`\`\`
-npm i ${shaUrl}    
+npm i ${shaUrl}
 \`\`\``;
     })
     .join("\n");
@@ -63,7 +63,7 @@ npm i ${shaUrl}
       );
       return `__${packageName}(#${workflowData.ref})__:
 \`\`\`
-npm i ${refUrl}    
+npm i ${refUrl}
 \`\`\``;
     })
     .join("\n");
