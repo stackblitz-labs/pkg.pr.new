@@ -165,7 +165,7 @@ const main = defineCommand({
 
           console.log("\n");
           console.log(
-            `⚡️ Your npm packages are published.\n${[...formData.keys()].map((name, i) => `${name}: \`npm i ${laterRes.urls[i]}\``).join("\n")}`,
+            `⚡️ Your npm packages are published.\n${[...formData.keys()].map((name, i) => `${name}: npm i ${laterRes.urls[i]}`).join("\n")}`,
           );
         },
       };
