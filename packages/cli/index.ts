@@ -51,7 +51,7 @@ const main = defineCommand({
           const templates = (
             typeof args.template === "string"
               ? [args.template]
-              : ([...args.template] as string[])
+              : ([...(args.template ?? [])] as string[])
           )
             .flatMap((p) => (fg.isDynamicPattern(p) ? fg.sync(p) : p))
             .map((p) => path.resolve(p));
@@ -94,7 +94,7 @@ const main = defineCommand({
                 await fs.readFile(path.join(templateDir, file), "utf-8"),
               );
             }
-            await createTemplate('Sheeeesh', filesMap)
+            await createTemplate("Sheeeesh", filesMap);
           }
 
           const compact = !!args.compact;
@@ -296,7 +296,7 @@ async function createTemplate(name: string, files: Map<string, string>) {
     data[`project[files][${k}]`] = v;
   }
   const urlEncodedData = new URLSearchParams(data).toString();
-  console.log(data, urlEncodedData)
+  console.log(data, urlEncodedData);
 
   const response = await fetch("https://stackblitz.com/run", {
     method: "POST",
@@ -304,7 +304,7 @@ async function createTemplate(name: string, files: Map<string, string>) {
       "Content-Type": "application/x-www-form-urlencoded",
     },
     body: urlEncodedData,
-    redirect: 'manual'
+    redirect: "manual",
   });
   console.log(response.url);
 }
