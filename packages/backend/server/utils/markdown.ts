@@ -29,8 +29,6 @@ npm i ${shaUrl}
   return `
 ${templatesStr}
 
-${templatesStr.length ? "---" : ""}
-
 ## Commit: ${workflowData.sha}
 
 ${shaMessages}
@@ -81,13 +79,9 @@ npm i ${refUrl}
   return `
 ${templatesStr}
 
-${templatesStr.length ? "---" : ""}
-
 ## Commit: ${workflowData.sha}
 
 ${shaMessages}
-
----    
 
 ## Pull Request: #${workflowData.ref}
 
@@ -101,7 +95,7 @@ function generateTemplatesStr(templates: Record<string, string>) {
     ? `
 ## Templates:
 
-${entries.map(([k, v]) => `\t - [${k}](${v})`).join("\n")}
+${entries.map(([k, v]) => `- [${k}](${v})`).join("\n")}
 `
     : "";
 }
