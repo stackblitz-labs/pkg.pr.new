@@ -100,7 +100,7 @@ function generateTemplatesStr(templates: Record<string, string>) {
   return entries.length
     ? `
 Templates:
-${entries.map(([k, v]) => `\t[${k}](${v})`).join("\n")}
+${entries.map(([k, v]) => `\t - [${k}](${v})`).join("\n")}
 `
     : "";
 }
