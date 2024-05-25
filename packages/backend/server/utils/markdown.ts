@@ -2,6 +2,7 @@ import { WorkflowData } from "../types";
 
 export function generateCommitPublishMessage(
   origin: string,
+  templates: Record<string, string>,
   packages: string[],
   workflowData: WorkflowData,
   compact: boolean,
@@ -23,7 +24,13 @@ npm i ${shaUrl}
     })
     .join("\n");
 
+  const templatesStr = generateTemplatesStr(templates);
+
   return `
+${templatesStr}
+
+${templatesStr.length ? "---" : ""}
+
 Last Commit: ${workflowData.sha}
 
 ${shaMessages}
@@ -32,6 +39,7 @@ ${shaMessages}
 
 export function generatePullRequestPublishMessage(
   origin: string,
+  templates: Record<string, string>,
   packages: string[],
   workflowData: WorkflowData,
   compact: boolean,
@@ -68,16 +76,33 @@ npm i ${refUrl}
     })
     .join("\n");
 
+  const templatesStr = generateTemplatesStr(templates);
+
   return `
+${templatesStr}
+
+${templatesStr.length ? "---" : ""}
+
 Last Commit Build: ${workflowData.sha}
 
 ${shaMessages}
-    
+
+---    
 
 Pull Request Build: #${workflowData.ref}
 
 ${refMessages}
 `;
+}
+
+function generateTemplatesStr(templates: Record<string, string>) {
+  const entries = Object.entries(templates);
+  return entries.length
+    ? `
+Templates:
+${entries.map(([k, v]) => `\t[${k}](${v})`).join("\n")}
+`
+    : "";
 }
 
 export function generatePublishUrl(

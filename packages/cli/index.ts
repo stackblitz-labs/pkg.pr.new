@@ -212,6 +212,7 @@ const main = defineCommand({
               "sb-key": key,
               "sb-shasums": JSON.stringify(shasums),
               "sb-commit-timestamp": commitTimestamp.toString(),
+              "sb-templates": JSON.stringify({"example": "https://test.ir", "example-1": "https://test.ir"})
             },
             body: formData,
           });

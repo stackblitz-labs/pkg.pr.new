@@ -16,17 +16,19 @@ export default eventHandler(async (event) => {
     "sb-key": key,
     "sb-shasums": shasumsHeader,
     "sb-compact": compactHeader,
+    "sb-templates": templatesHeader,
   } = getHeaders(event);
   const compact = compactHeader === "true";
 
-  if (!key || !commitTimestampHeader || !shasumsHeader) {
+  if (!key || !commitTimestampHeader || !shasumsHeader! || !templatesHeader) {
     throw createError({
       statusCode: 400,
       message:
-        "sb-commit-timestamp, sb-key and sb-shasums headers are required",
+        "sb-commit-timestamp, sb-key, sb-shasums and sb-templates headers are required",
     });
   }
 
+  const templates: Record<string, string> = JSON.parse(templatesHeader);
   const shasums: Record<string, string> = JSON.parse(shasumsHeader);
   const formData = await readFormData(event);
   const packages = [...formData.keys()];
@@ -120,6 +122,7 @@ export default eventHandler(async (event) => {
         summary: "Published successfully.",
         text: generateCommitPublishMessage(
           origin,
+          templates,
           packages,
           workflowData,
           compact,
@@ -152,6 +155,7 @@ export default eventHandler(async (event) => {
           comment_id: prevComment.id,
           body: generatePullRequestPublishMessage(
             origin,
+            templates,
             packages,
             workflowData,
             compact,
@@ -167,6 +171,7 @@ export default eventHandler(async (event) => {
           issue_number: Number(workflowData.ref),
           body: generatePullRequestPublishMessage(
             origin,
+            templates,
             packages,
             workflowData,
             compact,
