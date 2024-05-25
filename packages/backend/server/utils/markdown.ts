@@ -16,7 +16,7 @@ export function generateCommitPublishMessage(
         workflowData,
         compact,
       );
-      return `__${packageName}__:
+      return `### ${packageName}:
 \`\`\`
 npm i ${shaUrl}
 \`\`\`
@@ -31,7 +31,7 @@ ${templatesStr}
 
 ${templatesStr.length ? "---" : ""}
 
-Last Commit: ${workflowData.sha}
+## Commit: ${workflowData.sha}
 
 ${shaMessages}
 `;
@@ -53,7 +53,7 @@ export function generatePullRequestPublishMessage(
         workflowData,
         compact,
       );
-      return `__${packageName}(${workflowData.sha})__:
+      return `### ${packageName}:
 \`\`\`
 npm i ${shaUrl}
 \`\`\``;
@@ -69,7 +69,7 @@ npm i ${shaUrl}
         workflowData,
         compact,
       );
-      return `__${packageName}(#${workflowData.ref})__:
+      return `### ${packageName}:
 \`\`\`
 npm i ${refUrl}
 \`\`\``;
@@ -83,13 +83,13 @@ ${templatesStr}
 
 ${templatesStr.length ? "---" : ""}
 
-Last Commit Build: ${workflowData.sha}
+## Commit: ${workflowData.sha}
 
 ${shaMessages}
 
 ---    
 
-Pull Request Build: #${workflowData.ref}
+## Pull Request: #${workflowData.ref}
 
 ${refMessages}
 `;
@@ -99,7 +99,8 @@ function generateTemplatesStr(templates: Record<string, string>) {
   const entries = Object.entries(templates);
   return entries.length
     ? `
-Templates:
+## Templates:
+
 ${entries.map(([k, v]) => `\t - [${k}](${v})`).join("\n")}
 `
     : "";
