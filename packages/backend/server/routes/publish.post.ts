@@ -96,7 +96,7 @@ export default eventHandler(async (event) => {
 
       templatesMap.set(template, {
         ...templatesMap.get(template),
-        [templateAsset]: isBinary ? new URL(`/asset/${uuid}`, origin).href : file,
+        [templateAsset]: isBinary ? new URL(`/template/${uuid}`, origin).href : file,
       });
 
       if (isBinary) {
@@ -115,7 +115,7 @@ export default eventHandler(async (event) => {
     const html = generateTemplateHtml(template, files);
     const uuid = randomUUID();
     await templatesBucket.setItemRaw(uuid, textEncoder.encode(html));
-    templatesHtmlMap[template] = new URL(`/asset/${uuid}`, origin).href;
+    templatesHtmlMap[template] = new URL(`/template/${uuid}`, origin).href;
   }
 
   if (!currentCursor || currentCursor.timestamp < commitTimestamp) {
