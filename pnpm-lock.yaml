@@ -4,6 +4,14 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  nitro-cloudflare-dev@0.1.2:
+    hash: ohlyzk6s4d4tp4huqq6lzvge7i
+    path: patches/nitro-cloudflare-dev@0.1.2.patch
+  radix3@1.1.2:
+    hash: gsdwrxpd7rn5ueaa55ufykpidm
+    path: patches/radix3@1.1.2.patch
+
 importers:
 
   .:
