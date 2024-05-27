@@ -56,7 +56,12 @@ const main = defineCommand({
             .flatMap((p) => (fg.isDynamicPattern(p) ? fg.sync(p) : p))
             .map((p) => path.resolve(p));
 
+          const formData = new FormData();
+
           for (const templateDir of templates) {
+            const pJsonPath = path.resolve(templateDir, "package.json");
+            const { name } = await importPackageJson(pJsonPath);
+
             const gitignorePath = path.join(templateDir, ".gitignore");
             const ig = ignore();
             ig.add("node_modules");
@@ -77,24 +82,23 @@ const main = defineCommand({
               await Promise.all(
                 files
                   .filter((file) => !ig.ignores(file))
-                  .map(async (f) => ({
-                    // SB post api does not support binary files
-                    include: !(await isBinaryFile(path.join(templateDir, f))),
-                    f,
-                  })),
               )
             )
-              .filter((f) => f.include)
-              .map((f) => f.f);
-            const filesMap: Map<string, string> = new Map();
 
-            for (const file of filteredFiles) {
-              filesMap.set(
-                file,
-                await fs.readFile(path.join(templateDir, file), "utf-8"),
+            for (const filePath of filteredFiles) {
+              const file = await fs.readFile(
+                path.join(templateDir, filePath),
+                "utf-8",
+              );
+              const blob = new Blob([file], {
+                type: "application/octet-stream",
+              });
+              formData.append(
+                `template:${name}:${encodeURIComponent(filePath)}`,
+                blob,
+                filePath,
               );
             }
-            await createTemplate("Sheeeesh", filesMap);
           }
 
           const compact = !!args.compact;
@@ -178,7 +182,7 @@ const main = defineCommand({
             hijackDeps(deps, pJson.devDependencies);
             await fs.writeFile(pJsonPath, JSON.stringify(pJson));
           }
-          const formData = new FormData();
+
           const shasums: Record<string, string> = {};
           for (const p of paths) {
             const pJsonPath = path.resolve(p, "package.json");
@@ -199,7 +203,7 @@ const main = defineCommand({
               const blob = new Blob([file], {
                 type: "application/octet-stream",
               });
-              formData.append(name, blob, filename);
+              formData.append(`package:${name}`, blob, filename);
             } finally {
               await fs.writeFile(pJsonPath, pJsonContent.get(pJsonPath)!);
             }
@@ -212,7 +216,10 @@ const main = defineCommand({
               "sb-key": key,
               "sb-shasums": JSON.stringify(shasums),
               "sb-commit-timestamp": commitTimestamp.toString(),
-              "sb-templates": JSON.stringify({"example": "https://test.ir", "example-1": "https://test.ir"})
+              "sb-templates": JSON.stringify({
+                example: "https://test.ir",
+                "example-1": "https://test.ir",
+              }),
             },
             body: formData,
           });

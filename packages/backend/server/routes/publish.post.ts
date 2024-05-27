@@ -1,10 +1,13 @@
 import { abbreviateCommitHash, isPullRequest } from "@pkg-pr-new/utils";
-import { setItemStream } from "~/utils/bucket";
+import { randomUUID } from "uncrypto";
+import { setItemStream, useTemplatesBucket } from "~/utils/bucket";
+import { generateTemplateHtml } from "~/utils/template";
 
 export default eventHandler(async (event) => {
+  const origin = getRequestURL(event).origin;
   const contentLength = Number(getHeader(event, "content-length"));
-  // 15mb limits for now
-  if (contentLength > 1024 * 1024 * 15) {
+  // 20mb limit for now
+  if (contentLength > 1024 * 1024 * 20) {
     // Payload too large
     throw createError({
       statusCode: 413,
@@ -28,10 +31,12 @@ export default eventHandler(async (event) => {
     });
   }
 
-  const templates: Record<string, string> = JSON.parse(templatesHeader);
   const shasums: Record<string, string> = JSON.parse(shasumsHeader);
   const formData = await readFormData(event);
-  const packages = [...formData.keys()];
+  const packages = [...formData.keys()].filter((k) => k.startsWith("package:"));
+  const templateAssets = [...formData.keys()].filter((k) =>
+    k.startsWith("template:"),
+  );
 
   if (!packages.length) {
     throw createError({
@@ -64,7 +69,9 @@ export default eventHandler(async (event) => {
   const currentCursor = await cursorBucket.getItem(cursorKey);
 
   await Promise.all(
-    packages.map(async (packageName) => {
+    packages.map(async (packageNameWithPrefix) => {
+      const packageName = packageNameWithPrefix.slice("package:".length);
+
       const file = formData.get(packageName)! as File;
       const packageKey = `${baseKey}:${sha}:${packageName}`;
 
@@ -74,6 +81,40 @@ export default eventHandler(async (event) => {
       });
     }),
   );
+
+  const templatesMap = new Map<string, Record<string, string>>();
+
+  await Promise.all(
+    templateAssets.map(async (templateAssetWithPrefix) => {
+      const [template, encodedTemplateAsset] = templateAssetWithPrefix
+        .slice("template:".length)
+        .split(":");
+      const templateAsset = decodeURIComponent(encodedTemplateAsset);
+
+      const file = formData.get(templateAssetWithPrefix)! as File;
+      const uuid = randomUUID();
+
+      templatesMap.set(template, {
+        ...templatesMap.get(template),
+        [templateAsset]: new URL(`/asset/${uuid}`, origin).href,
+      });
+
+      const stream = file.stream();
+      return setItemStream(event, useTemplatesBucket.base, uuid, stream);
+    }),
+  );
+
+  const templatesBucket = useTemplatesBucket(event);
+
+  const textEncoder = new TextEncoder();
+  const templatesHtmlMap: Record<string, string> = {};
+
+  for (const [template, files] of templatesMap) {
+    const html = generateTemplateHtml(template, files);
+    const uuid = randomUUID();
+    await templatesBucket.setItem(uuid, textEncoder.encode(html));
+    templatesHtmlMap[template] = new URL(`/asset/${uuid}`, origin).href;
+  }
 
   if (!currentCursor || currentCursor.timestamp < commitTimestamp) {
     await cursorBucket.setItem(cursorKey, {
@@ -85,7 +126,6 @@ export default eventHandler(async (event) => {
   await workflowsBucket.removeItem(key);
 
   const app = useOctokitApp(event);
-  const origin = getRequestURL(event).origin;
 
   const { data: installationData } = await app.octokit.request(
     "GET /repos/{owner}/{repo}/installation",
@@ -122,7 +162,7 @@ export default eventHandler(async (event) => {
         summary: "Published successfully.",
         text: generateCommitPublishMessage(
           origin,
-          templates,
+          templatesHtmlMap,
           packages,
           workflowData,
           compact,
@@ -155,7 +195,7 @@ export default eventHandler(async (event) => {
           comment_id: prevComment.id,
           body: generatePullRequestPublishMessage(
             origin,
-            templates,
+            templatesHtmlMap,
             packages,
             workflowData,
             compact,
@@ -171,7 +211,7 @@ export default eventHandler(async (event) => {
           issue_number: Number(workflowData.ref),
           body: generatePullRequestPublishMessage(
             origin,
-            templates,
+            templatesHtmlMap,
             packages,
             workflowData,
             compact,
