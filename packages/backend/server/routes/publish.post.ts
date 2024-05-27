@@ -114,7 +114,7 @@ export default eventHandler(async (event) => {
   for (const [template, files] of templatesMap) {
     const html = generateTemplateHtml(template, files);
     const uuid = randomUUID();
-    await templatesBucket.setItem(uuid, textEncoder.encode(html));
+    await templatesBucket.setItemRaw(uuid, textEncoder.encode(html));
     templatesHtmlMap[template] = new URL(`/asset/${uuid}`, origin).href;
   }
 
