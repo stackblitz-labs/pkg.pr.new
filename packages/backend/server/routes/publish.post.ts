@@ -33,6 +33,7 @@ export default eventHandler(async (event) => {
   const shasums: Record<string, string> = JSON.parse(shasumsHeader);
   const formData = await readFormData(event);
   const packages = [...formData.keys()].filter((k) => k.startsWith("package:"));
+  const packagesWithoutPrefix = packages.map((p) => p.slice('package:'.length))
   const templateAssets = [...formData.keys()].filter((k) =>
     k.startsWith("template:"),
   );
@@ -165,7 +166,7 @@ export default eventHandler(async (event) => {
         text: generateCommitPublishMessage(
           origin,
           templatesHtmlMap,
-          packages,
+          packagesWithoutPrefix,
           workflowData,
           compact,
         ),
@@ -198,7 +199,7 @@ export default eventHandler(async (event) => {
           body: generatePullRequestPublishMessage(
             origin,
             templatesHtmlMap,
-            packages,
+            packagesWithoutPrefix,
             workflowData,
             compact,
           ),
@@ -214,7 +215,7 @@ export default eventHandler(async (event) => {
           body: generatePullRequestPublishMessage(
             origin,
             templatesHtmlMap,
-            packages,
+            packagesWithoutPrefix,
             workflowData,
             compact,
           ),
