@@ -58,43 +58,6 @@ const main = defineCommand({
 
           const formData = new FormData();
 
-          for (const templateDir of templates) {
-            const pJsonPath = path.resolve(templateDir, "package.json");
-            const { name } = await importPackageJson(pJsonPath);
-            console.log("preparing template:", name);
-
-            const gitignorePath = path.join(templateDir, ".gitignore");
-            const ig = ignore();
-            ig.add("node_modules");
-
-            if (fsSync.existsSync(gitignorePath)) {
-              const gitignoreContent = await fs.readFile(gitignorePath, "utf8");
-              ig.add(gitignoreContent);
-            }
-
-            const files = await fg(["**/*"], {
-              cwd: templateDir,
-              dot: true,
-              onlyFiles: true,
-            });
-
-            const filteredFiles = await Promise.all(
-              files.filter((file) => !ig.ignores(file)),
-            );
-
-            for (const filePath of filteredFiles) {
-              const file = await fs.readFile(path.join(templateDir, filePath));
-              const isBinary = await isBinaryFile(file);
-              const blob = new Blob([file.buffer], {
-                type: "application/octet-stream",
-              });
-              formData.append(
-                `template:${name}:${encodeURIComponent(filePath)}`,
-                isBinary ? blob : await blob.text(),
-              );
-            }
-          }
-
           const compact = !!args.compact;
 
           if (!process.env.TEST && process.env.GITHUB_ACTIONS !== "true") {
@@ -166,7 +129,46 @@ const main = defineCommand({
               ).href,
             );
           }
-          for (const p of paths) {
+
+          for (const templateDir of templates) {
+            const pJsonPath = path.resolve(templateDir, "package.json");
+            const { name } = await importPackageJson(pJsonPath);
+            console.log("preparing template:", name);
+
+            const gitignorePath = path.join(templateDir, ".gitignore");
+            const ig = ignore();
+            ig.add("node_modules");
+
+            if (fsSync.existsSync(gitignorePath)) {
+              const gitignoreContent = await fs.readFile(gitignorePath, "utf8");
+              ig.add(gitignoreContent);
+            }
+
+            const files = await fg(["**/*"], {
+              cwd: templateDir,
+              dot: true,
+              onlyFiles: true,
+            });
+
+            const filteredFiles = await Promise.all(
+              files.filter((file) => !ig.ignores(file)),
+            );
+
+            for (const filePath of filteredFiles) {
+              const file = await fs.readFile(path.join(templateDir, filePath));
+              const isBinary = await isBinaryFile(file);
+              const blob = new Blob([file.buffer], {
+                type: "application/octet-stream",
+              });
+              formData.append(
+                `template:${name}:${encodeURIComponent(filePath)}`,
+                isBinary ? blob : await blob.text(),
+              );
+            }
+            console.log(formData)
+          }
+
+          for (const p of [...paths, ...templates]) {
             const pJsonPath = path.resolve(p, "package.json");
             const content = await fs.readFile(pJsonPath, "utf-8");
             pJsonContent.set(pJsonPath, content);
