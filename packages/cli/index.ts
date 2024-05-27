@@ -133,6 +133,7 @@ const main = defineCommand({
           for (const templateDir of templates) {
             const pJsonPath = path.resolve(templateDir, "package.json");
             const { name } = await importPackageJson(pJsonPath);
+            console.log('preparing template:', name)
 
             const restore = await writeDeps(templateDir, deps);
 
