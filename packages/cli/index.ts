@@ -150,9 +150,8 @@ const main = defineCommand({
               onlyFiles: true,
             });
 
-            const filteredFiles = await Promise.all(
-              files.filter((file) => !ig.ignores(file)),
-            );
+            const filteredFiles = files.filter((file) => !ig.ignores(file));
+            console.log(filteredFiles)
 
             for (const filePath of filteredFiles) {
               const file = await fs.readFile(path.join(templateDir, filePath));
@@ -165,7 +164,7 @@ const main = defineCommand({
                 isBinary ? blob : await blob.text(),
               );
             }
-            console.log(formData)
+            console.log(formData);
           }
 
           for (const p of [...paths, ...templates]) {
