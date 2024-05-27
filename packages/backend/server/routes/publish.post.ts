@@ -19,15 +19,14 @@ export default eventHandler(async (event) => {
     "sb-key": key,
     "sb-shasums": shasumsHeader,
     "sb-compact": compactHeader,
-    "sb-templates": templatesHeader,
   } = getHeaders(event);
   const compact = compactHeader === "true";
 
-  if (!key || !commitTimestampHeader || !shasumsHeader! || !templatesHeader) {
+  if (!key || !commitTimestampHeader || !shasumsHeader!) {
     throw createError({
       statusCode: 400,
       message:
-        "sb-commit-timestamp, sb-key, sb-shasums and sb-templates headers are required",
+        "sb-commit-timestamp, sb-key and sb-shasums headers are required",
     });
   }
 
@@ -72,7 +71,7 @@ export default eventHandler(async (event) => {
     packages.map(async (packageNameWithPrefix) => {
       const packageName = packageNameWithPrefix.slice("package:".length);
 
-      const file = formData.get(packageName)! as File;
+      const file = formData.get(packageNameWithPrefix)! as File;
       const packageKey = `${baseKey}:${sha}:${packageName}`;
 
       const stream = file.stream();
@@ -91,16 +90,19 @@ export default eventHandler(async (event) => {
         .split(":");
       const templateAsset = decodeURIComponent(encodedTemplateAsset);
 
-      const file = formData.get(templateAssetWithPrefix)! as File;
+      const file = formData.get(templateAssetWithPrefix)!;
+      const isBinary = !(typeof file === 'string')
       const uuid = randomUUID();
 
       templatesMap.set(template, {
         ...templatesMap.get(template),
-        [templateAsset]: new URL(`/asset/${uuid}`, origin).href,
+        [templateAsset]: isBinary ? new URL(`/asset/${uuid}`, origin).href : file,
       });
 
-      const stream = file.stream();
-      return setItemStream(event, useTemplatesBucket.base, uuid, stream);
+      if (isBinary) {
+        const stream = file.stream();
+        return setItemStream(event, useTemplatesBucket.base, uuid, stream);
+      }
     }),
   );
 

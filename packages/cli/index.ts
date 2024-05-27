@@ -61,6 +61,7 @@ const main = defineCommand({
           for (const templateDir of templates) {
             const pJsonPath = path.resolve(templateDir, "package.json");
             const { name } = await importPackageJson(pJsonPath);
+            console.log("preparing template:", name);
 
             const gitignorePath = path.join(templateDir, ".gitignore");
             const ig = ignore();
@@ -77,26 +78,19 @@ const main = defineCommand({
               onlyFiles: true,
             });
 
-            // Yooo, this is ugly
-            const filteredFiles = (
-              await Promise.all(
-                files
-                  .filter((file) => !ig.ignores(file))
-              )
-            )
+            const filteredFiles = await Promise.all(
+              files.filter((file) => !ig.ignores(file)),
+            );
 
             for (const filePath of filteredFiles) {
-              const file = await fs.readFile(
-                path.join(templateDir, filePath),
-                "utf-8",
-              );
-              const blob = new Blob([file], {
+              const file = await fs.readFile(path.join(templateDir, filePath));
+              const isBinary = await isBinaryFile(file);
+              const blob = new Blob([file.buffer], {
                 type: "application/octet-stream",
               });
               formData.append(
                 `template:${name}:${encodeURIComponent(filePath)}`,
-                blob,
-                filePath,
+                isBinary ? blob : await blob.text(),
               );
             }
           }
@@ -216,10 +210,6 @@ const main = defineCommand({
               "sb-key": key,
               "sb-shasums": JSON.stringify(shasums),
               "sb-commit-timestamp": commitTimestamp.toString(),
-              "sb-templates": JSON.stringify({
-                example: "https://test.ir",
-                "example-1": "https://test.ir",
-              }),
             },
             body: formData,
           });
