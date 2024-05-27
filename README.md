@@ -45,6 +45,15 @@ For workspaces:
 npx pkg-pr-new publish ./packages/A ./packages/B # or `npx pkg-pr-new publish ./packages/*`
 ```
 
+For templates:
+
+> [!NOTE]
+> With templates, pkg.pr.new will generate Stackblitz instances for the given directories with the new built packages.
+
+```sh
+npx pkg-pr-new publish ./packages/A --template ./example-1 --template ./example-2
+```
+
 For shorter urls, `--compact` can be useful:
 
 ```sh
