@@ -7,7 +7,6 @@ import { hash } from "ohash";
 import fsSync from "fs";
 import fs from "fs/promises";
 import { Octokit } from "@octokit/action";
-import { pathToFileURL } from "node:url";
 import { getPackageManifest } from "query-registry";
 import { extractOwnerAndRepo, extractRepository } from "@pkg-pr-new/utils";
 import fg from "fast-glob";
@@ -15,6 +14,7 @@ import ignore from "ignore";
 import "./environments";
 import pkg from "./package.json" with { type: "json" };
 import { isBinaryFile } from "isbinaryfile";
+import { readPackageJSON, writePackageJSON } from 'pkg-types'
 
 declare global {
   var API_URL: string;
@@ -115,14 +115,14 @@ const main = defineCommand({
 
           for (const p of paths) {
             const pJsonPath = path.resolve(p, "package.json");
-            const { name } = await importPackageJson(pJsonPath);
+            const { name } = await readPackageJSON();
 
             if (compact) {
-              await verifyCompactMode(name);
+              await verifyCompactMode(name!);
             }
 
             deps.set(
-              name,
+              name!,
               new URL(
                 `/${owner}/${repo}/${name}@${GITHUB_SHA.substring(0, 7)}`,
                 API_URL,
@@ -131,8 +131,7 @@ const main = defineCommand({
           }
 
           for (const templateDir of templates) {
-            const pJsonPath = path.resolve(templateDir, "package.json");
-            const { name } = await importPackageJson(pJsonPath);
+            const { name } = await readPackageJSON();
             console.log('preparing template:', name)
 
             const restore = await writeDeps(templateDir, deps);
@@ -180,7 +179,7 @@ const main = defineCommand({
           for (const p of paths) {
             const pJsonPath = path.resolve(p, "package.json");
             try {
-              const { name } = await importPackageJson(pJsonPath);
+              const { name } = await readPackageJSON();
               const { stdout } = await ezSpawn.async("npm pack --json", {
                 stdio: "overlapped",
                 cwd: p,
@@ -188,7 +187,7 @@ const main = defineCommand({
               const { filename, shasum }: { filename: string; shasum: string } =
                 JSON.parse(stdout)[0];
 
-              shasums[name] = shasum;
+              shasums[name!] = shasum;
               console.log(`shasum for ${name}(${filename}): ${shasum}`);
 
               const file = await fs.readFile(path.resolve(p, filename));
@@ -243,24 +242,16 @@ const main = defineCommand({
 
 runMain(main);
 
-async function importPackageJson(p: string): Promise<Record<string, any>> {
-  const { default: obj } = await import(pathToFileURL(p).href, {
-    with: { type: "json" },
-  });
-
-  return obj;
-}
-
 async function writeDeps(p: string, deps: Map<string, string>) {
   const pJsonPath = path.resolve(p, "package.json");
-  const content = await fs.readFile(pJsonPath, "utf-8");
 
-  const pJson = await importPackageJson(pJsonPath);
+  const pJson = await readPackageJSON();
+  
   hijackDeps(deps, pJson.dependencies);
   hijackDeps(deps, pJson.devDependencies);
-  await fs.writeFile(pJsonPath, JSON.stringify(pJson));
+  await writePackageJSON(pJsonPath, pJson);
 
-  return () => fs.writeFile(pJsonPath, content);
+  return () => writePackageJSON(pJsonPath, pJson);
 }
 
 function hijackDeps(

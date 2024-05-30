@@ -116,6 +116,9 @@ importers:
       isbinaryfile:
         specifier: ^5.0.2
         version: 5.0.2
+      pkg-types:
+        specifier: ^1.1.1
+        version: 1.1.1
       query-registry:
         specifier: ^3.0.0
         version: 3.0.0
