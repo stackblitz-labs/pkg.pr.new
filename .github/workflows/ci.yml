@@ -8,9 +8,6 @@ on:
 
 jobs:
   deploy:
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
-      cancel-in-progress: true
     runs-on: ubuntu-latest
     name: Deploy
     environment: ${{ github.ref_name == 'release' && 'Production' || 'Staging' }}
