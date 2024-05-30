@@ -14,7 +14,7 @@ import ignore from "ignore";
 import "./environments";
 import pkg from "./package.json" with { type: "json" };
 import { isBinaryFile } from "isbinaryfile";
-import { readPackageJSON, writePackageJSON } from 'pkg-types'
+import { readPackageJSON, writePackageJSON, resolvePackageJSON } from 'pkg-types'
 
 declare global {
   var API_URL: string;
@@ -115,10 +115,10 @@ const main = defineCommand({
 
           for (const p of paths) {
             const pJsonPath = path.resolve(p, "package.json");
-            const { name } = await readPackageJSON();
+            const { name } = await readPackageJSON(pJsonPath);
 
-            if (compact) {
-              await verifyCompactMode(name!);
+            if (compact && name) {
+              await verifyCompactMode(name);
             }
 
             deps.set(
@@ -244,6 +244,7 @@ runMain(main);
 
 async function writeDeps(p: string, deps: Map<string, string>) {
   const pJsonPath = path.resolve(p, "package.json");
+  const content = await resolvePackageJSON(pJsonPath);
 
   const pJson = await readPackageJSON();
   
@@ -251,7 +252,7 @@ async function writeDeps(p: string, deps: Map<string, string>) {
   hijackDeps(deps, pJson.devDependencies);
   await writePackageJSON(pJsonPath, pJson);
 
-  return () => writePackageJSON(pJsonPath, pJson);
+  return () => fs.writeFile(pJsonPath, content);
 }
 
 function hijackDeps(
