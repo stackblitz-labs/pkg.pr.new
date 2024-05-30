@@ -179,7 +179,7 @@ const main = defineCommand({
           for (const p of paths) {
             const pJsonPath = path.resolve(p, "package.json");
             try {
-              const { name } = await readPackageJSON();
+              const { name } = await readPackageJSON(pJsonPath);
               const { stdout } = await ezSpawn.async("npm pack --json", {
                 stdio: "overlapped",
                 cwd: p,
