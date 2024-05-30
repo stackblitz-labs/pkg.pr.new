@@ -1,5 +1,11 @@
 name: E2E Test
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
+      - release
+  pull_request:
+
 
 jobs:
   ci:
