@@ -1,16 +1,10 @@
-import type { H3EventContext } from "h3";
-import { useDownloadedAtBucket } from "../../utils/bucket";
+import type { H3EventContext, H3Event } from "h3";
 
 declare module "nitropack/dist/runtime/task" {
   interface TaskContext {
     cloudflare: H3EventContext["cloudflare"];
   }
 }
-
-const options: R2ListOptions = {
-  prefix: usePackagesBucket.base,
-  limit: 500,
-};
 
 export default eventHandler(async (event) => {
   const rmStaleKeyHeader = getHeader(event, "sb-rm-stale-key");
@@ -20,28 +14,47 @@ export default eventHandler(async (event) => {
       status: 403,
     });
   }
+  return {
+    ok: true,
+    removed: [
+      ...(await Promise.all([
+        iterateAndDelete(event, {
+          prefix: usePackagesBucket.base,
+          limit: 100,
+        }),
+        iterateAndDelete(event, {
+          prefix: useTemplatesBucket.base,
+          limit: 100,
+        }),
+      ]).then((results) => results.flat())),
+    ],
+  };
+});
+
+async function iterateAndDelete(event: H3Event, opts: R2ListOptions) {
   const binding =
     event.context.cloudflare.env.ENV === "production"
       ? event.context.cloudflare.env.PROD_CR_BUCKET
       : event.context.cloudflare.env.CR_BUCKET;
 
-  const downloadedAtBucket = useDownloadedAtBucket(event);
-  const today = Date.parse(new Date().toString());
   let truncated = true;
   let cursor: string | undefined;
 
-  const removed: string[] = []
+  const downloadedAtBucket = useDownloadedAtBucket(event);
+  const today = Date.parse(new Date().toString());
+
+  const removed: string[] = [];
   while (truncated) {
     // TODO: Avoid using context.cloudflare and migrate to unstorage, but it does not have truncated for now
     const next = await binding.list({
-      ...options,
+      ...opts,
       cursor: cursor,
     });
     for (const object of next.objects) {
       const uploaded = Date.parse(object.uploaded.toString());
       // remove the object anyway if it's 6 months old already
       if ((today - uploaded) / (1000 * 3600 * 24 * 30 * 6) >= 1) {
-        removed.push(object.key)
+        removed.push(object.key);
         event.context.cloudflare.context.waitUntil(binding.delete(object.key));
         event.context.cloudflare.context.waitUntil(
           downloadedAtBucket.removeItem(object.key),
@@ -53,7 +66,7 @@ export default eventHandler(async (event) => {
         !((today - downloadedAt) / (1000 * 3600 * 24 * 30) < 1) &&
         (today - uploaded) / (1000 * 3600 * 24 * 30) >= 1
       ) {
-        removed.push(object.key)
+        removed.push(object.key);
         event.context.cloudflare.context.waitUntil(binding.delete(object.key));
         event.context.cloudflare.context.waitUntil(
           downloadedAtBucket.removeItem(object.key),
@@ -66,5 +79,5 @@ export default eventHandler(async (event) => {
       cursor = next.cursor;
     }
   }
-  return { ok: true, removed };
-});
+  return removed;
+}

@@ -11,7 +11,7 @@ export default eventHandler(async (event) => {
     // Payload too large
     throw createError({
       statusCode: 413,
-      message: "Max size limit is 15mb",
+      message: "Max payload limit is 20mb",
     });
   }
   const {
@@ -22,7 +22,7 @@ export default eventHandler(async (event) => {
   } = getHeaders(event);
   const compact = compactHeader === "true";
 
-  if (!key || !commitTimestampHeader || !shasumsHeader!) {
+  if (!key || !commitTimestampHeader || !shasumsHeader) {
     throw createError({
       statusCode: 400,
       message:
@@ -70,9 +70,9 @@ export default eventHandler(async (event) => {
 
   await Promise.all(
     packages.map(async (packageNameWithPrefix) => {
-      const packageName = packageNameWithPrefix.slice("package:".length);
-
       const file = formData.get(packageNameWithPrefix)! as File;
+      const packageName = packageNameWithPrefix.slice("package:".length);
+      
       const packageKey = `${baseKey}:${sha}:${packageName}`;
 
       const stream = file.stream();
@@ -86,12 +86,12 @@ export default eventHandler(async (event) => {
 
   await Promise.all(
     templateAssets.map(async (templateAssetWithPrefix) => {
+      const file = formData.get(templateAssetWithPrefix)!;
       const [template, encodedTemplateAsset] = templateAssetWithPrefix
         .slice("template:".length)
         .split(":");
       const templateAsset = decodeURIComponent(encodedTemplateAsset);
-
-      const file = formData.get(templateAssetWithPrefix)!;
+      
       const isBinary = !(typeof file === 'string')
       const uuid = randomUUID();
 
@@ -226,7 +226,7 @@ export default eventHandler(async (event) => {
 
   return {
     ok: true,
-    urls: packages.map(
+    urls: packagesWithoutPrefix.map(
       (packageName) =>
         generatePublishUrl("sha", origin, packageName, workflowData, compact)
           .href,
