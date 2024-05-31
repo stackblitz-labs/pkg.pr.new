@@ -121,15 +121,16 @@ const main = defineCommand({
           for (const p of paths) {
             const pJsonPath = path.resolve(p, "package.json");
             const { name } = await readPackageJSON(pJsonPath);
+            if(!name) {
+              throw new Error('name is not defined');
+            }
 
             if (compact) {
-              if(name) {
-                await verifyCompactMode(name);
-              }
+              await verifyCompactMode(name);
             }
 
             deps.set(
-              name!,
+              name,
               new URL(
                 `/${owner}/${repo}/${name}@${GITHUB_SHA.substring(0, 7)}`,
                 API_URL,
