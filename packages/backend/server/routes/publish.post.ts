@@ -5,15 +5,7 @@ import { generateTemplateHtml } from "~/utils/template";
 
 export default eventHandler(async (event) => {
   const origin = getRequestURL(event).origin;
-  const contentLength = Number(getHeader(event, "content-length"));
-  // 20mb limit for now
-  if (contentLength > 1024 * 1024 * 20) {
-    // Payload too large
-    throw createError({
-      statusCode: 413,
-      message: "Max payload limit is 20mb",
-    });
-  }
+  
   const {
     "sb-commit-timestamp": commitTimestampHeader,
     "sb-key": key,
@@ -29,11 +21,25 @@ export default eventHandler(async (event) => {
         "sb-commit-timestamp, sb-key and sb-shasums headers are required",
     });
   }
+  const workflowsBucket = useWorkflowsBucket(event);
+  const workflowData = (await workflowsBucket.getItem(key))!;
+
+  const whitelisted = await isWhitelisted(workflowData.owner, workflowData.repo)
+  const contentLength = Number(getHeader(event, "content-length"));
+
+  // 20mb limit for now
+  if (!whitelisted && contentLength > 1024 * 1024 * 20) {
+    // Payload too large
+    throw createError({
+      statusCode: 413,
+      message: "Max payload limit is 20mb! Feel free to apply for the whitelist: https://github.com/stackblitz-labs/pkg.pr.new/blob/main/.whitelist",
+    });
+  }
 
   const shasums: Record<string, string> = JSON.parse(shasumsHeader);
   const formData = await readFormData(event);
   const packages = [...formData.keys()].filter((k) => k.startsWith("package:"));
-  const packagesWithoutPrefix = packages.map((p) => p.slice('package:'.length))
+  const packagesWithoutPrefix = packages.map((p) => p.slice("package:".length));
   const templateAssets = [...formData.keys()].filter((k) =>
     k.startsWith("template:"),
   );
@@ -46,7 +52,6 @@ export default eventHandler(async (event) => {
   }
 
   const { appId } = useRuntimeConfig(event);
-  const workflowsBucket = useWorkflowsBucket(event);
   const cursorBucket = useCursorsBucket(event);
 
   if (!(await workflowsBucket.hasItem(key))) {
@@ -59,7 +64,7 @@ export default eventHandler(async (event) => {
 
   const commitTimestamp = Number(commitTimestampHeader);
 
-  const workflowData = (await workflowsBucket.getItem(key))!;
+  
 
   const sha = abbreviateCommitHash(workflowData.sha);
   const baseKey = `${workflowData.owner}:${workflowData.repo}`;
@@ -72,7 +77,7 @@ export default eventHandler(async (event) => {
     packages.map(async (packageNameWithPrefix) => {
       const file = formData.get(packageNameWithPrefix)! as File;
       const packageName = packageNameWithPrefix.slice("package:".length);
-      
+
       const packageKey = `${baseKey}:${sha}:${packageName}`;
 
       const stream = file.stream();
@@ -91,13 +96,15 @@ export default eventHandler(async (event) => {
         .slice("template:".length)
         .split(":");
       const templateAsset = decodeURIComponent(encodedTemplateAsset);
-      
-      const isBinary = !(typeof file === 'string')
+
+      const isBinary = !(typeof file === "string");
       const uuid = randomUUID();
 
       templatesMap.set(template, {
         ...templatesMap.get(template),
-        [templateAsset]: isBinary ? new URL(`/template/${uuid}`, origin).href : file,
+        [templateAsset]: isBinary
+          ? new URL(`/template/${uuid}`, origin).href
+          : file,
       });
 
       if (isBinary) {
@@ -233,3 +240,19 @@ export default eventHandler(async (event) => {
     ),
   };
 });
+
+const whitelist =
+  "https://raw.githubusercontent.com/stackblitz-labs/pkg.pr.new/main/.whitelist";
+
+async function isWhitelisted(owner: string, repo: string) {
+  const combination = `${owner}/${repo}`;
+
+  try {
+    const response = await fetch(whitelist);
+    const content = await response.text();
+
+    return content.includes(combination);
+  } catch {
+    return false;
+  }
+}
