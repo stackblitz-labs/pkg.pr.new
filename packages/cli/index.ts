@@ -121,8 +121,8 @@ const main = defineCommand({
           for (const p of paths) {
             const pJsonPath = path.resolve(p, "package.json");
             const { name } = await readPackageJSON(pJsonPath);
-            
-            if (isCompact && name) {
+
+            if (compact && name) {
               await verifyCompactMode(name);
             }
 
