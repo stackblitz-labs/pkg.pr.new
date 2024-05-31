@@ -216,7 +216,7 @@ export default eventHandler(async (event) => {
       await installation.request("POST /repos/{owner}/{repo}/deployments", {
         owner: workflowData.owner,
         repo: workflowData.repo,
-        ref: sha,
+        ref: workflowData.ref,
         description: 'Deploy request from hubot',
       })
     } else {
