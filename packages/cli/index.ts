@@ -4,69 +4,23 @@ import path from "path";
 import ezSpawn from "@jsdevtools/ez-spawn";
 // import { createRequire } from "module";
 import { hash } from "ohash";
+import fsSync from "fs";
 import fs from "fs/promises";
 import { Octokit } from "@octokit/action";
 import { pathToFileURL } from "node:url";
 import { getPackageManifest } from "query-registry";
 import { extractOwnerAndRepo, extractRepository } from "@pkg-pr-new/utils";
 import fg from "fast-glob";
+import ignore from "ignore";
 import "./environments";
 import pkg from "./package.json" with { type: "json" };
+import { isBinaryFile } from "isbinaryfile";
 
 declare global {
   var API_URL: string;
 }
 
 const publishUrl = new URL("/publish", API_URL);
-
-if (!process.env.TEST && process.env.GITHUB_ACTIONS !== "true") {
-  console.error("Continuous Releases are only available in Github Actions.");
-  process.exit(1);
-}
-const octokit = new Octokit();
-
-const {
-  GITHUB_SERVER_URL,
-  GITHUB_REPOSITORY,
-  GITHUB_RUN_ID,
-  GITHUB_RUN_ATTEMPT,
-  GITHUB_ACTOR_ID,
-  GITHUB_SHA,
-} = process.env;
-
-const [owner, repo] = GITHUB_REPOSITORY.split("/");
-
-const checkResponse = await fetch(new URL("/check", API_URL), {
-  method: "POST",
-  body: JSON.stringify({
-    owner,
-    repo,
-  }),
-});
-
-if (!checkResponse.ok) {
-  console.log(await checkResponse.text());
-  process.exit(1);
-}
-
-const commit = await octokit.git.getCommit({
-  owner,
-  repo,
-  commit_sha: GITHUB_SHA,
-});
-
-const commitTimestamp = Date.parse(commit.data.committer.date);
-
-// Note: If you need to use a workflow run's URL from within a job, you can combine these variables: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
-const url = `${GITHUB_SERVER_URL}/${owner}/${repo}/actions/runs/${GITHUB_RUN_ID}`;
-
-const metadata = {
-  url,
-  attempt: Number(GITHUB_RUN_ATTEMPT),
-  actor: Number(GITHUB_ACTOR_ID),
-};
-
-const key = hash(metadata);
 
 const main = defineCommand({
   meta: {
@@ -83,16 +37,82 @@ const main = defineCommand({
             description:
               "compact urls. The shortest form of urls like pkg.pr.new/tinybench@a832a55)",
           },
+          template: {
+            type: "string",
+            description:
+              "generate stackblitz templates out of directories in the current repo with the new built packages",
+          },
         },
         run: async ({ args }) => {
-          const compact = !!args.compact;
-
           const paths = (args._.length ? args._ : ["."])
             .flatMap((p) => (fg.isDynamicPattern(p) ? fg.sync(p) : p))
             .map((p) => path.resolve(p));
 
+          const templates = (
+            typeof args.template === "string"
+              ? [args.template]
+              : ([...(args.template ?? [])] as string[])
+          )
+            .flatMap((p) => (fg.isDynamicPattern(p) ? fg.sync(p) : p))
+            .map((p) => path.resolve(p));
+
+          const formData = new FormData();
+
+          const compact = !!args.compact;
+
+          if (!process.env.TEST && process.env.GITHUB_ACTIONS !== "true") {
+            console.error(
+              "Continuous Releases are only available in Github Actions.",
+            );
+            process.exit(1);
+          }
+          const octokit = new Octokit();
+
+          const {
+            GITHUB_SERVER_URL,
+            GITHUB_REPOSITORY,
+            GITHUB_RUN_ID,
+            GITHUB_RUN_ATTEMPT,
+            GITHUB_ACTOR_ID,
+            GITHUB_SHA,
+          } = process.env;
+
+          const [owner, repo] = GITHUB_REPOSITORY.split("/");
+
+          // Note: If you need to use a workflow run's URL from within a job, you can combine these variables: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
+          const url = `${GITHUB_SERVER_URL}/${owner}/${repo}/actions/runs/${GITHUB_RUN_ID}`;
+
+          const metadata = {
+            url,
+            attempt: Number(GITHUB_RUN_ATTEMPT),
+            actor: Number(GITHUB_ACTOR_ID),
+          };
+
+          const key = hash(metadata);
+
+          const checkResponse = await fetch(new URL("/check", API_URL), {
+            method: "POST",
+            body: JSON.stringify({
+              owner,
+              repo,
+            }),
+          });
+
+          if (!checkResponse.ok) {
+            console.log(await checkResponse.text());
+            process.exit(1);
+          }
+
+          const commit = await octokit.git.getCommit({
+            owner,
+            repo,
+            commit_sha: GITHUB_SHA,
+          });
+
+          const commitTimestamp = Date.parse(commit.data.committer.date);
+
           const deps: Map<string, string> = new Map();
-          const pJsonContent: Map<string, string> = new Map();
+
           for (const p of paths) {
             const pJsonPath = path.resolve(p, "package.json");
             const { name } = await importPackageJson(pJsonPath);
@@ -109,17 +129,53 @@ const main = defineCommand({
               ).href,
             );
           }
-          for (const p of paths) {
-            const pJsonPath = path.resolve(p, "package.json");
-            const content = await fs.readFile(pJsonPath, "utf-8");
-            pJsonContent.set(pJsonPath, content);
 
-            const pJson = await importPackageJson(pJsonPath);
-            hijackDeps(deps, pJson.dependencies);
-            hijackDeps(deps, pJson.devDependencies);
-            await fs.writeFile(pJsonPath, JSON.stringify(pJson));
+          for (const templateDir of templates) {
+            const pJsonPath = path.resolve(templateDir, "package.json");
+            const { name } = await importPackageJson(pJsonPath);
+            console.log('preparing template:', name)
+
+            const restore = await writeDeps(templateDir, deps);
+
+            const gitignorePath = path.join(templateDir, ".gitignore");
+            const ig = ignore();
+            ig.add("node_modules");
+
+            if (fsSync.existsSync(gitignorePath)) {
+              const gitignoreContent = await fs.readFile(gitignorePath, "utf8");
+              ig.add(gitignoreContent);
+            }
+
+            const files = await fg(["**/*"], {
+              cwd: templateDir,
+              dot: true,
+              onlyFiles: true,
+            });
+
+            const filteredFiles = files.filter((file) => !ig.ignores(file));
+
+            for (const filePath of filteredFiles) {
+              const file = await fs.readFile(path.join(templateDir, filePath));
+              const isBinary = await isBinaryFile(file);
+              const blob = new Blob([file.buffer], {
+                type: "application/octet-stream",
+              });
+              formData.append(
+                `template:${name}:${encodeURIComponent(filePath)}`,
+                isBinary ? blob : await blob.text(),
+              );
+            }
+            await restore();
           }
-          const formData = new FormData();
+
+          const restoreMap = new Map<
+            string,
+            Awaited<ReturnType<typeof writeDeps>>
+          >();
+          for (const p of paths) {
+            restoreMap.set(p, await writeDeps(p, deps));
+          }
+
           const shasums: Record<string, string> = {};
           for (const p of paths) {
             const pJsonPath = path.resolve(p, "package.json");
@@ -140,9 +196,9 @@ const main = defineCommand({
               const blob = new Blob([file], {
                 type: "application/octet-stream",
               });
-              formData.append(name, blob, filename);
+              formData.append(`package:${name}`, blob, filename);
             } finally {
-              await fs.writeFile(pJsonPath, pJsonContent.get(pJsonPath)!);
+              await restoreMap.get(pJsonPath)?.();
             }
           }
 
@@ -165,7 +221,13 @@ const main = defineCommand({
 
           console.log("\n");
           console.log(
-            `⚡️ Your npm packages are published.\n${[...formData.keys()].map((name, i) => `${name}: npm i ${laterRes.urls[i]}`).join("\n")}`,
+            `⚡️ Your npm packages are published.\n${[...formData.keys()]
+              .filter((k) => k.startsWith("package:"))
+              .map(
+                (name, i) =>
+                  `${name.slice("package:".length)}: npm i ${laterRes.urls[i]}`,
+              )
+              .join("\n")}`,
           );
         },
       };
@@ -187,6 +249,18 @@ async function importPackageJson(p: string): Promise<Record<string, any>> {
   });
 
   return obj;
+}
+
+async function writeDeps(p: string, deps: Map<string, string>) {
+  const pJsonPath = path.resolve(p, "package.json");
+  const content = await fs.readFile(pJsonPath, "utf-8");
+
+  const pJson = await importPackageJson(pJsonPath);
+  hijackDeps(deps, pJson.dependencies);
+  hijackDeps(deps, pJson.devDependencies);
+  await fs.writeFile(pJsonPath, JSON.stringify(pJson));
+
+  return () => fs.writeFile(pJsonPath, content);
 }
 
 function hijackDeps(

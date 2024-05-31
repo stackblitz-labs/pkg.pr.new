@@ -17,9 +17,11 @@
   "license": "ISC",
   "dependencies": {
     "@jsdevtools/ez-spawn": "^3.0.4",
+    "@octokit/action": "^6.1.0",
     "fast-glob": "^3.3.2",
-    "query-registry": "^3.0.0",
-    "@octokit/action": "^6.1.0"
+    "ignore": "^5.3.1",
+    "isbinaryfile": "^5.0.2",
+    "query-registry": "^3.0.0"
   },
   "devDependencies": {
     "@pkg-pr-new/utils": "workspace:^",

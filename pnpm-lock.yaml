@@ -110,6 +110,12 @@ importers:
       fast-glob:
         specifier: ^3.3.2
         version: 3.3.2
+      ignore:
+        specifier: ^5.3.1
+        version: 5.3.1
+      isbinaryfile:
+        specifier: ^5.0.2
+        version: 5.0.2
       query-registry:
         specifier: ^3.0.0
         version: 3.0.0
@@ -129,6 +135,15 @@ importers:
       query-registry:
         specifier: ^3.0.0
         version: 3.0.0
+
+  template:
+    dependencies:
+      playground-a:
+        specifier: link:../playgrounds/playground-a
+        version: link:../playgrounds/playground-a
+      playground-b:
+        specifier: link:../playgrounds/playground-b
+        version: link:../playgrounds/playground-b
 
 packages:
 
@@ -2437,6 +2452,10 @@ packages:
 
   isarray@2.0.5:
     resolution: {integrity: sha512-xHjhDr3cNBK0BzdUJSPXZntQUx/mwMS5Rw4A7lPJ90XGAO6ISP/ePDNuo0vhqOZU+UD5JoodwCAAoZQd3FeAKw==}
+
+  isbinaryfile@5.0.2:
+    resolution: {integrity: sha512-GvcjojwonMjWbTkfMpnVHVqXW/wKMYDfEpY94/8zy8HFMOqb/VL6oeONq9v87q4ttVlaTLnGXnJD4B5B1OTGIg==}
+    engines: {node: '>= 18.0.0'}
 
   isexe@2.0.0:
     resolution: {integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==}
@@ -6057,6 +6076,8 @@ snapshots:
   isarray@1.0.0: {}
 
   isarray@2.0.5: {}
+
+  isbinaryfile@5.0.2: {}
 
   isexe@2.0.0: {}
 
