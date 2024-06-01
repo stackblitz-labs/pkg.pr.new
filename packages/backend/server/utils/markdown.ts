@@ -85,6 +85,8 @@ ${shaMessages}
 
 ## Pull Request: #${workflowData.ref}
 
+[![Open in Codeflow](https://developer.stackblitz.com/img/open_in_codeflow.svg)](https:///pr.new/${workflowData.owner}/${workflowData.repo}/pull/${workflowData.ref})
+
 ${refMessages}
 `;
 }
