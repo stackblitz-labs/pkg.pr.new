@@ -122,7 +122,7 @@ const main = defineCommand({
             const pJsonPath = path.resolve(p, "package.json");
             const { name } = await readPackageJSON(pJsonPath);
             if(!name) {
-              throw new Error('name is not defined');
+              throw new Error(`"name" field in ${pJsonPath} should be defined`);
             }
 
             if (compact) {
