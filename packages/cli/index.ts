@@ -261,10 +261,11 @@ async function resolveTarball(pm: "npm" | "pnpm", p: string) {
 
     return { filename, shasum };
   } else if (pm === "pnpm") {
-    const { stdout: filename } = await ezSpawn.async("pnpm pack", {
+    const { stdout } = await ezSpawn.async("pnpm pack", {
       stdio: "overlapped",
       cwd: p,
     });
+    const filename = stdout.trim()
     console.log('filename', filename)
 
     const shasum = createHash("sha1")
