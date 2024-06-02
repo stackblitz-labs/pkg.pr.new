@@ -7,13 +7,7 @@
   "bin": {
     "playground-a": "index.js"
   },
-  "scripts": {
-    "publish": "pkg-pr-new publish"
-  },
   "keywords": [],
   "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "pkg-pr-new": "workspace:^"
-  }
+  "license": "ISC"
 }
