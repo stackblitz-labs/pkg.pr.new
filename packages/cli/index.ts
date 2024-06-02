@@ -265,10 +265,12 @@ async function resolveTarball(pm: "npm" | "pnpm", p: string) {
       stdio: "overlapped",
       cwd: p,
     });
+    console.log('filename', filename)
 
     const shasum = createHash("sha1")
       .update(await fs.readFile(filename))
       .digest("hex");
+    console.log("shasum", shasum)
     return { filename, shasum };
   }
   throw new Error("Could not resolve package manager");
