@@ -3,6 +3,7 @@ import assert from "node:assert";
 import path from "path";
 import ezSpawn from "@jsdevtools/ez-spawn";
 // import { createRequire } from "module";
+import { createHash } from "node:crypto";
 import { hash } from "ohash";
 import fsSync from "fs";
 import fs from "fs/promises";
@@ -37,6 +38,10 @@ const main = defineCommand({
             description:
               "compact urls. The shortest form of urls like pkg.pr.new/tinybench@a832a55)",
           },
+          pnpm: {
+            type: "boolean",
+            description: "use `pnpm pack` instead of `npm pack --json`",
+          },
           template: {
             type: "string",
             description:
@@ -58,7 +63,8 @@ const main = defineCommand({
 
           const formData = new FormData();
 
-          const compact = !!args.compact;
+          const isCompact = !!args.compact;
+          const isPnpm = !!args.pnpm;
 
           if (!process.env.TEST && process.env.GITHUB_ACTIONS !== "true") {
             console.error(
@@ -117,7 +123,7 @@ const main = defineCommand({
             const pJsonPath = path.resolve(p, "package.json");
             const { name } = await importPackageJson(pJsonPath);
 
-            if (compact) {
+            if (isCompact) {
               await verifyCompactMode(name);
             }
 
@@ -133,7 +139,7 @@ const main = defineCommand({
           for (const templateDir of templates) {
             const pJsonPath = path.resolve(templateDir, "package.json");
             const { name } = await importPackageJson(pJsonPath);
-            console.log('preparing template:', name)
+            console.log("preparing template:", name);
 
             const restore = await writeDeps(templateDir, deps);
 
@@ -181,12 +187,11 @@ const main = defineCommand({
             const pJsonPath = path.resolve(p, "package.json");
             try {
               const { name } = await importPackageJson(pJsonPath);
-              const { stdout } = await ezSpawn.async("npm pack --json", {
-                stdio: "overlapped",
-                cwd: p,
-              });
-              const { filename, shasum }: { filename: string; shasum: string } =
-                JSON.parse(stdout)[0];
+
+              const { filename, shasum } = await resolveTarball(
+                isPnpm ? "pnpm" : "npm",
+                p,
+              );
 
               shasums[name] = shasum;
               console.log(`shasum for ${name}(${filename}): ${shasum}`);
@@ -205,7 +210,7 @@ const main = defineCommand({
           const res = await fetch(publishUrl, {
             method: "POST",
             headers: {
-              "sb-compact": `${compact}`,
+              "sb-compact": `${isCompact}`,
               "sb-key": key,
               "sb-shasums": JSON.stringify(shasums),
               "sb-commit-timestamp": commitTimestamp.toString(),
@@ -242,6 +247,32 @@ const main = defineCommand({
 });
 
 runMain(main);
+
+// TODO: we'll add support for yarn if users hit issues with npm
+async function resolveTarball(pm: "npm" | "pnpm", p: string) {
+  if (pm === "npm") {
+    const { stdout } = await ezSpawn.async("npm pack --json", {
+      stdio: "overlapped",
+      cwd: p,
+    });
+
+    const { filename, shasum }: { filename: string; shasum: string } =
+      JSON.parse(stdout)[0];
+
+    return { filename, shasum };
+  } else if (pm === "pnpm") {
+    const { stdout: filename } = await ezSpawn.async("pnpm pack", {
+      stdio: "overlapped",
+      cwd: p,
+    });
+
+    const shasum = createHash("sha1")
+      .update(await fs.readFile(filename))
+      .digest("hex");
+    return { filename, shasum };
+  }
+  throw new Error("Could not resolve package manager");
+}
 
 async function importPackageJson(p: string): Promise<Record<string, any>> {
   const { default: obj } = await import(pathToFileURL(p).href, {

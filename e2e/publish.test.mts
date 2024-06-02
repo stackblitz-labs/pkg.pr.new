@@ -39,7 +39,6 @@ for (const [{ payload }, pr] of [
     // workflow_job.queued
     const webhookUrl = new URL("/webhook", serverUrl);
     if (pr) {
-      console.log("send pr event");
       const prWebhookData = await fetch(webhookUrl, {
         method: "POST",
         headers: [
