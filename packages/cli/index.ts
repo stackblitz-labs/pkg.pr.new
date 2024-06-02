@@ -196,7 +196,7 @@ const main = defineCommand({
               shasums[name] = shasum;
               console.log(`shasum for ${name}(${filename}): ${shasum}`);
 
-              const file = await fs.readFile(filename);
+              const file = await fs.readFile(path.resolve(p, filename));
 
               const blob = new Blob([file], {
                 type: "application/octet-stream",
@@ -259,19 +259,19 @@ async function resolveTarball(pm: "npm" | "pnpm", p: string) {
     const { filename, shasum }: { filename: string; shasum: string } =
       JSON.parse(stdout)[0];
 
-    return { filename: path.resolve(p, filename), shasum };
+    return { filename, shasum };
   } else if (pm === "pnpm") {
-    const { stdout } = await ezSpawn.async("pnpm pack", {
+    const { stdout} = await ezSpawn.async("pnpm pack", {
       stdio: "overlapped",
       cwd: p,
     });
-    const filename = path.resolve(p, stdout.trim())
-    console.log('filename', filename)
+    console.log(stdout)
+    const filename = stdout.trim()
 
     const shasum = createHash("sha1")
-      .update(await fs.readFile(filename))
+      .update(await fs.readFile(path.resolve(p, filename)))
       .digest("hex");
-    console.log("shasum", shasum)
+
     return { filename, shasum };
   }
   throw new Error("Could not resolve package manager");
