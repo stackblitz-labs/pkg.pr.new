@@ -196,7 +196,7 @@ const main = defineCommand({
               shasums[name] = shasum;
               console.log(`shasum for ${name}(${filename}): ${shasum}`);
 
-              const file = await fs.readFile(path.resolve(p, filename));
+              const file = await fs.readFile(filename);
 
               const blob = new Blob([file], {
                 type: "application/octet-stream",
@@ -259,13 +259,13 @@ async function resolveTarball(pm: "npm" | "pnpm", p: string) {
     const { filename, shasum }: { filename: string; shasum: string } =
       JSON.parse(stdout)[0];
 
-    return { filename, shasum };
+    return { filename: path.resolve(p, filename), shasum };
   } else if (pm === "pnpm") {
     const { stdout } = await ezSpawn.async("pnpm pack", {
       stdio: "overlapped",
       cwd: p,
     });
-    const filename = stdout.trim()
+    const filename = path.resolve(p, stdout.trim())
     console.log('filename', filename)
 
     const shasum = createHash("sha1")
