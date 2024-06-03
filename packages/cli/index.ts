@@ -146,11 +146,12 @@ const main = defineCommand({
           for (const templateDir of templates) {
             const pJsonPath = path.resolve(templateDir, "package.json");
             const pJson = await readPackageJSON(pJsonPath);
-            console.log("preparing template:", pJson?.name);
 
             if (!pJson.name) {
               throw new Error(`"name" field in ${pJsonPath} should be defined`);
             }
+
+            console.log("preparing template:", pJson.name);
 
             const restore = await writeDeps(templateDir, deps);
 
@@ -197,22 +198,26 @@ const main = defineCommand({
           for (const p of paths) {
             const pJsonPath = path.resolve(p, "package.json");
             try {
-              const { name } = await readPackageJSON(pJsonPath);
+              const pJson = await readPackageJSON(pJsonPath);
+
+              if (!pJson.name) {
+                throw new Error(`"name" field in ${pJsonPath} should be defined`);
+              }
 
               const { filename, shasum } = await resolveTarball(
                 isPnpm ? "pnpm" : "npm",
                 p,
               );
 
-              shasums[name!] = shasum;
-              console.log(`shasum for ${name}(${filename}): ${shasum}`);
+              shasums[pJson.name] = shasum;
+              console.log(`shasum for ${pJson.name}(${filename}): ${shasum}`);
 
               const file = await fs.readFile(path.resolve(p, filename));
 
               const blob = new Blob([file], {
                 type: "application/octet-stream",
               });
-              formData.append(`package:${name}`, blob, filename);
+              formData.append(`package:${pJson.name}`, blob, filename);
             } finally {
               await restoreMap.get(pJsonPath)?.();
             }
