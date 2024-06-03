@@ -16,7 +16,7 @@ export function generateCommitPublishMessage(
         workflowData,
         compact,
       );
-      return `### ${packageName}:
+      return `### ${packageName}
 \`\`\`
 npm i ${shaUrl}
 \`\`\`
@@ -51,7 +51,7 @@ export function generatePullRequestPublishMessage(
         workflowData,
         compact,
       );
-      return `### ${packageName}:
+      return `### ${packageName}
 \`\`\`
 npm i ${shaUrl}
 \`\`\``;
@@ -67,7 +67,7 @@ npm i ${shaUrl}
         workflowData,
         compact,
       );
-      return `### ${packageName}:
+      return `### ${packageName}
 \`\`\`
 npm i ${refUrl}
 \`\`\``;
@@ -95,7 +95,7 @@ function generateTemplatesStr(templates: Record<string, string>) {
   const entries = Object.entries(templates);
   return entries.length
     ? `
-## Templates:
+## Templates
 
 ${entries.map(([k, v]) => `- [${k}](${v})`).join("\n")}
 `

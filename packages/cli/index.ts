@@ -112,6 +112,7 @@ const main = defineCommand({
             process.exit(1);
           }
 
+          console.log('sha', GITHUB_SHA)
           const commit = await octokit.git.getCommit({
             owner,
             repo,
