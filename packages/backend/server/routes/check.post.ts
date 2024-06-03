@@ -1,8 +1,6 @@
 export default eventHandler(async (event) => {
   const data = await readRawBody(event);
-  const workflowsBucket = useWorkflowsBucket(event);
-
-  const { owner, repo, key } = JSON.parse(data!);
+  const { owner, repo } = JSON.parse(data!);
 
   const app = useOctokitApp(event);
 
@@ -17,13 +15,4 @@ export default eventHandler(async (event) => {
       message: `The app https://github.com/apps/pkg-pr-new is not installed on ${owner}/${repo}.`,
     });
   }
-  const workflowData = await workflowsBucket.getItem(key);
-
-  if (!workflowData) {
-    throw createError({
-      statusCode: 404,
-      message: `There is no workflow defined for ${key}`,
-    });
-  }
-  return { sha: workflowData.sha };
 });

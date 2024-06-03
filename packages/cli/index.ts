@@ -79,9 +79,7 @@ const main = defineCommand({
             GITHUB_RUN_ID,
             GITHUB_RUN_ATTEMPT,
             GITHUB_ACTOR_ID,
-            GITHUB_SHA: fakeGhSha
           } = process.env;
-          console.log('fake gh sha', fakeGhSha)
 
           const [owner, repo] = GITHUB_REPOSITORY.split("/");
 
@@ -110,22 +108,7 @@ const main = defineCommand({
             process.exit(1);
           }
 
-          const { sha: GITHUB_SHA } = await checkResponse.json();
-
-          console.log("sha", GITHUB_SHA);
-          const { stdout: fullSha } = await ezSpawn.async(`git rev-parse ${GITHUB_SHA}`, {
-            stdio: "overlapped",
-          });
-          console.log(fullSha)
-
-
-          const commit = await octokit.git.getCommit({
-            owner,
-            repo,
-            commit_sha: GITHUB_SHA,
-          });
-
-          const commitTimestamp = Date.parse(commit.data.committer.date);
+          const { sha } = await checkResponse.json();
 
           const deps: Map<string, string> = new Map();
 
@@ -144,7 +127,7 @@ const main = defineCommand({
             deps.set(
               pJson.name,
               new URL(
-                `/${owner}/${repo}/${pJson.name}@${GITHUB_SHA.substring(0, 7)}`,
+                `/${owner}/${repo}/${pJson.name}@${sha}`,
                 API_URL,
               ).href,
             );
@@ -238,7 +221,7 @@ const main = defineCommand({
               "sb-compact": `${isCompact}`,
               "sb-key": key,
               "sb-shasums": JSON.stringify(shasums),
-              "sb-commit-timestamp": commitTimestamp.toString(),
+              "sb-run-id": GITHUB_RUN_ID,
             },
             body: formData,
           });
