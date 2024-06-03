@@ -73,6 +73,14 @@ export function usePackagesBucket(event: Event) {
 usePackagesBucket.key = "package";
 usePackagesBucket.base = joinKeys(useBucket.base, usePackagesBucket.key);
 
+export function useTemplatesBucket(event: Event) {
+  const storage = useBucket(event);
+  return prefixStorage<Uint8Array>(storage, useTemplatesBucket.key);
+}
+
+useTemplatesBucket.key = "template";
+useTemplatesBucket.base = joinKeys(useBucket.base, useTemplatesBucket.key);
+
 export function useCursorsBucket(event: Event) {
   const storage = useBucket(event);
   return prefixStorage<Cursor>(storage, useCursorsBucket.key);
