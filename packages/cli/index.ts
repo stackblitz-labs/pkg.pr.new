@@ -124,9 +124,7 @@ const main = defineCommand({
 
           for (const p of paths) {
             const pJsonPath = path.resolve(p, "package.json");
-            console.log(pJsonPath)
             const pJson = await readPackageJSON(pJsonPath);
-            console.log('pJson', pJson?.name)
 
             if (!pJson.name) {
               throw new Error(`"name" field in ${pJsonPath} should be defined`);
@@ -291,13 +289,13 @@ async function resolveTarball(pm: "npm" | "pnpm", p: string) {
 
 async function writeDeps(p: string, deps: Map<string, string>) {
   const pJsonPath = path.resolve(p, "package.json");
-  const content = await resolvePackageJSON(pJsonPath);
+  const content = await fs.readFile(pJsonPath, 'utf-8');
 
   const pJson = await readPackageJSON(pJsonPath);
 
   hijackDeps(deps, pJson.dependencies);
   hijackDeps(deps, pJson.devDependencies);
-  console.log("pJson", pJson, "restore", content)
+
   await writePackageJSON(pJsonPath, pJson);
 
   return () => fs.writeFile(pJsonPath, content);
