@@ -79,7 +79,9 @@ const main = defineCommand({
             GITHUB_RUN_ID,
             GITHUB_RUN_ATTEMPT,
             GITHUB_ACTOR_ID,
+            GITHUB_SHA: fakeGhSha
           } = process.env;
+          console.log('fake gh sha', fakeGhSha)
 
           const [owner, repo] = GITHUB_REPOSITORY.split("/");
 
