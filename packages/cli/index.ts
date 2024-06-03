@@ -14,12 +14,7 @@ import ignore from "ignore";
 import "./environments";
 import pkg from "./package.json" with { type: "json" };
 import { isBinaryFile } from "isbinaryfile";
-import {
-  readPackageJSON,
-  writePackageJSON,
-} from "pkg-types";
-import type {WorkflowJobEvent} from '@octokit/webhooks-types'
-
+import { readPackageJSON, writePackageJSON } from "pkg-types";
 
 declare global {
   var API_URL: string;
@@ -84,11 +79,7 @@ const main = defineCommand({
             GITHUB_RUN_ID,
             GITHUB_RUN_ATTEMPT,
             GITHUB_ACTOR_ID,
-            GITHUB_EVENT_PATH,
           } = process.env;
-
-          const event = await import(GITHUB_EVENT_PATH, {with: {type: "json"}}) as WorkflowJobEvent
-          console.log(event)
 
           const [owner, repo] = GITHUB_REPOSITORY.split("/");
 
@@ -108,7 +99,7 @@ const main = defineCommand({
             body: JSON.stringify({
               owner,
               repo,
-              key
+              key,
             }),
           });
 
@@ -117,7 +108,9 @@ const main = defineCommand({
             process.exit(1);
           }
 
-          console.log('sha', GITHUB_SHA)
+          const { sha: GITHUB_SHA } = await checkResponse.json();
+
+          console.log("sha", GITHUB_SHA);
           const commit = await octokit.git.getCommit({
             owner,
             repo,
@@ -207,7 +200,9 @@ const main = defineCommand({
               const pJson = await readPackageJSON(pJsonPath);
 
               if (!pJson.name) {
-                throw new Error(`"name" field in ${pJsonPath} should be defined`);
+                throw new Error(
+                  `"name" field in ${pJsonPath} should be defined`,
+                );
               }
 
               const { filename, shasum } = await resolveTarball(
@@ -300,7 +295,7 @@ async function resolveTarball(pm: "npm" | "pnpm", p: string) {
 
 async function writeDeps(p: string, deps: Map<string, string>) {
   const pJsonPath = path.resolve(p, "package.json");
-  const content = await fs.readFile(pJsonPath, 'utf-8');
+  const content = await fs.readFile(pJsonPath, "utf-8");
 
   const pJson = await readPackageJSON(pJsonPath);
 
