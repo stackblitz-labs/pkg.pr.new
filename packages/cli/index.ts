@@ -124,19 +124,21 @@ const main = defineCommand({
 
           for (const p of paths) {
             const pJsonPath = path.resolve(p, "package.json");
-            const { name } = await readPackageJSON(pJsonPath);
-            if (!name) {
+            console.log(pJsonPath)
+            const pJson = await readPackageJSON(pJsonPath);
+
+            if (!pJson.name) {
               throw new Error(`"name" field in ${pJsonPath} should be defined`);
             }
 
             if (isCompact) {
-              await verifyCompactMode(name);
+              await verifyCompactMode(pJson.name);
             }
 
             deps.set(
-              name,
+              pJson.name,
               new URL(
-                `/${owner}/${repo}/${name}@${GITHUB_SHA.substring(0, 7)}`,
+                `/${owner}/${repo}/${pJson.name}@${GITHUB_SHA.substring(0, 7)}`,
                 API_URL,
               ).href,
             );
@@ -144,8 +146,12 @@ const main = defineCommand({
 
           for (const templateDir of templates) {
             const pJsonPath = path.resolve(templateDir, "package.json");
-            const { name } = await readPackageJSON(pJsonPath);
-            console.log("preparing template:", name);
+            const pJson = await readPackageJSON(pJsonPath);
+            console.log("preparing template:", pJson.name);
+
+            if (!pJson.name) {
+              throw new Error(`"name" field in ${pJsonPath} should be defined`);
+            }
 
             const restore = await writeDeps(templateDir, deps);
 
@@ -173,7 +179,7 @@ const main = defineCommand({
                 type: "application/octet-stream",
               });
               formData.append(
-                `template:${name}:${encodeURIComponent(filePath)}`,
+                `template:${pJson.name}:${encodeURIComponent(filePath)}`,
                 isBinary ? blob : await blob.text(),
               );
             }
