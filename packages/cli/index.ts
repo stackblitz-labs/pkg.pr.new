@@ -14,7 +14,11 @@ import ignore from "ignore";
 import "./environments";
 import pkg from "./package.json" with { type: "json" };
 import { isBinaryFile } from "isbinaryfile";
-import { readPackageJSON, writePackageJSON, resolvePackageJSON } from 'pkg-types'
+import {
+  readPackageJSON,
+  writePackageJSON,
+  resolvePackageJSON,
+} from "pkg-types";
 
 declare global {
   var API_URL: string;
@@ -121,11 +125,11 @@ const main = defineCommand({
           for (const p of paths) {
             const pJsonPath = path.resolve(p, "package.json");
             const { name } = await readPackageJSON(pJsonPath);
-            if(!name) {
+            if (!name) {
               throw new Error(`"name" field in ${pJsonPath} should be defined`);
             }
 
-            if (compact) {
+            if (isCompact) {
               await verifyCompactMode(name);
             }
 
@@ -141,7 +145,7 @@ const main = defineCommand({
           for (const templateDir of templates) {
             const pJsonPath = path.resolve(templateDir, "package.json");
             const { name } = await readPackageJSON(pJsonPath);
-            console.log('preparing template:', name)
+            console.log("preparing template:", name);
 
             const restore = await writeDeps(templateDir, deps);
 
