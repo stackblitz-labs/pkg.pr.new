@@ -1,7 +1,10 @@
 export default eventHandler(async (event) => {
   const data = await readRawBody(event);
-  const { owner, repo } = JSON.parse(data!);
+  const workflowsBucket = useWorkflowsBucket(event);
+  
+  const { owner, repo, key } = JSON.parse(data!);
 
+  
   const app = useOctokitApp(event);
 
   try {
@@ -9,6 +12,13 @@ export default eventHandler(async (event) => {
       owner: owner,
       repo: repo,
     });
+    // const workflowData = (await workflowsBucket.getItem(key));
+    // if (!workflowData) {
+    //   throw createError({
+    //     statusCode: 404,
+    //   });
+    // }
+    // return {commit: workflowData.sha}
   } catch {
     throw createError({
       statusCode: 404,

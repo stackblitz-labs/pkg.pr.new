@@ -17,8 +17,9 @@ import { isBinaryFile } from "isbinaryfile";
 import {
   readPackageJSON,
   writePackageJSON,
-  resolvePackageJSON,
 } from "pkg-types";
+import type {WorkflowJobEvent} from '@octokit/webhooks-types'
+
 
 declare global {
   var API_URL: string;
@@ -83,8 +84,11 @@ const main = defineCommand({
             GITHUB_RUN_ID,
             GITHUB_RUN_ATTEMPT,
             GITHUB_ACTOR_ID,
-            GITHUB_SHA,
+            GITHUB_EVENT_PATH,
           } = process.env;
+
+          const event = await import(GITHUB_EVENT_PATH, {with: {type: "json"}}) as WorkflowJobEvent
+          console.log(event)
 
           const [owner, repo] = GITHUB_REPOSITORY.split("/");
 
@@ -104,6 +108,7 @@ const main = defineCommand({
             body: JSON.stringify({
               owner,
               repo,
+              key
             }),
           });
 
