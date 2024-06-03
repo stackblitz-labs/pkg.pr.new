@@ -45,6 +45,15 @@ For workspaces:
 npx pkg-pr-new publish ./packages/A ./packages/B # or `npx pkg-pr-new publish ./packages/*`
 ```
 
+For templates (experimental):
+
+> [!NOTE]
+> With templates, pkg.pr.new will generate Stackblitz instances for the given directories with the new built packages.
+
+```sh
+npx pkg-pr-new publish ./packages/A --template ./examples/*
+```
+
 For shorter urls, `--compact` can be useful:
 
 ```sh
@@ -64,6 +73,8 @@ Without `--compact`:
 ```sh
 npm i https://pkg.pr.new/tinylibs/tinybench/tinybench@a832a55
 ```
+
+pkg.pr.new uses `npm pack --json` under the hood, in case you face issues, you can also use the `--pnpm` flag so it starts using `pnpm pack`. This is not necessary in most cases.
 
 <img width="100%" src="https://github.com/stackblitz-labs/pkg.pr.new/assets/37929992/2fc03b94-ebae-4c47-a271-03a4ad5d2449" />
 

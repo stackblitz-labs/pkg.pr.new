@@ -2,71 +2,25 @@ import { defineCommand, runMain, parseArgs } from "citty";
 import assert from "node:assert";
 import path from "path";
 import ezSpawn from "@jsdevtools/ez-spawn";
-// import { createRequire } from "module";
+import { createHash } from "node:crypto";
 import { hash } from "ohash";
+import fsSync from "fs";
 import fs from "fs/promises";
 import { Octokit } from "@octokit/action";
-import { pathToFileURL } from "node:url";
 import { getPackageManifest } from "query-registry";
 import { extractOwnerAndRepo, extractRepository } from "@pkg-pr-new/utils";
 import fg from "fast-glob";
+import ignore from "ignore";
 import "./environments";
 import pkg from "./package.json" with { type: "json" };
+import { isBinaryFile } from "isbinaryfile";
+import { readPackageJSON, writePackageJSON } from "pkg-types";
 
 declare global {
   var API_URL: string;
 }
 
 const publishUrl = new URL("/publish", API_URL);
-
-if (!process.env.TEST && process.env.GITHUB_ACTIONS !== "true") {
-  console.error("Continuous Releases are only available in Github Actions.");
-  process.exit(1);
-}
-const octokit = new Octokit();
-
-const {
-  GITHUB_SERVER_URL,
-  GITHUB_REPOSITORY,
-  GITHUB_RUN_ID,
-  GITHUB_RUN_ATTEMPT,
-  GITHUB_ACTOR_ID,
-  GITHUB_SHA,
-} = process.env;
-
-const [owner, repo] = GITHUB_REPOSITORY.split("/");
-
-const checkResponse = await fetch(new URL("/check", API_URL), {
-  method: "POST",
-  body: JSON.stringify({
-    owner,
-    repo,
-  }),
-});
-
-if (!checkResponse.ok) {
-  console.log(await checkResponse.text());
-  process.exit(1);
-}
-
-const commit = await octokit.git.getCommit({
-  owner,
-  repo,
-  commit_sha: GITHUB_SHA,
-});
-
-const commitTimestamp = Date.parse(commit.data.committer.date);
-
-// Note: If you need to use a workflow run's URL from within a job, you can combine these variables: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
-const url = `${GITHUB_SERVER_URL}/${owner}/${repo}/actions/runs/${GITHUB_RUN_ID}`;
-
-const metadata = {
-  url,
-  attempt: Number(GITHUB_RUN_ATTEMPT),
-  actor: Number(GITHUB_ACTOR_ID),
-};
-
-const key = hash(metadata);
 
 const main = defineCommand({
   meta: {
@@ -83,76 +37,191 @@ const main = defineCommand({
             description:
               "compact urls. The shortest form of urls like pkg.pr.new/tinybench@a832a55)",
           },
+          pnpm: {
+            type: "boolean",
+            description: "use `pnpm pack` instead of `npm pack --json`",
+          },
+          template: {
+            type: "string",
+            description:
+              "generate stackblitz templates out of directories in the current repo with the new built packages",
+          },
         },
         run: async ({ args }) => {
-          const compact = !!args.compact;
-
           const paths = (args._.length ? args._ : ["."])
             .flatMap((p) => (fg.isDynamicPattern(p) ? fg.sync(p) : p))
             .map((p) => path.resolve(p));
 
+          const templates = (
+            typeof args.template === "string"
+              ? [args.template]
+              : ([...(args.template ?? [])] as string[])
+          )
+            .flatMap((p) => (fg.isDynamicPattern(p) ? fg.sync(p) : p))
+            .map((p) => path.resolve(p));
+
+          const formData = new FormData();
+
+          const isCompact = !!args.compact;
+          const isPnpm = !!args.pnpm;
+
+          if (!process.env.TEST && process.env.GITHUB_ACTIONS !== "true") {
+            console.error(
+              "Continuous Releases are only available in Github Actions.",
+            );
+            process.exit(1);
+          }
+          const octokit = new Octokit();
+
+          const {
+            GITHUB_SERVER_URL,
+            GITHUB_REPOSITORY,
+            GITHUB_RUN_ID,
+            GITHUB_RUN_ATTEMPT,
+            GITHUB_ACTOR_ID,
+          } = process.env;
+
+          const [owner, repo] = GITHUB_REPOSITORY.split("/");
+
+          // Note: If you need to use a workflow run's URL from within a job, you can combine these variables: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
+          const url = `${GITHUB_SERVER_URL}/${owner}/${repo}/actions/runs/${GITHUB_RUN_ID}`;
+
+          const metadata = {
+            url,
+            attempt: Number(GITHUB_RUN_ATTEMPT),
+            actor: Number(GITHUB_ACTOR_ID),
+          };
+
+          const key = hash(metadata);
+
+          const checkResponse = await fetch(new URL("/check", API_URL), {
+            method: "POST",
+            body: JSON.stringify({
+              owner,
+              repo,
+              key,
+            }),
+          });
+
+          if (!checkResponse.ok) {
+            console.log(await checkResponse.text());
+            process.exit(1);
+          }
+
+          const { sha } = await checkResponse.json();
+
           const deps: Map<string, string> = new Map();
-          const pJsonContent: Map<string, string> = new Map();
+
           for (const p of paths) {
             const pJsonPath = path.resolve(p, "package.json");
-            const { name } = await importPackageJson(pJsonPath);
+            const pJson = await readPackageJSON(pJsonPath);
 
-            if (compact) {
-              await verifyCompactMode(name);
+            if (!pJson.name) {
+              throw new Error(`"name" field in ${pJsonPath} should be defined`);
+            }
+
+            if (isCompact) {
+              await verifyCompactMode(pJson.name);
             }
 
             deps.set(
-              name,
+              pJson.name,
               new URL(
-                `/${owner}/${repo}/${name}@${GITHUB_SHA.substring(0, 7)}`,
+                `/${owner}/${repo}/${pJson.name}@${sha}`,
                 API_URL,
               ).href,
             );
           }
-          for (const p of paths) {
-            const pJsonPath = path.resolve(p, "package.json");
-            const content = await fs.readFile(pJsonPath, "utf-8");
-            pJsonContent.set(pJsonPath, content);
 
-            const pJson = await importPackageJson(pJsonPath);
-            hijackDeps(deps, pJson.dependencies);
-            hijackDeps(deps, pJson.devDependencies);
-            await fs.writeFile(pJsonPath, JSON.stringify(pJson));
+          for (const templateDir of templates) {
+            const pJsonPath = path.resolve(templateDir, "package.json");
+            const pJson = await readPackageJSON(pJsonPath);
+
+            if (!pJson.name) {
+              throw new Error(`"name" field in ${pJsonPath} should be defined`);
+            }
+
+            console.log("preparing template:", pJson.name);
+
+            const restore = await writeDeps(templateDir, deps);
+
+            const gitignorePath = path.join(templateDir, ".gitignore");
+            const ig = ignore();
+            ig.add("node_modules");
+
+            if (fsSync.existsSync(gitignorePath)) {
+              const gitignoreContent = await fs.readFile(gitignorePath, "utf8");
+              ig.add(gitignoreContent);
+            }
+
+            const files = await fg(["**/*"], {
+              cwd: templateDir,
+              dot: true,
+              onlyFiles: true,
+            });
+
+            const filteredFiles = files.filter((file) => !ig.ignores(file));
+
+            for (const filePath of filteredFiles) {
+              const file = await fs.readFile(path.join(templateDir, filePath));
+              const isBinary = await isBinaryFile(file);
+              const blob = new Blob([file.buffer], {
+                type: "application/octet-stream",
+              });
+              formData.append(
+                `template:${pJson.name}:${encodeURIComponent(filePath)}`,
+                isBinary ? blob : await blob.text(),
+              );
+            }
+            await restore();
           }
-          const formData = new FormData();
+
+          const restoreMap = new Map<
+            string,
+            Awaited<ReturnType<typeof writeDeps>>
+          >();
+          for (const p of paths) {
+            restoreMap.set(p, await writeDeps(p, deps));
+          }
+
           const shasums: Record<string, string> = {};
           for (const p of paths) {
             const pJsonPath = path.resolve(p, "package.json");
             try {
-              const { name } = await importPackageJson(pJsonPath);
-              const { stdout } = await ezSpawn.async("npm pack --json", {
-                stdio: "overlapped",
-                cwd: p,
-              });
-              const { filename, shasum }: { filename: string; shasum: string } =
-                JSON.parse(stdout)[0];
+              const pJson = await readPackageJSON(pJsonPath);
 
-              shasums[name] = shasum;
-              console.log(`shasum for ${name}(${filename}): ${shasum}`);
+              if (!pJson.name) {
+                throw new Error(
+                  `"name" field in ${pJsonPath} should be defined`,
+                );
+              }
+
+              const { filename, shasum } = await resolveTarball(
+                isPnpm ? "pnpm" : "npm",
+                p,
+              );
+
+              shasums[pJson.name] = shasum;
+              console.log(`shasum for ${pJson.name}(${filename}): ${shasum}`);
 
               const file = await fs.readFile(path.resolve(p, filename));
 
               const blob = new Blob([file], {
                 type: "application/octet-stream",
               });
-              formData.append(name, blob, filename);
+              formData.append(`package:${pJson.name}`, blob, filename);
             } finally {
-              await fs.writeFile(pJsonPath, pJsonContent.get(pJsonPath)!);
+              await restoreMap.get(pJsonPath)?.();
             }
           }
 
           const res = await fetch(publishUrl, {
             method: "POST",
             headers: {
-              "sb-compact": `${compact}`,
+              "sb-compact": `${isCompact}`,
               "sb-key": key,
               "sb-shasums": JSON.stringify(shasums),
-              "sb-commit-timestamp": commitTimestamp.toString(),
+              "sb-run-id": GITHUB_RUN_ID,
             },
             body: formData,
           });
@@ -165,7 +234,13 @@ const main = defineCommand({
 
           console.log("\n");
           console.log(
-            `⚡️ Your npm packages are published.\n${[...formData.keys()].map((name, i) => `${name}: \`npm i ${laterRes.urls[i]}\``).join("\n")}`,
+            `⚡️ Your npm packages are published.\n${[...formData.keys()]
+              .filter((k) => k.startsWith("package:"))
+              .map(
+                (name, i) =>
+                  `${name.slice("package:".length)}: npm i ${laterRes.urls[i]}`,
+              )
+              .join("\n")}`,
           );
         },
       };
@@ -181,12 +256,46 @@ const main = defineCommand({
 
 runMain(main);
 
-async function importPackageJson(p: string): Promise<Record<string, any>> {
-  const { default: obj } = await import(pathToFileURL(p).href, {
-    with: { type: "json" },
-  });
+// TODO: we'll add support for yarn if users hit issues with npm
+async function resolveTarball(pm: "npm" | "pnpm", p: string) {
+  if (pm === "npm") {
+    const { stdout } = await ezSpawn.async("npm pack --json", {
+      stdio: "overlapped",
+      cwd: p,
+    });
 
-  return obj;
+    const { filename, shasum }: { filename: string; shasum: string } =
+      JSON.parse(stdout)[0];
+
+    return { filename, shasum };
+  } else if (pm === "pnpm") {
+    const { stdout } = await ezSpawn.async("pnpm pack", {
+      stdio: "overlapped",
+      cwd: p,
+    });
+    const filename = stdout.trim();
+
+    const shasum = createHash("sha1")
+      .update(await fs.readFile(path.resolve(p, filename)))
+      .digest("hex");
+
+    return { filename, shasum };
+  }
+  throw new Error("Could not resolve package manager");
+}
+
+async function writeDeps(p: string, deps: Map<string, string>) {
+  const pJsonPath = path.resolve(p, "package.json");
+  const content = await fs.readFile(pJsonPath, "utf-8");
+
+  const pJson = await readPackageJSON(pJsonPath);
+
+  hijackDeps(deps, pJson.dependencies);
+  hijackDeps(deps, pJson.devDependencies);
+
+  await writePackageJSON(pJsonPath, pJson);
+
+  return () => fs.writeFile(pJsonPath, content);
 }
 
 function hijackDeps(
