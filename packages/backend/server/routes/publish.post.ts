@@ -5,7 +5,7 @@ import { generateTemplateHtml } from "~/utils/template";
 
 export default eventHandler(async (event) => {
   const origin = getRequestURL(event).origin;
-  
+
   const {
     "sb-commit-timestamp": commitTimestampHeader,
     "sb-key": key,
@@ -24,7 +24,10 @@ export default eventHandler(async (event) => {
   const workflowsBucket = useWorkflowsBucket(event);
   const workflowData = (await workflowsBucket.getItem(key))!;
 
-  const whitelisted = await isWhitelisted(workflowData.owner, workflowData.repo)
+  const whitelisted = await isWhitelisted(
+    workflowData.owner,
+    workflowData.repo,
+  );
   const contentLength = Number(getHeader(event, "content-length"));
 
   // 20mb limit for now
@@ -32,7 +35,8 @@ export default eventHandler(async (event) => {
     // Payload too large
     throw createError({
       statusCode: 413,
-      message: "Max payload limit is 20mb! Feel free to apply for the whitelist: https://github.com/stackblitz-labs/pkg.pr.new/blob/main/.whitelist",
+      message:
+        "Max payload limit is 20mb! Feel free to apply for the whitelist: https://github.com/stackblitz-labs/pkg.pr.new/blob/main/.whitelist",
     });
   }
 
@@ -63,8 +67,6 @@ export default eventHandler(async (event) => {
   }
 
   const commitTimestamp = Number(commitTimestampHeader);
-
-  
 
   const sha = abbreviateCommitHash(workflowData.sha);
   const baseKey = `${workflowData.owner}:${workflowData.repo}`;
@@ -203,13 +205,16 @@ export default eventHandler(async (event) => {
           owner: workflowData.owner,
           repo: workflowData.repo,
           comment_id: prevComment.id,
-          body: generatePullRequestPublishMessage(
-            origin,
-            templatesHtmlMap,
-            packagesWithoutPrefix,
-            workflowData,
-            compact,
-          ),
+          body:
+            JSON.stringify(installationData.permissions, null, 2) +
+            "\n" +
+            generatePullRequestPublishMessage(
+              origin,
+              templatesHtmlMap,
+              packagesWithoutPrefix,
+              workflowData,
+              compact,
+            ),
         },
       );
 
@@ -217,8 +222,8 @@ export default eventHandler(async (event) => {
         owner: workflowData.owner,
         repo: workflowData.repo,
         ref: sha,
-        description: 'Deploy request from hubot',
-      })
+        description: "Deploy request from hubot",
+      });
     } else {
       await installation.request(
         "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
