@@ -261,24 +261,17 @@ async function resolveTarball(pm: "npm" | "pnpm", p: string) {
 
     return { filename, shasum };
   } else if (pm === "pnpm") {
-    try {
-      const { stdout, stderr } = await ezSpawn.async("pnpm pack", {
-        stdio: "overlapped",
-        shell: true,
-        cwd: p,
-      });
-      console.log(stdout, stderr);
-      const filename = stdout.trim();
+    const { stdout } = await ezSpawn.async("pnpm pack", {
+      stdio: "overlapped",
+      cwd: p,
+    });
+    const filename = stdout.trim();
 
-      const shasum = createHash("sha1")
-        .update(await fs.readFile(path.resolve(p, filename)))
-        .digest("hex");
+    const shasum = createHash("sha1")
+      .update(await fs.readFile(path.resolve(p, filename)))
+      .digest("hex");
 
-      return { filename, shasum };
-    } catch (e) {
-      console.log("here", e);
-      process.exit(1)
-    }
+    return { filename, shasum };
   }
   throw new Error("Could not resolve package manager");
 }
