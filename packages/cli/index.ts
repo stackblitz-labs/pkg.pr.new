@@ -111,6 +111,12 @@ const main = defineCommand({
           const { sha: GITHUB_SHA } = await checkResponse.json();
 
           console.log("sha", GITHUB_SHA);
+          const { stdout: fullSha } = await ezSpawn.async(`git rev-parse ${GITHUB_SHA}`, {
+            stdio: "overlapped",
+          });
+          console.log(fullSha)
+
+
           const commit = await octokit.git.getCommit({
             owner,
             repo,
