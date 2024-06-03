@@ -148,7 +148,7 @@ const main = defineCommand({
           for (const templateDir of templates) {
             const pJsonPath = path.resolve(templateDir, "package.json");
             const pJson = await readPackageJSON(pJsonPath);
-            console.log("preparing template:", pJson.name);
+            console.log("preparing template:", pJson?.name);
 
             if (!pJson.name) {
               throw new Error(`"name" field in ${pJsonPath} should be defined`);
