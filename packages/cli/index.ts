@@ -2,7 +2,6 @@ import { defineCommand, runMain, parseArgs } from "citty";
 import assert from "node:assert";
 import path from "path";
 import ezSpawn from "@jsdevtools/ez-spawn";
-// import { createRequire } from "module";
 import { createHash } from "node:crypto";
 import { hash } from "ohash";
 import fsSync from "fs";
