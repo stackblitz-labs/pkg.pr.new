@@ -7,20 +7,21 @@ export default eventHandler(async (event) => {
   const origin = getRequestURL(event).origin;
   
   const {
-    "sb-commit-timestamp": commitTimestampHeader,
+    "sb-run-id": runIdHeader,
     "sb-key": key,
     "sb-shasums": shasumsHeader,
     "sb-compact": compactHeader,
   } = getHeaders(event);
   const compact = compactHeader === "true";
 
-  if (!key || !commitTimestampHeader || !shasumsHeader) {
+  if (!key || !runIdHeader || !shasumsHeader) {
     throw createError({
       statusCode: 400,
       message:
         "sb-commit-timestamp, sb-key and sb-shasums headers are required",
     });
   }
+  const runId = Number(runIdHeader)
   const workflowsBucket = useWorkflowsBucket(event);
   const workflowData = (await workflowsBucket.getItem(key))!;
 
@@ -61,10 +62,6 @@ export default eventHandler(async (event) => {
         "Try publishing from a github workflow! Also make sure you install https://github.com/apps/pkg-pr-new Github app on the repo",
     });
   }
-
-  const commitTimestamp = Number(commitTimestampHeader);
-
-  
 
   const sha = abbreviateCommitHash(workflowData.sha);
   const baseKey = `${workflowData.owner}:${workflowData.repo}`;
@@ -126,10 +123,10 @@ export default eventHandler(async (event) => {
     templatesHtmlMap[template] = new URL(`/template/${uuid}`, origin).href;
   }
 
-  if (!currentCursor || currentCursor.timestamp < commitTimestamp) {
+  if (!currentCursor || currentCursor.timestamp < runId) {
     await cursorBucket.setItem(cursorKey, {
       sha,
-      timestamp: commitTimestamp,
+      timestamp: runId,
     });
   }
 

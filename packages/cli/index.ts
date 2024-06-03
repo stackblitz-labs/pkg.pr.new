@@ -7,7 +7,6 @@ import { hash } from "ohash";
 import fsSync from "fs";
 import fs from "fs/promises";
 import { Octokit } from "@octokit/action";
-import { pathToFileURL } from "node:url";
 import { getPackageManifest } from "query-registry";
 import { extractOwnerAndRepo, extractRepository } from "@pkg-pr-new/utils";
 import fg from "fast-glob";
@@ -15,6 +14,7 @@ import ignore from "ignore";
 import "./environments";
 import pkg from "./package.json" with { type: "json" };
 import { isBinaryFile } from "isbinaryfile";
+import { readPackageJSON, writePackageJSON } from "pkg-types";
 
 declare global {
   var API_URL: string;
@@ -79,7 +79,6 @@ const main = defineCommand({
             GITHUB_RUN_ID,
             GITHUB_RUN_ATTEMPT,
             GITHUB_ACTOR_ID,
-            GITHUB_SHA,
           } = process.env;
 
           const [owner, repo] = GITHUB_REPOSITORY.split("/");
@@ -100,6 +99,7 @@ const main = defineCommand({
             body: JSON.stringify({
               owner,
               repo,
+              key,
             }),
           });
 
@@ -108,28 +108,26 @@ const main = defineCommand({
             process.exit(1);
           }
 
-          const commit = await octokit.git.getCommit({
-            owner,
-            repo,
-            commit_sha: GITHUB_SHA,
-          });
-
-          const commitTimestamp = Date.parse(commit.data.committer.date);
+          const { sha } = await checkResponse.json();
 
           const deps: Map<string, string> = new Map();
 
           for (const p of paths) {
             const pJsonPath = path.resolve(p, "package.json");
-            const { name } = await importPackageJson(pJsonPath);
+            const pJson = await readPackageJSON(pJsonPath);
+
+            if (!pJson.name) {
+              throw new Error(`"name" field in ${pJsonPath} should be defined`);
+            }
 
             if (isCompact) {
-              await verifyCompactMode(name);
+              await verifyCompactMode(pJson.name);
             }
 
             deps.set(
-              name,
+              pJson.name,
               new URL(
-                `/${owner}/${repo}/${name}@${GITHUB_SHA.substring(0, 7)}`,
+                `/${owner}/${repo}/${pJson.name}@${sha}`,
                 API_URL,
               ).href,
             );
@@ -137,8 +135,13 @@ const main = defineCommand({
 
           for (const templateDir of templates) {
             const pJsonPath = path.resolve(templateDir, "package.json");
-            const { name } = await importPackageJson(pJsonPath);
-            console.log("preparing template:", name);
+            const pJson = await readPackageJSON(pJsonPath);
+
+            if (!pJson.name) {
+              throw new Error(`"name" field in ${pJsonPath} should be defined`);
+            }
+
+            console.log("preparing template:", pJson.name);
 
             const restore = await writeDeps(templateDir, deps);
 
@@ -166,7 +169,7 @@ const main = defineCommand({
                 type: "application/octet-stream",
               });
               formData.append(
-                `template:${name}:${encodeURIComponent(filePath)}`,
+                `template:${pJson.name}:${encodeURIComponent(filePath)}`,
                 isBinary ? blob : await blob.text(),
               );
             }
@@ -185,22 +188,28 @@ const main = defineCommand({
           for (const p of paths) {
             const pJsonPath = path.resolve(p, "package.json");
             try {
-              const { name } = await importPackageJson(pJsonPath);
+              const pJson = await readPackageJSON(pJsonPath);
+
+              if (!pJson.name) {
+                throw new Error(
+                  `"name" field in ${pJsonPath} should be defined`,
+                );
+              }
 
               const { filename, shasum } = await resolveTarball(
                 isPnpm ? "pnpm" : "npm",
                 p,
               );
 
-              shasums[name] = shasum;
-              console.log(`shasum for ${name}(${filename}): ${shasum}`);
+              shasums[pJson.name] = shasum;
+              console.log(`shasum for ${pJson.name}(${filename}): ${shasum}`);
 
               const file = await fs.readFile(path.resolve(p, filename));
 
               const blob = new Blob([file], {
                 type: "application/octet-stream",
               });
-              formData.append(`package:${name}`, blob, filename);
+              formData.append(`package:${pJson.name}`, blob, filename);
             } finally {
               await restoreMap.get(pJsonPath)?.();
             }
@@ -212,7 +221,7 @@ const main = defineCommand({
               "sb-compact": `${isCompact}`,
               "sb-key": key,
               "sb-shasums": JSON.stringify(shasums),
-              "sb-commit-timestamp": commitTimestamp.toString(),
+              "sb-run-id": GITHUB_RUN_ID,
             },
             body: formData,
           });
@@ -275,22 +284,16 @@ async function resolveTarball(pm: "npm" | "pnpm", p: string) {
   throw new Error("Could not resolve package manager");
 }
 
-async function importPackageJson(p: string): Promise<Record<string, any>> {
-  const { default: obj } = await import(pathToFileURL(p).href, {
-    with: { type: "json" },
-  });
-
-  return obj;
-}
-
 async function writeDeps(p: string, deps: Map<string, string>) {
   const pJsonPath = path.resolve(p, "package.json");
   const content = await fs.readFile(pJsonPath, "utf-8");
 
-  const pJson = await importPackageJson(pJsonPath);
+  const pJson = await readPackageJSON(pJsonPath);
+
   hijackDeps(deps, pJson.dependencies);
   hijackDeps(deps, pJson.devDependencies);
-  await fs.writeFile(pJsonPath, JSON.stringify(pJson));
+
+  await writePackageJSON(pJsonPath, pJson);
 
   return () => fs.writeFile(pJsonPath, content);
 }
