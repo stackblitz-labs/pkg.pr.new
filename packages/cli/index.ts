@@ -297,6 +297,7 @@ async function writeDeps(p: string, deps: Map<string, string>) {
 
   hijackDeps(deps, pJson.dependencies);
   hijackDeps(deps, pJson.devDependencies);
+  console.log("pJson", pJson, "restore", content)
   await writePackageJSON(pJsonPath, pJson);
 
   return () => fs.writeFile(pJsonPath, content);
