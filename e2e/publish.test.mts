@@ -3,8 +3,8 @@ import { platform } from "os";
 import wp from "wait-port";
 import assert from "node:assert";
 import ezSpawn from "@jsdevtools/ez-spawn";
-import pushWorkflowJobQueuedFixture from "./fixtures/workflow_job.queued.json" with { type: "json" };
-import prWorkflowJobQueuedFixture from "./fixtures/pr.workflow_job.queued.json" with { type: "json" };
+import pushWorkflowJobQueuedFixture from "./fixtures/workflow_job.in_progress.json" with { type: "json" };
+import prWorkflowJobQueuedFixture from "./fixtures/pr.workflow_job.in_progress.json" with { type: "json" };
 import prPullRequestSynchronizeFixture from "./fixtures/pr.pull_request.json" with { type: "json" };
 
 const PORT = 8788; // wrangler default
