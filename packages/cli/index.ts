@@ -93,10 +93,7 @@ const main = defineCommand({
             actor: Number(GITHUB_ACTOR_ID),
           };
 
-          console.log('metadata', metadata)
-          console.log(process.env)
           const key = hash(metadata);
-          console.log('key', key)
 
           const checkResponse = await fetch(new URL("/check", API_URL), {
             method: "POST",
