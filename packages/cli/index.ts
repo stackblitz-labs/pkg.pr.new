@@ -94,6 +94,7 @@ const main = defineCommand({
           };
 
           console.log('metadata', metadata)
+          console.log(process.env)
           const key = hash(metadata);
           console.log('key', key)
 
