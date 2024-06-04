@@ -25,6 +25,8 @@ declare global {
       GITHUB_EVENT_PATH: string;
       // A unique number for each workflow run within a repository. This number does not change if you re-run the workflow run. For example, 1658821493.
       GITHUB_RUN_ID: string;
+      // The job_id of the current job. For example, greeting_job.
+      GITHUB_JOB: string;
       // A unique number for each attempt of a particular workflow run in a repository. This number begins at 1 for the workflow run's first attempt, and increments with each re-run. For example, 3.
       GITHUB_RUN_ATTEMPT: string;
     }

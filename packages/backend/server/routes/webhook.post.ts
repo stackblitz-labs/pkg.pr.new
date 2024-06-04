@@ -9,6 +9,8 @@ const prMarkEvents: PullRequestEvent["action"][] = [
   "opened",
   "reopened",
   "synchronize",
+  "enqueued",
+  "dequeued",
 ];
 
 export default eventHandler(async (event) => {
@@ -25,12 +27,19 @@ export default eventHandler(async (event) => {
     const [owner, repo] = payload.repository.full_name.split("/");
 
     const metadata = {
-      url: payload.workflow_job.html_url.split("/job/")[0], // run url: (https://github.com/stackblitz-labs/pkg.pr.new/actions/runs/8390507718)/job/23004786296
+      owner,
+      repo,
+      runId: payload.workflow_job.run_id,
+      jobId: payload.workflow_job.id,
       attempt: payload.workflow_job.run_attempt,
       actor: payload.sender.id,
     };
     const hashKey = hash(metadata);
-    if (payload.action === "queued") {
+
+    if (payload.action === "completed") {
+      // Publishing is not available anymore
+      await workflowsBucket.removeItem(hashKey);
+    } else {
       const prData: PullRequestData = {
         owner,
         repo,
@@ -52,9 +61,6 @@ export default eventHandler(async (event) => {
 
       // Publishing is only available throughout the lifetime of a workflow_job
       await workflowsBucket.setItem(hashKey, data);
-    } else if (payload.action === "completed") {
-      // Publishing is not available anymore
-      await workflowsBucket.removeItem(hashKey);
     }
   };
 
@@ -71,7 +77,6 @@ export default eventHandler(async (event) => {
     const prDataHash = hash(key);
     if (prMarkEvents.includes(payload.action)) {
       await pullRequestNumbersBucket.setItem(prDataHash, payload.number);
-      // TODO: send comment here if the workflow was run before (for in repo pull requests)
     } else if (payload.action === "closed") {
       await pullRequestNumbersBucket.removeItem(prDataHash);
 
