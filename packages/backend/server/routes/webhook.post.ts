@@ -9,8 +9,6 @@ const prMarkEvents: PullRequestEvent["action"][] = [
   "opened",
   "reopened",
   "synchronize",
-  "enqueued",
-  "dequeued",
 ];
 
 export default eventHandler(async (event) => {
@@ -39,7 +37,7 @@ export default eventHandler(async (event) => {
     if (payload.action === "completed") {
       // Publishing is not available anymore
       await workflowsBucket.removeItem(hashKey);
-    } else {
+    } else if (payload.action === 'in_progress') {
       const prData: PullRequestData = {
         owner,
         repo,
