@@ -1,4 +1,4 @@
-import { defineCommand, runMain, parseArgs } from "citty";
+import { defineCommand, runMain } from "citty";
 import assert from "node:assert";
 import path from "path";
 import ezSpawn from "@jsdevtools/ez-spawn";
@@ -87,8 +87,8 @@ const main = defineCommand({
           const metadata = {
             owner,
             repo,
+            job: GITHUB_JOB,
             runId: GITHUB_RUN_ID,
-            jobId: GITHUB_JOB,
             attempt: Number(GITHUB_RUN_ATTEMPT),
             actor: Number(GITHUB_ACTOR_ID),
           };

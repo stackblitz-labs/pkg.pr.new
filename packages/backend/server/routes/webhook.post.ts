@@ -29,8 +29,8 @@ export default eventHandler(async (event) => {
     const metadata = {
       owner,
       repo,
+      job: payload.workflow_job.name,
       runId: payload.workflow_job.run_id,
-      jobId: payload.workflow_job.id,
       attempt: payload.workflow_job.run_attempt,
       actor: payload.sender.id,
     };
