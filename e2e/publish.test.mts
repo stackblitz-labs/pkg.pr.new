@@ -72,6 +72,7 @@ for (const [{ payload }, pr] of [
       GITHUB_ACTOR_ID: payload.sender.id,
       GITHUB_SHA: payload.workflow_job.head_sha,
       GITHUB_ACTION: payload.workflow_job.id,
+      GITHUB_JOB: payload.workflow_job.name,
       GITHUB_REF_NAME: pr
         ? `${pr.payload.number}/merge`
         : payload.workflow_job.head_branch,
