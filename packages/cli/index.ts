@@ -88,7 +88,7 @@ const main = defineCommand({
             owner,
             repo,
             job: GITHUB_JOB,
-            runId: GITHUB_RUN_ID,
+            runId: Number(GITHUB_RUN_ID),
             attempt: Number(GITHUB_RUN_ATTEMPT),
             actor: Number(GITHUB_ACTOR_ID),
           };
