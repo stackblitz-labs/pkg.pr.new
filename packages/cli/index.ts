@@ -1,4 +1,4 @@
-import { defineCommand, runMain, parseArgs } from "citty";
+import { defineCommand, runMain } from "citty";
 import assert from "node:assert";
 import path from "path";
 import ezSpawn from "@jsdevtools/ez-spawn";
@@ -71,28 +71,32 @@ const main = defineCommand({
             );
             process.exit(1);
           }
-          const octokit = new Octokit();
+
+          new Octokit(); // gh authentication
 
           const {
-            GITHUB_SERVER_URL,
             GITHUB_REPOSITORY,
             GITHUB_RUN_ID,
             GITHUB_RUN_ATTEMPT,
             GITHUB_ACTOR_ID,
+            GITHUB_JOB
           } = process.env;
 
           const [owner, repo] = GITHUB_REPOSITORY.split("/");
 
-          // Note: If you need to use a workflow run's URL from within a job, you can combine these variables: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
-          const url = `${GITHUB_SERVER_URL}/${owner}/${repo}/actions/runs/${GITHUB_RUN_ID}`;
-
           const metadata = {
-            url,
+            owner,
+            repo,
+            job: GITHUB_JOB,
+            runId: Number(GITHUB_RUN_ID),
             attempt: Number(GITHUB_RUN_ATTEMPT),
             actor: Number(GITHUB_ACTOR_ID),
           };
 
+          console.log('metadata', metadata)
+          console.log(process.env)
           const key = hash(metadata);
+          console.log('key', key)
 
           const checkResponse = await fetch(new URL("/check", API_URL), {
             method: "POST",
