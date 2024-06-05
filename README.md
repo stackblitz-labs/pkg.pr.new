@@ -149,3 +149,24 @@ jobs:
 Publishing is only available in workflows and it supports any workflow trigger event, more information [here](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#about-events-that-trigger-workflows).
 
 <p align="center"><img src="https://github.com/stackblitz-labs/pkg.pr.new/assets/37929992/e15abdc6-aaeb-4895-b2e9-0b73a019c1d0" /></p>
+
+## FAQ
+
+### Why there's a bot? Can't it be done without a bot?
+
+The bot is mainly used for authentication and identifying valid and spam releases. pkg.pr.new does not require any sign in. 
+
+It's also used for tracking pull request numbers and mapping those numbers to the latest commits!  
+`pkg.pr.new/vitejs/vite@17314` -> `pkg.pr.new/vitejs/vite@d0fa5fd` 
+
+### Why not npm itself? 
+
+All the releases are supported in npm and other package managers like pnpm. But the releases won't be stored in npm itself for several reasons.
+
+Other approaches storing tarballs in npm would get noisy over time and maintainers would have to move those noisy preview releases to another org for their library, which gets to be less maintainable gradually. So the developer experience won't be ideal anyway, as opposed to pkg.pr.new, which is just a one-liner in your Github workflow file.  
+
+pkg.pr.new would remove releases after a month if they do not have any usage or download, but if they're being downloaded, the removal would be delegated to 6 months after the initial release at most. 
+
+Preview releases are just previews, they are not permanent. So storing tarballs that are less likely to be used over time in npm would not be space efficient for npm itself. 
+
+Handling pull request numbers would not be trivial in npm too, since pkg.pr.new provides support for branch names, pull request numbers and commit hashes. 
