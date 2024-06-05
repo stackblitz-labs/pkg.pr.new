@@ -5,7 +5,7 @@ import { generateTemplateHtml } from "~/utils/template";
 
 export default eventHandler(async (event) => {
   const origin = getRequestURL(event).origin;
-  
+
   const {
     "sb-run-id": runIdHeader,
     "sb-key": key,
@@ -21,11 +21,14 @@ export default eventHandler(async (event) => {
         "sb-commit-timestamp, sb-key and sb-shasums headers are required",
     });
   }
-  const runId = Number(runIdHeader)
+  const runId = Number(runIdHeader);
   const workflowsBucket = useWorkflowsBucket(event);
   const workflowData = (await workflowsBucket.getItem(key))!;
 
-  const whitelisted = await isWhitelisted(workflowData.owner, workflowData.repo)
+  const whitelisted = await isWhitelisted(
+    workflowData.owner,
+    workflowData.repo,
+  );
   const contentLength = Number(getHeader(event, "content-length"));
 
   // 20mb limit for now
@@ -33,7 +36,8 @@ export default eventHandler(async (event) => {
     // Payload too large
     throw createError({
       statusCode: 413,
-      message: "Max payload limit is 20mb! Feel free to apply for the whitelist: https://github.com/stackblitz-labs/pkg.pr.new/blob/main/.whitelist",
+      message:
+        "Max payload limit is 20mb! Feel free to apply for the whitelist: https://github.com/stackblitz-labs/pkg.pr.new/blob/main/.whitelist",
     });
   }
 
@@ -158,8 +162,12 @@ export default eventHandler(async (event) => {
     },
   );
 
+  let checkRunUrl = check_runs[0]?.html_url ?? "";
+
   if (!check_runs.length) {
-    await installation.request("POST /repos/{owner}/{repo}/check-runs", {
+    const {
+      data: { html_url },
+    } = await installation.request("POST /repos/{owner}/{repo}/check-runs", {
       name: checkName,
       owner: workflowData.owner,
       repo: workflowData.repo,
@@ -177,6 +185,7 @@ export default eventHandler(async (event) => {
       },
       conclusion: "success",
     });
+    checkRunUrl = html_url!;
   }
 
   if (isPullRequest(workflowData.ref)) {
@@ -191,6 +200,9 @@ export default eventHandler(async (event) => {
     const appComments = data.filter(
       (comment) => comment.performed_via_github_app?.id === Number(appId),
     );
+    const codeflow = !data.some(
+      (comment) => comment.performed_via_github_app?.slug === "stackblitz",
+    )
 
     if (appComments.length) {
       const prevComment = appComments[0];
@@ -206,6 +218,8 @@ export default eventHandler(async (event) => {
             packagesWithoutPrefix,
             workflowData,
             compact,
+            checkRunUrl,
+            codeflow
           ),
         },
       );
@@ -222,6 +236,8 @@ export default eventHandler(async (event) => {
             packagesWithoutPrefix,
             workflowData,
             compact,
+            checkRunUrl,
+            codeflow
           ),
         },
       );
