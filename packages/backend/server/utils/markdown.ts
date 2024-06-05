@@ -27,11 +27,11 @@ npm i ${shaUrl}
   const templatesStr = generateTemplatesStr(templates);
 
   return `
-${templatesStr}
-
-### Commit: ${workflowData.sha}
-
 ${shaMessages}
+
+---
+
+${templatesStr}
 `;
 }
 
@@ -53,7 +53,7 @@ export function generatePullRequestPublishMessage(
         workflowData,
         compact,
       );
-      return `#### ${packageName} ([${workflowData.sha}](${checkRunUrl}))
+      return `#### ${packageName} ([\`${workflowData.sha}\`](${checkRunUrl}))
 \`\`\`
 npm i ${refUrl}
 \`\`\``;
