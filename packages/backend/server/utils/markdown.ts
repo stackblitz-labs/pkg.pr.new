@@ -29,7 +29,7 @@ npm i ${shaUrl}
   return `
 ${shaMessages}
 
-${templatesStr ? "---" : null}
+${templatesStr ? "---" : ""}
 
 ${templatesStr}
 `;
@@ -66,12 +66,12 @@ npm i ${refUrl}
 ${
   codeflow
     ? `<a href="https:///pr.new/${workflowData.owner}/${workflowData.repo}/pull/${workflowData.ref}"><img src="https://developer.stackblitz.com/img/review_pr_small.svg" alt="Review PR in StackBlitz Codeflow" align="left" width="103" height="20"></a> _Run & review this pull request in [StackBlitz Codeflow](https:///pr.new/${workflowData.owner}/${workflowData.repo}/pull/${workflowData.ref})._`
-    : null
+    : ""
 }
 
 ${refMessages}
 
-${templatesStr ? "---" : null}
+${templatesStr ? "---" : ""}
 
 ${templatesStr}
 `;
