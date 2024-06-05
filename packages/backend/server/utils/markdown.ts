@@ -16,7 +16,7 @@ export function generateCommitPublishMessage(
         workflowData,
         compact,
       );
-      return `### ${packageName}
+      return `#### ${packageName}
 \`\`\`
 npm i ${shaUrl}
 \`\`\`
@@ -29,7 +29,7 @@ npm i ${shaUrl}
   return `
 ${templatesStr}
 
-## Commit: ${workflowData.sha}
+### Commit: ${workflowData.sha}
 
 ${shaMessages}
 `;
@@ -41,23 +41,9 @@ export function generatePullRequestPublishMessage(
   packages: string[],
   workflowData: WorkflowData,
   compact: boolean,
+  checkRunUrl: string,
+  codeflow: boolean
 ) {
-  const shaMessages = packages
-    .map((packageName) => {
-      const shaUrl = generatePublishUrl(
-        "sha",
-        origin,
-        packageName,
-        workflowData,
-        compact,
-      );
-      return `### ${packageName}
-\`\`\`
-npm i ${shaUrl}
-\`\`\``;
-    })
-    .join("\n");
-
   const refMessages = packages
     .map((packageName) => {
       const refUrl = generatePublishUrl(
@@ -67,7 +53,7 @@ npm i ${shaUrl}
         workflowData,
         compact,
       );
-      return `### ${packageName}
+      return `#### ${packageName} ([${workflowData.sha}](${checkRunUrl}))
 \`\`\`
 npm i ${refUrl}
 \`\`\``;
@@ -77,17 +63,17 @@ npm i ${refUrl}
   const templatesStr = generateTemplatesStr(templates);
 
   return `
-${templatesStr}
-
-## Commit: ${workflowData.sha}
-
-${shaMessages}
-
-## Pull Request: #${workflowData.ref}
-
-[![Open in Codeflow](https://developer.stackblitz.com/img/open_in_codeflow.svg)](https:///pr.new/${workflowData.owner}/${workflowData.repo}/pull/${workflowData.ref})
+${
+  codeflow
+    ? `<a href="https:///pr.new/${workflowData.owner}/${workflowData.repo}/pull/${workflowData.ref}"><img src="https://developer.stackblitz.com/img/review_pr_small.svg" alt="Review PR in StackBlitz Codeflow" align="left" width="103" height="20"></a> _Run & review this pull request in [StackBlitz Codeflow](https:///pr.new/${workflowData.owner}/${workflowData.repo}/pull/${workflowData.ref})._`
+    : null
+}
 
 ${refMessages}
+
+---
+
+${templatesStr}
 `;
 }
 
@@ -95,7 +81,7 @@ function generateTemplatesStr(templates: Record<string, string>) {
   const entries = Object.entries(templates);
   return entries.length
     ? `
-## Templates
+### Templates
 
 ${entries.map(([k, v]) => `- [${k}](${v})`).join("\n")}
 `
