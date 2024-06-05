@@ -3,8 +3,8 @@ import { platform } from "os";
 import wp from "wait-port";
 import assert from "node:assert";
 import ezSpawn from "@jsdevtools/ez-spawn";
-import pushWorkflowJobQueuedFixture from "./fixtures/workflow_job.queued.json" with { type: "json" };
-import prWorkflowJobQueuedFixture from "./fixtures/pr.workflow_job.queued.json" with { type: "json" };
+import pushWorkflowJobQueuedFixture from "./fixtures/workflow_job.in_progress.json" with { type: "json" };
+import prWorkflowJobQueuedFixture from "./fixtures/pr.workflow_job.in_progress.json" with { type: "json" };
 import prPullRequestSynchronizeFixture from "./fixtures/pr.pull_request.json" with { type: "json" };
 
 const PORT = 8788; // wrangler default
@@ -72,6 +72,7 @@ for (const [{ payload }, pr] of [
       GITHUB_ACTOR_ID: payload.sender.id,
       GITHUB_SHA: payload.workflow_job.head_sha,
       GITHUB_ACTION: payload.workflow_job.id,
+      GITHUB_JOB: payload.workflow_job.name,
       GITHUB_REF_NAME: pr
         ? `${pr.payload.number}/merge`
         : payload.workflow_job.head_branch,
