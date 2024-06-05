@@ -29,7 +29,7 @@ npm i ${shaUrl}
   return `
 ${shaMessages}
 
----
+${templatesStr ? "---" : null}
 
 ${templatesStr}
 `;
@@ -71,7 +71,7 @@ ${
 
 ${refMessages}
 
----
+${templatesStr ? "---" : null}
 
 ${templatesStr}
 `;
