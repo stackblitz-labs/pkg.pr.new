@@ -149,30 +149,3 @@ jobs:
 Publishing is only available in workflows and it supports any workflow trigger event, more information [here](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#about-events-that-trigger-workflows).
 
 <p align="center"><img src="https://github.com/stackblitz-labs/pkg.pr.new/assets/37929992/e15abdc6-aaeb-4895-b2e9-0b73a019c1d0" /></p>
-
-## FAQ
-
-### Why there's a bot? Can't it be done without a bot?
-
-The bot is mainly used for authentication and identifying valid and spam releases. pkg.pr.new does not require any sign in. 
-
-It's also used for tracking pull request numbers and mapping those numbers to the latest commits!  
-`pkg.pr.new/vitejs/vite@17314` -> `pkg.pr.new/vitejs/vite@d0fa5fd` 
-
-### Why not storing packages in npm itself? 
-
-Handling pull request numbers would not be trivial in npm too, since pkg.pr.new provides support for branch names, pull request numbers and commit hashes. pkg.pr.new has a cursor for each branch name and pull request number, and moves that cursor with workflow runs on new pushed commits in a matter of few milliseconds. While unpublishes in npm are not smooth at all and they have their own limitations (e.g. it's not possible to unpublish a version that is older than 24 hours)  
-
-Other approaches storing tarballs in npm would get noisy over time and maintainers would have to move those noisy preview releases to another org for their library, which adds complexity for each project and adoption will suffer. So the developer experience won't be ideal anyway, as opposed to pkg.pr.new, which is just a one-liner in your Github workflow file.  
-
-### Then why not something like @pkg-pr-new/vite? 
-
-That'd be possible by fetching a package, modifying the metadatan and then republishing it again. But this would not work in cases where the package is published under another org, since something like @pkg-pr-new/@vitejs/vite would not be possible. 
-
-And for authentication, the user would have to give us an npm token and check if that token is valid for the published package, then we'd be able to publish which adds extra friction. As opposed to GITHUB_TOKEN where it's provided by the Github CI out of the box.
-
-### Are releases permanent? 
-
-pkg.pr.new would remove releases after a month if they do not have any usage or download, but if they're being downloaded, the removal would be delegated to 6 months after the initial release at most. 
-
-
