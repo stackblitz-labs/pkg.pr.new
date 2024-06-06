@@ -1,4 +1,6 @@
+import { useOctokitInstallation } from "~/utils/octokit";
 import { WorkflowData } from "../../../types";
+import { abbreviateCommitHash } from "@pkg-pr-new/utils";
 
 type Params = Omit<WorkflowData, "sha" | "ref"> & {
   packageAndRefOrSha: string;
@@ -7,7 +9,7 @@ type Params = Omit<WorkflowData, "sha" | "ref"> & {
 export default eventHandler(async (event) => {
   const params = getRouterParams(event) as Params;
   const [encodedPackageName, refOrSha] = params.packageAndRefOrSha.split("@");
-  const packageName = decodeURIComponent(encodedPackageName)
+  const packageName = decodeURIComponent(encodedPackageName);
 
   const packageKey = `${params.owner}:${params.repo}:${refOrSha}:${packageName.split(".tgz")[0]}`;
   const cursorKey = `${params.owner}:${params.repo}:${refOrSha}`;
@@ -43,6 +45,30 @@ export default eventHandler(async (event) => {
     );
     return;
   }
+
+  try {
+    const installation = await useOctokitInstallation(
+      event,
+      params.owner,
+      params.repo,
+    );
+    // TODO: full commits are only supported on repo commits and not on fork commits
+    const {
+      data: { sha },
+    } = await installation.request(
+      "GET /repos/{owner}/{repo}/git/commits/{commit_sha}",
+      {
+        owner: params.owner,
+        repo: params.repo,
+        commit_sha: refOrSha,
+      },
+    );
+    sendRedirect(
+      event,
+      `/${params.owner}/${params.repo}/${packageName}@${abbreviateCommitHash(sha)}`,
+    );
+    return;
+  } catch {}
 
   throw createError({
     status: 404,

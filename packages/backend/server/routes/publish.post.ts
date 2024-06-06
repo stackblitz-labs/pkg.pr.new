@@ -1,6 +1,7 @@
 import { abbreviateCommitHash, isPullRequest } from "@pkg-pr-new/utils";
 import { randomUUID } from "uncrypto";
 import { setItemStream, useTemplatesBucket } from "~/utils/bucket";
+import { useOctokitInstallation } from "~/utils/octokit";
 import { generateTemplateHtml } from "~/utils/template";
 
 export default eventHandler(async (event) => {
@@ -136,17 +137,7 @@ export default eventHandler(async (event) => {
 
   await workflowsBucket.removeItem(key);
 
-  const app = useOctokitApp(event);
-
-  const { data: installationData } = await app.octokit.request(
-    "GET /repos/{owner}/{repo}/installation",
-    {
-      owner: workflowData.owner,
-      repo: workflowData.repo,
-    },
-  );
-
-  const installation = await app.getInstallationOctokit(installationData.id);
+  const installation = await useOctokitInstallation(event, workflowData.owner, workflowData.repo)
 
   const checkName = "Continuous Releases";
   const {
