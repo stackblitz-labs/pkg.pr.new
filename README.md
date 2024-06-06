@@ -33,7 +33,7 @@ The Github Application is available [here](https://github.com/apps/pkg-pr-new).
 > [!IMPORTANT]
 > Make sure it's installed on the repository before trying to publish a package.
 
-After installing on your repository, you can run `npx pkg-pr-new publish` with `GITHUB_TOKEN` in your workflows and then you have continuous releases!
+After installing on your repository, you can run `npx pkg-pr-new publish` in your workflows and then you have continuous releases!
 
 ```sh
 npm install --save-dev pkg-pr-new # or `npx pkg-pr-new publish`
@@ -109,8 +109,6 @@ jobs:
         run: pnpm build
 
       - run: pnpx pkg-pr-new publish
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # GITHUB_TOKEN is provided automatically in any repository
 ```
 
 #### Release approved pull requests only:
@@ -140,8 +138,6 @@ jobs:
         run: pnpm install
 
       - run: pnpx pkg-pr-new publish
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 > Releasing approved pull requests is the recommended way of having continuous releases. This ensures users always install approved and safe packages.
@@ -149,3 +145,4 @@ jobs:
 Publishing is only available in workflows and it supports any workflow trigger event, more information [here](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#about-events-that-trigger-workflows).
 
 <p align="center"><img src="https://github.com/stackblitz-labs/pkg.pr.new/assets/37929992/e15abdc6-aaeb-4895-b2e9-0b73a019c1d0" /></p>
+
