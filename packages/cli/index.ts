@@ -73,8 +73,6 @@ const main = defineCommand({
             process.exit(1);
           }
 
-          new Octokit(); // gh authentication
-
           const {
             GITHUB_REPOSITORY,
             GITHUB_RUN_ID,
