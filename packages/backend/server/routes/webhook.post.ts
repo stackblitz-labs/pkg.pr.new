@@ -36,7 +36,7 @@ export default eventHandler(async (event) => {
     if (payload.action === "completed") {
       // Publishing is not available anymore
       await workflowsBucket.removeItem(hashKey);
-    } else if (payload.action === 'in_progress') {
+    } else if (payload.action === 'requested') {
       const prData: PullRequestData = {
         owner,
         repo,
