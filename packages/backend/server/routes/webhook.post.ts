@@ -36,7 +36,7 @@ export default eventHandler(async (event) => {
     if (payload.action === "completed") {
       // Publishing is not available anymore
       await workflowsBucket.removeItem(hashKey);
-    } else { 
+    } else (!await workflowsBucket.hasItem(hashKey)){ 
       // "requested" or "in_progress" 
       // "requested" won't be received in re-running workflow jobs, but "in_progress" would be
       const prData: PullRequestData = {
