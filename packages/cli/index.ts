@@ -20,7 +20,8 @@ declare global {
   var API_URL: string;
 }
 
-const publishUrl = new URL("/publish", API_URL);
+const apiUrl = process.env.API_URL ?? API_URL
+const publishUrl = new URL("/publish", apiUrl);
 
 const main = defineCommand({
   meta: {
@@ -95,7 +96,7 @@ const main = defineCommand({
 
           const key = hash(metadata);
 
-          const checkResponse = await fetch(new URL("/check", API_URL), {
+          const checkResponse = await fetch(new URL("/check", apiUrl), {
             method: "POST",
             body: JSON.stringify({
               owner,
@@ -129,7 +130,7 @@ const main = defineCommand({
               pJson.name,
               new URL(
                 `/${owner}/${repo}/${pJson.name}@${sha}`,
-                API_URL,
+                apiUrl,
               ).href,
             );
           }
