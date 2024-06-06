@@ -76,7 +76,6 @@ for (const [{ payload }, pr] of [
       GITHUB_REF_NAME: pr
         ? `${pr.payload.number}/merge`
         : payload.workflow_job.head_branch,
-      // GITHUB_TOKEN: process.env.GITHUB_TOKEN,
     })
       .map(([k, v]) => `${k}=${v}`)
       .join(" ");
