@@ -1,4 +1,5 @@
 import { WorkflowData } from "../../../types";
+import { abbreviateCommitHash } from "@pkg-pr-new/utils";
 
 type Params = Omit<WorkflowData, "sha" | "ref"> & {
   packageAndRefOrSha: string;
@@ -6,8 +7,12 @@ type Params = Omit<WorkflowData, "sha" | "ref"> & {
 
 export default eventHandler(async (event) => {
   const params = getRouterParams(event) as Params;
-  const [encodedPackageName, refOrSha] = params.packageAndRefOrSha.split("@");
-  const packageName = decodeURIComponent(encodedPackageName)
+  let [encodedPackageName, refOrSha] = params.packageAndRefOrSha.split("@");
+  const packageName = decodeURIComponent(encodedPackageName);
+
+  if (isValidGitHash(refOrSha)) {
+    refOrSha = abbreviateCommitHash(refOrSha);
+  }
 
   const packageKey = `${params.owner}:${params.repo}:${refOrSha}:${packageName.split(".tgz")[0]}`;
   const cursorKey = `${params.owner}:${params.repo}:${refOrSha}`;
@@ -48,3 +53,10 @@ export default eventHandler(async (event) => {
     status: 404,
   });
 });
+
+const sha1Regex = /^[a-f0-9]{40}$/i;
+const sha256Regex = /^[a-f0-9]{64}$/i;
+
+function isValidGitHash(hash: string): boolean {
+  return sha1Regex.test(hash) || sha256Regex.test(hash);
+}
