@@ -3,8 +3,8 @@ import { platform } from "os";
 import wp from "wait-port";
 import assert from "node:assert";
 import ezSpawn from "@jsdevtools/ez-spawn";
-import pushWorkflowJobQueuedFixture from "./fixtures/workflow_job.in_progress.json" with { type: "json" };
-import prWorkflowJobQueuedFixture from "./fixtures/pr.workflow_job.in_progress.json" with { type: "json" };
+import pushWorkflowRunInProgressFixture from "./fixtures/workflow_run.in_progress.json" with { type: "json" };
+import prWorkflowRunRequestedFixture from "./fixtures/pr.workflow_run.requested.json" with { type: "json" };
 import prPullRequestSynchronizeFixture from "./fixtures/pr.pull_request.json" with { type: "json" };
 
 const PORT = 8788; // wrangler default
@@ -31,9 +31,9 @@ ezSpawn.async("pnpm --filter=backend run preview", [], {
 
 await wp({ port: PORT });
 
-for (const [{ payload }, pr] of [
-  [pushWorkflowJobQueuedFixture],
-  [prWorkflowJobQueuedFixture, prPullRequestSynchronizeFixture],
+for (const [{ event, payload }, pr] of [
+  [pushWorkflowRunInProgressFixture],
+  [prWorkflowRunRequestedFixture, prPullRequestSynchronizeFixture],
 ] as const) {
   {
     // workflow_job.queued
@@ -54,7 +54,7 @@ for (const [{ payload }, pr] of [
       method: "POST",
       headers: [
         ["x-github-delivery", "d81876a0-e8c4-11ee-8fca-9d3a2baa9707"],
-        ["x-github-event", "workflow_job"],
+        ["x-github-event", event],
       ],
       body: JSON.stringify(payload),
     });
@@ -65,20 +65,19 @@ for (const [{ payload }, pr] of [
   {
     const env = Object.entries({
       TEST: true,
-      GITHUB_SERVER_URL: new URL(payload.workflow_job.html_url).origin,
+      GITHUB_SERVER_URL: new URL(payload.workflow_run.html_url).origin,
       GITHUB_REPOSITORY: payload.repository.full_name,
-      GITHUB_RUN_ID: payload.workflow_job.run_id,
-      GITHUB_RUN_ATTEMPT: payload.workflow_job.run_attempt,
+      GITHUB_RUN_ID: payload.workflow_run.id,
+      GITHUB_RUN_ATTEMPT: payload.workflow_run.run_attempt,
       GITHUB_ACTOR_ID: payload.sender.id,
-      GITHUB_SHA: payload.workflow_job.head_sha,
-      GITHUB_ACTION: payload.workflow_job.id,
-      GITHUB_JOB: payload.workflow_job.name,
+      GITHUB_SHA: payload.workflow_run.head_sha,
+      GITHUB_ACTION: payload.workflow_run.id,
+      GITHUB_JOB: payload.workflow_run.name,
       GITHUB_REF_NAME: pr
         ? `${pr.payload.number}/merge`
-        : payload.workflow_job.head_branch,
-      GITHUB_TOKEN: process.env.GITHUB_TOKEN,
+        : payload.workflow_run.head_branch,
     })
-      .map(([k, v]) => `${k}=${v}`)
+      .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
       .join(" ");
     await ezSpawn.async(
       `pnpm cross-env ${env} pnpm run publish:playgrounds`,
@@ -92,10 +91,10 @@ for (const [{ payload }, pr] of [
 
   {
     const [owner, repo] = payload.repository.full_name.split("/");
-    const ref = pr?.payload.number ?? payload.workflow_job.head_branch;
+    const ref = pr?.payload.number ?? payload.workflow_run.head_branch;
     // install
     const playgroundShaUrl = new URL(
-      `/${owner}/${repo}/playground-a@${payload.workflow_job.head_sha.substring(0, 7)}`,
+      `/${owner}/${repo}/playground-a@${payload.workflow_run.head_sha.substring(0, 7)}`,
       serverUrl,
     );
     {
@@ -143,7 +142,7 @@ for (const [{ payload }, pr] of [
     }
     {
       const playgroundBShaUrl = new URL(
-        `/${owner}/${repo}/playground-b@${payload.workflow_job.head_sha.substring(0, 7)}`,
+        `/${owner}/${repo}/playground-b@${payload.workflow_run.head_sha.substring(0, 7)}`,
         serverUrl,
       );
       playgroundBShaUrl.searchParams.set("id", Date.now().toString());
@@ -168,7 +167,6 @@ for (const [{ payload }, pr] of [
         "installation failed",
       );
     }
-    console.log("success");
   }
 }
 

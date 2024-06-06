@@ -20,7 +20,8 @@ declare global {
   var API_URL: string;
 }
 
-const publishUrl = new URL("/publish", API_URL);
+const apiUrl = process.env.API_URL ?? API_URL
+const publishUrl = new URL("/publish", apiUrl);
 
 const main = defineCommand({
   meta: {
@@ -72,14 +73,11 @@ const main = defineCommand({
             process.exit(1);
           }
 
-          new Octokit(); // gh authentication
-
           const {
             GITHUB_REPOSITORY,
             GITHUB_RUN_ID,
             GITHUB_RUN_ATTEMPT,
             GITHUB_ACTOR_ID,
-            GITHUB_JOB
           } = process.env;
 
           const [owner, repo] = GITHUB_REPOSITORY.split("/");
@@ -87,15 +85,14 @@ const main = defineCommand({
           const metadata = {
             owner,
             repo,
-            job: GITHUB_JOB,
-            runId: Number(GITHUB_RUN_ID),
+            run: Number(GITHUB_RUN_ID),
             attempt: Number(GITHUB_RUN_ATTEMPT),
             actor: Number(GITHUB_ACTOR_ID),
           };
 
           const key = hash(metadata);
 
-          const checkResponse = await fetch(new URL("/check", API_URL), {
+          const checkResponse = await fetch(new URL("/check", apiUrl), {
             method: "POST",
             body: JSON.stringify({
               owner,
@@ -129,7 +126,7 @@ const main = defineCommand({
               pJson.name,
               new URL(
                 `/${owner}/${repo}/${pJson.name}@${sha}`,
-                API_URL,
+                apiUrl,
               ).href,
             );
           }
