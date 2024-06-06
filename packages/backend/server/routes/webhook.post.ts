@@ -19,7 +19,7 @@ export default eventHandler(async (event) => {
   const pullRequestNumbersBucket = usePullRequestNumbersBucket(event);
   const cursorBucket = useCursorsBucket(event);
 
-  const workflowHandler: HandlerFunction<"workflow_job", unknown> = async ({
+  const workflowHandler: HandlerFunction<"workflow_run", unknown> = async ({
     payload,
   }) => {
     const [owner, repo] = payload.repository.full_name.split("/");
@@ -27,9 +27,8 @@ export default eventHandler(async (event) => {
     const metadata = {
       owner,
       repo,
-      job: payload.workflow_job.name,
-      runId: payload.workflow_job.run_id,
-      attempt: payload.workflow_job.run_attempt,
+      run: payload.workflow_run.id,
+      attempt: payload.workflow_run.run_attempt,
       actor: payload.sender.id,
     };
     const hashKey = hash(metadata);
@@ -41,7 +40,7 @@ export default eventHandler(async (event) => {
       const prData: PullRequestData = {
         owner,
         repo,
-        ref: payload.workflow_job.head_branch!,
+        ref: payload.workflow_run.head_branch!,
       };
       const prDataHash = hash(prData);
       const isPullRequest = await pullRequestNumbersBucket.hasItem(prDataHash);
@@ -50,11 +49,11 @@ export default eventHandler(async (event) => {
       const data: WorkflowData = {
         owner,
         repo,
-        sha: abbreviateCommitHash(payload.workflow_job.head_sha),
+        sha: abbreviateCommitHash(payload.workflow_run.head_sha),
         ref: isPullRequest
           ? // it's a pull request workflow
             `${prNumber}`
-          : payload.workflow_job.head_branch!,
+          : payload.workflow_run.head_branch!,
       };
 
       // Publishing is only available throughout the lifetime of a workflow_job
@@ -85,7 +84,7 @@ export default eventHandler(async (event) => {
     }
   };
 
-  app.webhooks.on("workflow_job", workflowHandler);
+  app.webhooks.on("workflow_run", workflowHandler);
   app.webhooks.on("pull_request", pullRequestHandler);
 
   type EmitterWebhookEvent = Parameters<
@@ -120,7 +119,7 @@ export default eventHandler(async (event) => {
       });
     }
   } finally {
-    app.webhooks.removeListener("workflow_job", workflowHandler);
+    app.webhooks.removeListener("workflow_run", workflowHandler);
     app.webhooks.removeListener("pull_request", pullRequestHandler);
   }
 });

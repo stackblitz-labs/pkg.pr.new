@@ -80,7 +80,6 @@ const main = defineCommand({
             GITHUB_RUN_ID,
             GITHUB_RUN_ATTEMPT,
             GITHUB_ACTOR_ID,
-            GITHUB_JOB
           } = process.env;
 
           const [owner, repo] = GITHUB_REPOSITORY.split("/");
@@ -88,8 +87,7 @@ const main = defineCommand({
           const metadata = {
             owner,
             repo,
-            job: GITHUB_JOB,
-            runId: Number(GITHUB_RUN_ID),
+            run: Number(GITHUB_RUN_ID),
             attempt: Number(GITHUB_RUN_ATTEMPT),
             actor: Number(GITHUB_ACTOR_ID),
           };
