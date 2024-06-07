@@ -148,7 +148,7 @@ export default eventHandler(async (event) => {
       check_name: checkName,
       owner: workflowData.owner,
       repo: workflowData.repo,
-      ref: sha,
+      ref: "here" + sha,
       app_id: Number(appId),
     },
   );
