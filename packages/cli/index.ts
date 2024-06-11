@@ -322,7 +322,7 @@ Make sure to have your package on npm first.`,
   const repository = extractRepository(manifest);
   if (!repository) {
     throw new Error(
-      `pkg-pr-new connot extract the repository link from the ${packageName} manifest. --compact flag requires the link to be present.
+      `pkg-pr-new cannot extract the repository link from the ${packageName} manifest. --compact flag requires the link to be present.
 Make sure to configure the 'repository' / 'repository.url' field in its package.json properly.
 See https://docs.npmjs.com/cli/v10/configuring-npm/package-json#repository for details.`,
     );
@@ -331,7 +331,7 @@ See https://docs.npmjs.com/cli/v10/configuring-npm/package-json#repository for d
   const match = extractOwnerAndRepo(repository);
   if (!match) {
     throw new Error(
-      `pkg-pr-new connot extract the owner and repo names from the ${packageName} repository link: ${repository}. --compact flag requires these names.
+      `pkg-pr-new cannot extract the owner and repo names from the ${packageName} repository link: ${repository}. --compact flag requires these names.
 Make sure to configure the 'repository' / 'repository.url' field in its package.json properly.
 See https://docs.npmjs.com/cli/v10/configuring-npm/package-json#repository for details.`,
     );
