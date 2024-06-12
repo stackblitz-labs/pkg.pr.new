@@ -93,8 +93,8 @@ importers:
         specifier: ^3.2.1
         version: 3.2.1
       query-registry:
-        specifier: ^3.0.0
-        version: 3.0.0
+        specifier: ^3.0.1
+        version: 3.0.1
       wrangler:
         specifier: ^3.57.1
         version: 3.57.1(@cloudflare/workers-types@4.20240512.0)
@@ -120,8 +120,8 @@ importers:
         specifier: ^1.1.1
         version: 1.1.1
       query-registry:
-        specifier: ^3.0.0
-        version: 3.0.0
+        specifier: ^3.0.1
+        version: 3.0.1
     devDependencies:
       '@pkg-pr-new/utils':
         specifier: workspace:^
@@ -136,8 +136,8 @@ importers:
   packages/utils:
     dependencies:
       query-registry:
-        specifier: ^3.0.0
-        version: 3.0.0
+        specifier: ^3.0.1
+        version: 3.0.1
 
   template:
     dependencies:
@@ -2994,8 +2994,8 @@ packages:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
     engines: {node: '>=6'}
 
-  query-registry@3.0.0:
-    resolution: {integrity: sha512-zhuMwPF5N6HRB2K1OJCFkHdUTPB+cis7xo/L3daT+cJCosTKsTrMtNN6Rz5kSZmVeJp8mOcNZJOcpRNsmzogDA==}
+  query-registry@3.0.1:
+    resolution: {integrity: sha512-M9RxRITi2mHMVPU5zysNjctUT8bAPx6ltEXo/ir9+qmiM47Y7f0Ir3+OxUO5OjYAWdicBQRew7RtHtqUXydqlg==}
     engines: {node: '>=20'}
 
   query-string@9.0.0:
@@ -3743,8 +3743,8 @@ packages:
     resolution: {integrity: sha512-zK7YHHz4ZXpW89AHXUPbQVGKI7uvkd3hzusTdotCg1UxyaVtg0zFJSTfW/Dq5f7OBBVnq6cZIaC8Ti4hb6dtCA==}
     engines: {node: '>= 14'}
 
-  zod-package-json@1.0.2:
-    resolution: {integrity: sha512-6kh/j4VnyWUNT47SHPq4QWp8WQMv/0SdWrc5EevxQ2fk2PNCSDBdhNFd3c677N1A8xlm1n6OSkUKBfoKSspEqw==}
+  zod-package-json@1.0.3:
+    resolution: {integrity: sha512-Mb6GzuRyUEl8X+6V6xzHbd4XV0au/4gOYrYP+CAfHL32uPmGswES+v2YqonZiW1NZWVA3jkssCKSU2knonm/aQ==}
     engines: {node: '>=20'}
 
   zod@3.23.8:
@@ -6674,14 +6674,14 @@ snapshots:
 
   punycode@2.3.1: {}
 
-  query-registry@3.0.0:
+  query-registry@3.0.1:
     dependencies:
       query-string: 9.0.0
       quick-lru: 7.0.0
       url-join: 5.0.0
       validate-npm-package-name: 5.0.1
       zod: 3.23.8
-      zod-package-json: 1.0.2
+      zod-package-json: 1.0.3
 
   query-string@9.0.0:
     dependencies:
@@ -7500,7 +7500,7 @@ snapshots:
       compress-commons: 6.0.2
       readable-stream: 4.5.2
 
-  zod-package-json@1.0.2:
+  zod-package-json@1.0.3:
     dependencies:
       zod: 3.23.8
 
