@@ -27,15 +27,5 @@ export default eventHandler(async (event) => {
       message: `There is no workflow defined for ${key}`,
     });
   }
-
-  const {status} = await app.octokit.request("GET /repos/{owner}/{repo}/commits/{ref}", {
-    owner,
-    repo,
-    ref: workflowData.sha,
-  });
-  console.log('status', status)
-
-  // if (status === 404)
-
   return { sha: workflowData.sha };
 });

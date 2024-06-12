@@ -51,7 +51,7 @@ export default eventHandler(async (event) => {
       const data: WorkflowData = {
         owner,
         repo,
-        sha: abbreviateCommitHash(payload.workflow_run.head_sha),
+        sha: payload.workflow_run.head_sha,
         ref: isPullRequest
           ? // it's a pull request workflow
             `${prNumber}`
