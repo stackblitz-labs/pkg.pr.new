@@ -1,3 +1,4 @@
+import { abbreviateCommitHash } from "@pkg-pr-new/utils";
 import { WorkflowData } from "../types";
 
 export function generateCommitPublishMessage(
@@ -95,7 +96,7 @@ export function generatePublishUrl(
   workflowData: WorkflowData,
   compact: boolean,
 ) {
-  const tag = base === "sha" ? workflowData.sha : workflowData.ref;
+  const tag = base === "sha" ? abbreviateCommitHash(workflowData.sha) : workflowData.ref;
   const shorter = workflowData.repo === packageName;
 
   const urlPath = compact
