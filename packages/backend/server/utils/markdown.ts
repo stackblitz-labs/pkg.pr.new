@@ -54,7 +54,7 @@ export function generatePullRequestPublishMessage(
         workflowData,
         compact,
       );
-      return `#### ${packageName} ([\`${workflowData.sha}\`](${checkRunUrl}))
+      return `#### ${packageName} ([\`${abbreviateCommitHash(workflowData.sha)}\`](${checkRunUrl}))
 \`\`\`
 npm i ${refUrl}
 \`\`\``;
