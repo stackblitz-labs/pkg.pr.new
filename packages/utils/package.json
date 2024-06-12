@@ -10,6 +10,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "query-registry": "^3.0.0"
+    "query-registry": "^3.0.1"
   }
 }
