@@ -68,7 +68,7 @@ export default eventHandler(async (event) => {
     });
   }
 
-  const sha = abbreviateCommitHash(workflowData.sha);
+  const abbreviatedSha = abbreviateCommitHash(workflowData.sha);
   const baseKey = `${workflowData.owner}:${workflowData.repo}`;
 
   const cursorKey = `${baseKey}:${workflowData.ref}`;
@@ -80,7 +80,7 @@ export default eventHandler(async (event) => {
       const file = formData.get(packageNameWithPrefix)! as File;
       const packageName = packageNameWithPrefix.slice("package:".length);
 
-      const packageKey = `${baseKey}:${sha}:${packageName}`;
+      const packageKey = `${baseKey}:${abbreviatedSha}:${packageName}`;
 
       const stream = file.stream();
       return setItemStream(event, usePackagesBucket.base, packageKey, stream, {
@@ -130,7 +130,7 @@ export default eventHandler(async (event) => {
 
   if (!currentCursor || currentCursor.timestamp < runId) {
     await cursorBucket.setItem(cursorKey, {
-      sha,
+      sha: abbreviatedSha,
       timestamp: runId,
     });
   }
@@ -148,7 +148,7 @@ export default eventHandler(async (event) => {
       check_name: checkName,
       owner: workflowData.owner,
       repo: workflowData.repo,
-      ref: sha,
+      ref: workflowData.sha,
       app_id: Number(appId),
     },
   );
@@ -162,7 +162,7 @@ export default eventHandler(async (event) => {
       name: checkName,
       owner: workflowData.owner,
       repo: workflowData.repo,
-      head_sha: sha,
+      head_sha: workflowData.sha,
       output: {
         title: "Successful",
         summary: "Published successfully.",

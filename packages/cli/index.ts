@@ -8,7 +8,7 @@ import fsSync from "fs";
 import fs from "fs/promises";
 import { Octokit } from "@octokit/action";
 import { getPackageManifest, type PackageManifest } from "query-registry";
-import { extractOwnerAndRepo, extractRepository } from "@pkg-pr-new/utils";
+import { abbreviateCommitHash, extractOwnerAndRepo, extractRepository } from "@pkg-pr-new/utils";
 import fg from "fast-glob";
 import ignore from "ignore";
 import "./environments";
@@ -107,6 +107,7 @@ const main = defineCommand({
           }
 
           const { sha } = await checkResponse.json();
+          const abbreviatedSha = abbreviateCommitHash(sha)
 
           const deps: Map<string, string> = new Map();
 
@@ -124,7 +125,7 @@ const main = defineCommand({
 
             deps.set(
               pJson.name,
-              new URL(`/${owner}/${repo}/${pJson.name}@${sha}`, apiUrl).href,
+              new URL(`/${owner}/${repo}/${pJson.name}@${abbreviatedSha}`, apiUrl).href,
             );
           }
 

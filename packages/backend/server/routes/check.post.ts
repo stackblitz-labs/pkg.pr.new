@@ -8,12 +8,13 @@ export default eventHandler(async (event) => {
 
   try {
     await app.octokit.request("GET /repos/{owner}/{repo}/installation", {
-      owner: owner,
-      repo: repo,
+      owner,
+      repo,
     });
   } catch {
     throw createError({
       statusCode: 404,
+      fatal: true,
       message: `The app https://github.com/apps/pkg-pr-new is not installed on ${owner}/${repo}.`,
     });
   }
@@ -22,6 +23,7 @@ export default eventHandler(async (event) => {
   if (!workflowData) {
     throw createError({
       statusCode: 404,
+      fatal: true,
       message: `There is no workflow defined for ${key}`,
     });
   }
