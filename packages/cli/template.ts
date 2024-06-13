@@ -25,7 +25,7 @@ npm i ${url}
 
 ## Usage
 
-To use this feature, you can run the following command:
+To use this feature as a maintainer, you can run the following command:
 
 \`\`\`sh
 npx pkg-pr-new publish ./packages/A --template ./examples/*
