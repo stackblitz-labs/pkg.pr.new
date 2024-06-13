@@ -6,9 +6,6 @@ type Params = Omit<WorkflowData, "sha" | "ref"> & {
 };
 
 export default eventHandler(async (event) => {
-  if (handleCors(event, {origin: "*"})) {
-    return
-  }
   const params = getRouterParams(event) as Params;
   let [encodedPackageName, refOrSha] = params.packageAndRefOrSha.split("@");
   const packageName = decodeURIComponent(encodedPackageName);
