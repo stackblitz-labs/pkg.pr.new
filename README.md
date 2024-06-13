@@ -74,11 +74,14 @@ Without `--compact`:
 npm i https://pkg.pr.new/tinylibs/tinybench/tinybench@a832a55
 ```
 
-You can control the publishing comments with `--comment`:
+You can control publishing comments with `--comment`:
 ```sh
 npx pkg-pr-new publish --comment=update # default
 ```
-with `--comment=update`, pkg.pr.new would generate one initial comment and then edit it in the following commits. With `--comment=create`, each commit would generate a comment for itself, useful for triggering workflows, like workflow execution using maintainer comments.
+with `--comment=update`, pkg.pr.new would generate one initial comment and then edit it in the following commits. 
+
+With `--comment=create`, each commit would generate a comment for itself, useful for triggering workflows, like workflow execution using maintainer comments.
+
 And `--comment=off` would turn off comments for maintainers who prefer minimal pull requests.
 
 
