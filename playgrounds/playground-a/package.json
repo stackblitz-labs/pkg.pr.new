@@ -5,7 +5,9 @@
   "main": "index.js",
   "type": "module",
   "bin": {
-    "playground-a": "index.js"
+    "prepack": "echo prepack",
+    "playground-a": "index.js",
+    "posthack": "echo posthack"
   },
   "keywords": [],
   "author": "",
