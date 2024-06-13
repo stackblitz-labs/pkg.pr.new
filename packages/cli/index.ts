@@ -43,10 +43,6 @@ const main = defineCommand({
             type: "boolean",
             description: "use `pnpm pack` instead of `npm pack --json`",
           },
-          "no-template": {
-            type: "boolean",
-            description: "disable the default template",
-          },
           template: {
             type: "string",
             description:
@@ -68,7 +64,7 @@ const main = defineCommand({
           const templates = (
             typeof args.template === "string"
               ? [args.template]
-              : ([...(args.template ?? [])] as string[])
+              : ([...(args.template || [])] as string[])
           )
             .flatMap((p) => (fg.isDynamicPattern(p) ? fg.sync(p) : p))
             .map((p) => path.resolve(p));
@@ -186,7 +182,7 @@ const main = defineCommand({
             await restore();
           }
 
-          const noDefaultTemplate = !!args["no-template"]
+          const noDefaultTemplate = args.template === false
 
           if (!templates.length && !noDefaultTemplate) {
             const project = createDefaultTemplate(Object.fromEntries(deps.entries()))
