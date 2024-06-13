@@ -263,30 +263,18 @@ runMain(main);
 
 // TODO: we'll add support for yarn if users hit issues with npm
 async function resolveTarball(pm: "npm" | "pnpm", p: string) {
-  if (pm === "npm") {
-    const { stdout } = await ezSpawn.async("npm pack --json", {
-      stdio: "overlapped",
-      cwd: p,
-    });
+  const { stdout } = await ezSpawn.async(`${pm} pack`, {
+    stdio: "overlapped",
+    cwd: p,
+  });
+  const lines = stdout.split('\n').filter(Boolean)
+  const filename = lines[lines.length - 1].trim();
 
-    const { filename, shasum }: { filename: string; shasum: string } =
-      JSON.parse(stdout)[0];
+  const shasum = createHash("sha1")
+    .update(await fs.readFile(path.resolve(p, filename)))
+    .digest("hex");
 
-    return { filename, shasum };
-  } else if (pm === "pnpm") {
-    const { stdout } = await ezSpawn.async("pnpm pack", {
-      stdio: "overlapped",
-      cwd: p,
-    });
-    const filename = stdout.trim();
-
-    const shasum = createHash("sha1")
-      .update(await fs.readFile(path.resolve(p, filename)))
-      .digest("hex");
-
-    return { filename, shasum };
-  }
-  throw new Error("Could not resolve package manager");
+  return { filename, shasum };
 }
 
 async function writeDeps(p: string, deps: Map<string, string>) {
