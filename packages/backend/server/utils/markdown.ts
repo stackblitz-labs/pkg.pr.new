@@ -17,11 +17,14 @@ export function generateCommitPublishMessage(
         workflowData,
         compact,
       );
-      return `#### ${packageName}
+      return createCollapsibleBlock(
+        `<b>${packageName}</b>`,
+        `
 \`\`\`
 npm i ${shaUrl}
 \`\`\`
-`;
+      `,
+      );
     })
     .join("\n");
 
@@ -43,7 +46,7 @@ export function generatePullRequestPublishMessage(
   workflowData: WorkflowData,
   compact: boolean,
   checkRunUrl: string,
-  codeflow: boolean
+  codeflow: boolean,
 ) {
   const refMessages = packages
     .map((packageName) => {
@@ -54,10 +57,15 @@ export function generatePullRequestPublishMessage(
         workflowData,
         compact,
       );
-      return `#### ${packageName} ([\`${abbreviateCommitHash(workflowData.sha)}\`](${checkRunUrl}))
+
+      return createCollapsibleBlock(
+        `<b>${packageName}</b>`,
+        `
 \`\`\`
 npm i ${refUrl}
-\`\`\``;
+\`\`\`
+`,
+      );
     })
     .join("\n");
 
@@ -70,6 +78,8 @@ ${
     : ""
 }
 
+_commit: <a href="${checkRunUrl}"><code>${abbreviateCommitHash(workflowData.sha)}</code></a>_
+
 ${refMessages}
 
 ${templatesStr ? "---" : ""}
@@ -81,11 +91,12 @@ ${templatesStr}
 function generateTemplatesStr(templates: Record<string, string>) {
   const entries = Object.entries(templates);
   return entries.length
-    ? `
-### Templates
-
+    ? createCollapsibleBlock(
+        "<b>Templates</b>",
+        `
 ${entries.map(([k, v]) => `- [${k}](${v})`).join("\n")}
-`
+`,
+      )
     : "";
 }
 
@@ -96,7 +107,8 @@ export function generatePublishUrl(
   workflowData: WorkflowData,
   compact: boolean,
 ) {
-  const tag = base === "sha" ? abbreviateCommitHash(workflowData.sha) : workflowData.ref;
+  const tag =
+    base === "sha" ? abbreviateCommitHash(workflowData.sha) : workflowData.ref;
   const shorter = workflowData.repo === packageName;
 
   const urlPath = compact
@@ -104,4 +116,13 @@ export function generatePublishUrl(
     : `/${workflowData.owner}${shorter ? "" : `/${workflowData.repo}`}/${packageName}@${tag}`;
 
   return new URL(urlPath, origin);
+}
+
+function createCollapsibleBlock(title: string, body: string) {
+  return `
+<details><summary>${title}</summary><p>
+${body}
+</p></details>
+      
+    `;
 }
