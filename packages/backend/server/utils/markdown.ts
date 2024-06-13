@@ -59,7 +59,7 @@ export function generatePullRequestPublishMessage(
       );
 
       return createCollapsibleBlock(
-        `<b>${packageName} (<a href="${checkRunUrl}"><code>${abbreviateCommitHash(workflowData.sha)}</code></a>)</b>`,
+        `<b>${packageName}</b>`,
         `
 \`\`\`
 npm i ${refUrl}
@@ -77,6 +77,8 @@ ${
     ? `<a href="https:///pr.new/${workflowData.owner}/${workflowData.repo}/pull/${workflowData.ref}"><img src="https://developer.stackblitz.com/img/review_pr_small.svg" alt="Review PR in StackBlitz Codeflow" align="left" width="103" height="20"></a> _Run & review this pull request in [StackBlitz Codeflow](https:///pr.new/${workflowData.owner}/${workflowData.repo}/pull/${workflowData.ref})._`
     : ""
 }
+
+_commit: <a href="${checkRunUrl}"><code>${abbreviateCommitHash(workflowData.sha)}</code></a>_
 
 ${refMessages}
 
