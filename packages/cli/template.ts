@@ -45,7 +45,7 @@ This command will:
 
 ## Benefits
 
-- **Interactive Documentation:** Automatically create live demos that users can interact with directly in their browser.
+- **Interactive Demos:** Automatically create live demos that users can interact with directly in their browser.
 - **Enhanced Testing:** Quickly spin up environments to test your package in different scenarios.
 - **Improved Sharing:** Easily share working examples of your package with collaborators or users without needing them to set up their environment.
 `
