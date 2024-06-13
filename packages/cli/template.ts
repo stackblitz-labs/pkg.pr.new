@@ -2,7 +2,39 @@ export const createDefaultTemplate = (
   dependencies: Record<string, string>,
 ) => ({
   "index.js": "",
-  "README.md": README,
+  "README.md": `
+# Default Template
+
+This is a template that leverages the experimental templates feature in the \`pkg.pr.new\` tool.
+
+## Overview
+
+Templates are particularly useful for creating live, interactive examples of your packages, which can be very beneficial for both development and documentation purposes.
+
+As a user, you can check the package.json file and see the new generated packages! You can just copy those and put them in your package.json or install them with your favorite package manager.
+
+${Object.values(dependencies)
+  .map(
+    (url) => `
+npm i ${url}
+`,
+  )
+  .join("\n")}
+
+## Usage
+
+To use this feature, you can run the following command:
+
+\`\`\`sh
+npx pkg-pr-new publish ./packages/A --template ./examples/*
+\`\`\`
+
+## Benefits
+
+- Interactive Demos: Automatically create live demos that users can interact with directly in their browser.
+- Enhanced Testing: Quickly spin up environments to test your package in different scenarios.
+- Improved Sharing: Easily share working examples of your package with collaborators or users without needing them to set up their environment.
+`,
   "package.json": JSON.stringify(
     {
       name: "default-template",
@@ -18,35 +50,3 @@ export const createDefaultTemplate = (
     2,
   ),
 });
-
-
-const README = `
-# Default Template
-
-This is a template that leverages the experimental templates feature in the \`pkg.pr.new\` tool.
-
-## Overview
-
-The templates feature allows you to automatically generate Stackblitz instances for specified directories, utilizing the newly built packages. This is particularly useful for creating live, interactive examples of your packages, which can be very beneficial for both development and documentation purposes.
-
-## Usage
-
-To use this feature, you can run the following command:
-
-\`\`\`sh
-npx pkg-pr-new publish ./packages/A --template ./examples/*
-\`\`\`
-
-This command will:
-
-- Build the package located in \`./packages/A\`.
-- Use the directories specified in \`./examples/*\` as templates.
-- Generate Stackblitz instances for each template, incorporating the newly built package.
-
-## Benefits
-
-- **Interactive Demos:** Automatically create live demos that users can interact with directly in their browser.
-- **Enhanced Testing:** Quickly spin up environments to test your package in different scenarios.
-- **Improved Sharing:** Easily share working examples of your package with collaborators or users without needing them to set up their environment.
-`
-

@@ -36,6 +36,7 @@ export default eventHandler(async (event) => {
       Date.parse(new Date().toString()),
     );
 
+    appendCorsHeaders(event, { origin: "*" });
     setResponseHeader(event, "content-type", "application/tar+gzip");
     // TODO: add HTTP caching
     return stream;
