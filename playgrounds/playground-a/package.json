@@ -5,9 +5,11 @@
   "main": "index.js",
   "type": "module",
   "bin": {
-    "prepack": "echo prepack",
-    "playground-a": "index.js",
-    "posthack": "echo posthack"
+    "playground-a": "index.js"
+  },
+  "scripts": {
+    "prepack": "echo \"prepack\"",
+    "postpack": "echo \"postpack\""
   },
   "keywords": [],
   "author": "",
