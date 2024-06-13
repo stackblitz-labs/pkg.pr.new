@@ -268,6 +268,7 @@ async function resolveTarball(pm: "npm" | "pnpm", p: string) {
     cwd: p,
   });
   const lines = stdout.split('\n')
+  console.log(lines)
   const filename = lines[lines.length - 1].trim();
 
   const shasum = createHash("sha1")
