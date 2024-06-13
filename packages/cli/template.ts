@@ -21,7 +21,7 @@ npm i ${url}
 \`\`\`
 `,
   )
-  .join()}
+  .join("")}
 
 ## Usage
 
