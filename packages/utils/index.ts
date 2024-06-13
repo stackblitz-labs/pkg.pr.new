@@ -33,3 +33,5 @@ export function abbreviateCommitHash(fullHash: string) {
 export function isPullRequest(ref: string) {
   return !Number.isNaN(Number(ref));
 }
+
+export type Comment = "off" | "create" | "update"

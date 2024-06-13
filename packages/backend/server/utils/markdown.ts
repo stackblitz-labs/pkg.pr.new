@@ -47,11 +47,12 @@ export function generatePullRequestPublishMessage(
   compact: boolean,
   checkRunUrl: string,
   codeflow: boolean,
+  base: "sha" | "ref"
 ) {
   const refMessages = packages
     .map((packageName) => {
       const refUrl = generatePublishUrl(
-        "ref",
+        base,
         origin,
         packageName,
         workflowData,

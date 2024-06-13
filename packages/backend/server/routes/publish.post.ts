@@ -1,4 +1,8 @@
-import { abbreviateCommitHash, isPullRequest } from "@pkg-pr-new/utils";
+import {
+  Comment,
+  abbreviateCommitHash,
+  isPullRequest,
+} from "@pkg-pr-new/utils";
 import { randomUUID } from "uncrypto";
 import { setItemStream, useTemplatesBucket } from "~/utils/bucket";
 import { useOctokitInstallation } from "~/utils/octokit";
@@ -11,9 +15,11 @@ export default eventHandler(async (event) => {
     "sb-run-id": runIdHeader,
     "sb-key": key,
     "sb-shasums": shasumsHeader,
+    "sb-comment": commentHeader,
     "sb-compact": compactHeader,
   } = getHeaders(event);
   const compact = compactHeader === "true";
+  const comment: Comment = (commentHeader ?? "update") as Comment;
 
   if (!key || !runIdHeader || !shasumsHeader) {
     throw createError({
@@ -137,7 +143,11 @@ export default eventHandler(async (event) => {
 
   await workflowsBucket.removeItem(key);
 
-  const installation = await useOctokitInstallation(event, workflowData.owner, workflowData.repo)
+  const installation = await useOctokitInstallation(
+    event,
+    workflowData.owner,
+    workflowData.repo,
+  );
 
   const checkName = "Continuous Releases";
   const {
@@ -193,45 +203,49 @@ export default eventHandler(async (event) => {
     );
     const codeflow = !data.some(
       (comment) => comment.performed_via_github_app?.slug === "stackblitz",
-    )
+    );
 
-    if (appComments.length) {
-      const prevComment = appComments[0];
-      await installation.request(
-        "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}",
-        {
-          owner: workflowData.owner,
-          repo: workflowData.repo,
-          comment_id: prevComment.id,
-          body: generatePullRequestPublishMessage(
-            origin,
-            templatesHtmlMap,
-            packagesWithoutPrefix,
-            workflowData,
-            compact,
-            checkRunUrl,
-            codeflow
-          ),
-        },
-      );
-    } else {
-      await installation.request(
-        "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
-        {
-          owner: workflowData.owner,
-          repo: workflowData.repo,
-          issue_number: Number(workflowData.ref),
-          body: generatePullRequestPublishMessage(
-            origin,
-            templatesHtmlMap,
-            packagesWithoutPrefix,
-            workflowData,
-            compact,
-            checkRunUrl,
-            codeflow
-          ),
-        },
-      );
+    if (comment !== "off") {
+      if (comment === "update" && appComments.length) {
+        const prevComment = appComments[0];
+        await installation.request(
+          "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}",
+          {
+            owner: workflowData.owner,
+            repo: workflowData.repo,
+            comment_id: prevComment.id,
+            body: generatePullRequestPublishMessage(
+              origin,
+              templatesHtmlMap,
+              packagesWithoutPrefix,
+              workflowData,
+              compact,
+              checkRunUrl,
+              codeflow,
+              "ref",
+            ),
+          },
+        );
+      } else {
+        await installation.request(
+          "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
+          {
+            owner: workflowData.owner,
+            repo: workflowData.repo,
+            issue_number: Number(workflowData.ref),
+            body: generatePullRequestPublishMessage(
+              origin,
+              templatesHtmlMap,
+              packagesWithoutPrefix,
+              workflowData,
+              compact,
+              checkRunUrl,
+              codeflow,
+              comment === "update" ? "ref" : "sha",
+            ),
+          },
+        );
+      }
     }
   }
 

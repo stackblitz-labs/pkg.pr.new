@@ -6,8 +6,8 @@ import { createHash } from "node:crypto";
 import { hash } from "ohash";
 import fsSync from "fs";
 import fs from "fs/promises";
-import { Octokit } from "@octokit/action";
 import { getPackageManifest, type PackageManifest } from "query-registry";
+import type { Comment } from "@pkg-pr-new/utils";
 import { abbreviateCommitHash, extractOwnerAndRepo, extractRepository } from "@pkg-pr-new/utils";
 import fg from "fast-glob";
 import ignore from "ignore";
@@ -47,6 +47,12 @@ const main = defineCommand({
             description:
               "generate stackblitz templates out of directories in the current repo with the new built packages",
           },
+          comment: {
+            type: "string", // "off", "create", "update" (default)
+            description:
+              `"off" for no comments (silent mode). "create" for comment on each publish. "update" for one comment across the pull request with edits on each publish (default)`,
+            default: "update"
+          },
         },
         run: async ({ args }) => {
           const paths = (args._.length ? args._ : ["."])
@@ -65,6 +71,8 @@ const main = defineCommand({
 
           const isCompact = !!args.compact;
           const isPnpm = !!args.pnpm;
+          
+          const comment: Comment = args.comment as Comment
 
           if (!process.env.TEST && process.env.GITHUB_ACTIONS !== "true") {
             console.error(
@@ -214,6 +222,7 @@ const main = defineCommand({
           const res = await fetch(publishUrl, {
             method: "POST",
             headers: {
+              "sb-comment": comment,
               "sb-compact": `${isCompact}`,
               "sb-key": key,
               "sb-shasums": JSON.stringify(shasums),
