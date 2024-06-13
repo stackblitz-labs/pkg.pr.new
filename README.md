@@ -74,6 +74,17 @@ Without `--compact`:
 npm i https://pkg.pr.new/tinylibs/tinybench/tinybench@a832a55
 ```
 
+You can control publishing comments with `--comment`:
+```sh
+npx pkg-pr-new publish --comment=update # default
+```
+Using `--comment=update`, pkg.pr.new would generate one initial comment and then edit it in the following commits. 
+
+With `--comment=create`, each commit would generate a comment for itself, useful for triggering workflows, like workflow execution using maintainer comments.
+
+And `--comment=off` would turn off comments for maintainers who prefer minimal pull requests.
+
+
 pkg.pr.new uses `npm pack --json` under the hood, in case you face issues, you can also use the `--pnpm` flag so it starts using `pnpm pack`. This is not necessary in most cases.
 
 <img width="100%" src="https://github.com/stackblitz-labs/pkg.pr.new/assets/37929992/2fc03b94-ebae-4c47-a271-03a4ad5d2449" />
@@ -145,4 +156,3 @@ jobs:
 Publishing is only available in workflows and it supports any workflow trigger event, more information [here](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#about-events-that-trigger-workflows).
 
 <p align="center"><img src="https://github.com/stackblitz-labs/pkg.pr.new/assets/37929992/e15abdc6-aaeb-4895-b2e9-0b73a019c1d0" /></p>
-
