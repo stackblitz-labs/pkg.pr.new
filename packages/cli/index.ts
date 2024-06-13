@@ -192,7 +192,7 @@ const main = defineCommand({
 
             for (const filePath of Object.keys(project)) {
               formData.append(
-                `template:default-template:${encodeURIComponent(filePath)}`,
+                `template:default:${encodeURIComponent(filePath)}`,
                 project[filePath],
               );
             }
