@@ -16,7 +16,9 @@ As a user, you can check the package.json file and see the new generated package
 ${Object.values(dependencies)
   .map(
     (url) => `
+\`\`\`sh
 npm i ${url}
+\`\`\`
 `,
   )
   .join("\n")}
