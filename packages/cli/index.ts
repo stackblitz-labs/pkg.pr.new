@@ -267,8 +267,7 @@ async function resolveTarball(pm: "npm" | "pnpm", p: string) {
     stdio: "overlapped",
     cwd: p,
   });
-  const lines = stdout.split('\n')
-  console.log(lines)
+  const lines = stdout.split('\n').filter(Boolean)
   const filename = lines[lines.length - 1].trim();
 
   const shasum = createHash("sha1")
