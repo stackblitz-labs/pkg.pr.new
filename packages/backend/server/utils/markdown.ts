@@ -93,7 +93,7 @@ function generateTemplatesStr(templates: Record<string, string>) {
   const entries = Object.entries(templates);
   return entries.length
     ? createCollapsibleBlock(
-        "<b>Templates</b>",
+        "<b>templates</b>",
         `
 ${entries.map(([k, v]) => `- [${k}](${v})`).join("\n")}
 `,
