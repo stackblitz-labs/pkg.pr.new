@@ -15,6 +15,7 @@ import "./environments";
 import pkg from "./package.json" with { type: "json" };
 import { isBinaryFile } from "isbinaryfile";
 import { readPackageJSON, writePackageJSON } from "pkg-types";
+import { createDefaultTemplate } from "./template";
 
 declare global {
   var API_URL: string;
@@ -62,7 +63,7 @@ const main = defineCommand({
           const templates = (
             typeof args.template === "string"
               ? [args.template]
-              : ([...(args.template ?? [])] as string[])
+              : ([...(args.template || [])] as string[])
           )
             .flatMap((p) => (fg.isDynamicPattern(p) ? fg.sync(p) : p))
             .map((p) => path.resolve(p));
@@ -178,6 +179,19 @@ const main = defineCommand({
               );
             }
             await restore();
+          }
+
+          const noDefaultTemplate = args.template === false
+
+          if (!templates.length && !noDefaultTemplate) {
+            const project = createDefaultTemplate(Object.fromEntries(deps.entries()))
+
+            for (const filePath of Object.keys(project)) {
+              formData.append(
+                `template:default:${encodeURIComponent(filePath)}`,
+                project[filePath],
+              );
+            }
           }
 
           const restoreMap = new Map<
