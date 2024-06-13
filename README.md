@@ -54,6 +54,8 @@ For templates (experimental):
 npx pkg-pr-new publish ./packages/A --template ./examples/*
 ```
 
+By default, pkg.pr.new will generate a template called "default" which includes each built package in the dependencies. This can be disabled with `--no-template`.
+
 For shorter urls, `--compact` can be useful:
 
 ```sh
