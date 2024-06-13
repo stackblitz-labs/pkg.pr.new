@@ -15,6 +15,7 @@ import "./environments";
 import pkg from "./package.json" with { type: "json" };
 import { isBinaryFile } from "isbinaryfile";
 import { readPackageJSON, writePackageJSON } from "pkg-types";
+import { createDefaultTemplate } from "./template";
 
 declare global {
   var API_URL: string;
@@ -41,6 +42,10 @@ const main = defineCommand({
           pnpm: {
             type: "boolean",
             description: "use `pnpm pack` instead of `npm pack --json`",
+          },
+          "no-template": {
+            type: "boolean",
+            description: "disable the default template",
           },
           template: {
             type: "string",
@@ -178,6 +183,19 @@ const main = defineCommand({
               );
             }
             await restore();
+          }
+
+          const noDefaultTemplate = !!args["no-template"]
+
+          if (!templates.length && !noDefaultTemplate) {
+            const project = createDefaultTemplate(Object.fromEntries(deps.entries()))
+
+            for (const filePath of Object.keys(project)) {
+              formData.append(
+                `template:default-template:${encodeURIComponent(filePath)}`,
+                project[filePath],
+              );
+            }
           }
 
           const restoreMap = new Map<
