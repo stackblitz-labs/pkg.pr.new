@@ -214,11 +214,7 @@ for (const [{ event, payload }, pr] of [
   const url = new URL(`/@stackblitz/sdk@a832a55`, serverUrl);
   const response = await fetch(url);
   assert.ok(response.redirected, "did not redirect");
-  assert.equal(
-    response.url,
-    expectedUrl.href,
-    "not the correct redirect",
-  );
+  assert.equal(response.url, expectedUrl.href, "not the correct redirect");
 }
 
 killPort();
