@@ -1,6 +1,6 @@
 {
   "name": "pkg-pr-new",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "",
   "main": "index.js",
   "type": "module",
@@ -22,7 +22,7 @@
     "ignore": "^5.3.1",
     "isbinaryfile": "^5.0.2",
     "pkg-types": "^1.1.1",
-    "query-registry": "^3.0.0"
+    "query-registry": "^3.0.1"
   },
   "devDependencies": {
     "@pkg-pr-new/utils": "workspace:^",

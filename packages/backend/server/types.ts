@@ -5,7 +5,10 @@ export type WorkflowData = {
   ref: string;
 };
 
-export type PullRequestData = Omit<WorkflowData, 'sha'>
+export type PullRequestData = {
+  full_name: string,
+  ref: string
+}
 
 export type Cursor = {
   timestamp: number;
