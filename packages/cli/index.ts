@@ -6,21 +6,26 @@ import { createHash } from "node:crypto";
 import { hash } from "ohash";
 import fsSync from "fs";
 import fs from "fs/promises";
-import { Octokit } from "@octokit/action";
-import { getPackageManifest } from "query-registry";
-import { extractOwnerAndRepo, extractRepository } from "@pkg-pr-new/utils";
+import { getPackageManifest, type PackageManifest } from "query-registry";
+import type { Comment } from "@pkg-pr-new/utils";
+import {
+  abbreviateCommitHash,
+  extractOwnerAndRepo,
+  extractRepository,
+} from "@pkg-pr-new/utils";
 import fg from "fast-glob";
 import ignore from "ignore";
 import "./environments";
 import pkg from "./package.json" with { type: "json" };
 import { isBinaryFile } from "isbinaryfile";
 import { readPackageJSON, writePackageJSON } from "pkg-types";
+import { createDefaultTemplate } from "./template";
 
 declare global {
   var API_URL: string;
 }
 
-const apiUrl = process.env.API_URL ?? API_URL
+const apiUrl = process.env.API_URL ?? API_URL;
 const publishUrl = new URL("/publish", apiUrl);
 
 const main = defineCommand({
@@ -47,6 +52,11 @@ const main = defineCommand({
             description:
               "generate stackblitz templates out of directories in the current repo with the new built packages",
           },
+          comment: {
+            type: "string", // "off", "create", "update" (default)
+            description: `"off" for no comments (silent mode). "create" for comment on each publish. "update" for one comment across the pull request with edits on each publish (default)`,
+            default: "update",
+          },
         },
         run: async ({ args }) => {
           const paths = (args._.length ? args._ : ["."])
@@ -56,7 +66,7 @@ const main = defineCommand({
           const templates = (
             typeof args.template === "string"
               ? [args.template]
-              : ([...(args.template ?? [])] as string[])
+              : ([...(args.template || [])] as string[])
           )
             .flatMap((p) => (fg.isDynamicPattern(p) ? fg.sync(p) : p))
             .map((p) => path.resolve(p));
@@ -65,6 +75,8 @@ const main = defineCommand({
 
           const isCompact = !!args.compact;
           const isPnpm = !!args.pnpm;
+
+          const comment: Comment = args.comment as Comment;
 
           if (!process.env.TEST && process.env.GITHUB_ACTIONS !== "true") {
             console.error(
@@ -107,6 +119,7 @@ const main = defineCommand({
           }
 
           const { sha } = await checkResponse.json();
+          const abbreviatedSha = abbreviateCommitHash(sha);
 
           const deps: Map<string, string> = new Map();
 
@@ -125,7 +138,7 @@ const main = defineCommand({
             deps.set(
               pJson.name,
               new URL(
-                `/${owner}/${repo}/${pJson.name}@${sha}`,
+                `/${owner}/${repo}/${pJson.name}@${abbreviatedSha}`,
                 apiUrl,
               ).href,
             );
@@ -174,6 +187,21 @@ const main = defineCommand({
             await restore();
           }
 
+          const noDefaultTemplate = args.template === false;
+
+          if (!templates.length && !noDefaultTemplate) {
+            const project = createDefaultTemplate(
+              Object.fromEntries(deps.entries()),
+            );
+
+            for (const filePath of Object.keys(project)) {
+              formData.append(
+                `template:default:${encodeURIComponent(filePath)}`,
+                project[filePath],
+              );
+            }
+          }
+
           const restoreMap = new Map<
             string,
             Awaited<ReturnType<typeof writeDeps>>
@@ -216,6 +244,7 @@ const main = defineCommand({
           const res = await fetch(publishUrl, {
             method: "POST",
             headers: {
+              "sb-comment": comment,
               "sb-compact": `${isCompact}`,
               "sb-key": key,
               "sb-shasums": JSON.stringify(shasums),
@@ -256,30 +285,18 @@ runMain(main);
 
 // TODO: we'll add support for yarn if users hit issues with npm
 async function resolveTarball(pm: "npm" | "pnpm", p: string) {
-  if (pm === "npm") {
-    const { stdout } = await ezSpawn.async("npm pack --json", {
-      stdio: "overlapped",
-      cwd: p,
-    });
+  const { stdout } = await ezSpawn.async(`${pm} pack`, {
+    stdio: "overlapped",
+    cwd: p,
+  });
+  const lines = stdout.split("\n").filter(Boolean);
+  const filename = lines[lines.length - 1].trim();
 
-    const { filename, shasum }: { filename: string; shasum: string } =
-      JSON.parse(stdout)[0];
+  const shasum = createHash("sha1")
+    .update(await fs.readFile(path.resolve(p, filename)))
+    .digest("hex");
 
-    return { filename, shasum };
-  } else if (pm === "pnpm") {
-    const { stdout } = await ezSpawn.async("pnpm pack", {
-      stdio: "overlapped",
-      cwd: p,
-    });
-    const filename = stdout.trim();
-
-    const shasum = createHash("sha1")
-      .update(await fs.readFile(path.resolve(p, filename)))
-      .digest("hex");
-
-    return { filename, shasum };
-  }
-  throw new Error("Could not resolve package manager");
+  return { filename, shasum };
 }
 
 async function writeDeps(p: string, deps: Map<string, string>) {
@@ -311,23 +328,33 @@ function hijackDeps(
 }
 
 async function verifyCompactMode(packageName: string) {
-  const error = new Error(
-    `pkg-pr-new cannot resolve ${packageName} from npm. --compact flag depends on the package being available in npm.
-Make sure to have your package on npm first or configure the 'repository' field in your package.json properly.`,
-  );
+  let manifest: PackageManifest;
+
   try {
-    const manifest = await getPackageManifest(packageName);
-
-    const repository = extractRepository(manifest);
-    if (!repository) {
-      throw error;
-    }
-
-    const match = extractOwnerAndRepo(repository);
-    if (!match) {
-      throw error;
-    }
+    manifest = await getPackageManifest(packageName);
   } catch {
-    throw error;
+    throw new Error(
+      `pkg-pr-new cannot resolve ${packageName} from npm. --compact flag depends on the package being available in npm.
+Make sure to have your package on npm first.`,
+    );
+  }
+
+  const instruction = `Make sure to configure the 'repository' / 'repository.url' field in its package.json properly.
+See https://docs.npmjs.com/cli/v10/configuring-npm/package-json#repository for details.`;
+
+  const repository = extractRepository(manifest);
+  if (!repository) {
+    throw new Error(
+      `pkg-pr-new cannot extract the repository link from the ${packageName} manifest. --compact flag requires the link to be present.
+${instruction}`,
+    );
+  }
+
+  const match = extractOwnerAndRepo(repository);
+  if (!match) {
+    throw new Error(
+      `pkg-pr-new cannot extract the owner and repo names from the ${packageName} repository link: ${repository}. --compact flag requires these names.
+${instruction}`,
+    );
   }
 }

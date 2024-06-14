@@ -2,7 +2,6 @@ import type { PullRequestEvent } from "@octokit/webhooks-types";
 import type { HandlerFunction } from "@octokit/webhooks/dist-types/types";
 import type { PullRequestData, WorkflowData } from "../types";
 import { hash } from "ohash";
-import { abbreviateCommitHash } from "@pkg-pr-new/utils";
 
 // mark a PR as a PR :)
 const prMarkEvents: PullRequestEvent["action"][] = [
@@ -40,9 +39,8 @@ export default eventHandler(async (event) => {
       // "requested" or "in_progress"
       // "requested" won't be received in re-running workflow jobs, but "in_progress" would be
       const prData: PullRequestData = {
-        owner,
-        repo,
-        ref: payload.workflow_run.head_branch!,
+        full_name: payload.workflow_run.head_repository.full_name,
+        ref: payload.workflow_run.head_branch,
       };
       const prDataHash = hash(prData);
       const isPullRequest = await pullRequestNumbersBucket.hasItem(prDataHash);
@@ -51,7 +49,7 @@ export default eventHandler(async (event) => {
       const data: WorkflowData = {
         owner,
         repo,
-        sha: abbreviateCommitHash(payload.workflow_run.head_sha),
+        sha: payload.workflow_run.head_sha,
         ref: isPullRequest
           ? // it's a pull request workflow
             `${prNumber}`
@@ -69,8 +67,7 @@ export default eventHandler(async (event) => {
     const [owner, repo] = payload.repository.full_name.split("/");
     // TODO: functions that generate these kinda keys
     const key: PullRequestData = {
-      owner,
-      repo,
+      full_name: payload.pull_request.head.repo?.full_name!,
       ref: payload.pull_request.head.ref,
     };
     const prDataHash = hash(key);
@@ -80,14 +77,26 @@ export default eventHandler(async (event) => {
       await pullRequestNumbersBucket.removeItem(prDataHash);
 
       const baseKey = `${owner}:${repo}`;
-      const cursorKey = `${baseKey}:${payload.pull_request.head.ref}`;
+      const cursorKey = `${baseKey}:${payload.number}`;
 
       await cursorBucket.removeItem(cursorKey);
     }
   };
 
+  const branchDeletionHandler: HandlerFunction<"delete", unknown> = async ({
+    payload,
+  }) => {
+    const [owner, repo] = payload.repository.full_name.split("/");
+
+    const baseKey = `${owner}:${repo}`;
+    const cursorKey = `${baseKey}:${payload.ref}`;
+
+    await cursorBucket.removeItem(cursorKey);
+  };
+
   app.webhooks.on("workflow_run", workflowHandler);
   app.webhooks.on("pull_request", pullRequestHandler);
+  app.webhooks.on("delete", branchDeletionHandler);
 
   type EmitterWebhookEvent = Parameters<
     typeof app.webhooks.receive | typeof app.webhooks.verifyAndReceive
@@ -123,5 +132,6 @@ export default eventHandler(async (event) => {
   } finally {
     app.webhooks.removeListener("workflow_run", workflowHandler);
     app.webhooks.removeListener("pull_request", pullRequestHandler);
+    app.webhooks.removeListener("delete", branchDeletionHandler);
   }
 });

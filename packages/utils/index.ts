@@ -1,7 +1,7 @@
 import type { PackageManifest } from "query-registry";
 
 const githubUrlRegex =
-  /(?:git\+)?https?:\/\/github\.com\/([^\/]+\/[^\/]+)\.git/; // TODO: Don't trust this, it's chatgbd :)
+  /(?:git\+)?https?:\/\/github\.com\/([^\/]+)\/([^\/]+)\.git/; // TODO: Don't trust this, it's chatgbd :)
 
 export function extractOwnerAndRepo(
   repositoryUrl: string,
@@ -9,11 +9,10 @@ export function extractOwnerAndRepo(
   const match = repositoryUrl.match(githubUrlRegex);
 
   if (match) {
-    const [owner, repo] = match[1].split("/");
-    return [owner, repo];
-  } else {
-    return null;
+    return [match[1], match[2]];
   }
+
+  return null;
 }
 
 export function extractRepository(manifest: PackageManifest) {
@@ -32,5 +31,7 @@ export function abbreviateCommitHash(fullHash: string) {
 }
 
 export function isPullRequest(ref: string) {
-  return !Number.isNaN(Number(ref))
+  return !Number.isNaN(Number(ref));
 }
+
+export type Comment = "off" | "create" | "update"
