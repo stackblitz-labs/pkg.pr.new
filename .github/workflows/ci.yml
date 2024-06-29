@@ -79,5 +79,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - run: cat ./packages/playground-a/package.json
-      - run: cat ./packages/playground-b/package.json
+      - run: cat ./playgrounds/playground-a/package.json
+      - run: cat ./playgrounds/playground-b/package.json
