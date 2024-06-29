@@ -8,7 +8,11 @@ import fsSync from "fs";
 import fs from "fs/promises";
 import { getPackageManifest, type PackageManifest } from "query-registry";
 import type { Comment } from "@pkg-pr-new/utils";
-import { abbreviateCommitHash, extractOwnerAndRepo, extractRepository } from "@pkg-pr-new/utils";
+import {
+  abbreviateCommitHash,
+  extractOwnerAndRepo,
+  extractRepository,
+} from "@pkg-pr-new/utils";
 import fg from "fast-glob";
 import ignore from "ignore";
 import "./environments";
@@ -50,9 +54,8 @@ const main = defineCommand({
           },
           comment: {
             type: "string", // "off", "create", "update" (default)
-            description:
-              `"off" for no comments (silent mode). "create" for comment on each publish. "update" for one comment across the pull request with edits on each publish (default)`,
-            default: "update"
+            description: `"off" for no comments (silent mode). "create" for comment on each publish. "update" for one comment across the pull request with edits on each publish (default)`,
+            default: "update",
           },
         },
         run: async ({ args }) => {
@@ -72,8 +75,8 @@ const main = defineCommand({
 
           const isCompact = !!args.compact;
           const isPnpm = !!args.pnpm;
-          
-          const comment: Comment = args.comment as Comment
+
+          const comment: Comment = args.comment as Comment;
 
           if (!process.env.TEST && process.env.GITHUB_ACTIONS !== "true") {
             console.error(
@@ -116,13 +119,13 @@ const main = defineCommand({
           }
 
           const { sha } = await checkResponse.json();
-          const abbreviatedSha = abbreviateCommitHash(sha)
+          const abbreviatedSha = abbreviateCommitHash(sha);
 
           const deps: Map<string, string> = new Map();
 
           for (const p of paths) {
-            if (!await hasPackageJson(p)) {
-              continue
+            if (!(await hasPackageJson(p))) {
+              continue;
             }
             const pJsonPath = path.resolve(p, "package.json");
             const pJson = await readPackageJSON(pJsonPath);
@@ -131,7 +134,7 @@ const main = defineCommand({
               throw new Error(`"name" field in ${pJsonPath} should be defined`);
             }
             if (pJson.private) {
-              continue
+              continue;
             }
 
             if (isCompact) {
@@ -140,14 +143,19 @@ const main = defineCommand({
 
             deps.set(
               pJson.name,
-              new URL(`/${owner}/${repo}/${pJson.name}@${abbreviatedSha}`, apiUrl).href,
+              new URL(
+                `/${owner}/${repo}/${pJson.name}@${abbreviatedSha}`,
+                apiUrl,
+              ).href,
             );
           }
 
           for (const templateDir of templates) {
-            if (!await hasPackageJson(templateDir)) {
-              console.log(`skipping ${templateDir} because there's no package.json file`)
-              continue
+            if (!(await hasPackageJson(templateDir))) {
+              console.log(
+                `skipping ${templateDir} because there's no package.json file`,
+              );
+              continue;
             }
             const pJsonPath = path.resolve(templateDir, "package.json");
             const pJson = await readPackageJSON(pJsonPath);
@@ -156,8 +164,10 @@ const main = defineCommand({
               throw new Error(`"name" field in ${pJsonPath} should be defined`);
             }
             if (pJson.private) {
-              console.log(`skipping ${templateDir} because the package is private`)
-              continue
+              console.log(
+                `skipping ${templateDir} because the package is private`,
+              );
+              continue;
             }
 
             console.log("preparing template:", pJson.name);
@@ -195,10 +205,12 @@ const main = defineCommand({
             await restore();
           }
 
-          const noDefaultTemplate = args.template === false
+          const noDefaultTemplate = args.template === false;
 
           if (!templates.length && !noDefaultTemplate) {
-            const project = createDefaultTemplate(Object.fromEntries(deps.entries()))
+            const project = createDefaultTemplate(
+              Object.fromEntries(deps.entries()),
+            );
 
             for (const filePath of Object.keys(project)) {
               formData.append(
@@ -213,17 +225,24 @@ const main = defineCommand({
             Awaited<ReturnType<typeof writeDeps>>
           >();
           for (const p of paths) {
-            if (!await hasPackageJson(p)) {
-              continue
+            if (!(await hasPackageJson(p))) {
+              continue;
             }
+            const pJsonPath = path.resolve(p, "package.json");
+            const pJson = await readPackageJSON(pJsonPath);
+
+            if (pJson.private) {
+              continue;
+            }
+
             restoreMap.set(p, await writeDeps(p, deps));
           }
 
           const shasums: Record<string, string> = {};
           for (const p of paths) {
-            if (!await hasPackageJson(p)) {
-              console.log(`skipping ${p} because there's no package.json file`)
-              continue
+            if (!(await hasPackageJson(p))) {
+              console.log(`skipping ${p} because there's no package.json file`);
+              continue;
             }
             const pJsonPath = path.resolve(p, "package.json");
             try {
@@ -235,8 +254,8 @@ const main = defineCommand({
                 );
               }
               if (pJson.private) {
-                console.log(`skipping ${p} because the package is private`)
-                continue
+                console.log(`skipping ${p} because the package is private`);
+                continue;
               }
 
               const { filename, shasum } = await resolveTarball(
@@ -306,7 +325,7 @@ async function resolveTarball(pm: "npm" | "pnpm", p: string) {
     stdio: "overlapped",
     cwd: p,
   });
-  const lines = stdout.split('\n').filter(Boolean)
+  const lines = stdout.split("\n").filter(Boolean);
   const filename = lines[lines.length - 1].trim();
 
   const shasum = createHash("sha1")
@@ -378,9 +397,9 @@ ${instruction}`,
 
 async function hasPackageJson(p: string) {
   try {
-    await fs.access(path.resolve(p, "package.json"), fs.constants.F_OK)
-    return true
+    await fs.access(path.resolve(p, "package.json"), fs.constants.F_OK);
+    return true;
   } catch {
-    return false
+    return false;
   }
 }
