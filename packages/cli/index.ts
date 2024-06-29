@@ -61,7 +61,7 @@ const main = defineCommand({
         run: async ({ args }) => {
           const paths = (args._.length ? args._ : ["."])
             .flatMap((p) => (fg.isDynamicPattern(p) ? fg.sync(p) : p))
-            .map((p) => path.resolve(p));
+            .map((p) => path.resolve(p.trim()));
 
           const templates = (
             typeof args.template === "string"
@@ -69,7 +69,7 @@ const main = defineCommand({
               : ([...(args.template || [])] as string[])
           )
             .flatMap((p) => (fg.isDynamicPattern(p) ? fg.sync(p) : p))
-            .map((p) => path.resolve(p));
+            .map((p) => path.resolve(p.trim()));
 
           const formData = new FormData();
 
@@ -124,11 +124,17 @@ const main = defineCommand({
           const deps: Map<string, string> = new Map();
 
           for (const p of paths) {
+            if (!(await hasPackageJson(p))) {
+              continue;
+            }
             const pJsonPath = path.resolve(p, "package.json");
             const pJson = await readPackageJSON(pJsonPath);
 
             if (!pJson.name) {
               throw new Error(`"name" field in ${pJsonPath} should be defined`);
+            }
+            if (pJson.private) {
+              continue;
             }
 
             if (isCompact) {
@@ -145,11 +151,23 @@ const main = defineCommand({
           }
 
           for (const templateDir of templates) {
+            if (!(await hasPackageJson(templateDir))) {
+              console.log(
+                `skipping ${templateDir} because there's no package.json file`,
+              );
+              continue;
+            }
             const pJsonPath = path.resolve(templateDir, "package.json");
             const pJson = await readPackageJSON(pJsonPath);
 
             if (!pJson.name) {
               throw new Error(`"name" field in ${pJsonPath} should be defined`);
+            }
+            if (pJson.private) {
+              console.log(
+                `skipping ${templateDir} because the package is private`,
+              );
+              continue;
             }
 
             console.log("preparing template:", pJson.name);
@@ -207,11 +225,25 @@ const main = defineCommand({
             Awaited<ReturnType<typeof writeDeps>>
           >();
           for (const p of paths) {
+            if (!(await hasPackageJson(p))) {
+              continue;
+            }
+            const pJsonPath = path.resolve(p, "package.json");
+            const pJson = await readPackageJSON(pJsonPath);
+
+            if (pJson.private) {
+              continue;
+            }
+
             restoreMap.set(p, await writeDeps(p, deps));
           }
 
           const shasums: Record<string, string> = {};
           for (const p of paths) {
+            if (!(await hasPackageJson(p))) {
+              console.log(`skipping ${p} because there's no package.json file`);
+              continue;
+            }
             const pJsonPath = path.resolve(p, "package.json");
             try {
               const pJson = await readPackageJSON(pJsonPath);
@@ -220,6 +252,10 @@ const main = defineCommand({
                 throw new Error(
                   `"name" field in ${pJsonPath} should be defined`,
                 );
+              }
+              if (pJson.private) {
+                console.log(`skipping ${p} because the package is private`);
+                continue;
               }
 
               const { filename, shasum } = await resolveTarball(
@@ -237,7 +273,7 @@ const main = defineCommand({
               });
               formData.append(`package:${pJson.name}`, blob, filename);
             } finally {
-              await restoreMap.get(pJsonPath)?.();
+              await restoreMap.get(p)!();
             }
           }
 
@@ -356,5 +392,14 @@ ${instruction}`,
       `pkg-pr-new cannot extract the owner and repo names from the ${packageName} repository link: ${repository}. --compact flag requires these names.
 ${instruction}`,
     );
+  }
+}
+
+async function hasPackageJson(p: string) {
+  try {
+    await fs.access(path.resolve(p, "package.json"), fs.constants.F_OK);
+    return true;
+  } catch {
+    return false;
   }
 }
