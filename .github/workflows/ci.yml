@@ -78,3 +78,6 @@ jobs:
         run: pnpm publish:playgrounds
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - run: cat ./packages/playground-a/package.json
+      - run: cat ./packages/playground-b/package.json
