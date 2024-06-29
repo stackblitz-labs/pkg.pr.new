@@ -130,6 +130,9 @@ const main = defineCommand({
             if (!pJson.name) {
               throw new Error(`"name" field in ${pJsonPath} should be defined`);
             }
+            if (pJson.private) {
+              continue
+            }
 
             if (isCompact) {
               await verifyCompactMode(pJson.name);
@@ -151,6 +154,10 @@ const main = defineCommand({
 
             if (!pJson.name) {
               throw new Error(`"name" field in ${pJsonPath} should be defined`);
+            }
+            if (pJson.private) {
+              console.log(`skipping ${templateDir} because the package is private`)
+              continue
             }
 
             console.log("preparing template:", pJson.name);
@@ -226,6 +233,10 @@ const main = defineCommand({
                 throw new Error(
                   `"name" field in ${pJsonPath} should be defined`,
                 );
+              }
+              if (pJson.private) {
+                console.log(`skipping ${p} because the package is private`)
+                continue
               }
 
               const { filename, shasum } = await resolveTarball(
