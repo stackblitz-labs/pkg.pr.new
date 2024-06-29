@@ -206,6 +206,9 @@ const main = defineCommand({
             Awaited<ReturnType<typeof writeDeps>>
           >();
           for (const p of paths) {
+            if (!await hasPackageJson(p)) {
+              continue
+            }
             restoreMap.set(p, await writeDeps(p, deps));
           }
 
