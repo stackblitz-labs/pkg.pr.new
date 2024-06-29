@@ -121,6 +121,9 @@ const main = defineCommand({
           const deps: Map<string, string> = new Map();
 
           for (const p of paths) {
+            if (!await hasPackageJson(p)) {
+              continue
+            }
             const pJsonPath = path.resolve(p, "package.json");
             const pJson = await readPackageJSON(pJsonPath);
 
@@ -139,6 +142,10 @@ const main = defineCommand({
           }
 
           for (const templateDir of templates) {
+            if (!await hasPackageJson(templateDir)) {
+              console.log(`skipping ${templateDir} because there's no package.json file`)
+              continue
+            }
             const pJsonPath = path.resolve(templateDir, "package.json");
             const pJson = await readPackageJSON(pJsonPath);
 
@@ -204,6 +211,10 @@ const main = defineCommand({
 
           const shasums: Record<string, string> = {};
           for (const p of paths) {
+            if (!await hasPackageJson(p)) {
+              console.log(`skipping ${p} because there's no package.json file`)
+              continue
+            }
             const pJsonPath = path.resolve(p, "package.json");
             try {
               const pJson = await readPackageJSON(pJsonPath);
@@ -348,5 +359,14 @@ ${instruction}`,
       `pkg-pr-new cannot extract the owner and repo names from the ${packageName} repository link: ${repository}. --compact flag requires these names.
 ${instruction}`,
     );
+  }
+}
+
+async function hasPackageJson(p: string) {
+  try {
+    await fs.access(path.resolve(p, "package.json"), fs.constants.F_OK)
+    return true
+  } catch {
+    return false
   }
 }
