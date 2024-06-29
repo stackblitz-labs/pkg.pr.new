@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "private": true,
   "type": "module",
   "bin": {
     "playground-b": "index.js"
