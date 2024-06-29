@@ -56,6 +56,7 @@ const main = defineCommand({
           },
         },
         run: async ({ args }) => {
+          console.log(args)
           const paths = (args._.length ? args._ : ["."])
             .flatMap((p) => (fg.isDynamicPattern(p) ? fg.sync(p) : p))
             .map((p) => path.resolve(p));
