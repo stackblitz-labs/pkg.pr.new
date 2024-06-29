@@ -59,6 +59,7 @@ const main = defineCommand({
           const paths = (args._.length ? args._ : ["."])
             .flatMap((p) => (fg.isDynamicPattern(p) ? fg.sync(p) : p))
             .map((p) => path.resolve(p));
+          console.log('paths', paths)
 
           const templates = (
             typeof args.template === "string"
