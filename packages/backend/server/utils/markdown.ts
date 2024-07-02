@@ -1,5 +1,20 @@
 import { abbreviateCommitHash } from "@pkg-pr-new/utils";
 import { WorkflowData } from "../types";
+import * as fs from "fs";
+import * as path from "path";
+
+export function detectPackageManager(rootPath: string): "npm" | "pnpm" {
+  if (fs.existsSync(path.join(rootPath, "pnpm-lock.yaml"))) {
+    return "pnpm";
+  }
+  if (
+    fs.existsSync(path.join(rootPath, "package-lock.json")) ||
+    fs.existsSync(path.join(rootPath, "npm-shrinkwrap.json"))
+  ) {
+    return "npm";
+  }
+  return "npm";
+}
 
 export function generateCommitPublishMessage(
   origin: string,
@@ -8,6 +23,7 @@ export function generateCommitPublishMessage(
   workflowData: WorkflowData,
   compact: boolean,
 ) {
+  const packageManager = detectPackageManager(".");
   const shaMessages = packages
     .map((packageName) => {
       const shaUrl = generatePublishUrl(
@@ -21,7 +37,7 @@ export function generateCommitPublishMessage(
         `<b>${packageName}</b>`,
         `
 \`\`\`
-npm i ${shaUrl}
+${packageManager} ${packageManager === "npm" ? "i" : "add"} ${shaUrl}
 \`\`\`
       `,
       );
@@ -47,8 +63,9 @@ export function generatePullRequestPublishMessage(
   compact: boolean,
   checkRunUrl: string,
   codeflow: boolean,
-  base: "sha" | "ref"
+  base: "sha" | "ref",
 ) {
+  const packageManager = detectPackageManager(".");
   const refMessages = packages
     .map((packageName) => {
       const refUrl = generatePublishUrl(
@@ -63,7 +80,7 @@ export function generatePullRequestPublishMessage(
         `<b>${packageName}</b>`,
         `
 \`\`\`
-npm i ${refUrl}
+${packageManager} ${packageManager === "npm" ? "i" : "add"} ${refUrl}
 \`\`\`
 `,
       );
