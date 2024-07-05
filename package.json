@@ -41,5 +41,5 @@
   "dependencies": {
     "wrangler": "^3.57.1"
   },
-  "packageManager": "pnpm@8.15.8"
+  "packageManager": "pnpm@9.1.3+sha256.7f63001edc077f1cff96cacba901f350796287a2800dfa83fe898f94183e4f5f"
 }
