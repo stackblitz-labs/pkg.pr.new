@@ -7,7 +7,8 @@ import { randomUUID } from "uncrypto";
 import { setItemStream, useTemplatesBucket } from "~/utils/bucket";
 import { useOctokitInstallation } from "~/utils/octokit";
 import { generateTemplateHtml } from "~/utils/template";
-import { detectPackageManager } from "../utils/markdown";
+import fsSync from "fs";
+import path from "path";
 
 export default eventHandler(async (event) => {
   const origin = getRequestURL(event).origin;
@@ -263,6 +264,19 @@ export default eventHandler(async (event) => {
     ),
   };
 });
+
+function detectPackageManager(rootPath: string): "npm" | "pnpm" {
+  if (fsSync.existsSync(path.join(rootPath, "pnpm-lock.yaml"))) {
+    return "pnpm";
+  }
+  if (
+    fsSync.existsSync(path.join(rootPath, "package-lock.json")) ||
+    fsSync.existsSync(path.join(rootPath, "npm-shrinkwrap.json"))
+  ) {
+    return "npm";
+  }
+  return "npm";
+}
 
 const whitelist =
   "https://raw.githubusercontent.com/stackblitz-labs/pkg.pr.new/main/.whitelist";
