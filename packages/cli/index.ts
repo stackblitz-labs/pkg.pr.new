@@ -20,7 +20,6 @@ import pkg from "./package.json" with { type: "json" };
 import { isBinaryFile } from "isbinaryfile";
 import { readPackageJSON, writePackageJSON } from "pkg-types";
 import { createDefaultTemplate } from "./template";
-import { detectPackageManager } from "../backend/server/utils/markdown";
 
 declare global {
   var API_URL: string;
@@ -278,6 +277,18 @@ const main = defineCommand({
             }
           }
 
+          function detectPackageManager(rootPath: string): "npm" | "pnpm" {
+            if (fsSync.existsSync(path.join(rootPath, "pnpm-lock.yaml"))) {
+              return "pnpm";
+            }
+            if (
+              fsSync.existsSync(path.join(rootPath, "package-lock.json")) ||
+              fsSync.existsSync(path.join(rootPath, "npm-shrinkwrap.json"))
+            ) {
+              return "npm";
+            }
+            return "npm";
+          }
           const packageManager = detectPackageManager(".");
 
           const res = await fetch(publishUrl, {
