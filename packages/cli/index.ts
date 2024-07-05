@@ -61,7 +61,9 @@ const main = defineCommand({
         run: async ({ args }) => {
           const paths = (args._.length ? args._ : ["."])
             .flatMap((p) =>
-              fg.isDynamicPattern(p) ? fg.sync(p, { onlyFiles: false }) : p,
+              fg.isDynamicPattern(p)
+                ? fg.sync(p, { onlyDirectories: true })
+                : p,
             )
             .map((p) => path.resolve(p.trim()));
 
@@ -71,7 +73,9 @@ const main = defineCommand({
               : ([...(args.template || [])] as string[])
           )
             .flatMap((p) =>
-              fg.isDynamicPattern(p) ? fg.sync(p, { onlyFiles: false }) : p,
+              fg.isDynamicPattern(p)
+                ? fg.sync(p, { onlyDirectories: true })
+                : p,
             )
             .map((p) => path.resolve(p.trim()));
 
