@@ -17,13 +17,10 @@ export default eventHandler(async (event) => {
     "sb-shasums": shasumsHeader,
     "sb-comment": commentHeader,
     "sb-compact": compactHeader,
-    "sb-package-manager": packageManagerHeader,
   } = getHeaders(event);
   const compact = compactHeader === "true";
   const comment: Comment = (commentHeader ?? "update") as Comment;
-  const packageManager = String(
-    packageManagerHeader === detectPackageManager("."),
-  );
+  const packageManager = detectPackageManager(".");
 
   if (!key || !runIdHeader || !shasumsHeader) {
     throw createError({
