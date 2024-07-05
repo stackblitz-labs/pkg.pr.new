@@ -20,6 +20,7 @@ import pkg from "./package.json" with { type: "json" };
 import { isBinaryFile } from "isbinaryfile";
 import { readPackageJSON, writePackageJSON } from "pkg-types";
 import { createDefaultTemplate } from "./template";
+import { detectPackageManager } from "../backend/server/utils/markdown";
 
 declare global {
   var API_URL: string;
@@ -277,6 +278,8 @@ const main = defineCommand({
             }
           }
 
+          const packageManager = detectPackageManager(".");
+
           const res = await fetch(publishUrl, {
             method: "POST",
             headers: {
@@ -285,6 +288,7 @@ const main = defineCommand({
               "sb-key": key,
               "sb-shasums": JSON.stringify(shasums),
               "sb-run-id": GITHUB_RUN_ID,
+              "sb-package-manager": packageManager,
             },
             body: formData,
           });
