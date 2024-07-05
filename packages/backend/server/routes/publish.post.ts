@@ -7,19 +7,23 @@ import { randomUUID } from "uncrypto";
 import { setItemStream, useTemplatesBucket } from "~/utils/bucket";
 import { useOctokitInstallation } from "~/utils/octokit";
 import { generateTemplateHtml } from "~/utils/template";
+import { detectPackageManager } from "../utils/markdown";
 
 export default eventHandler(async (event) => {
   const origin = getRequestURL(event).origin;
-
   const {
     "sb-run-id": runIdHeader,
     "sb-key": key,
     "sb-shasums": shasumsHeader,
     "sb-comment": commentHeader,
     "sb-compact": compactHeader,
+    "sb-package-manager": packageManagerHeader,
   } = getHeaders(event);
   const compact = compactHeader === "true";
   const comment: Comment = (commentHeader ?? "update") as Comment;
+  const packageManager = String(
+    packageManagerHeader === detectPackageManager("."),
+  );
 
   if (!key || !runIdHeader || !shasumsHeader) {
     throw createError({
@@ -182,6 +186,7 @@ export default eventHandler(async (event) => {
           packagesWithoutPrefix,
           workflowData,
           compact,
+          packageManager,
         ),
       },
       conclusion: "success",
@@ -222,6 +227,7 @@ export default eventHandler(async (event) => {
               compact,
               checkRunUrl,
               codeflow,
+              packageManager,
               "ref",
             ),
           },
@@ -241,6 +247,7 @@ export default eventHandler(async (event) => {
               compact,
               checkRunUrl,
               codeflow,
+              packageManager,
               comment === "update" ? "ref" : "sha",
             ),
           },

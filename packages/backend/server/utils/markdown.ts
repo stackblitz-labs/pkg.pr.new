@@ -22,8 +22,9 @@ export function generateCommitPublishMessage(
   packages: string[],
   workflowData: WorkflowData,
   compact: boolean,
+  packageManager: string,
 ) {
-  const packageManager = detectPackageManager(".");
+  // const packageManager = detectPackageManager(".");
   const shaMessages = packages
     .map((packageName) => {
       const shaUrl = generatePublishUrl(
@@ -63,9 +64,10 @@ export function generatePullRequestPublishMessage(
   compact: boolean,
   checkRunUrl: string,
   codeflow: boolean,
+  packageManager: string,
   base: "sha" | "ref",
 ) {
-  const packageManager = detectPackageManager(".");
+  // const packageManager = detectPackageManager(".");
   const refMessages = packages
     .map((packageName) => {
       const refUrl = generatePublishUrl(
