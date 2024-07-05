@@ -63,6 +63,9 @@ const main = defineCommand({
             .flatMap((p) => (fg.isDynamicPattern(p) ? fg.sync(p) : p))
             .map((p) => path.resolve(p.trim()));
 
+          console.log(args._);
+          console.log(paths);
+
           const templates = (
             typeof args.template === "string"
               ? [args.template]
@@ -70,6 +73,9 @@ const main = defineCommand({
           )
             .flatMap((p) => (fg.isDynamicPattern(p) ? fg.sync(p) : p))
             .map((p) => path.resolve(p.trim()));
+
+          console.log(args.template);
+          console.log(templates);
 
           const formData = new FormData();
 
