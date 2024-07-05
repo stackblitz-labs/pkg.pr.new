@@ -278,8 +278,6 @@ const main = defineCommand({
             }
           }
 
-          const packageManager = detectPackageManager(".");
-
           const res = await fetch(publishUrl, {
             method: "POST",
             headers: {
@@ -288,7 +286,6 @@ const main = defineCommand({
               "sb-key": key,
               "sb-shasums": JSON.stringify(shasums),
               "sb-run-id": GITHUB_RUN_ID,
-              "sb-package-manager": packageManager,
             },
             body: formData,
           });
