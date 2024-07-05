@@ -60,22 +60,20 @@ const main = defineCommand({
         },
         run: async ({ args }) => {
           const paths = (args._.length ? args._ : ["."])
-            .flatMap((p) => (fg.isDynamicPattern(p) ? fg.sync(p) : p))
+            .flatMap((p) =>
+              fg.isDynamicPattern(p) ? fg.sync(p, { onlyFiles: false }) : p,
+            )
             .map((p) => path.resolve(p.trim()));
-
-          console.log(args._);
-          console.log(paths);
 
           const templates = (
             typeof args.template === "string"
               ? [args.template]
               : ([...(args.template || [])] as string[])
           )
-            .flatMap((p) => (fg.isDynamicPattern(p) ? fg.sync(p) : p))
+            .flatMap((p) =>
+              fg.isDynamicPattern(p) ? fg.sync(p, { onlyFiles: false }) : p,
+            )
             .map((p) => path.resolve(p.trim()));
-
-          console.log(args.template);
-          console.log(templates);
 
           const formData = new FormData();
 
