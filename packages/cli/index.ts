@@ -59,12 +59,9 @@ const main = defineCommand({
           },
         },
         run: async ({ args }) => {
+          console.log(args);
           const paths = (args._.length ? args._ : ["."])
-            .flatMap((p) =>
-              fg.isDynamicPattern(p)
-                ? fg.sync(p, { onlyDirectories: true })
-                : p,
-            )
+            .flatMap((p) => fg.sync(p, { onlyDirectories: true }))
             .map((p) => path.resolve(p.trim()));
 
           const templates = (
@@ -72,11 +69,7 @@ const main = defineCommand({
               ? [args.template]
               : ([...(args.template || [])] as string[])
           )
-            .flatMap((p) =>
-              fg.isDynamicPattern(p)
-                ? fg.sync(p, { onlyDirectories: true })
-                : p,
-            )
+            .flatMap((p) => fg.sync(p, { onlyDirectories: true }))
             .map((p) => path.resolve(p.trim()));
 
           const formData = new FormData();
