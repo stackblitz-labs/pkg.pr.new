@@ -51,7 +51,7 @@ For templates (experimental):
 > With templates, pkg.pr.new will generate Stackblitz instances for the given directories with the new built packages.
 
 ```sh
-npx pkg-pr-new publish ./packages/A --template ./examples/*
+npx pkg-pr-new publish ./packages/A --template="./examples/*"
 ```
 
 By default, pkg.pr.new will generate a template called "default" which includes each built package in the dependencies. This can be disabled with `--no-template`.
@@ -77,21 +77,22 @@ npm i https://pkg.pr.new/tinylibs/tinybench/tinybench@a832a55
 ```
 
 You can control publishing comments with `--comment`:
+
 ```sh
 npx pkg-pr-new publish --comment=update # default
 ```
-Using `--comment=update`, pkg.pr.new would generate one initial comment and then edit it in the following commits. 
+
+Using `--comment=update`, pkg.pr.new would generate one initial comment and then edit it in the following commits.
 
 With `--comment=create`, each commit would generate a comment for itself, useful for triggering workflows, like workflow execution using maintainer comments.
 
 And `--comment=off` would turn off comments for maintainers who prefer minimal pull requests.
 
-
 pkg.pr.new uses `npm pack --json` under the hood, in case you face issues, you can also use the `--pnpm` flag so it starts using `pnpm pack`. This is not necessary in most cases.
 
 <img width="100%" src="https://github.com/stackblitz-labs/pkg.pr.new/assets/37929992/2fc03b94-ebae-4c47-a271-03a4ad5d2449" />
 
-pkg.pr.new is not available in your local environment and it only works in workflows. 
+pkg.pr.new is not available in your local environment and it only works in workflows.
 
 ### Examples
 

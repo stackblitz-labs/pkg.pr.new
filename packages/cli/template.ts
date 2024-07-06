@@ -28,7 +28,7 @@ npm i ${url}
 To use this feature as a maintainer, you can run the following command:
 
 \`\`\`sh
-npx pkg-pr-new publish ./packages/A --template ./examples/*
+npx pkg-pr-new publish ./packages/A --template="./examples/*"
 \`\`\`
 
 ## Benefits
