@@ -6,6 +6,7 @@ import { createHash } from "node:crypto";
 import { hash } from "ohash";
 import fsSync from "fs";
 import fs from "fs/promises";
+import { detect } from "detect-package-manager";
 import { getPackageManifest, type PackageManifest } from "query-registry";
 import type { Comment } from "@pkg-pr-new/utils";
 import {
@@ -277,19 +278,7 @@ const main = defineCommand({
             }
           }
 
-          function detectPackageManager(rootPath: string): "npm" | "pnpm" {
-            if (fsSync.existsSync(path.join(rootPath, "pnpm-lock.yaml"))) {
-              return "pnpm";
-            }
-            if (
-              fsSync.existsSync(path.join(rootPath, "package-lock.json")) ||
-              fsSync.existsSync(path.join(rootPath, "npm-shrinkwrap.json"))
-            ) {
-              return "npm";
-            }
-            return "npm";
-          }
-          const packageManager = detectPackageManager(".");
+          const packageManager = await detect();
 
           const res = await fetch(publishUrl, {
             method: "POST",
