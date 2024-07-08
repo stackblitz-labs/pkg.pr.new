@@ -6,6 +6,7 @@ import { createHash } from "node:crypto";
 import { hash } from "ohash";
 import fsSync from "fs";
 import fs from "fs/promises";
+import { detect } from "detect-package-manager";
 import { getPackageManifest, type PackageManifest } from "query-registry";
 import type { Comment } from "@pkg-pr-new/utils";
 import {
@@ -271,6 +272,7 @@ const main = defineCommand({
             }
           }
 
+          const packageManager = await detect();
           const res = await fetch(publishUrl, {
             method: "POST",
             headers: {
@@ -279,6 +281,7 @@ const main = defineCommand({
               "sb-key": key,
               "sb-shasums": JSON.stringify(shasums),
               "sb-run-id": GITHUB_RUN_ID,
+              "sb-package-manager": packageManager,
             },
             body: formData,
           });
