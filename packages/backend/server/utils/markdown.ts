@@ -1,6 +1,12 @@
 import { abbreviateCommitHash } from "@pkg-pr-new/utils";
 import { WorkflowData } from "../types";
 
+const packageCommands: Record<string, string> = {
+  npm: "i",
+  pnpm: "add",
+  yarn: "add",
+};
+
 export function generateCommitPublishMessage(
   origin: string,
   templates: Record<string, string>,
@@ -22,7 +28,7 @@ export function generateCommitPublishMessage(
         `<b>${packageName}</b>`,
         `
 \`\`\`
-${packageManager} ${packageManager === "npm" ? "i" : "add"} ${shaUrl}
+${packageManager} ${packageCommands[packageManager]} ${shaUrl}
 \`\`\`
       `,
       );
@@ -65,7 +71,7 @@ export function generatePullRequestPublishMessage(
         `<b>${packageName}</b>`,
         `
 \`\`\`
-${packageManager} ${packageManager === "npm" ? "i" : "add"} ${refUrl}
+${packageManager} ${packageCommands[packageManager]} ${refUrl}
 \`\`\`
 `,
       );

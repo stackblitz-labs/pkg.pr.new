@@ -18,6 +18,7 @@
   "dependencies": {
     "@jsdevtools/ez-spawn": "^3.0.4",
     "@octokit/action": "^6.1.0",
+    "detect-package-manager": "^3.0.2",
     "fast-glob": "^3.3.2",
     "ignore": "^5.3.1",
     "isbinaryfile": "^5.0.2",

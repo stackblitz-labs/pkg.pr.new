@@ -7,6 +7,7 @@ import { randomUUID } from "uncrypto";
 import { setItemStream, useTemplatesBucket } from "~/utils/bucket";
 import { useOctokitInstallation } from "~/utils/octokit";
 import { generateTemplateHtml } from "~/utils/template";
+import type { PackageManager } from "@pkg-pr-new/utils";
 
 export default eventHandler(async (event) => {
   const origin = getRequestURL(event).origin;
@@ -20,7 +21,8 @@ export default eventHandler(async (event) => {
   } = getHeaders(event);
   const compact = compactHeader === "true";
   const comment: Comment = (commentHeader ?? "update") as Comment;
-  const packageManager = packageManagerHeader || "npm";
+  const packageManager: PackageManager =
+    (packageManagerHeader as PackageManager) || "npm";
 
   if (!key || !runIdHeader || !shasumsHeader) {
     throw createError({
