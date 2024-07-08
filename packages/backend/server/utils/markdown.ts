@@ -1,7 +1,7 @@
-import { abbreviateCommitHash } from "@pkg-pr-new/utils";
+import { abbreviateCommitHash, PackageManager } from "@pkg-pr-new/utils";
 import { WorkflowData } from "../types";
 
-const packageCommands: Record<string, string> = {
+const packageCommands: Record<PackageManager, string> = {
   npm: "i",
   pnpm: "add",
   yarn: "add",
@@ -13,7 +13,7 @@ export function generateCommitPublishMessage(
   packages: string[],
   workflowData: WorkflowData,
   compact: boolean,
-  packageManager: string,
+  packageManager: PackageManager,
 ) {
   const shaMessages = packages
     .map((packageName) => {
@@ -54,7 +54,7 @@ export function generatePullRequestPublishMessage(
   compact: boolean,
   checkRunUrl: string,
   codeflow: boolean,
-  packageManager: string,
+  packageManager: PackageManager,
   base: "sha" | "ref",
 ) {
   const refMessages = packages

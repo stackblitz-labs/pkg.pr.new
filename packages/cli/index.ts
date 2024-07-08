@@ -279,10 +279,7 @@ const main = defineCommand({
           }
 
           const detectPackageManager = detect();
-          const packageManager = await detectPackageManager.then((value) => {
-            return value;
-          });
-
+          const packageManager = await detectPackageManager;
           const res = await fetch(publishUrl, {
             method: "POST",
             headers: {
@@ -410,16 +407,3 @@ async function hasPackageJson(p: string) {
     return false;
   }
 }
-
-// function detectPackageManager(rootPath: string): "npm" | "pnpm" {
-//   if (fsSync.existsSync(path.join(rootPath, "pnpm-lock.yaml"))) {
-//     return "pnpm";
-//   }
-//   if (
-//     fsSync.existsSync(path.join(rootPath, "package-lock.json")) ||
-//     fsSync.existsSync(path.join(rootPath, "npm-shrinkwrap.json"))
-//   ) {
-//     return "npm";
-//   }
-//   return "npm";
-// }
