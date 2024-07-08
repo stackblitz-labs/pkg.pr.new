@@ -278,8 +278,7 @@ const main = defineCommand({
             }
           }
 
-          const detectPackageManager = detect();
-          const packageManager = await detectPackageManager;
+          const packageManager = await detect();
           const res = await fetch(publishUrl, {
             method: "POST",
             headers: {
