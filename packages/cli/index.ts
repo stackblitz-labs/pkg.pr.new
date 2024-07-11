@@ -91,6 +91,7 @@ const main = defineCommand({
             GITHUB_RUN_ID,
             GITHUB_RUN_ATTEMPT,
             GITHUB_ACTOR_ID,
+            DEBUG,
           } = process.env;
 
           const [owner, repo] = GITHUB_REPOSITORY.split("/");
@@ -182,9 +183,15 @@ const main = defineCommand({
               cwd: templateDir,
               dot: true,
               onlyFiles: true,
+              ignore: ['node_modules', '.git'], // always ignore node_modules and .git
             });
 
             const filteredFiles = files.filter((file) => !ig.ignores(file));
+
+            if (DEBUG === pkg.name) {
+              console.log('files', files);
+              console.log('filteredFiles', filteredFiles);
+            }
 
             for (const filePath of filteredFiles) {
               const file = await fs.readFile(path.join(templateDir, filePath));
