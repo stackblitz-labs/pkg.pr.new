@@ -29,8 +29,6 @@ declare global {
       GITHUB_JOB: string;
       // A unique number for each attempt of a particular workflow run in a repository. This number begins at 1 for the workflow run's first attempt, and increments with each re-run. For example, 3.
       GITHUB_RUN_ATTEMPT: string;
-      // like npm.io/debug
-      DEBUG: string;
     }
   }
 }

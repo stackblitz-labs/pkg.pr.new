@@ -91,7 +91,6 @@ const main = defineCommand({
             GITHUB_RUN_ID,
             GITHUB_RUN_ATTEMPT,
             GITHUB_ACTOR_ID,
-            DEBUG,
           } = process.env;
 
           const [owner, repo] = GITHUB_REPOSITORY.split("/");
@@ -171,8 +170,9 @@ const main = defineCommand({
             const restore = await writeDeps(templateDir, deps);
 
             const gitignorePath = path.join(templateDir, ".gitignore");
-            const ig = ignore();
-            ig.add("node_modules");
+            const ig = ignore()
+              .add("node_modules")
+              .add(".git");
 
             if (fsSync.existsSync(gitignorePath)) {
               const gitignoreContent = await fs.readFile(gitignorePath, "utf8");
@@ -188,10 +188,6 @@ const main = defineCommand({
 
             const filteredFiles = files.filter((file) => !ig.ignores(file));
 
-            if (DEBUG === pkg.name) {
-              console.log('files', files);
-              console.log('filteredFiles', filteredFiles);
-            }
 
             for (const filePath of filteredFiles) {
               const file = await fs.readFile(path.join(templateDir, filePath));
