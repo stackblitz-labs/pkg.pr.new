@@ -170,8 +170,9 @@ const main = defineCommand({
             const restore = await writeDeps(templateDir, deps);
 
             const gitignorePath = path.join(templateDir, ".gitignore");
-            const ig = ignore();
-            ig.add("node_modules");
+            const ig = ignore()
+              .add("node_modules")
+              .add(".git");
 
             if (fsSync.existsSync(gitignorePath)) {
               const gitignoreContent = await fs.readFile(gitignorePath, "utf8");
@@ -182,6 +183,7 @@ const main = defineCommand({
               cwd: templateDir,
               dot: true,
               onlyFiles: true,
+              ignore: ['node_modules', '.git'], // always ignore node_modules and .git
             });
 
             const filteredFiles = files.filter((file) => !ig.ignores(file));
