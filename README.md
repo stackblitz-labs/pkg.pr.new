@@ -167,6 +167,8 @@ on:
 ```
 As noted in [#140](https://github.com/stackblitz-labs/pkg.pr.new/issues/140), workflows run on tags too, that's not an issue at all, but in case users would like to avoid duplicate publishes.
 
+---
+
 > Releasing approved pull requests is the recommended way of having continuous releases. This ensures users always install approved and safe packages.
 
 Publishing is only available in workflows and it supports any workflow trigger event, more information [here](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#about-events-that-trigger-workflows).
