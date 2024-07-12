@@ -188,7 +188,6 @@ const main = defineCommand({
 
             const filteredFiles = files.filter((file) => !ig.ignores(file));
 
-
             for (const filePath of filteredFiles) {
               const file = await fs.readFile(path.join(templateDir, filePath));
               const isBinary = await isBinaryFile(file);
