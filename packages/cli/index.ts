@@ -142,13 +142,19 @@ const main = defineCommand({
               await verifyCompactMode(pJson.name);
             }
 
-            deps.set(
-              pJson.name,
-              new URL(
+            const depUrl = new URL(
                 `/${owner}/${repo}/${pJson.name}@${abbreviatedSha}`,
                 apiUrl,
-              ).href,
+              ).href
+            deps.set(
+              pJson.name,
+              depUrl,
             );
+
+            const resource = await fetch(depUrl)
+            if (resource.ok) {
+              console.warn(`${pJson.name}@${abbreviatedSha} was already published on ${depUrl}`)
+            }
           }
 
           for (const templateDir of templates) {
