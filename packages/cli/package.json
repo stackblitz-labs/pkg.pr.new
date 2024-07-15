@@ -7,6 +7,11 @@
   "bin": {
     "pkg-pr-new": "bin/cli.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stackblitz-labs/pkg.pr.new",
+    "directory": "packages/cli"
+  },
   "scripts": {
     "dev": "tsup --watch",
     "build": "tsup",
