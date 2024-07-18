@@ -1,13 +1,15 @@
-import GitHost from "hosted-git-info";
 import type { PackageManifest } from "query-registry";
+
+const githubUrlRegex =
+  /(?:git\+)?https?:\/\/github\.com\/([^\/]+)\/([^\/]+)\.git/; // TODO: Don't trust this, it's chatgbd :)
 
 export function extractOwnerAndRepo(
   repositoryUrl: string,
-): [owner: string, repo: string] | null {
-  const { type, user, project } = GitHost.fromUrl(repositoryUrl.replace(/^git\+/, "")) ?? {};
+): [string, string] | null {
+  const match = repositoryUrl.match(githubUrlRegex);
 
-  if (type === "github" && user && project) {
-    return [user, project];
+  if (match) {
+    return [match[1], match[2]];
   }
 
   return null;
