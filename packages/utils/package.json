@@ -10,6 +10,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "hosted-git-info": "^7.0.2",
     "query-registry": "^3.0.1"
+  },
+  "devDependencies": {
+    "@types/hosted-git-info": "^3.0.5"
   }
 }
