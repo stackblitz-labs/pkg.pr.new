@@ -210,6 +210,7 @@ export default eventHandler(async (event) => {
           if (c.performed_via_github_app?.id === Number(appId)) {
             prevComment = c;
             done();
+            break
           }
           if (c.performed_via_github_app?.slug === "stackblitz") {
             codeflow = false;
