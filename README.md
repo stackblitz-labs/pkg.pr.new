@@ -42,7 +42,7 @@ npm install --save-dev pkg-pr-new # or `npx pkg-pr-new publish`
 For workspaces:
 
 ```sh
-npx pkg-pr-new publish ./packages/A ./packages/B # or `npx pkg-pr-new publish ./packages/*`
+npx pkg-pr-new publish './packages/A' './packages/B' # or `npx pkg-pr-new publish './packages/*'`
 ```
 
 For templates (experimental):
@@ -51,7 +51,7 @@ For templates (experimental):
 > With templates, pkg.pr.new will generate Stackblitz instances for the given directories with the new built packages.
 
 ```sh
-npx pkg-pr-new publish ./packages/A --template ./examples/*
+npx pkg-pr-new publish './packages/A' --template './examples/*'
 ```
 
 By default, pkg.pr.new will generate a template called "default" which includes each built package in the dependencies. This can be disabled with `--no-template`.
@@ -59,10 +59,10 @@ By default, pkg.pr.new will generate a template called "default" which includes 
 For shorter urls, `--compact` can be useful:
 
 ```sh
-npx pkg-pr-new publish --compact ./packages/A ./packages/B
+npx pkg-pr-new publish --compact './packages/A' './packages/B'
 ```
 
-> `--compact` requires your package to be a valid (published) package on npm with a specified `repository` field in the package.json! See [this](https://docs.npmjs.com/cli/v7/configuring-npm/package-json#repository).
+> `--compact` requires your package to be a valid (published) package on npm with a specified `repository` field in the package.json! See [this](https://docs.npmjs.com/cli/v7/configuring-npm/package-json#repository). pkg.pr.new is case sensitive, if the Github owner is `PuruVJ`, the package.json `repository` field should not have `puruvj`.
 
 With `--compact`:
 
@@ -153,6 +153,22 @@ jobs:
 
       - run: pnpx pkg-pr-new publish
 ```
+
+#### Avoid publishing on tags
+
+```yml
+on:
+  pull_request:
+  push:
+    branches:
+      - "**"
+    tags:
+      - "!**"
+```
+
+As noted in [#140](https://github.com/stackblitz-labs/pkg.pr.new/issues/140), workflows run on tags too, that's not an issue at all, but in case users would like to avoid duplicate publishes.
+
+---
 
 > Releasing approved pull requests is the recommended way of having continuous releases. This ensures users always install approved and safe packages.
 

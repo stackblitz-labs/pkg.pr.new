@@ -6,6 +6,7 @@ import { createHash } from "node:crypto";
 import { hash } from "ohash";
 import fsSync from "fs";
 import fs from "fs/promises";
+import { detect } from "detect-package-manager";
 import { getPackageManifest, type PackageManifest } from "query-registry";
 import type { Comment } from "@pkg-pr-new/utils";
 import {
@@ -60,7 +61,7 @@ const main = defineCommand({
         },
         run: async ({ args }) => {
           const paths = (args._.length ? args._ : ["."])
-            .flatMap((p) => (fg.isDynamicPattern(p) ? fg.sync(p) : p))
+            .flatMap((p) => fg.sync(p, { onlyDirectories: true }))
             .map((p) => path.resolve(p.trim()));
 
           const templates = (
@@ -68,7 +69,7 @@ const main = defineCommand({
               ? [args.template]
               : ([...(args.template || [])] as string[])
           )
-            .flatMap((p) => (fg.isDynamicPattern(p) ? fg.sync(p) : p))
+            .flatMap((p) => fg.sync(p, { onlyDirectories: true }))
             .map((p) => path.resolve(p.trim()));
 
           const formData = new FormData();
@@ -141,13 +142,18 @@ const main = defineCommand({
               await verifyCompactMode(pJson.name);
             }
 
-            deps.set(
-              pJson.name,
-              new URL(
-                `/${owner}/${repo}/${pJson.name}@${abbreviatedSha}`,
-                apiUrl,
-              ).href,
-            );
+            const depUrl = new URL(
+              `/${owner}/${repo}/${pJson.name}@${abbreviatedSha}`,
+              apiUrl,
+            ).href;
+            deps.set(pJson.name, depUrl);
+
+            const resource = await fetch(depUrl);
+            if (resource.ok) {
+              console.warn(
+                `${pJson.name}@${abbreviatedSha} was already published on ${depUrl}`,
+              );
+            }
           }
 
           for (const templateDir of templates) {
@@ -163,20 +169,13 @@ const main = defineCommand({
             if (!pJson.name) {
               throw new Error(`"name" field in ${pJsonPath} should be defined`);
             }
-            if (pJson.private) {
-              console.log(
-                `skipping ${templateDir} because the package is private`,
-              );
-              continue;
-            }
 
             console.log("preparing template:", pJson.name);
 
             const restore = await writeDeps(templateDir, deps);
 
             const gitignorePath = path.join(templateDir, ".gitignore");
-            const ig = ignore();
-            ig.add("node_modules");
+            const ig = ignore().add("node_modules").add(".git");
 
             if (fsSync.existsSync(gitignorePath)) {
               const gitignoreContent = await fs.readFile(gitignorePath, "utf8");
@@ -187,6 +186,7 @@ const main = defineCommand({
               cwd: templateDir,
               dot: true,
               onlyFiles: true,
+              ignore: ["node_modules", ".git"], // always ignore node_modules and .git
             });
 
             const filteredFiles = files.filter((file) => !ig.ignores(file));
@@ -273,10 +273,11 @@ const main = defineCommand({
               });
               formData.append(`package:${pJson.name}`, blob, filename);
             } finally {
-              await restoreMap.get(p)!();
+              await restoreMap.get(p)?.();
             }
           }
 
+          const packageManager = await detect();
           const res = await fetch(publishUrl, {
             method: "POST",
             headers: {
@@ -285,6 +286,7 @@ const main = defineCommand({
               "sb-key": key,
               "sb-shasums": JSON.stringify(shasums),
               "sb-run-id": GITHUB_RUN_ID,
+              "sb-package-manager": packageManager,
             },
             body: formData,
           });

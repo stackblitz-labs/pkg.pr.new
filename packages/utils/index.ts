@@ -34,4 +34,5 @@ export function isPullRequest(ref: string) {
   return !Number.isNaN(Number(ref));
 }
 
-export type Comment = "off" | "create" | "update"
+export type Comment = "off" | "create" | "update";
+export type PackageManager = "npm" | "pnpm" | "yarn";

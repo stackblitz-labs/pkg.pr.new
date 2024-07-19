@@ -1,5 +1,11 @@
-import { abbreviateCommitHash } from "@pkg-pr-new/utils";
+import { abbreviateCommitHash, PackageManager } from "@pkg-pr-new/utils";
 import { WorkflowData } from "../types";
+
+const packageCommands: Record<PackageManager, string> = {
+  npm: "i",
+  pnpm: "add",
+  yarn: "add",
+};
 
 export function generateCommitPublishMessage(
   origin: string,
@@ -7,6 +13,7 @@ export function generateCommitPublishMessage(
   packages: string[],
   workflowData: WorkflowData,
   compact: boolean,
+  packageManager: PackageManager,
 ) {
   const shaMessages = packages
     .map((packageName) => {
@@ -21,7 +28,7 @@ export function generateCommitPublishMessage(
         `<b>${packageName}</b>`,
         `
 \`\`\`
-npm i ${shaUrl}
+${packageManager} ${packageCommands[packageManager]} ${shaUrl}
 \`\`\`
       `,
       );
@@ -47,6 +54,7 @@ export function generatePullRequestPublishMessage(
   compact: boolean,
   checkRunUrl: string,
   codeflow: boolean,
+  packageManager: PackageManager,
   base: "sha" | "ref",
 ) {
   const refMessages = packages
@@ -63,7 +71,7 @@ export function generatePullRequestPublishMessage(
         `<b>${packageName}</b>`,
         `
 \`\`\`
-npm i ${refUrl}
+${packageManager} ${packageCommands[packageManager]} ${refUrl}
 \`\`\`
 `,
       );
