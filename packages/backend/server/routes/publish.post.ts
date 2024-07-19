@@ -195,7 +195,7 @@ export default eventHandler(async (event) => {
   }
 
   if (isPullRequest(workflowData.ref)) {
-    let codeflow = false;
+    let codeflow = true;
     let prevComment: OctokitComponents["schemas"]["issue-comment"];
 
     await installation.paginate(
@@ -212,7 +212,7 @@ export default eventHandler(async (event) => {
             done();
           }
           if (c.performed_via_github_app?.slug === "stackblitz") {
-            codeflow = true;
+            codeflow = false;
           }
         }
         return [];
