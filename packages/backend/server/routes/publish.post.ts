@@ -219,9 +219,6 @@ export default eventHandler(async (event) => {
         return [];
       },
     );
-    const codeflow = !data.some(
-      (comment) => comment.performed_via_github_app?.slug === "stackblitz",
-    );
 
     if (comment !== "off") {
       if (comment === "update" && prevComment!) {
