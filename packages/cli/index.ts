@@ -329,18 +329,22 @@ runMain(main);
 
 // TODO: we'll add support for yarn if users hit issues with npm
 async function resolveTarball(pm: "npm" | "pnpm", p: string) {
-  const { stdout } = await ezSpawn.async(`${pm} pack`, {
-    stdio: "overlapped",
-    cwd: p,
-  });
-  const lines = stdout.split("\n").filter(Boolean);
-  const filename = lines[lines.length - 1].trim();
+  try {
+    const { stdout } = await ezSpawn.async(`${pm} pack`, {
+      stdio: "overlapped",
+      cwd: p,
+    });
+    const lines = stdout.split("\n").filter(Boolean);
+    const filename = lines[lines.length - 1].trim();
 
-  const shasum = createHash("sha1")
-    .update(await fs.readFile(path.resolve(p, filename)))
-    .digest("hex");
+    const shasum = createHash("sha1")
+      .update(await fs.readFile(path.resolve(p, filename)))
+      .digest("hex");
 
-  return { filename, shasum };
+    return { filename, shasum };
+  } catch (e) {
+    console.log(e)
+  }
 }
 
 async function writeDeps(p: string, deps: Map<string, string>) {
@@ -349,10 +353,8 @@ async function writeDeps(p: string, deps: Map<string, string>) {
 
   const pJson = await readPackageJSON(pJsonPath);
 
-  console.log('writeDeps', pJson)
   hijackDeps(deps, pJson.dependencies);
   hijackDeps(deps, pJson.devDependencies);
-  console.log('new writtenDeps', pJson)
 
   await writePackageJSON(pJsonPath, pJson);
 
