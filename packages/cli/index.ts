@@ -276,6 +276,8 @@ const main = defineCommand({
               });
               formData.append(`package:${pJson.name}`, blob, filename);
             } finally {
+              const pJsonPath = path.resolve(p, "package.json");
+              console.log(await fs.readFile(pJsonPath, 'utf-8'))
               console.log('clearing', p, restoreMap.get(p))
               await restoreMap.get(p)?.();
             }
