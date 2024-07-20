@@ -251,7 +251,6 @@ const main = defineCommand({
             try {
               const pJson = await readPackageJSON(pJsonPath);
 
-              console.log(p, pJson)
               if (!pJson.name) {
                 throw new Error(
                   `"name" field in ${pJsonPath} should be defined`,
@@ -277,7 +276,8 @@ const main = defineCommand({
               });
               formData.append(`package:${pJson.name}`, blob, filename);
             } finally {
-              // await restoreMap.get(p)?.();
+              console.log('clearing', p, restoreMap.get(p))
+              await restoreMap.get(p)?.();
             }
           }
 
