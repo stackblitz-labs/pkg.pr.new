@@ -129,7 +129,7 @@ const main = defineCommand({
               continue;
             }
             const pJsonPath = path.resolve(p, "package.json");
-            const pJson = await readPackageJSON(pJsonPath);
+            const pJson = await readPackageJSON(pJsonPath, {cache: false});
 
             if (!pJson.name) {
               throw new Error(`"name" field in ${pJsonPath} should be defined`);
@@ -165,7 +165,7 @@ const main = defineCommand({
               continue;
             }
             const pJsonPath = path.resolve(templateDir, "package.json");
-            const pJson = await readPackageJSON(pJsonPath);
+            const pJson = await readPackageJSON(pJsonPath, {cache: false});
 
             if (!pJson.name) {
               throw new Error(`"name" field in ${pJsonPath} should be defined`);
@@ -232,7 +232,7 @@ const main = defineCommand({
               continue;
             }
             const pJsonPath = path.resolve(p, "package.json");
-            const pJson = await readPackageJSON(pJsonPath);
+            const pJson = await readPackageJSON(pJsonPath, {cache: false});
 
             if (pJson.private) {
               continue;
@@ -249,7 +249,7 @@ const main = defineCommand({
             }
             const pJsonPath = path.resolve(p, "package.json");
             try {
-              const pJson = await readPackageJSON(pJsonPath);
+              const pJson = await readPackageJSON(pJsonPath, {cache:false});
 
               console.log(p, pJson)
               if (!pJson.name) {
@@ -345,12 +345,10 @@ async function writeDeps(p: string, deps: Map<string, string>) {
   const pJsonPath = path.resolve(p, "package.json");
   const content = await fs.readFile(pJsonPath, "utf-8");
 
-  const pJson = await readPackageJSON(pJsonPath);
+  const pJson = await readPackageJSON(pJsonPath, {cache: false});
 
-  console.log('writeDeps', pJson)
   hijackDeps(deps, pJson.dependencies);
   hijackDeps(deps, pJson.devDependencies);
-  console.log('new writtenDeps', pJson)
 
   await writePackageJSON(pJsonPath, pJson);
 
