@@ -277,7 +277,7 @@ const main = defineCommand({
               });
               formData.append(`package:${pJson.name}`, blob, filename);
             } finally {
-              await restoreMap.get(p)?.();
+              // await restoreMap.get(p)?.();
             }
           }
 
