@@ -251,6 +251,7 @@ const main = defineCommand({
             try {
               const pJson = await readPackageJSON(pJsonPath);
 
+              console.log(p, pJson)
               if (!pJson.name) {
                 throw new Error(
                   `"name" field in ${pJsonPath} should be defined`,
@@ -346,8 +347,10 @@ async function writeDeps(p: string, deps: Map<string, string>) {
 
   const pJson = await readPackageJSON(pJsonPath);
 
+  console.log('writeDeps', pJson)
   hijackDeps(deps, pJson.dependencies);
   hijackDeps(deps, pJson.devDependencies);
+  console.log('new writtenDeps', pJson)
 
   await writePackageJSON(pJsonPath, pJson);
 
