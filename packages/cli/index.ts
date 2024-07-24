@@ -44,6 +44,12 @@ const main = defineCommand({
             description:
               "compact urls. The shortest form of urls like pkg.pr.new/tinybench@a832a55)",
           },
+          peerDeps: {
+            type: "boolean",
+            description:
+              "handle peerDependencies by setting the workspace version instead of what has been set in the peerDeps itself. --peerDeps not being true would leave peerDependencies to the package manager itself (npm, pnpm)",
+            default: false,
+          },
           pnpm: {
             type: "boolean",
             description: "use `pnpm pack` instead of `npm pack --json`",
@@ -76,6 +82,7 @@ const main = defineCommand({
 
           const isCompact = !!args.compact;
           const isPnpm = !!args.pnpm;
+          const isPeerDepsEnabled = !!args.peerDeps
 
           const comment: Comment = args.comment as Comment;
 
@@ -122,7 +129,8 @@ const main = defineCommand({
           const { sha } = await checkResponse.json();
           const abbreviatedSha = abbreviateCommitHash(sha);
 
-          const deps: Map<string, string> = new Map();
+          const deps: Map<string, string> = new Map(); // pkg.pr.new versions of the package
+          const realDeps: Map<string, string> | null = isPeerDepsEnabled ? new Map() : null // real versions of the package, useful for peerDependencies
 
           for (const p of paths) {
             if (!(await hasPackageJson(p))) {
@@ -150,6 +158,7 @@ const main = defineCommand({
               pJson.name,
               depUrl,
             );
+            realDeps?.set(pJson.name, pJson.version ?? depUrl)
 
             const resource = await fetch(depUrl)
             if (resource.ok) {
@@ -173,7 +182,7 @@ const main = defineCommand({
 
             console.log("preparing template:", pJson.name);
 
-            const restore = await writeDeps(templateDir, deps);
+            const restore = await writeDeps(templateDir, deps, realDeps);
 
             const gitignorePath = path.join(templateDir, ".gitignore");
             const ig = ignore()
@@ -238,7 +247,7 @@ const main = defineCommand({
               continue;
             }
 
-            restoreMap.set(p, await writeDeps(p, deps));
+            restoreMap.set(p, await writeDeps(p, deps, realDeps));
           }
 
           const shasums: Record<string, string> = {};
@@ -340,7 +349,7 @@ async function resolveTarball(pm: "npm" | "pnpm", p: string) {
   return { filename, shasum };
 }
 
-async function writeDeps(p: string, deps: Map<string, string>) {
+async function writeDeps(p: string, deps: Map<string, string>, realDeps: Map<string, string> | null) {
   const pJsonPath = path.resolve(p, "package.json");
   const content = await fs.readFile(pJsonPath, "utf-8");
 
@@ -348,6 +357,10 @@ async function writeDeps(p: string, deps: Map<string, string>) {
 
   hijackDeps(deps, pJson.dependencies);
   hijackDeps(deps, pJson.devDependencies);
+
+  if (realDeps) {
+    hijackDeps(realDeps, pJson.peerDependencies);
+  }
 
   await writePackageJSON(pJsonPath, pJson);
 
