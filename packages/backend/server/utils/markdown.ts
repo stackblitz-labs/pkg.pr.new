@@ -82,15 +82,18 @@ ${templatesStr}
 
 function generateTemplatesStr(templates: Record<string, string>) {
   const entries = Object.entries(templates).filter(([k]) => k !== "default");
-  return `
-[Open in Stackblitz](${templates["default"]})\n` + entries.length
-    ? createCollapsibleBlock(
-        "<b>More templates</b>",
-        `
+  return (
+    `
+[Open in Stackblitz](${templates["default"]})\n` +
+    (entries.length
+      ? createCollapsibleBlock(
+          "<b>More templates</b>",
+          `
 ${entries.map(([k, v]) => `- [${k}](${v})`).join("\n")}
 `,
-      )
-    : "";
+        )
+      : "")
+  );
 }
 
 export function generatePublishUrl(
