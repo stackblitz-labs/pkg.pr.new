@@ -37,8 +37,6 @@ ${packageManager} ${packageCommands[packageManager]} ${shaUrl}
   return `
 ${shaMessages}
 
-${templatesStr ? "---" : ""}
-
 ${templatesStr}
 `;
 }
@@ -50,7 +48,6 @@ export function generatePullRequestPublishMessage(
   workflowData: WorkflowData,
   compact: boolean,
   checkRunUrl: string,
-  codeflow: boolean,
   packageManager: PackageManager,
   base: "sha" | "ref",
 ) {
@@ -75,27 +72,21 @@ ${packageManager} ${packageCommands[packageManager]} ${refUrl}
   const templatesStr = generateTemplatesStr(templates);
 
   return `
-${
-  codeflow
-    ? `<a href="https:///pr.new/${workflowData.owner}/${workflowData.repo}/pull/${workflowData.ref}"><img src="https://developer.stackblitz.com/img/review_pr_small.svg" alt="Review PR in StackBlitz Codeflow" align="left" width="103" height="20"></a> _Run & review this pull request in [StackBlitz Codeflow](https:///pr.new/${workflowData.owner}/${workflowData.repo}/pull/${workflowData.ref})._`
-    : ""
-}
-
 _commit: <a href="${checkRunUrl}"><code>${abbreviateCommitHash(workflowData.sha)}</code></a>_
 
 ${refMessages}
-
-${templatesStr ? "---" : ""}
 
 ${templatesStr}
 `;
 }
 
 function generateTemplatesStr(templates: Record<string, string>) {
-  const entries = Object.entries(templates);
-  return entries.length
+  const entries = Object.entries(templates).filter(([k]) => k !== "default");
+  return `
+[Open in Stackblitz](${templates["default"]})
+    ` + entries.length
     ? createCollapsibleBlock(
-        "More templates",
+        "<b>More templates</b>",
         `
 ${entries.map(([k, v]) => `- [${k}](${v})`).join("\n")}
 `,

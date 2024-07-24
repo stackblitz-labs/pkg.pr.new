@@ -219,7 +219,7 @@ const main = defineCommand({
 
           const noDefaultTemplate = args.template === false;
 
-          if (!templates.length && !noDefaultTemplate) {
+          if (!noDefaultTemplate) {
             const project = createDefaultTemplate(
               Object.fromEntries(deps.entries()),
             );
