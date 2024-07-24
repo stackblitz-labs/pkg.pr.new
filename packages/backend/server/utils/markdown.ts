@@ -24,14 +24,11 @@ export function generateCommitPublishMessage(
         workflowData,
         compact,
       );
-      return createCollapsibleBlock(
-        `<b>${packageName}</b>`,
-        `
+      return `
 \`\`\`
 ${packageManager} ${packageCommands[packageManager]} ${shaUrl}
 \`\`\`
-      `,
-      );
+      `;
     })
     .join("\n");
 
@@ -67,14 +64,11 @@ export function generatePullRequestPublishMessage(
         compact,
       );
 
-      return createCollapsibleBlock(
-        `<b>${packageName}</b>`,
-        `
+      return `
 \`\`\`
 ${packageManager} ${packageCommands[packageManager]} ${refUrl}
 \`\`\`
-`,
-      );
+`;
     })
     .join("\n");
 
@@ -101,7 +95,7 @@ function generateTemplatesStr(templates: Record<string, string>) {
   const entries = Object.entries(templates);
   return entries.length
     ? createCollapsibleBlock(
-        "<b>templates</b>",
+        "More templates",
         `
 ${entries.map(([k, v]) => `- [${k}](${v})`).join("\n")}
 `,
