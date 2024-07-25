@@ -1,5 +1,11 @@
-import { abbreviateCommitHash } from "@pkg-pr-new/utils";
+import { abbreviateCommitHash, PackageManager } from "@pkg-pr-new/utils";
 import { WorkflowData } from "../types";
+
+const packageCommands: Record<PackageManager, string> = {
+  npm: "i",
+  pnpm: "add",
+  yarn: "add",
+};
 
 export function generateCommitPublishMessage(
   origin: string,
@@ -7,6 +13,7 @@ export function generateCommitPublishMessage(
   packages: string[],
   workflowData: WorkflowData,
   compact: boolean,
+  packageManager: PackageManager,
 ) {
   const shaMessages = packages
     .map((packageName) => {
@@ -17,14 +24,11 @@ export function generateCommitPublishMessage(
         workflowData,
         compact,
       );
-      return createCollapsibleBlock(
-        `<b>${packageName}</b>`,
-        `
+      return `
 \`\`\`
-npm i ${shaUrl}
+${packageManager} ${packageCommands[packageManager]} ${shaUrl}
 \`\`\`
-      `,
-      );
+      `;
     })
     .join("\n");
 
@@ -32,8 +36,6 @@ npm i ${shaUrl}
 
   return `
 ${shaMessages}
-
-${templatesStr ? "---" : ""}
 
 ${templatesStr}
 `;
@@ -46,7 +48,7 @@ export function generatePullRequestPublishMessage(
   workflowData: WorkflowData,
   compact: boolean,
   checkRunUrl: string,
-  codeflow: boolean,
+  packageManager: PackageManager,
   base: "sha" | "ref",
 ) {
   const refMessages = packages
@@ -59,46 +61,40 @@ export function generatePullRequestPublishMessage(
         compact,
       );
 
-      return createCollapsibleBlock(
-        `<b>${packageName}</b>`,
-        `
+      return `
 \`\`\`
-npm i ${refUrl}
+${packageManager} ${packageCommands[packageManager]} ${refUrl}
 \`\`\`
-`,
-      );
+`;
     })
     .join("\n");
 
   const templatesStr = generateTemplatesStr(templates);
 
   return `
-${
-  codeflow
-    ? `<a href="https:///pr.new/${workflowData.owner}/${workflowData.repo}/pull/${workflowData.ref}"><img src="https://developer.stackblitz.com/img/review_pr_small.svg" alt="Review PR in StackBlitz Codeflow" align="left" width="103" height="20"></a> _Run & review this pull request in [StackBlitz Codeflow](https:///pr.new/${workflowData.owner}/${workflowData.repo}/pull/${workflowData.ref})._`
-    : ""
-}
-
 _commit: <a href="${checkRunUrl}"><code>${abbreviateCommitHash(workflowData.sha)}</code></a>_
 
 ${refMessages}
-
-${templatesStr ? "---" : ""}
 
 ${templatesStr}
 `;
 }
 
 function generateTemplatesStr(templates: Record<string, string>) {
-  const entries = Object.entries(templates);
-  return entries.length
-    ? createCollapsibleBlock(
-        "<b>templates</b>",
-        `
+  const entries = Object.entries(templates).filter(([k]) => k !== "default");
+  let str = `[Open in Stackblitz](${templates["default"]})`;
+
+  if (entries.length <= 2) {
+    str += ` • ${entries.map(([k, v]) => `[${k}](${v})`).join(" • ")}`;
+  } else if (entries.length > 2) {
+    str += createCollapsibleBlock(
+      "<b>More templates</b>",
+      `
 ${entries.map(([k, v]) => `- [${k}](${v})`).join("\n")}
 `,
-      )
-    : "";
+    );
+  }
+  return str;
 }
 
 export function generatePublishUrl(

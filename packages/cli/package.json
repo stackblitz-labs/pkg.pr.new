@@ -1,11 +1,16 @@
 {
   "name": "pkg-pr-new",
-  "version": "0.0.9",
+  "version": "0.0.16",
   "description": "",
   "main": "index.js",
   "type": "module",
   "bin": {
     "pkg-pr-new": "bin/cli.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stackblitz-labs/pkg.pr.new",
+    "directory": "packages/cli"
   },
   "scripts": {
     "dev": "tsup --watch",
@@ -18,6 +23,7 @@
   "dependencies": {
     "@jsdevtools/ez-spawn": "^3.0.4",
     "@octokit/action": "^6.1.0",
+    "detect-package-manager": "^3.0.2",
     "fast-glob": "^3.3.2",
     "ignore": "^5.3.1",
     "isbinaryfile": "^5.0.2",

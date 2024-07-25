@@ -92,11 +92,14 @@ export default eventHandler(async (event) => {
     const cursorKey = `${baseKey}:${payload.ref}`;
 
     await cursorBucket.removeItem(cursorKey);
-  };
+  }
+  
 
   app.webhooks.on("workflow_run", workflowHandler);
   app.webhooks.on("pull_request", pullRequestHandler);
-  app.webhooks.on("delete", branchDeletionHandler);
+  app.webhooks.on("delete", branchDeletionHandler)
+  // TODO: create branch cursors on create
+  // app.webhooks.on("create", branchDeletionHandler)
 
   type EmitterWebhookEvent = Parameters<
     typeof app.webhooks.receive | typeof app.webhooks.verifyAndReceive

@@ -6,6 +6,7 @@ import { createHash } from "node:crypto";
 import { hash } from "ohash";
 import fsSync from "fs";
 import fs from "fs/promises";
+import { detect } from "detect-package-manager";
 import { getPackageManifest, type PackageManifest } from "query-registry";
 import type { Comment } from "@pkg-pr-new/utils";
 import {
@@ -43,6 +44,12 @@ const main = defineCommand({
             description:
               "compact urls. The shortest form of urls like pkg.pr.new/tinybench@a832a55)",
           },
+          peerDeps: {
+            type: "boolean",
+            description:
+              "handle peerDependencies by setting the workspace version instead of what has been set in the peerDeps itself. --peerDeps not being true would leave peerDependencies to the package manager itself (npm, pnpm)",
+            default: false,
+          },
           pnpm: {
             type: "boolean",
             description: "use `pnpm pack` instead of `npm pack --json`",
@@ -60,7 +67,7 @@ const main = defineCommand({
         },
         run: async ({ args }) => {
           const paths = (args._.length ? args._ : ["."])
-            .flatMap((p) => (fg.isDynamicPattern(p) ? fg.sync(p) : p))
+            .flatMap((p) => fg.sync(p, { onlyDirectories: true }))
             .map((p) => path.resolve(p.trim()));
 
           const templates = (
@@ -68,13 +75,14 @@ const main = defineCommand({
               ? [args.template]
               : ([...(args.template || [])] as string[])
           )
-            .flatMap((p) => (fg.isDynamicPattern(p) ? fg.sync(p) : p))
+            .flatMap((p) => fg.sync(p, { onlyDirectories: true }))
             .map((p) => path.resolve(p.trim()));
 
           const formData = new FormData();
 
           const isCompact = !!args.compact;
           const isPnpm = !!args.pnpm;
+          const isPeerDepsEnabled = !!args.peerDeps
 
           const comment: Comment = args.comment as Comment;
 
@@ -121,7 +129,8 @@ const main = defineCommand({
           const { sha } = await checkResponse.json();
           const abbreviatedSha = abbreviateCommitHash(sha);
 
-          const deps: Map<string, string> = new Map();
+          const deps: Map<string, string> = new Map(); // pkg.pr.new versions of the package
+          const realDeps: Map<string, string> | null = isPeerDepsEnabled ? new Map() : null // real versions of the package, useful for peerDependencies
 
           for (const p of paths) {
             if (!(await hasPackageJson(p))) {
@@ -141,13 +150,20 @@ const main = defineCommand({
               await verifyCompactMode(pJson.name);
             }
 
-            deps.set(
-              pJson.name,
-              new URL(
+            const depUrl = new URL(
                 `/${owner}/${repo}/${pJson.name}@${abbreviatedSha}`,
                 apiUrl,
-              ).href,
+              ).href
+            deps.set(
+              pJson.name,
+              depUrl,
             );
+            realDeps?.set(pJson.name, pJson.version ?? depUrl)
+
+            const resource = await fetch(depUrl)
+            if (resource.ok) {
+              console.warn(`${pJson.name}@${abbreviatedSha} was already published on ${depUrl}`)
+            }
           }
 
           for (const templateDir of templates) {
@@ -163,20 +179,15 @@ const main = defineCommand({
             if (!pJson.name) {
               throw new Error(`"name" field in ${pJsonPath} should be defined`);
             }
-            if (pJson.private) {
-              console.log(
-                `skipping ${templateDir} because the package is private`,
-              );
-              continue;
-            }
 
             console.log("preparing template:", pJson.name);
 
-            const restore = await writeDeps(templateDir, deps);
+            const restore = await writeDeps(templateDir, deps, realDeps);
 
             const gitignorePath = path.join(templateDir, ".gitignore");
-            const ig = ignore();
-            ig.add("node_modules");
+            const ig = ignore()
+              .add("node_modules")
+              .add(".git");
 
             if (fsSync.existsSync(gitignorePath)) {
               const gitignoreContent = await fs.readFile(gitignorePath, "utf8");
@@ -187,6 +198,7 @@ const main = defineCommand({
               cwd: templateDir,
               dot: true,
               onlyFiles: true,
+              ignore: ['node_modules', '.git'], // always ignore node_modules and .git
             });
 
             const filteredFiles = files.filter((file) => !ig.ignores(file));
@@ -207,7 +219,7 @@ const main = defineCommand({
 
           const noDefaultTemplate = args.template === false;
 
-          if (!templates.length && !noDefaultTemplate) {
+          if (!noDefaultTemplate) {
             const project = createDefaultTemplate(
               Object.fromEntries(deps.entries()),
             );
@@ -235,7 +247,7 @@ const main = defineCommand({
               continue;
             }
 
-            restoreMap.set(p, await writeDeps(p, deps));
+            restoreMap.set(p, await writeDeps(p, deps, realDeps));
           }
 
           const shasums: Record<string, string> = {};
@@ -273,10 +285,11 @@ const main = defineCommand({
               });
               formData.append(`package:${pJson.name}`, blob, filename);
             } finally {
-              await restoreMap.get(p)!();
+              await restoreMap.get(p)?.();
             }
           }
 
+          const packageManager = await detect();
           const res = await fetch(publishUrl, {
             method: "POST",
             headers: {
@@ -285,6 +298,7 @@ const main = defineCommand({
               "sb-key": key,
               "sb-shasums": JSON.stringify(shasums),
               "sb-run-id": GITHUB_RUN_ID,
+              "sb-package-manager": packageManager,
             },
             body: formData,
           });
@@ -335,7 +349,7 @@ async function resolveTarball(pm: "npm" | "pnpm", p: string) {
   return { filename, shasum };
 }
 
-async function writeDeps(p: string, deps: Map<string, string>) {
+async function writeDeps(p: string, deps: Map<string, string>, realDeps: Map<string, string> | null) {
   const pJsonPath = path.resolve(p, "package.json");
   const content = await fs.readFile(pJsonPath, "utf-8");
 
@@ -343,6 +357,10 @@ async function writeDeps(p: string, deps: Map<string, string>) {
 
   hijackDeps(deps, pJson.dependencies);
   hijackDeps(deps, pJson.devDependencies);
+
+  if (realDeps) {
+    hijackDeps(realDeps, pJson.peerDependencies);
+  }
 
   await writePackageJSON(pJsonPath, pJson);
 

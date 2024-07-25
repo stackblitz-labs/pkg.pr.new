@@ -7,6 +7,8 @@ import { randomUUID } from "uncrypto";
 import { setItemStream, useTemplatesBucket } from "~/utils/bucket";
 import { useOctokitInstallation } from "~/utils/octokit";
 import { generateTemplateHtml } from "~/utils/template";
+import type { PackageManager } from "@pkg-pr-new/utils";
+import type { components as OctokitComponents } from "@octokit/openapi-types";
 
 export default eventHandler(async (event) => {
   const origin = getRequestURL(event).origin;
@@ -16,9 +18,12 @@ export default eventHandler(async (event) => {
     "sb-shasums": shasumsHeader,
     "sb-comment": commentHeader,
     "sb-compact": compactHeader,
+    "sb-package-manager": packageManagerHeader,
   } = getHeaders(event);
   const compact = compactHeader === "true";
   const comment: Comment = (commentHeader ?? "update") as Comment;
+  const packageManager: PackageManager =
+    (packageManagerHeader as PackageManager) || "npm";
 
   if (!key || !runIdHeader || !shasumsHeader) {
     throw createError({
@@ -181,6 +186,7 @@ export default eventHandler(async (event) => {
           packagesWithoutPrefix,
           workflowData,
           compact,
+          packageManager,
         ),
       },
       conclusion: "success",
@@ -189,24 +195,29 @@ export default eventHandler(async (event) => {
   }
 
   if (isPullRequest(workflowData.ref)) {
-    const { data } = await installation.request(
+    let prevComment: OctokitComponents["schemas"]["issue-comment"];
+
+    await installation.paginate(
       "GET /repos/{owner}/{repo}/issues/{issue_number}/comments",
       {
         owner: workflowData.owner,
         repo: workflowData.repo,
         issue_number: Number(workflowData.ref),
       },
-    );
-    const appComments = data.filter(
-      (comment) => comment.performed_via_github_app?.id === Number(appId),
-    );
-    const codeflow = !data.some(
-      (comment) => comment.performed_via_github_app?.slug === "stackblitz",
+      ({ data }, done) => {
+        for (const c of data) {
+          if (c.performed_via_github_app?.id === Number(appId)) {
+            prevComment = c;
+            done();
+            break
+          }
+        }
+        return [];
+      },
     );
 
     if (comment !== "off") {
-      if (comment === "update" && appComments.length) {
-        const prevComment = appComments[0];
+      if (comment === "update" && prevComment!) {
         await installation.request(
           "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}",
           {
@@ -220,7 +231,7 @@ export default eventHandler(async (event) => {
               workflowData,
               compact,
               checkRunUrl,
-              codeflow,
+              packageManager,
               "ref",
             ),
           },
@@ -239,7 +250,7 @@ export default eventHandler(async (event) => {
               workflowData,
               compact,
               checkRunUrl,
-              codeflow,
+              packageManager,
               comment === "update" ? "ref" : "sha",
             ),
           },
