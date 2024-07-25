@@ -85,7 +85,7 @@ function generateTemplatesStr(templates: Record<string, string>) {
   let str = `[Open in Stackblitz](${templates["default"]})`;
 
   if (entries.length <= 2) {
-    str += ` | ${entries.map(([k, v]) => `[${k}](${v})`).join(" | ")}`;
+    str += ` • ${entries.map(([k, v]) => `[${k}](${v})`).join(" • ")}`;
   } else if (entries.length > 2) {
     str += createCollapsibleBlock(
       "<b>More templates</b>",
