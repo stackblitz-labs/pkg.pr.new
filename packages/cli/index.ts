@@ -229,6 +229,10 @@ const main = defineCommand({
                 `template:default:${encodeURIComponent(filePath)}`,
                 project[filePath],
               );
+              formData.append(
+                `template:default1:${encodeURIComponent(filePath)}`,
+                project[filePath],
+              );
             }
           }
 
