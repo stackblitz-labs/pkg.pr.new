@@ -82,18 +82,19 @@ ${templatesStr}
 
 function generateTemplatesStr(templates: Record<string, string>) {
   const entries = Object.entries(templates).filter(([k]) => k !== "default");
-  return (
-    `
-[Open in Stackblitz](${templates["default"]})\n` +
-    (entries.length
-      ? createCollapsibleBlock(
-          "<b>More templates</b>",
-          `
+  let str = `[Open in Stackblitz](${templates["default"]})`;
+
+  if (entries.length <= 2) {
+    str += ` | ${entries.map(([k, v]) => `[${k}](${v})`).join("| ")}`;
+  } else if (entries.length > 2) {
+    str += createCollapsibleBlock(
+      "<b>More templates</b>",
+      `
 ${entries.map(([k, v]) => `- [${k}](${v})`).join("\n")}
 `,
-        )
-      : "")
-  );
+    );
+  }
+  return str;
 }
 
 export function generatePublishUrl(
