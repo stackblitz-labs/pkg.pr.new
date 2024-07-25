@@ -12,5 +12,8 @@
   "dependencies": {
     "playground-a": "link:../../playgrounds/playground-a",
     "playground-b": "link:../../playgrounds/playground-b"
+  },
+  "peerDependencies": {
+    "pkg-pr-new": "workspace:*"
   }
 }
