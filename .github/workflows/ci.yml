@@ -62,7 +62,7 @@ jobs:
       - run: pnpm install
 
       - id: release 
-      - run: |
+        run: |
           pnpm build:publish
           echo "version=$(npm version ${{ inputs.version }})" >> "$GITHUB_OUTPUT"
           npm publish --access public 
