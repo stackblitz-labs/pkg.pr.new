@@ -3,14 +3,24 @@ on:
   push:
     branches:
       - main
-      - release
   pull_request:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "type of ref"
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+        default: "patch"
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     name: Deploy
-    environment: ${{ github.ref_name == 'release' && 'Production' || 'Staging' }}
+    environment: ${{ github.event_name == 'workflow_dispatch' && 'Production' || 'Staging' }}
     outputs:
       deployment-url: ${{ steps.deploy.outputs.deployment-url}}
     steps:
@@ -36,6 +46,37 @@ jobs:
         env:
           DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
         run: echo $DEPLOYMENT_URL
+
+  release:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    needs: deploy
+    
+    steps:
+      - uses: actions/checkout@v4
+      - run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+      - run: pnpm install
+
+      - id: release 
+      - run: |
+          pnpm build:publish
+          echo "version=${npm version ${{ inputs.version }}}" >> "$GITHUB_OUTPUT"
+          npm publish --access public 
+        working-directory: ./packages/cli
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          steps:
+      - uses: EndBug/add-and-commit@v9
+        with:
+          default_author: github_actions
+          add: 'packages/cli/package.json' # commit the new version
+          message: '${{ steps.release.outputs.version }}'
+
+
 
   cr:
     concurrency:
@@ -64,7 +105,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - run: pnpm tsx script/update-webhook-url.ts
-        if: ${{ github.ref_name != 'release' }}
+        if: ${{ github.event_name != 'workflow_dispatch' }}
         working-directory: ./packages/backend
         env:
           API_URL: ${{ needs.deploy.outputs.deployment-url }}
