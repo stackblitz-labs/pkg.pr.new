@@ -64,7 +64,7 @@ jobs:
       - id: release 
       - run: |
           pnpm build:publish
-          echo "version=${npm version ${{ inputs.version }}}" >> "$GITHUB_OUTPUT"
+          echo "version=$(npm version ${{ inputs.version }})" >> "$GITHUB_OUTPUT"
           npm publish --access public 
         working-directory: ./packages/cli
         env:
@@ -75,8 +75,6 @@ jobs:
           default_author: github_actions
           add: 'packages/cli/package.json' # commit the new version
           message: '${{ steps.release.outputs.version }}'
-
-
 
   cr:
     concurrency:
