@@ -32,7 +32,7 @@ ${packageManager} ${packageCommands[packageManager]} ${shaUrl}
       `;
     })
     .map((message, i) =>
-      isMoreThanFour ? createCollapsibleBlock(packages[i], message) : message,
+      isMoreThanFour ? createCollapsibleBlock(`<b>${packages[i]}</b>`, message) : message,
     )
     .join("\n");
 
@@ -73,7 +73,7 @@ ${packageManager} ${packageCommands[packageManager]} ${refUrl}
 `;
     })
     .map((message, i) =>
-      isMoreThanFour ? createCollapsibleBlock(packages[i], message) : message,
+      isMoreThanFour ? createCollapsibleBlock(`<b>${packages[i]}</b>`, message) : message,
     )
     .join("\n");
 
