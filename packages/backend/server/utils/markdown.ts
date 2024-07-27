@@ -15,7 +15,7 @@ export function generateCommitPublishMessage(
   compact: boolean,
   packageManager: PackageManager,
 ) {
-  const isMoreThanFour = packages.length > 2;
+  const isMoreThanFour = packages.length > 4;
   const shaMessages = packages
     .map((packageName) => {
       const shaUrl = generatePublishUrl(
@@ -55,7 +55,7 @@ export function generatePullRequestPublishMessage(
   packageManager: PackageManager,
   base: "sha" | "ref",
 ) {
-  const isMoreThanFour = packages.length > 2;
+  const isMoreThanFour = packages.length > 4;
   const refMessages = packages
     .map((packageName) => {
       const refUrl = generatePublishUrl(
