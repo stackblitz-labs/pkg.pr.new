@@ -1,26 +1,17 @@
 name: Preview & Release
 on:
   push:
+    tags:
+      - "v*" # Push events to matching v*, i.e. v1.0, v20.15.10
     branches:
       - main
   pull_request:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: "type of ref"
-        required: true
-        type: choice
-        options:
-          - patch
-          - minor
-          - major
-        default: "patch"
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     name: Deploy
-    environment: ${{ github.event_name == 'workflow_dispatch' && 'Production' || 'Staging' }}
+    environment: ${{ startsWith(github.ref, 'refs/tags/v') && 'Production' || 'Staging' }}
     outputs:
       deployment-url: ${{ steps.deploy.outputs.deployment-url}}
     steps:
@@ -49,7 +40,7 @@ jobs:
 
   release:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' }}
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
     needs: deploy
     
     steps:
@@ -60,21 +51,12 @@ jobs:
           node-version: 20
           cache: "pnpm"
       - run: pnpm install
-
-      - id: release 
-        run: |
+      - run: |
           pnpm build:publish
-          echo "version=$(npm version ${{ inputs.version }})" >> "$GITHUB_OUTPUT"
-          npm publish --access public 
+          npm publish --access public # new version is already set before the tag event 
         working-directory: ./packages/cli
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - uses: EndBug/add-and-commit@v9
-        with:
-          default_author: github_actions
-          add: 'packages/cli/package.json' # commit the new version
-          message: '${{ steps.release.outputs.version }}'
 
   cr:
     concurrency:
