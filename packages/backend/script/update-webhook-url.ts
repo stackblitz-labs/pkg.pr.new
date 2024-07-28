@@ -1,10 +1,13 @@
-// import { Octokit } from "";
-import { createTokenAuth } from "@octokit/auth-token";
-import { Octokit, App } from "octokit";
+import { Octokit } from "octokit";
 import { config } from "dotenv";
-import jwt from "jsonwebtoken";
+import { createSigner } from "fast-jwt";
 
 config({ path: ".dev.vars" });
+
+const nitroSigner = createSigner({
+  algorithm: "RS256",
+  key: process.env.NITRO_PRIVATE_KEY!,
+})
 
 function generateJWT() {
   const payload = {
@@ -13,9 +16,7 @@ function generateJWT() {
     iss: process.env.NITRO_APP_ID!, // Issuer (GitHub App ID)
   };
 
-  return jwt.sign(payload, process.env.NITRO_PRIVATE_KEY!, {
-    algorithm: "RS256",
-  });
+  return nitroSigner(payload);
 }
 
 // Generate JWT

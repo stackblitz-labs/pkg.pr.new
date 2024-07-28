@@ -15,7 +15,7 @@
     "@octokit/app": "^14.1.0",
     "@pkg-pr-new/utils": "workspace:^",
     "dotenv": "^16.4.5",
-    "jsonwebtoken": "^9.0.2",
+    "fast-jwt": "^4.0.2",
     "nitro-cloudflare-dev": "0.1.2",
     "nitropack": "^2.9.6",
     "octokit": "^3.2.1",
