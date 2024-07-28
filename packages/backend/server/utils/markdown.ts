@@ -5,6 +5,7 @@ const packageCommands: Record<PackageManager, string> = {
   npm: "i",
   pnpm: "add",
   yarn: "add",
+  bun: "add",
 };
 
 export function generateCommitPublishMessage(
