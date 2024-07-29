@@ -331,7 +331,7 @@ const main = defineCommand({
   },
 });
 
-runMain(main).then(() => console.log('done'));
+runMain(main)
 
 // TODO: we'll add support for yarn if users hit issues with npm
 async function resolveTarball(pm: "npm" | "pnpm", p: string) {
