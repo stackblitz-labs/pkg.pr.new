@@ -54,7 +54,7 @@ jobs:
       - run: pnpm install
       - run: |
           pnpm build:publish
-          pnpm publish --access public # new version is already set before the tag event 
+          pnpm publish --access public --no-git-checks # new version is already set before the tag event 
         working-directory: ./packages/cli
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
