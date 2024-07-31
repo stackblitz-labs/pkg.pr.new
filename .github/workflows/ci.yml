@@ -39,6 +39,7 @@ jobs:
         run: echo $DEPLOYMENT_URL
 
   release:
+    environment: Production
     runs-on: ubuntu-latest
     if: ${{ startsWith(github.ref, 'refs/tags/v') }}
     needs: deploy
