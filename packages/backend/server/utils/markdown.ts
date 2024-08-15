@@ -52,6 +52,7 @@ export function generatePullRequestPublishMessage(
   packages: string[],
   workflowData: WorkflowData,
   compact: boolean,
+  onlyTemplates: boolean,
   checkRunUrl: string,
   packageManager: PackageManager,
   base: "sha" | "ref",
@@ -79,6 +80,10 @@ ${packageManager} ${packageCommands[packageManager]} ${refUrl}
     .join("\n");
 
   const templatesStr = generateTemplatesStr(templates);
+
+  if(onlyTemplates) {
+    return templatesStr
+  }
 
   return `
 _commit: <a href="${checkRunUrl}"><code>${abbreviateCommitHash(workflowData.sha)}</code></a>_

@@ -64,6 +64,11 @@ const main = defineCommand({
             description: `"off" for no comments (silent mode). "create" for comment on each publish. "update" for one comment across the pull request with edits on each publish (default)`,
             default: "update",
           },
+          onlyTemplates: {
+            type: "boolean",
+            description: `generate only stackblitz templates`,
+            default: false,
+          },
         },
         run: async ({ args }) => {
           const paths = (args._.length ? args._ : ["."])
@@ -83,6 +88,7 @@ const main = defineCommand({
           const isCompact = !!args.compact;
           const isPnpm = !!args.pnpm;
           const isPeerDepsEnabled = !!args.peerDeps
+          const isOnlyTemplates = !!args.onlyTemplates
 
           const comment: Comment = args.comment as Comment;
 
@@ -299,6 +305,7 @@ const main = defineCommand({
               "sb-shasums": JSON.stringify(shasums),
               "sb-run-id": GITHUB_RUN_ID,
               "sb-package-manager": packageManager,
+              "sb-only-templates": `${isOnlyTemplates}`
             },
             body: formData,
           });
