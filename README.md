@@ -1,5 +1,32 @@
 <p align="center"><img src="https://github.com/user-attachments/assets/314d5112-f67f-4758-82bf-7b0c19c01ba6" /></p>
 
+
+# pkg.pr.new <span><img src="https://emoji.slack-edge.com/TFHDVN56F/stackblitz/fd010078dcccebca.png" width="30" /></span>
+
+> We call it "Continuous Releases" too.
+
+With pkg.pr.new, each of your commits and pull requests will trigger an instant preview release without publishing anything to NPM. This enables users to access features and bug-fixes without the need to wait for release cycles using npm or pull request merges.
+
+- 🚀 Instant Builds
+- 🍕 No Need for NPM Access
+- 🛠️ Github Workflows Friendly
+- 📦️ No Configuration
+- 🔩 Single Command
+- ✉️ Pull Request Comments
+- 🔥 Check Runs
+
+pkg.pr.new won't publish anything to NPM; instead, it leverages its own URLs, which are npm-compatible.
+
+```sh
+npm i https://pkg.pr.new/tinylibs/tinybench/tinybench@a832a55
+
+# npm i https://pkg.pr.new/${owner}/${repo}/${package}@{commit}
+```
+
+It is aiming to reduce the number of these comments :)
+
+> This was fixed in #18. Can we release that fix?
+
 <p align="center">
   <a href="https://huggingface.co/">
     <img src="https://huggingface.co/front/assets/huggingface_logo.svg" height="40">
@@ -54,31 +81,7 @@
   </a>
 </p>
 
-# pkg.pr.new <span><img src="https://emoji.slack-edge.com/TFHDVN56F/stackblitz/fd010078dcccebca.png" width="30" /></span>
-
-> We call it "Continuous Releases" too.
-
-With pkg.pr.new, each of your commits and pull requests will trigger an instant preview release without publishing anything to NPM. This enables users to access features and bug-fixes without the need to wait for release cycles using npm or pull request merges.
-
-- 🚀 Instant Builds
-- 🍕 No Need for NPM Access
-- 🛠️ Github Workflows Friendly
-- 📦️ No Configuration
-- 🔩 Single Command
-- ✉️ Pull Request Comments
-- 🔥 Check Runs
-
-pkg.pr.new won't publish anything to NPM; instead, it leverages its own URLs, which are npm-compatible.
-
-```sh
-npm i https://pkg.pr.new/tinylibs/tinybench/tinybench@a832a55
-
-# npm i https://pkg.pr.new/${owner}/${repo}/${package}@{commit}
-```
-
-It is aiming to reduce the number of these comments :)
-
-> This was fixed in #18. Can we release that fix?
+> We'd be happy to add your project or company here!
 
 ## Setup
 
