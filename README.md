@@ -1,55 +1,55 @@
 <p align="center"><img src="https://github.com/user-attachments/assets/314d5112-f67f-4758-82bf-7b0c19c01ba6" /></p>
 
 <p align="center">
-  <a href="https://huggingface.co/" target="_blank" rel="noopener noreferrer">
+  <a href="https://huggingface.co/">
     <img src="https://huggingface.co/front/assets/huggingface_logo.svg" alt="Hugging Face" height="40">
   </a>
-  <a href="https://about.meta.com/" target="_blank" rel="noopener noreferrer">
+  <a href="https://about.meta.com/">
     <img src="https://github.com/facebook.png" alt="Meta" height="40">
   </a>
-  <a href="https://nuxt.com/" target="_blank" rel="noopener noreferrer">
+  <a href="https://nuxt.com/">
     <img src="https://nuxt.com/assets/design-kit/icon-green.png" alt="Nuxt" height="40">
   </a>
-  <a href="https://vitejs.dev/" target="_blank" rel="noopener noreferrer">
+  <a href="https://vitejs.dev/">
     <img src="https://vitejs.dev/logo.svg" alt="Vite" height="40">
   </a>
-  <a href="https://github.com/volarjs" target="_blank" rel="noopener noreferrer">
+  <a href="https://github.com/volarjs">
     <img src="https://github.com/volarjs.png" alt="Volar" height="40">
   </a>
-  <a href="https://qwik.builder.io/" target="_blank" rel="noopener noreferrer">
+  <a href="https://qwik.builder.io/">
     <img src="https://qwik.builder.io/logos/qwik-logo.svg" alt="Qwik" height="40">
   </a>
-  <a href="https://qwikui.com/" target="_blank" rel="noopener noreferrer">
+  <a href="https://qwikui.com/">
     <img src="https://qwikui.com/favicon.svg" alt="QwikUI" height="40">
   </a>
-  <a href="https://tanstack.com/" target="_blank" rel="noopener noreferrer">
+  <a href="https://tanstack.com/">
     <img src="https://avatars.githubusercontent.com/u/72518640?s=200&v=4" alt="TanStack" height="40">
   </a>
-  <a href="https://biomejs.dev/" target="_blank" rel="noopener noreferrer">
+  <a href="https://biomejs.dev/">
     <img src="https://github.com/biomejs.png" alt="Biome" height="40">
   </a>
-  <a href="https://github.com/tinylibs" target="_blank" rel="noopener noreferrer">
+  <a href="https://github.com/tinylibs">
     <img src="https://github.com/tinylibs.png" alt="tinylibs" height="40">
   </a>
-  <a href="https://unjs.io/" target="_blank" rel="noopener noreferrer">
+  <a href="https://unjs.io/">
     <img src="https://avatars.githubusercontent.com/u/80154025?s=200&v=4" alt="UnJS" height="40">
   </a>
-  <a href="https://www.radix-vue.com/" target="_blank" rel="noopener noreferrer">
+  <a href="https://www.radix-vue.com/">
     <img src="https://www.radix-vue.com/logo.svg" alt="Radix Vue" height="40">
   </a>
-  <a href="https://www.gradio.app/" target="_blank" rel="noopener noreferrer">
+  <a href="https://www.gradio.app/">
     <img src="https://www.gradio.app/_app/immutable/assets/gradio.CHB5adID.svg" alt="Gradio" height="40">
   </a>
-  <a href="https://clockworklabs.io/" target="_blank" rel="noopener noreferrer">
+  <a href="https://clockworklabs.io/">
     <img src="https://clockworklabs.io/images/logo.svg" alt="Clockwork Labs" height="40">
   </a>
-  <a href="https://valtio.pmnd.rs/" target="_blank" rel="noopener noreferrer">
+  <a href="https://valtio.pmnd.rs/">
     <img src="https://blog.stackblitz.com/posts/pkg-pr-new/valtio.svg" alt="Valtio" height="40">
   </a>
-  <a href="https://github.com/nksaraf/vinxi" target="_blank" rel="noopener noreferrer">
+  <a href="https://github.com/nksaraf/vinxi">
     <img src="https://github.com/nksaraf/vinxi/raw/main/docs/public/logo.png" alt="Vinxi" height="40">
   </a>
-  <a href="https://github.com/scalar/scalar" target="_blank" rel="noopener noreferrer">
+  <a href="https://github.com/scalar/scalar">
     <img src="https://github.com/scalar.png" alt="Scalar" height="40">
   </a>
 </p>
