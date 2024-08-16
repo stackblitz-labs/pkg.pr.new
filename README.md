@@ -27,6 +27,9 @@ It is aiming to reduce the number of these comments :)
 
 > This was fixed in #18. Can we release that fix?
 
+
+These are the projects and companies are using pkg.pr.new:
+
 <p align="center">
   <a href="https://huggingface.co/">
     <img src="https://huggingface.co/front/assets/huggingface_logo.svg" height="40">
