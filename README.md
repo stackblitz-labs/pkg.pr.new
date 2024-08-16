@@ -84,7 +84,7 @@ These are the projects and companies are using pkg.pr.new:
   </a>
 </p>
 
-> We'd be happy to add your project or company here!
+Feel free to add your project or company here!
 
 ## Setup
 
