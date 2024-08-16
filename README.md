@@ -1,5 +1,19 @@
 <p align="center"><img src="https://github.com/user-attachments/assets/314d5112-f67f-4758-82bf-7b0c19c01ba6" /></p>
 
+<p align="center">
+  <a href="https://huggingface.co/" target="_blank" rel="noopener noreferrer">
+    <img src="https://huggingface.co/front/assets/huggingface_logo.svg" alt="Hugging Face" height="40">
+  </a>
+  &nbsp;&nbsp;&nbsp;
+  <a href="https://about.meta.com/" target="_blank" rel="noopener noreferrer">
+    <img src="https://about.meta.com/brand/meta/logo.png" alt="Meta" height="40">
+  </a>
+  &nbsp;&nbsp;&nbsp;
+  <a href="https://nuxt.com/" target="_blank" rel="noopener noreferrer">
+    <img src="https://nuxt.com/assets/design-kit/logo/icon-green.svg" alt="Nuxt" height="40">
+  </a>
+</p>
+
 # pkg.pr.new <span><img src="https://emoji.slack-edge.com/TFHDVN56F/stackblitz/fd010078dcccebca.png" width="30" /></span>
 
 > We call it "Continuous Releases" too.
