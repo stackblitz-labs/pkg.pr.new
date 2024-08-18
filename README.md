@@ -1,5 +1,6 @@
 <p align="center"><img src="https://github.com/user-attachments/assets/314d5112-f67f-4758-82bf-7b0c19c01ba6" /></p>
 
+
 # pkg.pr.new <span><img src="https://emoji.slack-edge.com/TFHDVN56F/stackblitz/fd010078dcccebca.png" width="30" /></span>
 
 > We call it "Continuous Releases" too.
@@ -25,6 +26,32 @@ npm i https://pkg.pr.new/tinylibs/tinybench/tinybench@a832a55
 It is aiming to reduce the number of these comments :)
 
 > This was fixed in #18. Can we release that fix?
+
+
+These are the projects and companies are using pkg.pr.new:
+
+<p align="center">
+  <a href="https://vuejs.org/"><img src="https://vuejs.org/images/logo.png" height="40"></a>
+  <a href="https://huggingface.co/"><img src="https://huggingface.co/front/assets/huggingface_logo.svg" height="40"></a>
+  <a href="https://about.meta.com/"><img src="https://github.com/facebook.png" height="40"></a>
+  <a href="https://nuxt.com/"><img src="https://nuxt.com/assets/design-kit/icon-green.png" height="40"></a>
+  <a href="https://vitejs.dev/"><img src="https://vitejs.dev/logo.svg" height="40"></a>
+  <a href="https://github.com/volarjs"><img src="https://github.com/volarjs.png" height="40"></a>
+  <a href="https://qwik.builder.io/"><img src="https://qwik.builder.io/logos/qwik-logo.svg" height="40"></a>
+  <a href="https://qwikui.com/"><img src="https://qwikui.com/favicon.svg" height="40"></a>
+  <a href="https://tanstack.com/"><img src="https://avatars.githubusercontent.com/u/72518640?s=200&v=4" height="40"></a>
+  <a href="https://biomejs.dev/"><img src="https://github.com/biomejs.png" height="40"></a>
+  <a href="https://github.com/tinylibs"><img src="https://github.com/tinylibs.png" height="40"></a>
+  <a href="https://unjs.io/"><img src="https://avatars.githubusercontent.com/u/80154025?s=200&v=4" height="40"></a>
+  <a href="https://www.radix-vue.com/"><img src="https://www.radix-vue.com/logo.svg" height="40"></a>
+  <a href="https://www.gradio.app/"><img src="https://www.gradio.app/_app/immutable/assets/gradio.CHB5adID.svg" height="40"></a>
+  <a href="https://clockworklabs.io/"><img src="https://clockworklabs.io/images/logo.svg" height="40"></a>
+  <a href="https://valtio.pmnd.rs/"><img src="https://blog.stackblitz.com/posts/pkg-pr-new/valtio.svg" height="40"></a>
+  <a href="https://github.com/nksaraf/vinxi"><img src="https://github.com/nksaraf/vinxi/raw/main/docs/public/logo.png" height="40"></a>
+  <a href="https://github.com/scalar/scalar"><img src="https://github.com/scalar.png" height="40"></a>
+</p>
+
+Feel free to add your project or company here!
 
 ## Setup
 
