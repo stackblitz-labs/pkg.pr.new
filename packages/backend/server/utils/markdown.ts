@@ -81,14 +81,10 @@ ${packageManager} ${packageCommands[packageManager]} ${refUrl}
 
   const templatesStr = generateTemplatesStr(templates);
 
-  if(onlyTemplates) {
-    return templatesStr
-  }
-
   return `
 _commit: <a href="${checkRunUrl}"><code>${abbreviateCommitHash(workflowData.sha)}</code></a>_
 
-${refMessages}
+${!onlyTemplates ? refMessages : null}
 
 ${templatesStr}
 `;
