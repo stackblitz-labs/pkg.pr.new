@@ -64,7 +64,7 @@ const main = defineCommand({
             description: `"off" for no comments (silent mode). "create" for comment on each publish. "update" for one comment across the pull request with edits on each publish (default)`,
             default: "update",
           },
-          onlyTemplates: {
+          "only-templates": {
             type: "boolean",
             description: `generate only stackblitz templates`,
             default: false,
@@ -89,7 +89,7 @@ const main = defineCommand({
           const isCompact = !!args.compact;
           const isPnpm = !!args.pnpm;
           const isPeerDepsEnabled = !!args.peerDeps
-          const isOnlyTemplates = !!args.onlyTemplates
+          const isOnlyTemplates = !!args['only-templates']
           console.log("isOnlyTemplates", isOnlyTemplates)
 
           const comment: Comment = args.comment as Comment;
