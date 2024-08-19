@@ -35,4 +35,4 @@ export function isPullRequest(ref: string) {
 }
 
 export type Comment = "off" | "create" | "update";
-export type PackageManager = "npm" | "pnpm" | "yarn";
+export type PackageManager = "npm" | "pnpm" | "yarn" | "bun";
