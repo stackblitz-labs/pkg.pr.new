@@ -75,7 +75,6 @@ const main = defineCommand({
             .flatMap((p) => fg.sync(p, { onlyDirectories: true }))
             .map((p) => path.resolve(p.trim()));
 
-          console.log(args)
           const templates = (
             typeof args.template === "string"
               ? [args.template]
@@ -90,7 +89,6 @@ const main = defineCommand({
           const isPnpm = !!args.pnpm;
           const isPeerDepsEnabled = !!args.peerDeps
           const isOnlyTemplates = !!args['only-templates']
-          console.log("isOnlyTemplates", isOnlyTemplates)
 
           const comment: Comment = args.comment as Comment;
 
