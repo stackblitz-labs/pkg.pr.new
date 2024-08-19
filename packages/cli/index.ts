@@ -89,6 +89,7 @@ const main = defineCommand({
           const isPnpm = !!args.pnpm;
           const isPeerDepsEnabled = !!args.peerDeps
           const isOnlyTemplates = !!args.onlyTemplates
+          console.log("isOnlyTemplates", isOnlyTemplates)
 
           const comment: Comment = args.comment as Comment;
 
