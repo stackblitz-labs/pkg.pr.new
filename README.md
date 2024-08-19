@@ -53,7 +53,7 @@ These are some of the projects and companies using pkg.pr.new:
   <a href="https://github.com/capawesome-team/"><img src="https://avatars.githubusercontent.com/u/105555861?s=200&v=4" height="40"></a>
 </p>
 
-Feel free to add your project or company here!
+Feel free to add your project or company here to join the pkg.pr.new family :)
 
 ## Setup
 
