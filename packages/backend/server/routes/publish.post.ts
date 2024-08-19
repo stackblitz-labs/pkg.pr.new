@@ -19,8 +19,10 @@ export default eventHandler(async (event) => {
     "sb-comment": commentHeader,
     "sb-compact": compactHeader,
     "sb-package-manager": packageManagerHeader,
+    "sb-only-templates": onlyTemplatesHeader,
   } = getHeaders(event);
   const compact = compactHeader === "true";
+  const onlyTemplates = onlyTemplatesHeader === "true";
   const comment: Comment = (commentHeader ?? "update") as Comment;
   const packageManager: PackageManager =
     (packageManagerHeader as PackageManager) || "npm";
@@ -230,6 +232,7 @@ export default eventHandler(async (event) => {
               packagesWithoutPrefix,
               workflowData,
               compact,
+              onlyTemplates,
               checkRunUrl,
               packageManager,
               "ref",
@@ -249,6 +252,7 @@ export default eventHandler(async (event) => {
               packagesWithoutPrefix,
               workflowData,
               compact,
+              onlyTemplates,
               checkRunUrl,
               packageManager,
               comment === "update" ? "ref" : "sha",
