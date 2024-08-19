@@ -28,7 +28,7 @@ It is aiming to reduce the number of these comments :)
 > This was fixed in #18. Can we release that fix?
 
 
-These are the projects and companies are using pkg.pr.new:
+These are some of the projects and companies using pkg.pr.new:
 
 <p align="center">
   <a href="https://vuejs.org/"><img src="https://vuejs.org/images/logo.png" height="40"></a>
