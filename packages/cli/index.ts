@@ -75,6 +75,7 @@ const main = defineCommand({
             .flatMap((p) => fg.sync(p, { onlyDirectories: true }))
             .map((p) => path.resolve(p.trim()));
 
+          console.log(args)
           const templates = (
             typeof args.template === "string"
               ? [args.template]
