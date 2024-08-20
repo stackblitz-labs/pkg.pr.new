@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "pnpm -r run dev",
     "build": "pnpm -r run build",
-    "publish:playgrounds": "pnpm pkg-pr-new publish './playgrounds/*' ./packages/cli --template './templates/*' --peerDeps --json > test.txt ; echo 'here' ; cat test.txt",
+    "publish:playgrounds": "pnpm pkg-pr-new publish './playgrounds/*' ./packages/cli --template './templates/*' --peerDeps --json test.txt ; echo 'test.txt' ; cat test.txt",
     "format": "prettier --write --cache .",
     "lint": "eslint --cache .",
     "typecheck": "tsc -p scripts --noEmit && pnpm -r --parallel run typecheck",
