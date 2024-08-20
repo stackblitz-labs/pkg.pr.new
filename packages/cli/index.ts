@@ -87,7 +87,6 @@ const main = defineCommand({
           },
         },
         run: async ({ args }) => {
-          console.log("args", args)
           const paths = (args._.length ? args._ : ["."])
             .flatMap((p) => fg.sync(p, { onlyDirectories: true }))
             .map((p) => path.resolve(p.trim()));
@@ -145,7 +144,7 @@ const main = defineCommand({
           });
 
           if (!checkResponse.ok) {
-            console.log(await checkResponse.text());
+            console.error(await checkResponse.text());
             process.exit(1);
           }
 
