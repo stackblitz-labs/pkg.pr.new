@@ -377,7 +377,7 @@ const main = defineCommand({
           }
           if (saveJson) {
             await fs.writeFile(jsonFilePath, output);
-            console.warn(`Metadata written to ${jsonFilePath}`);
+            console.warn(`metadata written to ${jsonFilePath}`);
           }
         },
       };
