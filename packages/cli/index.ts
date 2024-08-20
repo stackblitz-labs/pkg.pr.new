@@ -30,6 +30,7 @@ type OutputMetadata = {
   packages: {
     name: string;
     url: string;
+    shasum: string;
   }[];
   templates: {
     name: string;
@@ -155,11 +156,11 @@ const main = defineCommand({
           const realDeps: Map<string, string> | null = isPeerDepsEnabled ? new Map() : null // real versions of the package, useful for peerDependencies
 
           const printJson = typeof args.json === 'boolean';
-          const saveJson = typeof args.json === 'string'; 
+          const saveJson = typeof args.json === 'string';
           const jsonFilePath = saveJson ? args.json : '';
           const outputMetadata: OutputMetadata = {
-              packages: [],
-              templates: [],
+            packages: [],
+            templates: [],
           };
 
           for (const p of paths) {
@@ -181,9 +182,9 @@ const main = defineCommand({
             }
 
             const depUrl = new URL(
-                `/${owner}/${repo}/${pJson.name}@${abbreviatedSha}`,
-                apiUrl,
-              ).href
+              `/${owner}/${repo}/${pJson.name}@${abbreviatedSha}`,
+              apiUrl,
+            ).href
             deps.set(
               pJson.name,
               depUrl,
@@ -197,8 +198,9 @@ const main = defineCommand({
 
             // Collect package metadata
             outputMetadata.packages.push({
-                name: pJson.name,
-                url: depUrl,
+              name: pJson.name,
+              url: depUrl,
+              shasum: "", // will be filled later
             });
           }
 
@@ -254,12 +256,12 @@ const main = defineCommand({
 
             // Collect template metadata
             const templateUrl = new URL(
-                `/${owner}/${repo}/template/${pJson.name}`,
-                apiUrl,
+              `/${owner}/${repo}/template/${pJson.name}`,
+              apiUrl,
             ).href;
             outputMetadata.templates.push({
-                name: pJson.name,
-                url: templateUrl,
+              name: pJson.name,
+              url: templateUrl,
             });
           }
 
@@ -324,6 +326,9 @@ const main = defineCommand({
               shasums[pJson.name] = shasum;
               console.warn(`shasum for ${pJson.name}(${filename}): ${shasum}`);
 
+              const outputPkg = outputMetadata.packages.find(p => p.name === pJson.name)!;
+              outputPkg.shasum = shasum;
+
               const file = await fs.readFile(path.resolve(p, filename));
 
               const blob = new Blob([file], {
@@ -381,7 +386,7 @@ const main = defineCommand({
     link: () => {
       return {
         meta: {},
-        run: () => {},
+        run: () => { },
       };
     },
   },
