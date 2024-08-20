@@ -40,9 +40,9 @@ ${packageManager} ${packageCommands[packageManager]} ${shaUrl}
   const templatesStr = generateTemplatesStr(templates);
 
   return `
-${shaMessages}
-
 ${templatesStr}
+
+${shaMessages}
 `;
 }
 
@@ -84,9 +84,9 @@ ${packageManager} ${packageCommands[packageManager]} ${refUrl}
   return `
 _commit: <a href="${checkRunUrl}"><code>${abbreviateCommitHash(workflowData.sha)}</code></a>_
 
-${!onlyTemplates ? refMessages : ""}
-
 ${templatesStr}
+
+${!onlyTemplates ? refMessages : ""}
 `;
 }
 
