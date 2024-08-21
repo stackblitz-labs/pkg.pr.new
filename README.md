@@ -54,7 +54,7 @@ These are some of the projects and companies using pkg.pr.new:
   <a href="https://unocss.dev"><img src="https://unocss.dev/logo.svg" height="40"></a>
 </p>
 
-Feel free to add your project or company here!
+Feel free to add your project or company here to join the pkg.pr.new family :)
 
 ## Setup
 
