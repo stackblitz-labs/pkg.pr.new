@@ -14,7 +14,7 @@ import {
   extractOwnerAndRepo,
   extractRepository,
 } from "@pkg-pr-new/utils";
-import fg from "fast-glob";
+import { glob, globSync } from "tinyglobby";
 import ignore from "ignore";
 import "./environments";
 import pkg from "./package.json" with { type: "json" };
@@ -88,7 +88,7 @@ const main = defineCommand({
         },
         run: async ({ args }) => {
           const paths = (args._.length ? args._ : ["."])
-            .flatMap((p) => fg.sync(p, { onlyDirectories: true }))
+            .flatMap((p) => globSync([p], { expandDirectories: false, onlyDirectories: true }))
             .map((p) => path.resolve(p.trim()));
 
           const templates = (
@@ -96,7 +96,7 @@ const main = defineCommand({
               ? [args.template]
               : ([...(args.template || [])] as string[])
           )
-            .flatMap((p) => fg.sync(p, { onlyDirectories: true }))
+            .flatMap((p) => globSync([p], { expandDirectories: false, onlyDirectories: true }))
             .map((p) => path.resolve(p.trim()));
 
           const formData = new FormData();
@@ -231,11 +231,11 @@ const main = defineCommand({
               ig.add(gitignoreContent);
             }
 
-            const files = await fg(["**/*"], {
+            const files = await glob(["**/*"], {
               cwd: templateDir,
               dot: true,
               onlyFiles: true,
-              ignore: ['node_modules', '.git'], // always ignore node_modules and .git
+              ignore: ['**/node_modules', '.git'], // always ignore node_modules and .git
             });
 
             const filteredFiles = files.filter((file) => !ig.ignores(file));

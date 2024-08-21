@@ -23,12 +23,12 @@
   "dependencies": {
     "@jsdevtools/ez-spawn": "^3.0.4",
     "@octokit/action": "^6.1.0",
-    "fast-glob": "^3.3.2",
     "ignore": "^5.3.1",
     "isbinaryfile": "^5.0.2",
     "package-manager-detector": "^0.1.2",
     "pkg-types": "^1.1.1",
-    "query-registry": "^3.0.1"
+    "query-registry": "^3.0.1",
+    "tinyglobby": "^0.2.2"
   },
   "devDependencies": {
     "@pkg-pr-new/utils": "workspace:^",
