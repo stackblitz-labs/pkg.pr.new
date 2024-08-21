@@ -26,6 +26,18 @@ declare global {
   var API_URL: string;
 }
 
+type OutputMetadata = {
+  packages: {
+    name: string;
+    url: string;
+    shasum: string;
+  }[];
+  templates: {
+    name: string;
+    url: string;
+  }[];
+};
+
 const apiUrl = process.env.API_URL ?? API_URL;
 const publishUrl = new URL("/publish", apiUrl);
 
@@ -68,6 +80,10 @@ const main = defineCommand({
             type: "boolean",
             description: `generate only stackblitz templates`,
             default: false,
+          },
+          json: {
+            type: "mixed",
+            description: `Save metadata to a JSON file. If true, log the output for piping. If a string, save the output to the specified file path.`,
           },
         },
         run: async ({ args }) => {
@@ -128,7 +144,7 @@ const main = defineCommand({
           });
 
           if (!checkResponse.ok) {
-            console.log(await checkResponse.text());
+            console.error(await checkResponse.text());
             process.exit(1);
           }
 
@@ -137,6 +153,14 @@ const main = defineCommand({
 
           const deps: Map<string, string> = new Map(); // pkg.pr.new versions of the package
           const realDeps: Map<string, string> | null = isPeerDepsEnabled ? new Map() : null // real versions of the package, useful for peerDependencies
+
+          const printJson = typeof args.json === 'boolean';
+          const saveJson = typeof args.json === 'string';
+          const jsonFilePath = saveJson ? args.json : '';
+          const outputMetadata: OutputMetadata = {
+            packages: [],
+            templates: [],
+          };
 
           for (const p of paths) {
             if (!(await hasPackageJson(p))) {
@@ -157,9 +181,9 @@ const main = defineCommand({
             }
 
             const depUrl = new URL(
-                `/${owner}/${repo}/${pJson.name}@${abbreviatedSha}`,
-                apiUrl,
-              ).href
+              `/${owner}/${repo}/${pJson.name}@${abbreviatedSha}`,
+              apiUrl,
+            ).href
             deps.set(
               pJson.name,
               depUrl,
@@ -170,11 +194,18 @@ const main = defineCommand({
             if (resource.ok) {
               console.warn(`${pJson.name}@${abbreviatedSha} was already published on ${depUrl}`)
             }
+
+            // Collect package metadata
+            outputMetadata.packages.push({
+              name: pJson.name,
+              url: depUrl,
+              shasum: "", // will be filled later
+            });
           }
 
           for (const templateDir of templates) {
             if (!(await hasPackageJson(templateDir))) {
-              console.log(
+              console.warn(
                 `skipping ${templateDir} because there's no package.json file`,
               );
               continue;
@@ -186,7 +217,7 @@ const main = defineCommand({
               throw new Error(`"name" field in ${pJsonPath} should be defined`);
             }
 
-            console.log("preparing template:", pJson.name);
+            console.warn("preparing template:", pJson.name);
 
             const restore = await writeDeps(templateDir, deps, realDeps);
 
@@ -221,6 +252,16 @@ const main = defineCommand({
               );
             }
             await restore();
+
+            // Collect template metadata
+            const templateUrl = new URL(
+              `/${owner}/${repo}/template/${pJson.name}`,
+              apiUrl,
+            ).href;
+            outputMetadata.templates.push({
+              name: pJson.name,
+              url: templateUrl,
+            });
           }
 
           const noDefaultTemplate = args.template === false;
@@ -259,7 +300,7 @@ const main = defineCommand({
           const shasums: Record<string, string> = {};
           for (const p of paths) {
             if (!(await hasPackageJson(p))) {
-              console.log(`skipping ${p} because there's no package.json file`);
+              console.warn(`skipping ${p} because there's no package.json file`);
               continue;
             }
             const pJsonPath = path.resolve(p, "package.json");
@@ -272,7 +313,7 @@ const main = defineCommand({
                 );
               }
               if (pJson.private) {
-                console.log(`skipping ${p} because the package is private`);
+                console.warn(`skipping ${p} because the package is private`);
                 continue;
               }
 
@@ -282,7 +323,10 @@ const main = defineCommand({
               );
 
               shasums[pJson.name] = shasum;
-              console.log(`shasum for ${pJson.name}(${filename}): ${shasum}`);
+              console.warn(`shasum for ${pJson.name}(${filename}): ${shasum}`);
+
+              const outputPkg = outputMetadata.packages.find(p => p.name === pJson.name)!;
+              outputPkg.shasum = shasum;
 
               const file = await fs.readFile(path.resolve(p, filename));
 
@@ -316,8 +360,8 @@ const main = defineCommand({
             `publishing failed: ${await res.text()}`,
           );
 
-          console.log("\n");
-          console.log(
+          console.warn("\n");
+          console.warn(
             `⚡️ Your npm packages are published.\n${[...formData.keys()]
               .filter((k) => k.startsWith("package:"))
               .map(
@@ -326,13 +370,22 @@ const main = defineCommand({
               )
               .join("\n")}`,
           );
+
+          const output = JSON.stringify(outputMetadata, null, 2);
+          if (printJson) {
+            console.log(output); // Log output for piping
+          }
+          if (saveJson) {
+            await fs.writeFile(jsonFilePath, output);
+            console.warn(`metadata written to ${jsonFilePath}`);
+          }
         },
       };
     },
     link: () => {
       return {
         meta: {},
-        run: () => {},
+        run: () => { },
       };
     },
   },
