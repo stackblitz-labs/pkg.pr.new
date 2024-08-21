@@ -51,6 +51,7 @@ These are some of the projects and companies using pkg.pr.new:
   <a href="https://github.com/scalar/scalar"><img src="https://github.com/scalar.png" height="40"></a>
   <a href="https://tresjs.org/"><img src="https://avatars.githubusercontent.com/u/119253150?s=200&v=4" height="40"></a>
   <a href="https://github.com/capawesome-team/"><img src="https://avatars.githubusercontent.com/u/105555861?s=200&v=4" height="40"></a>
+  <a href="https://unocss.dev"><img src="https://unocss.dev/logo.svg" height="40"></a>
 </p>
 
 Feel free to add your project or company here!
