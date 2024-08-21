@@ -6,7 +6,7 @@ import { createHash } from "node:crypto";
 import { hash } from "ohash";
 import fsSync from "fs";
 import fs from "fs/promises";
-import { detect } from "detect-package-manager";
+import { detect } from "package-manager-detector";
 import { getPackageManifest, type PackageManifest } from "query-registry";
 import type { Comment } from "@pkg-pr-new/utils";
 import {
@@ -348,7 +348,7 @@ const main = defineCommand({
               "sb-key": key,
               "sb-shasums": JSON.stringify(shasums),
               "sb-run-id": GITHUB_RUN_ID,
-              "sb-package-manager": packageManager,
+              "sb-package-manager": packageManager.agent ?? "npm",
               "sb-only-templates": `${isOnlyTemplates}`
             },
             body: formData,
