@@ -31,6 +31,7 @@ It is aiming to reduce the number of these comments :)
 These are some of the projects and companies using pkg.pr.new:
 
 <p align="center">
+  <a href="https://trigger.dev/"><img src="https://trigger.dev/assets/triggerdev-logo--with-border.svg" height="40"></a>
   <a href="https://vuejs.org/"><img src="https://vuejs.org/images/logo.png" height="40"></a>
   <a href="https://huggingface.co/"><img src="https://huggingface.co/front/assets/huggingface_logo.svg" height="40"></a>
   <a href="https://about.meta.com/"><img src="https://github.com/facebook.png" height="40"></a>
