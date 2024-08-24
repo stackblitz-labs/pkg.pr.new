@@ -60,6 +60,7 @@ These are some of the projects and companies using pkg.pr.new:
         <img height="40" src="https://raw.githubusercontent.com/vite-pwa/.github/main/hero-light.svg">
     </picture>
   </a>
+   <a href="https://github.com/forge42dev/open-source-stack"><img src="https://avatars.githubusercontent.com/u/161314831?s=200&v=4" height="40"></a>
 </p>
 
 Feel free to add your project or company here to join the pkg.pr.new family :)
