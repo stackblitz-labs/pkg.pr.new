@@ -46,7 +46,7 @@ These are some of the projects and companies using pkg.pr.new:
   <a href="https://unjs.io/"><img src="https://avatars.githubusercontent.com/u/80154025?s=200&v=4" height="40"></a>
   <a href="https://www.radix-vue.com/"><img src="https://www.radix-vue.com/logo.svg" height="40"></a>
   <a href="https://www.gradio.app/"><img src="https://www.gradio.app/_app/immutable/assets/gradio.CHB5adID.svg" height="40"></a>
-  <a href="https://clockworklabs.io/"><img src="https://clockworklabs.io/images/logo.svg" height="40"></a>
+  <a href="https://clockworklabs.io/"><img src="https://github.com/user-attachments/assets/85d42291-6676-4592-b6a0-ee4b6350dc47" height="40"></a>
   <a href="https://valtio.pmnd.rs/"><img src="https://blog.stackblitz.com/posts/pkg-pr-new/valtio.svg" height="40"></a>
   <a href="https://github.com/nksaraf/vinxi"><img src="https://github.com/nksaraf/vinxi/raw/main/docs/public/logo.png" height="40"></a>
   <a href="https://github.com/scalar/scalar"><img src="https://github.com/scalar.png" height="40"></a>
@@ -62,6 +62,7 @@ These are some of the projects and companies using pkg.pr.new:
   </a>
    <a href="https://github.com/forge42dev/open-source-stack"><img src="https://avatars.githubusercontent.com/u/161314831?s=200&v=4" height="40"></a>
 </p>
+
 
 Feel free to add your project or company here to join the pkg.pr.new family :)
 
