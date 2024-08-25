@@ -67,7 +67,7 @@ Feel free to add your project or company here to join the pkg.pr.new family :)
 
 ## Setup
 
-The Github Application is available [here](https://github.com/apps/pkg-pr-new).
+First [install the Github Application](https://github.com/apps/pkg-pr-new).
 
 > [!IMPORTANT]
 > Make sure it's installed on the repository before trying to publish a package.
