@@ -92,10 +92,10 @@ _commit: <a href="${checkRunUrl}"><code>${abbreviateCommitHash(workflowData.sha)
 
 function generateTemplatesStr(templates: Record<string, string>) {
   const entries = Object.entries(templates).filter(([k]) => k !== "default");
-  let str = `[Open in Stackblitz](${templates["default"]})`;
+  let str = templates["default"] ? `[Open in Stackblitz](${templates["default"]})` : '';
 
   if (entries.length && entries.length <= 2) {
-    str += ` • ${entries.map(([k, v]) => `[${k}](${v})`).join(" • ")}`;
+    str = [str, ...entries.map(([k, v]) => `[${k}](${v})`)].filter(Boolean).join(" • ");
   } else if (entries.length > 2) {
     str += createCollapsibleBlock(
       "<b>More templates</b>",
