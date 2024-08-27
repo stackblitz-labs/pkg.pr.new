@@ -19,13 +19,18 @@ export function generateCommitPublishMessage(
   const isMoreThanFour = packages.length > 4;
   const shaMessages = packages
     .map((packageName) => {
-      const shaUrl = generatePublishUrl(
+      let shaUrl = generatePublishUrl(
         "sha",
         origin,
         packageName,
         workflowData,
         compact,
       );
+
+      if (packageManager === 'yarn') {
+        shaUrl = shaUrl + '.tgz'
+      }
+
       return `
 \`\`\`
 ${packageManager} ${packageCommands[packageManager]} ${shaUrl}
@@ -60,13 +65,17 @@ export function generatePullRequestPublishMessage(
   const isMoreThanFour = packages.length > 4;
   const refMessages = packages
     .map((packageName) => {
-      const refUrl = generatePublishUrl(
+      let refUrl = generatePublishUrl(
         base,
         origin,
         packageName,
         workflowData,
         compact,
       );
+
+      if (packageManager === 'yarn') {
+        refUrl = refUrl + '.tgz'
+      }
 
       return `
 \`\`\`
@@ -122,7 +131,7 @@ export function generatePublishUrl(
     ? `/${packageName}@${tag}`
     : `/${workflowData.owner}${shorter ? "" : `/${workflowData.repo}`}/${packageName}@${tag}`;
 
-  return new URL(urlPath, origin);
+  return `${new URL(urlPath, origin)}`;
 }
 
 function createCollapsibleBlock(title: string, body: string) {

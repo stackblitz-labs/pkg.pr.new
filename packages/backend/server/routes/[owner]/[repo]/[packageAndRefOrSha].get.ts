@@ -9,13 +9,15 @@ export default eventHandler(async (event) => {
   const params = getRouterParams(event) as Params;
   let [encodedPackageName, refOrSha] = params.packageAndRefOrSha.split("@");
   const packageName = decodeURIComponent(encodedPackageName);
+  refOrSha = refOrSha.split('.tgz')[0] // yarn support
 
   if (isValidGitHash(refOrSha)) {
     refOrSha = abbreviateCommitHash(refOrSha);
   }
 
-  const packageKey = `${params.owner}:${params.repo}:${refOrSha}:${packageName.split(".tgz")[0]}`;
-  const cursorKey = `${params.owner}:${params.repo}:${refOrSha}`;
+  const base = `${params.owner}:${params.repo}:${refOrSha}`
+  const packageKey = `${base}:${packageName}`;
+  const cursorKey = base;
 
   const packagesBucket = usePackagesBucket(event);
   const downloadedAtBucket = useDownloadedAtBucket(event);
