@@ -53,7 +53,12 @@ These are some of the projects and companies using pkg.pr.new:
   <a href="https://tresjs.org/"><img src="https://avatars.githubusercontent.com/u/119253150?s=200&v=4" height="40"></a>
   <a href="https://github.com/capawesome-team/"><img src="https://avatars.githubusercontent.com/u/105555861?s=200&v=4" height="40"></a>
   <a href="https://unocss.dev"><img src="https://unocss.dev/logo.svg" height="40"></a>
-  <a href="https://github.com/kazupon/vue-i18n"><img src="https://raw.githubusercontent.com/intlify/art/master/logo_symbol.svg" height="40"></a>
+  <a href="https://github.com/kazupon/vue-i18n">
+    <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/intlify/art/master/logo_symbol_negative.svg" height="40" />
+        <img height="40" src="https://raw.githubusercontent.com/intlify/art/master/logo_symbol.svg">
+    </picture>
+  </a>
   <a href="https://github.com/vite-pwa">
     <picture>
         <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/vite-pwa/.github/main/hero-dark.svg" height="40" />
