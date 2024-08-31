@@ -417,6 +417,7 @@ async function writeDeps(p: string, deps: Map<string, string>, realDeps: Map<str
 
   hijackDeps(deps, pJson.dependencies);
   hijackDeps(deps, pJson.devDependencies);
+  hijackDeps(deps, pJson.optionalDependencies);
 
   if (realDeps) {
     hijackDeps(realDeps, pJson.peerDependencies);
