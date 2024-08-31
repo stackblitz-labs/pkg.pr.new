@@ -267,8 +267,7 @@ export default eventHandler(async (event) => {
     ok: true,
     urls: packagesWithoutPrefix.map(
       (packageName) =>
-        generatePublishUrl("sha", origin, packageName, workflowData, compact)
-          .href,
+        generatePublishUrl("sha", origin, packageName, workflowData, compact),
     ),
   };
 });
