@@ -90,6 +90,7 @@ const main = defineCommand({
           const paths = (args._.length ? args._ : ["."])
             .flatMap((p) => globSync([p], { expandDirectories: false, onlyDirectories: true }))
             .map((p) => path.resolve(p.trim()));
+          console.log(paths)
 
           const templates = (
             typeof args.template === "string"
