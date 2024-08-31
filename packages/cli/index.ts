@@ -88,7 +88,7 @@ const main = defineCommand({
         },
         run: async ({ args }) => {
           const paths = (args._.length ? args._ : ["."])
-            .flatMap((p) => globSync([p], { expandDirectories: false, onlyDirectories: true }))
+            .flatMap((p) => globSync([p], { expandDirectories: false, onlyDirectories: true, dot: true }))
             .map((p) => path.resolve(p.trim()));
           console.log(paths)
 
