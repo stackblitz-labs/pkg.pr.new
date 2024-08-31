@@ -360,7 +360,6 @@ const main = defineCommand({
             `publishing failed: ${await res.text()}`,
           );
 
-          console.log(laterRes)
           console.warn("\n");
           console.warn(
             `⚡️ Your npm packages are published.\n${[...formData.keys()]
