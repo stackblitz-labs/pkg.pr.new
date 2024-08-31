@@ -87,24 +87,36 @@ const main = defineCommand({
           },
         },
         run: async ({ args }) => {
-          const paths = (args._.length ? args._.flatMap((p) => globSync([p], { expandDirectories: false, onlyDirectories: true })) : ["."])
-            .map((p) => path.resolve(p.trim()));
-          console.log(paths)
+          const paths = (
+            args._.length
+              ? args._.flatMap((p) =>
+                  globSync([p], {
+                    expandDirectories: false,
+                    onlyDirectories: true,
+                  }),
+                )
+              : ["."]
+          ).map((p) => path.resolve(p.trim()));
 
           const templates = (
             typeof args.template === "string"
               ? [args.template]
               : ([...(args.template || [])] as string[])
           )
-            .flatMap((p) => globSync([p], { expandDirectories: false, onlyDirectories: true }))
+            .flatMap((p) =>
+              globSync([p], {
+                expandDirectories: false,
+                onlyDirectories: true,
+              }),
+            )
             .map((p) => path.resolve(p.trim()));
 
           const formData = new FormData();
 
           const isCompact = !!args.compact;
           const isPnpm = !!args.pnpm;
-          const isPeerDepsEnabled = !!args.peerDeps
-          const isOnlyTemplates = !!args['only-templates']
+          const isPeerDepsEnabled = !!args.peerDeps;
+          const isOnlyTemplates = !!args["only-templates"];
 
           const comment: Comment = args.comment as Comment;
 
@@ -152,11 +164,13 @@ const main = defineCommand({
           const abbreviatedSha = abbreviateCommitHash(sha);
 
           const deps: Map<string, string> = new Map(); // pkg.pr.new versions of the package
-          const realDeps: Map<string, string> | null = isPeerDepsEnabled ? new Map() : null // real versions of the package, useful for peerDependencies
+          const realDeps: Map<string, string> | null = isPeerDepsEnabled
+            ? new Map()
+            : null; // real versions of the package, useful for peerDependencies
 
-          const printJson = typeof args.json === 'boolean';
-          const saveJson = typeof args.json === 'string';
-          const jsonFilePath = saveJson ? args.json : '';
+          const printJson = typeof args.json === "boolean";
+          const saveJson = typeof args.json === "string";
+          const jsonFilePath = saveJson ? args.json : "";
           const outputMetadata: OutputMetadata = {
             packages: [],
             templates: [],
@@ -183,16 +197,15 @@ const main = defineCommand({
             const depUrl = new URL(
               `/${owner}/${repo}/${pJson.name}@${abbreviatedSha}`,
               apiUrl,
-            ).href
-            deps.set(
-              pJson.name,
-              depUrl,
-            );
-            realDeps?.set(pJson.name, pJson.version ?? depUrl)
+            ).href;
+            deps.set(pJson.name, depUrl);
+            realDeps?.set(pJson.name, pJson.version ?? depUrl);
 
-            const resource = await fetch(depUrl)
+            const resource = await fetch(depUrl);
             if (resource.ok) {
-              console.warn(`${pJson.name}@${abbreviatedSha} was already published on ${depUrl}`)
+              console.warn(
+                `${pJson.name}@${abbreviatedSha} was already published on ${depUrl}`,
+              );
             }
 
             // Collect package metadata
@@ -222,9 +235,7 @@ const main = defineCommand({
             const restore = await writeDeps(templateDir, deps, realDeps);
 
             const gitignorePath = path.join(templateDir, ".gitignore");
-            const ig = ignore()
-              .add("node_modules")
-              .add(".git");
+            const ig = ignore().add("node_modules").add(".git");
 
             if (fsSync.existsSync(gitignorePath)) {
               const gitignoreContent = await fs.readFile(gitignorePath, "utf8");
@@ -235,7 +246,7 @@ const main = defineCommand({
               cwd: templateDir,
               dot: true,
               onlyFiles: true,
-              ignore: ['**/node_modules', '.git'], // always ignore node_modules and .git
+              ignore: ["**/node_modules", ".git"], // always ignore node_modules and .git
             });
 
             const filteredFiles = files.filter((file) => !ig.ignores(file));
@@ -300,7 +311,9 @@ const main = defineCommand({
           const shasums: Record<string, string> = {};
           for (const p of paths) {
             if (!(await hasPackageJson(p))) {
-              console.warn(`skipping ${p} because there's no package.json file`);
+              console.warn(
+                `skipping ${p} because there's no package.json file`,
+              );
               continue;
             }
             const pJsonPath = path.resolve(p, "package.json");
@@ -325,7 +338,9 @@ const main = defineCommand({
               shasums[pJson.name] = shasum;
               console.warn(`shasum for ${pJson.name}(${filename}): ${shasum}`);
 
-              const outputPkg = outputMetadata.packages.find(p => p.name === pJson.name)!;
+              const outputPkg = outputMetadata.packages.find(
+                (p) => p.name === pJson.name,
+              )!;
               outputPkg.shasum = shasum;
 
               const file = await fs.readFile(path.resolve(p, filename));
@@ -349,7 +364,7 @@ const main = defineCommand({
               "sb-shasums": JSON.stringify(shasums),
               "sb-run-id": GITHUB_RUN_ID,
               "sb-package-manager": packageManager.agent ?? "npm",
-              "sb-only-templates": `${isOnlyTemplates}`
+              "sb-only-templates": `${isOnlyTemplates}`,
             },
             body: formData,
           });
@@ -385,13 +400,15 @@ const main = defineCommand({
     link: () => {
       return {
         meta: {},
-        run: () => { },
+        run: () => {},
       };
     },
   },
 });
 
-runMain(main).then(() => process.exit(0)).catch(() => process.exit(1));
+runMain(main)
+  .then(() => process.exit(0))
+  .catch(() => process.exit(1));
 
 // TODO: we'll add support for yarn if users hit issues with npm
 async function resolveTarball(pm: "npm" | "pnpm", p: string) {
@@ -409,7 +426,11 @@ async function resolveTarball(pm: "npm" | "pnpm", p: string) {
   return { filename, shasum };
 }
 
-async function writeDeps(p: string, deps: Map<string, string>, realDeps: Map<string, string> | null) {
+async function writeDeps(
+  p: string,
+  deps: Map<string, string>,
+  realDeps: Map<string, string> | null,
+) {
   const pJsonPath = path.resolve(p, "package.json");
   const content = await fs.readFile(pJsonPath, "utf-8");
 
