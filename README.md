@@ -68,6 +68,7 @@ These are some of the projects and companies using pkg.pr.new:
    <a href="https://github.com/forge42dev/open-source-stack"><img src="https://avatars.githubusercontent.com/u/161314831?s=200&v=4" height="40"></a>
    <a href="https://sidebase.io"><img src="https://avatars.githubusercontent.com/u/112630501?s=200&v=4" height="40"></a>
    <a href="https://rolldown.rs/"><img src="https://avatars.githubusercontent.com/u/94954945" height="40"></a>
+   <a href="https://element-plus.org/"><img src="https://avatars.githubusercontent.com/u/68583457?s=48&v=4" height="40"></a>
 </p>
 
 Feel free to add your project or company here to join the pkg.pr.new family :)
