@@ -14,7 +14,7 @@ import {
   extractOwnerAndRepo,
   extractRepository,
 } from "@pkg-pr-new/utils";
-import { glob, globSync } from "tinyglobby";
+import { glob } from "tinyglobby";
 import ignore from "ignore";
 import "./environments";
 import pkg from "./package.json" with { type: "json" };
@@ -87,29 +87,35 @@ const main = defineCommand({
           },
         },
         run: async ({ args }) => {
-          const paths = (
-            args._.length
-              ? args._.flatMap((p) =>
-                  globSync([p], {
-                    expandDirectories: false,
-                    onlyDirectories: true,
-                  }),
-                )
-              : ["."]
-          ).map((p) => path.resolve(p.trim()));
-
-          const templates = (
-            typeof args.template === "string"
-              ? [args.template]
-              : ([...(args.template || [])] as string[])
-          )
-            .flatMap((p) =>
-              globSync([p], {
+          const paths = args._.length
+            ? await glob(args._, {
                 expandDirectories: false,
                 onlyDirectories: true,
-              }),
-            )
-            .map((p) => path.resolve(p.trim()));
+                absolute: true,
+              })
+            : [process.cwd()];
+
+          if (args._.includes(".") || args._.includes("./")) {
+            paths.push(process.cwd());
+          }
+
+          const templatePatterns =
+            typeof args.template === "string"
+              ? [args.template]
+              : ([...(args.template || [])] as string[]);
+
+          const templates = await glob(templatePatterns, {
+            expandDirectories: false,
+            onlyDirectories: true,
+            absolute: true,
+          });
+
+          if (
+            templatePatterns.includes(".") ||
+            templatePatterns.includes("./")
+          ) {
+            templates.push(process.cwd());
+          }
 
           const formData = new FormData();
 
