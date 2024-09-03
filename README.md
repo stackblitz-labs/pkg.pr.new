@@ -72,7 +72,7 @@ These are some of the projects and companies using pkg.pr.new:
    <a href="https://valibot.dev/"><img src="https://raw.githubusercontent.com/fabian-hiller/valibot/main/brand/valibot-icon.svg" height="40"></a>
    <a href="https://codemod.com/"><img src="https://github.com/codemod-com.png" height="40"></a>
    <a href="https://uploadthing.com/"><img src="https://uploadthing.com/UploadThing-Logo.svg" height="40"></a>
-   <a href="https://github.com/47ng"><img src="https://avatars.githubusercontent.com/u/43356325?s=200&v=4" height="40"></a>
+
 
 </p>
 
