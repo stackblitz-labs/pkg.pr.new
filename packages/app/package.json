@@ -1,0 +1,36 @@
+{
+  "type": "module",
+  "private": true,
+  "packageManager": "pnpm@9.7.1",
+  "scripts": {
+    "build": "nuxi build",
+    "dev": "nuxi dev",
+    "generate": "nuxi generate",
+    "prepare": "nuxi prepare",
+    "start": "node .output/server/index.mjs",
+    "start:generate": "npx serve .output/public",
+    "lint": "eslint .",
+    "typecheck": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "@iconify-json/ph": "^1.1.14",
+    "@nuxt/ui": "^2.18.4",
+    "@octokit/graphql": "^8.1.1",
+    "@vueuse/core": "^11.0.1",
+    "@vueuse/nuxt": "^11.0.1",
+    "feed": "^4.2.2",
+    "marked": "^14.0.0",
+    "nuxt": "^3.12.4",
+    "vue": "^3.4.38",
+    "vue-router": "^4.4.3",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^2.27.0",
+    "@nuxt/eslint": "^0.5.1",
+    "eslint": "^9.9.0",
+    "typescript": "^5.5.4",
+    "vue-tsc": "^2.0.29",
+    "wrangler": "^3.72.1"
+  }
+}
