@@ -73,6 +73,7 @@ These are some of the projects and companies using pkg.pr.new:
    <a href="https://codemod.com/"><img src="https://github.com/codemod-com.png" height="40"></a>
    <a href="https://uploadthing.com/"><img src="https://uploadthing.com/UploadThing-Logo.svg" height="40"></a>
    <a href="https://nuqs.47ng.com"><img src="https://raw.githubusercontent.com/47ng/nuqs/e65560b518e5b60500ea28e59ce55bdb2079fcda/packages/docs/src/app/icon.svg" height="40"></a>
+   <a href="https://github.com/nuxt-modules/i18n"><img height="40" src="https://raw.githubusercontent.com/nuxt-modules/i18n/main/docs/public/icon.svg"></a>
 
 </p>
 
