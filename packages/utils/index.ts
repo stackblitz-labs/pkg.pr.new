@@ -36,3 +36,21 @@ export function isPullRequest(ref: string) {
 
 export type Comment = "off" | "create" | "update";
 export type PackageManager = "npm" | "pnpm" | "yarn" | "bun";
+
+
+
+const whitelist =
+  "https://raw.githubusercontent.com/stackblitz-labs/pkg.pr.new/main/.whitelist";
+
+export async function isWhitelisted(owner: string, repo: string) {
+  const combination = `${owner}/${repo}`;
+
+  try {
+    const response = await fetch(whitelist);
+    const content = await response.text();
+
+    return content.includes(combination);
+  } catch {
+    return false;
+  }
+}

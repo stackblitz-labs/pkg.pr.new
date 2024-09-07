@@ -40,6 +40,8 @@ type OutputMetadata = {
 
 const apiUrl = process.env.API_URL ?? API_URL;
 const publishUrl = new URL("/publish", apiUrl);
+const createMultipart = new URL("/multipart/create", apiUrl);
+const uploadMultipart = new URL("/multipart/upload", apiUrl);
 
 const main = defineCommand({
   meta: {
@@ -360,6 +362,87 @@ const main = defineCommand({
             }
           }
 
+          const formDataPackagesSize = [...formData.entries()].reduce(
+            (prev, [_, entry]) => prev + getFormEntrySize(entry),
+            0,
+          );
+
+          // multipart uploading
+          if (formDataPackagesSize > 1024 * 1024 * 99) {
+            for (const [name, entry] of formData) {
+              if (name.startsWith("package:")) {
+                const file = entry as File;
+                const chunkSize = 1024 * 1024 * 5;
+                if (file.size <= chunkSize) {
+                  continue;
+                }
+                const totalChunks = Math.ceil(file.size / chunkSize);
+                const createMultipartRes = await fetch(createMultipart, {
+                  method: "POST",
+                  headers: {
+                    "sb-key": key,
+                  },
+                  body: formData,
+                });
+                if (!createMultipartRes.ok) {
+                  console.error(await checkResponse.text());
+                  continue;
+                }
+                const { key: uploadKey, id: uploadId } =
+                  await createMultipartRes.json();
+
+                interface R2UploadedPart {
+                  partNumber: number;
+                  etag: string;
+                }
+                const uploadedParts: R2UploadedPart[] = [];
+
+                for (let i = 0; i < totalChunks; i++) {
+                  const start = i * chunkSize;
+                  const end = Math.min(file.size, start + chunkSize);
+                  const chunk = file.slice(start, end);
+
+                  const uploadMultipartRes = await fetch(uploadMultipart, {
+                    method: "POST",
+                    headers: {
+                      key: uploadKey,
+                      id: uploadId,
+                      "part-number": `${i + 1}`,
+                    },
+                    body: chunk,
+                  });
+
+                  if (!uploadMultipartRes.ok) {
+                    console.error(
+                      `Error uploading part ${i + 1}: ${await uploadMultipartRes.text()}`,
+                    );
+                    break;
+                  }
+                  const { part } = await uploadMultipartRes.json();
+                  uploadedParts.push(part);
+                }
+                const completeMultipartRes = await fetch(uploadMultipart, {
+                  method: "POST",
+                  headers: {
+                    key: uploadKey,
+                    id: uploadId,
+                    "uploaded-parts": JSON.stringify(uploadedParts),
+                  },
+                  body: null,
+                });
+                if (!completeMultipartRes.ok) {
+                  console.error(
+                    `Error completing ${key}: ${await completeMultipartRes.text()}`,
+                  );
+                  break;
+                }
+                const { key: completionKey } =
+                  await completeMultipartRes.json();
+                formData.set(name, `object:${completionKey}`);
+              }
+            }
+          }
+
           const packageManager = await detect();
           const res = await fetch(publishUrl, {
             method: "POST",
@@ -467,6 +550,13 @@ function hijackDeps(
       oldDeps[newDep] = url;
     }
   }
+}
+
+function getFormEntrySize(entry: FormDataEntryValue) {
+  if (entry instanceof File) {
+    return entry.size;
+  }
+  return entry.length;
 }
 
 async function verifyCompactMode(packageName: string) {

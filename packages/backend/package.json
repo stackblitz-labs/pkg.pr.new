@@ -21,5 +21,8 @@
     "octokit": "^3.2.1",
     "query-registry": "^3.0.1",
     "wrangler": "^3.57.1"
+  },
+  "dependencies": {
+    "@paralleldrive/cuid2": "^2.2.2"
   }
 }
