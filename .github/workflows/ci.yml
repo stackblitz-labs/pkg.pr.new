@@ -97,5 +97,14 @@ jobs:
           # NITRO_RM_STALE_KEY: ${{ secrets.NITRO_RM_STALE_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: dummy big file
+        run: |
+          file_size=120  # 120 MB
+          file_path="dummy_random_content.txt"
+          file_size_in_bytes=$((file_size * 1024 * 1024))
+          head -c $file_size_in_bytes </dev/urandom >$file_path
+          echo "File $file_path created with random content of size $file_size MB."
+        working-directory: ./playgrounds/playground-b
+
       - name: pkg.pr.new
         run: pnpm publish:playgrounds
