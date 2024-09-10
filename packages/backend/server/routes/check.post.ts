@@ -6,18 +6,31 @@ export default eventHandler(async (event) => {
 
   const app = useOctokitApp(event);
 
+  let authenticated = false;
+
   try {
     await app.octokit.request("GET /repos/{owner}/{repo}/installation", {
       owner,
       repo,
     });
-  } catch {
+    authenticated = true;
+  } catch {}
+
+  try {
+    await app.octokit.request("GET /orgs/{org}/installation", {
+      org: owner,
+    });
+    authenticated = true;
+  } catch {}
+
+  if (!authenticated) {
     throw createError({
       statusCode: 404,
       fatal: true,
       message: `The app https://github.com/apps/pkg-pr-new is not installed on ${owner}/${repo}.`,
     });
   }
+
   const workflowData = await workflowsBucket.getItem(key);
 
   if (!workflowData) {
