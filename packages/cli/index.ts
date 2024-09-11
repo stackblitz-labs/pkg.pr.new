@@ -421,6 +421,7 @@ const main = defineCommand({
                   const { part } = await uploadMultipartRes.json();
                   uploadedParts.push(part);
                 }
+                console.log('uploaded-parts', uploadedParts)
                 const completeMultipartRes = await fetch(uploadMultipart, {
                   method: "POST",
                   headers: {
@@ -438,7 +439,8 @@ const main = defineCommand({
                 }
                 const { key: completionKey } =
                   await completeMultipartRes.json();
-                formData.set(name, `object:${completionKey}`);
+                console.log(name, `object:${completionKey}`)
+                formData.append(name, `object:${completionKey}`);
               }
             }
           }
