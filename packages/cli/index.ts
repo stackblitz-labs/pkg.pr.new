@@ -385,7 +385,7 @@ const main = defineCommand({
                   body: formData,
                 });
                 if (!createMultipartRes.ok) {
-                  console.error(await checkResponse.text());
+                  console.error(await createMultipartRes.text());
                   continue;
                 }
                 const { key: uploadKey, id: uploadId } =
