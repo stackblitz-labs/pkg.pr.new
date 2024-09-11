@@ -443,7 +443,6 @@ const main = defineCommand({
             }
           }
 
-          console.log("formData", formData)
           const packageManager = await detect();
           const res = await fetch(publishUrl, {
             method: "POST",
