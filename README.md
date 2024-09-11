@@ -76,6 +76,7 @@ These are some of the projects and companies using pkg.pr.new:
    <a href="https://github.com/nuxt-modules/i18n"><img height="40" src="https://raw.githubusercontent.com/nuxt-modules/i18n/main/docs/public/icon.svg"></a>
    <a href="https://github.com/codiume/orbit"><img height="40" src="https://avatars.githubusercontent.com/u/98262232"></a>
    <a href="https://vue-mess-detector.webmania.cc"><img src="https://vue-mess-detector.webmania.cc/logo.png" alt="Vue Mess Detector Logo" height="40" /></a>
+   <a href="https://wxt.dev/"><img src="https://raw.githubusercontent.com/wxt-dev/wxt/HEAD/docs/public/hero-logo.svg" alt="WXT Framework Logo" height="40" /></a>
 
 </p>
 
