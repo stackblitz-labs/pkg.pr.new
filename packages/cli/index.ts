@@ -409,6 +409,8 @@ const main = defineCommand({
                       "part-number": `${i + 1}`,
                     },
                     body: chunk.stream(),
+                    // @ts-ignore
+                    duplex: "half"
                   });
 
                   if (!uploadMultipartRes.ok) {
