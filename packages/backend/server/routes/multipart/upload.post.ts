@@ -26,8 +26,8 @@ export default eventHandler(async (event) => {
       key: object.key
     }
   } else {
-    const stream = getRequestWebStream(event)
-    const part = await upload.uploadPart(partNumber, stream as any)
+    const buffer = (await readRawBody(event, false))!
+    const part = await upload.uploadPart(partNumber, buffer)
 
     return {
       ok: true,
