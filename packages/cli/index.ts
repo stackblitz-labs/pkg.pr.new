@@ -382,7 +382,6 @@ const main = defineCommand({
                   headers: {
                     "sb-key": key,
                   },
-                  body: formData,
                 });
                 if (!createMultipartRes.ok) {
                   console.error(await createMultipartRes.text());
@@ -429,7 +428,6 @@ const main = defineCommand({
                     id: uploadId,
                     "uploaded-parts": JSON.stringify(uploadedParts),
                   },
-                  body: null,
                 });
                 if (!completeMultipartRes.ok) {
                   console.error(
