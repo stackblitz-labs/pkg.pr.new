@@ -42,6 +42,7 @@ const apiUrl = process.env.API_URL ?? API_URL;
 const publishUrl = new URL("/publish", apiUrl);
 const createMultipart = new URL("/multipart/create", apiUrl);
 const uploadMultipart = new URL("/multipart/upload", apiUrl);
+const completeMultipart = new URL("/multipart/complete", apiUrl);
 
 const main = defineCommand({
   meta: {
@@ -402,7 +403,7 @@ const main = defineCommand({
                   const chunk = file.slice(start, end);
 
                   const uploadMultipartRes = await fetch(uploadMultipart, {
-                    method: "POST",
+                    method: "PUT",
                     headers: {
                       key: uploadKey,
                       id: uploadId,
@@ -420,8 +421,7 @@ const main = defineCommand({
                   const { part } = await uploadMultipartRes.json();
                   uploadedParts.push(part);
                 }
-                console.log('uploaded-parts', uploadedParts)
-                const completeMultipartRes = await fetch(uploadMultipart, {
+                const completeMultipartRes = await fetch(completeMultipart, {
                   method: "POST",
                   headers: {
                     key: uploadKey,
@@ -437,7 +437,7 @@ const main = defineCommand({
                 }
                 const { key: completionKey } =
                   await completeMultipartRes.json();
-                console.log(name, `object:${completionKey}`)
+
                 formData.set(name, `object:${completionKey}`);
               }
             }

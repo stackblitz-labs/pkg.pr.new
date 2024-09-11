@@ -67,10 +67,6 @@ importers:
         version: 1.1.0
 
   packages/backend:
-    dependencies:
-      '@paralleldrive/cuid2':
-        specifier: ^2.2.2
-        version: 2.2.2
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20240512.0
@@ -81,6 +77,9 @@ importers:
       '@octokit/app':
         specifier: ^14.1.0
         version: 14.1.0
+      '@paralleldrive/cuid2':
+        specifier: ^2.2.2
+        version: 2.2.2
       '@pkg-pr-new/utils':
         specifier: workspace:^
         version: link:../utils
