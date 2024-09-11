@@ -408,7 +408,7 @@ const main = defineCommand({
                       id: uploadId,
                       "part-number": `${i + 1}`,
                     },
-                    body: chunk,
+                    body: chunk.stream(),
                   });
 
                   if (!uploadMultipartRes.ok) {
