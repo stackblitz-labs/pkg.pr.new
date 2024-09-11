@@ -438,7 +438,7 @@ const main = defineCommand({
                 const { key: completionKey } =
                   await completeMultipartRes.json();
                 console.log(name, `object:${completionKey}`)
-                formData.append(name, `object:${completionKey}`);
+                formData.set(name, `object:${completionKey}`);
               }
             }
           }
