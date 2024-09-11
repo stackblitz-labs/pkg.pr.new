@@ -408,7 +408,7 @@ const main = defineCommand({
                       id: uploadId,
                       "part-number": `${i + 1}`,
                     },
-                    body: await chunk.arrayBuffer(),
+                    body: new Uint8Array(await chunk.arrayBuffer()),
                     // @ts-ignore
                     duplex: "half"
                   });
