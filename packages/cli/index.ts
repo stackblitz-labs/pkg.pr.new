@@ -369,7 +369,7 @@ const main = defineCommand({
 
           // multipart uploading
           if (formDataPackagesSize > 1024 * 1024 * 99) {
-            for (const [name, entry] of formData) {
+            for (const [name, entry] of [...formData]) {
               if (name.startsWith("package:")) {
                 const file = entry as File;
                 const chunkSize = 1024 * 1024 * 5;
