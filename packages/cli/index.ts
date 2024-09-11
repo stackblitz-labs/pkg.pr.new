@@ -408,7 +408,7 @@ const main = defineCommand({
                       id: uploadId,
                       "part-number": `${i + 1}`,
                     },
-                    body: chunk.stream(),
+                    body: await chunk.arrayBuffer(),
                     // @ts-ignore
                     duplex: "half"
                   });
