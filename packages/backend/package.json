@@ -2,6 +2,7 @@
   "name": "backend",
   "private": true,
   "type": "module",
+  "license": "MIT",
   "scripts": {
     "build": "nitro build",
     "dev": "nitro dev",
