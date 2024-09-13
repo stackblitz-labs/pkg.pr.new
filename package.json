@@ -17,7 +17,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@jsdevtools/ez-spawn": "^3.0.4",
     "@types/node": "^20.14.2",
