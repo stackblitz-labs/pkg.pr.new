@@ -1,4 +1,3 @@
-import { defineCommand, runMain } from "citty";
 import assert from "node:assert";
 import path from "path";
 import ezSpawn from "@jsdevtools/ez-spawn";
@@ -8,7 +7,6 @@ import fsSync from "fs";
 import fs from "fs/promises";
 import { detect } from "package-manager-detector";
 import { getPackageManifest, type PackageManifest } from "query-registry";
-import type { Comment } from "@pkg-pr-new/utils";
 import {
   abbreviateCommitHash,
   extractOwnerAndRepo,
@@ -17,10 +15,11 @@ import {
 import { glob } from "tinyglobby";
 import ignore from "ignore";
 import "./environments";
-import pkg from "./package.json" with { type: "json" };
 import { isBinaryFile } from "isbinaryfile";
 import { readPackageJSON, writePackageJSON } from "pkg-types";
 import { createDefaultTemplate } from "./template";
+import type { Comment } from "@pkg-pr-new/utils";
+
 
 declare global {
   var API_URL: string;
@@ -38,383 +37,284 @@ type OutputMetadata = {
   }[];
 };
 
+type Options = {
+  comment: Comment;
+  compact?: boolean;
+  pnpm?: boolean;
+  peerDeps?: boolean;
+  onlyTemplates?: boolean;
+  json?: boolean | string;
+  noDefaultTemplate?: boolean;
+};
+
 const apiUrl = process.env.API_URL ?? API_URL;
 const publishUrl = new URL("/publish", apiUrl);
 
-const main = defineCommand({
-  meta: {
-    version: pkg.version,
-    name: "stackblitz",
-    description: "A CLI for pkg.pr.new (Continuous Releases)",
-  },
-  subCommands: {
-    publish: () => {
-      return {
-        args: {
-          compact: {
-            type: "boolean",
-            description:
-              "compact urls. The shortest form of urls like pkg.pr.new/tinybench@a832a55)",
-          },
-          peerDeps: {
-            type: "boolean",
-            description:
-              "handle peerDependencies by setting the workspace version instead of what has been set in the peerDeps itself. --peerDeps not being true would leave peerDependencies to the package manager itself (npm, pnpm)",
-            default: false,
-          },
-          pnpm: {
-            type: "boolean",
-            description: "use `pnpm pack` instead of `npm pack --json`",
-          },
-          template: {
-            type: "string",
-            description:
-              "generate stackblitz templates out of directories in the current repo with the new built packages",
-          },
-          comment: {
-            type: "string", // "off", "create", "update" (default)
-            description: `"off" for no comments (silent mode). "create" for comment on each publish. "update" for one comment across the pull request with edits on each publish (default)`,
-            default: "update",
-          },
-          "only-templates": {
-            type: "boolean",
-            description: `generate only stackblitz templates`,
-            default: false,
-          },
-          json: {
-            type: "mixed",
-            description: `Save metadata to a JSON file. If true, log the output for piping. If a string, save the output to the specified file path.`,
-          },
-        },
-        run: async ({ args }) => {
-          const paths = args._.length
-            ? await glob(args._, {
-                expandDirectories: false,
-                onlyDirectories: true,
-                absolute: true,
-              })
-            : [process.cwd()];
+export async function preview(
+  packages: string[],
+  templates: string[],
+  options: Options,
+) {
+  const formData = new FormData();
 
-          if (args._.includes(".") || args._.includes("./")) {
-            paths.push(process.cwd());
-          }
+  if (!process.env.TEST && process.env.GITHUB_ACTIONS !== "true") {
+    console.error("Continuous Releases are only available in Github Actions.");
+    process.exit(1);
+  }
 
-          const templatePatterns =
-            typeof args.template === "string"
-              ? [args.template]
-              : ([...(args.template || [])] as string[]);
+  const {
+    GITHUB_REPOSITORY,
+    GITHUB_RUN_ID,
+    GITHUB_RUN_ATTEMPT,
+    GITHUB_ACTOR_ID,
+  } = process.env;
 
-          const templates = await glob(templatePatterns, {
-            expandDirectories: false,
-            onlyDirectories: true,
-            absolute: true,
-          });
+  const [owner, repo] = GITHUB_REPOSITORY.split("/");
 
-          if (
-            templatePatterns.includes(".") ||
-            templatePatterns.includes("./")
-          ) {
-            templates.push(process.cwd());
-          }
+  const metadata = {
+    owner,
+    repo,
+    run: Number(GITHUB_RUN_ID),
+    attempt: Number(GITHUB_RUN_ATTEMPT),
+    actor: Number(GITHUB_ACTOR_ID),
+  };
 
-          const formData = new FormData();
+  const key = hash(metadata);
 
-          const isCompact = !!args.compact;
-          const isPnpm = !!args.pnpm;
-          const isPeerDepsEnabled = !!args.peerDeps;
-          const isOnlyTemplates = !!args["only-templates"];
+  const checkResponse = await fetch(new URL("/check", apiUrl), {
+    method: "POST",
+    body: JSON.stringify({
+      owner,
+      repo,
+      key,
+    }),
+  });
 
-          const comment: Comment = args.comment as Comment;
+  if (!checkResponse.ok) {
+    console.error(await checkResponse.text());
+    process.exit(1);
+  }
 
-          if (!process.env.TEST && process.env.GITHUB_ACTIONS !== "true") {
-            console.error(
-              "Continuous Releases are only available in Github Actions.",
-            );
-            process.exit(1);
-          }
+  const { sha } = await checkResponse.json();
+  const abbreviatedSha = abbreviateCommitHash(sha);
 
-          const {
-            GITHUB_REPOSITORY,
-            GITHUB_RUN_ID,
-            GITHUB_RUN_ATTEMPT,
-            GITHUB_ACTOR_ID,
-          } = process.env;
+  const deps: Map<string, string> = new Map(); // pkg.pr.new versions of the package
+  const realDeps: Map<string, string> | null = options.peerDeps
+    ? new Map()
+    : null; // real versions of the package, useful for peerDependencies
 
-          const [owner, repo] = GITHUB_REPOSITORY.split("/");
+  const printJson = typeof options.json === "boolean";
+  const saveJson = typeof options.json === "string";
+  const jsonFilePath = saveJson ? options.json as string : "";
+  const outputMetadata: OutputMetadata = {
+    packages: [],
+    templates: [],
+  };
 
-          const metadata = {
-            owner,
-            repo,
-            run: Number(GITHUB_RUN_ID),
-            attempt: Number(GITHUB_RUN_ATTEMPT),
-            actor: Number(GITHUB_ACTOR_ID),
-          };
+  for (const p of packages) {
+    if (!(await hasPackageJson(p))) {
+      continue;
+    }
+    const pJsonPath = path.resolve(p, "package.json");
+    const pJson = await readPackageJSON(pJsonPath);
 
-          const key = hash(metadata);
+    if (!pJson.name) {
+      throw new Error(`"name" field in ${pJsonPath} should be defined`);
+    }
+    if (pJson.private) {
+      continue;
+    }
 
-          const checkResponse = await fetch(new URL("/check", apiUrl), {
-            method: "POST",
-            body: JSON.stringify({
-              owner,
-              repo,
-              key,
-            }),
-          });
+    if (options.compact) {
+      await verifyCompactMode(pJson.name);
+    }
 
-          if (!checkResponse.ok) {
-            console.error(await checkResponse.text());
-            process.exit(1);
-          }
+    const depUrl = new URL(
+      `/${owner}/${repo}/${pJson.name}@${abbreviatedSha}`,
+      apiUrl,
+    ).href;
+    deps.set(pJson.name, depUrl);
+    realDeps?.set(pJson.name, pJson.version ?? depUrl);
 
-          const { sha } = await checkResponse.json();
-          const abbreviatedSha = abbreviateCommitHash(sha);
+    const resource = await fetch(depUrl);
+    if (resource.ok) {
+      console.warn(
+        `${pJson.name}@${abbreviatedSha} was already published on ${depUrl}`,
+      );
+    }
 
-          const deps: Map<string, string> = new Map(); // pkg.pr.new versions of the package
-          const realDeps: Map<string, string> | null = isPeerDepsEnabled
-            ? new Map()
-            : null; // real versions of the package, useful for peerDependencies
+    // Collect package metadata
+    outputMetadata.packages.push({
+      name: pJson.name,
+      url: depUrl,
+      shasum: "", // will be filled later
+    });
+  }
 
-          const printJson = typeof args.json === "boolean";
-          const saveJson = typeof args.json === "string";
-          const jsonFilePath = saveJson ? args.json : "";
-          const outputMetadata: OutputMetadata = {
-            packages: [],
-            templates: [],
-          };
+  for (const templateDir of templates) {
+    if (!(await hasPackageJson(templateDir))) {
+      console.warn(
+        `skipping ${templateDir} because there's no package.json file`,
+      );
+      continue;
+    }
+    const pJsonPath = path.resolve(templateDir, "package.json");
+    const pJson = await readPackageJSON(pJsonPath);
 
-          for (const p of paths) {
-            if (!(await hasPackageJson(p))) {
-              continue;
-            }
-            const pJsonPath = path.resolve(p, "package.json");
-            const pJson = await readPackageJSON(pJsonPath);
+    if (!pJson.name) {
+      throw new Error(`"name" field in ${pJsonPath} should be defined`);
+    }
 
-            if (!pJson.name) {
-              throw new Error(`"name" field in ${pJsonPath} should be defined`);
-            }
-            if (pJson.private) {
-              continue;
-            }
+    console.warn("preparing template:", pJson.name);
 
-            if (isCompact) {
-              await verifyCompactMode(pJson.name);
-            }
+    const restore = await writeDeps(templateDir, deps, realDeps);
 
-            const depUrl = new URL(
-              `/${owner}/${repo}/${pJson.name}@${abbreviatedSha}`,
-              apiUrl,
-            ).href;
-            deps.set(pJson.name, depUrl);
-            realDeps?.set(pJson.name, pJson.version ?? depUrl);
+    const gitignorePath = path.join(templateDir, ".gitignore");
+    const ig = ignore().add("node_modules").add(".git");
 
-            const resource = await fetch(depUrl);
-            if (resource.ok) {
-              console.warn(
-                `${pJson.name}@${abbreviatedSha} was already published on ${depUrl}`,
-              );
-            }
+    if (fsSync.existsSync(gitignorePath)) {
+      const gitignoreContent = await fs.readFile(gitignorePath, "utf8");
+      ig.add(gitignoreContent);
+    }
 
-            // Collect package metadata
-            outputMetadata.packages.push({
-              name: pJson.name,
-              url: depUrl,
-              shasum: "", // will be filled later
-            });
-          }
+    const files = await glob(["**/*"], {
+      cwd: templateDir,
+      dot: true,
+      onlyFiles: true,
+      ignore: ["**/node_modules", ".git"], // always ignore node_modules and .git
+    });
 
-          for (const templateDir of templates) {
-            if (!(await hasPackageJson(templateDir))) {
-              console.warn(
-                `skipping ${templateDir} because there's no package.json file`,
-              );
-              continue;
-            }
-            const pJsonPath = path.resolve(templateDir, "package.json");
-            const pJson = await readPackageJSON(pJsonPath);
+    const filteredFiles = files.filter((file) => !ig.ignores(file));
 
-            if (!pJson.name) {
-              throw new Error(`"name" field in ${pJsonPath} should be defined`);
-            }
+    for (const filePath of filteredFiles) {
+      const file = await fs.readFile(path.join(templateDir, filePath));
+      const isBinary = await isBinaryFile(file);
+      const blob = new Blob([file.buffer], {
+        type: "application/octet-stream",
+      });
+      formData.append(
+        `template:${pJson.name}:${encodeURIComponent(filePath)}`,
+        isBinary ? blob : await blob.text(),
+      );
+    }
+    await restore();
 
-            console.warn("preparing template:", pJson.name);
+    // Collect template metadata
+    const templateUrl = new URL(
+      `/${owner}/${repo}/template/${pJson.name}`,
+      apiUrl,
+    ).href;
+    outputMetadata.templates.push({
+      name: pJson.name,
+      url: templateUrl,
+    });
+  }
 
-            const restore = await writeDeps(templateDir, deps, realDeps);
+  if (!options.noDefaultTemplate) {
+    const project = createDefaultTemplate(Object.fromEntries(deps.entries()));
 
-            const gitignorePath = path.join(templateDir, ".gitignore");
-            const ig = ignore().add("node_modules").add(".git");
+    for (const filePath of Object.keys(project)) {
+      formData.append(
+        `template:default:${encodeURIComponent(filePath)}`,
+        project[filePath],
+      );
+    }
+  }
 
-            if (fsSync.existsSync(gitignorePath)) {
-              const gitignoreContent = await fs.readFile(gitignorePath, "utf8");
-              ig.add(gitignoreContent);
-            }
+  const restoreMap = new Map<string, Awaited<ReturnType<typeof writeDeps>>>();
+  for (const p of packages) {
+    if (!(await hasPackageJson(p))) {
+      continue;
+    }
+    const pJsonPath = path.resolve(p, "package.json");
+    const pJson = await readPackageJSON(pJsonPath);
 
-            const files = await glob(["**/*"], {
-              cwd: templateDir,
-              dot: true,
-              onlyFiles: true,
-              ignore: ["**/node_modules", ".git"], // always ignore node_modules and .git
-            });
+    if (pJson.private) {
+      continue;
+    }
 
-            const filteredFiles = files.filter((file) => !ig.ignores(file));
+    restoreMap.set(p, await writeDeps(p, deps, realDeps));
+  }
 
-            for (const filePath of filteredFiles) {
-              const file = await fs.readFile(path.join(templateDir, filePath));
-              const isBinary = await isBinaryFile(file);
-              const blob = new Blob([file.buffer], {
-                type: "application/octet-stream",
-              });
-              formData.append(
-                `template:${pJson.name}:${encodeURIComponent(filePath)}`,
-                isBinary ? blob : await blob.text(),
-              );
-            }
-            await restore();
+  const shasums: Record<string, string> = {};
+  for (const p of packages) {
+    if (!(await hasPackageJson(p))) {
+      console.warn(`skipping ${p} because there's no package.json file`);
+      continue;
+    }
+    const pJsonPath = path.resolve(p, "package.json");
+    try {
+      const pJson = await readPackageJSON(pJsonPath);
 
-            // Collect template metadata
-            const templateUrl = new URL(
-              `/${owner}/${repo}/template/${pJson.name}`,
-              apiUrl,
-            ).href;
-            outputMetadata.templates.push({
-              name: pJson.name,
-              url: templateUrl,
-            });
-          }
+      if (!pJson.name) {
+        throw new Error(`"name" field in ${pJsonPath} should be defined`);
+      }
+      if (pJson.private) {
+        console.warn(`skipping ${p} because the package is private`);
+        continue;
+      }
 
-          const noDefaultTemplate = args.template === false;
+      const { filename, shasum } = await resolveTarball(
+        options.pnpm ? "pnpm" : "npm",
+        p,
+      );
 
-          if (!noDefaultTemplate) {
-            const project = createDefaultTemplate(
-              Object.fromEntries(deps.entries()),
-            );
+      shasums[pJson.name] = shasum;
+      console.warn(`shasum for ${pJson.name}(${filename}): ${shasum}`);
 
-            for (const filePath of Object.keys(project)) {
-              formData.append(
-                `template:default:${encodeURIComponent(filePath)}`,
-                project[filePath],
-              );
-            }
-          }
+      const outputPkg = outputMetadata.packages.find(
+        (p) => p.name === pJson.name,
+      )!;
+      outputPkg.shasum = shasum;
 
-          const restoreMap = new Map<
-            string,
-            Awaited<ReturnType<typeof writeDeps>>
-          >();
-          for (const p of paths) {
-            if (!(await hasPackageJson(p))) {
-              continue;
-            }
-            const pJsonPath = path.resolve(p, "package.json");
-            const pJson = await readPackageJSON(pJsonPath);
+      const file = await fs.readFile(path.resolve(p, filename));
 
-            if (pJson.private) {
-              continue;
-            }
+      const blob = new Blob([file], {
+        type: "application/octet-stream",
+      });
+      formData.append(`package:${pJson.name}`, blob, filename);
+    } finally {
+      await restoreMap.get(p)?.();
+    }
+  }
 
-            restoreMap.set(p, await writeDeps(p, deps, realDeps));
-          }
-
-          const shasums: Record<string, string> = {};
-          for (const p of paths) {
-            if (!(await hasPackageJson(p))) {
-              console.warn(
-                `skipping ${p} because there's no package.json file`,
-              );
-              continue;
-            }
-            const pJsonPath = path.resolve(p, "package.json");
-            try {
-              const pJson = await readPackageJSON(pJsonPath);
-
-              if (!pJson.name) {
-                throw new Error(
-                  `"name" field in ${pJsonPath} should be defined`,
-                );
-              }
-              if (pJson.private) {
-                console.warn(`skipping ${p} because the package is private`);
-                continue;
-              }
-
-              const { filename, shasum } = await resolveTarball(
-                isPnpm ? "pnpm" : "npm",
-                p,
-              );
-
-              shasums[pJson.name] = shasum;
-              console.warn(`shasum for ${pJson.name}(${filename}): ${shasum}`);
-
-              const outputPkg = outputMetadata.packages.find(
-                (p) => p.name === pJson.name,
-              )!;
-              outputPkg.shasum = shasum;
-
-              const file = await fs.readFile(path.resolve(p, filename));
-
-              const blob = new Blob([file], {
-                type: "application/octet-stream",
-              });
-              formData.append(`package:${pJson.name}`, blob, filename);
-            } finally {
-              await restoreMap.get(p)?.();
-            }
-          }
-
-          const packageManager = await detect();
-          const res = await fetch(publishUrl, {
-            method: "POST",
-            headers: {
-              "sb-comment": comment,
-              "sb-compact": `${isCompact}`,
-              "sb-key": key,
-              "sb-shasums": JSON.stringify(shasums),
-              "sb-run-id": GITHUB_RUN_ID,
-              "sb-package-manager": packageManager.agent ?? "npm",
-              "sb-only-templates": `${isOnlyTemplates}`,
-            },
-            body: formData,
-          });
-          const laterRes = await res.clone().json();
-          assert.equal(
-            res.status,
-            200,
-            `publishing failed: ${await res.text()}`,
-          );
-
-          console.warn("\n");
-          console.warn(
-            `⚡️ Your npm packages are published.\n${[...formData.keys()]
-              .filter((k) => k.startsWith("package:"))
-              .map(
-                (name, i) =>
-                  `${name.slice("package:".length)}: npm i ${laterRes.urls[i]}`,
-              )
-              .join("\n")}`,
-          );
-
-          const output = JSON.stringify(outputMetadata, null, 2);
-          if (printJson) {
-            console.log(output); // Log output for piping
-          }
-          if (saveJson) {
-            await fs.writeFile(jsonFilePath, output);
-            console.warn(`metadata written to ${jsonFilePath}`);
-          }
-        },
-      };
+  const packageManager = await detect();
+  const res = await fetch(publishUrl, {
+    method: "POST",
+    headers: {
+      "sb-comment": options.comment,
+      "sb-compact": `${options.compact}`,
+      "sb-key": key,
+      "sb-shasums": JSON.stringify(shasums),
+      "sb-run-id": GITHUB_RUN_ID,
+      "sb-package-manager": packageManager.agent ?? "npm",
+      "sb-only-templates": `${options.onlyTemplates}`,
     },
-    link: () => {
-      return {
-        meta: {},
-        run: () => {},
-      };
-    },
-  },
-});
+    body: formData,
+  });
+  const laterRes = await res.clone().json();
+  assert.equal(res.status, 200, `publishing failed: ${await res.text()}`);
 
-runMain(main)
-  .then(() => process.exit(0))
-  .catch(() => process.exit(1));
+  console.warn("\n");
+  console.warn(
+    `⚡️ Your npm packages are published.\n${[...formData.keys()]
+      .filter((k) => k.startsWith("package:"))
+      .map(
+        (name, i) =>
+          `${name.slice("package:".length)}: npm i ${laterRes.urls[i]}`,
+      )
+      .join("\n")}`,
+  );
+
+  const output = JSON.stringify(outputMetadata, null, 2);
+  if (printJson) {
+    console.log(output); // Log output for piping
+  }
+  if (saveJson) {
+    await fs.writeFile(jsonFilePath, output);
+    console.warn(`metadata written to ${jsonFilePath}`);
+  }
+}
 
 // TODO: we'll add support for yarn if users hit issues with npm
 async function resolveTarball(pm: "npm" | "pnpm", p: string) {
