@@ -2,7 +2,7 @@
   "name": "pkg-pr-new",
   "version": "0.0.24",
   "description": "",
-  "main": "index.js",
+  "main": "./dist/index.js",
   "type": "module",
   "bin": {
     "pkg-pr-new": "bin/cli.js"
@@ -16,6 +16,12 @@
     "dev": "tsup --watch",
     "build": "tsup",
     "build:publish": "API_URL=https://pkg.pr.new/ tsup"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
   },
   "keywords": [],
   "author": "",
