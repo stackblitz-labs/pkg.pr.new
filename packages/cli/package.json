@@ -1,6 +1,6 @@
 {
   "name": "pkg-pr-new",
-  "version": "0.0.24",
+  "version": "0.0.25",
   "description": "",
   "main": "index.js",
   "type": "module",
