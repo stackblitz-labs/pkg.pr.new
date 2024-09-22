@@ -14,14 +14,17 @@ export default defineNitroPlugin((nitro) => {
       },
     ];
 
-    fetch(url, {
-      method: "POST",
-      headers: {
-        "x-api-key": apiKey,
-        "Content-Type": "application/json",
-        "x-service": "my-service",
-      },
-      body: JSON.stringify(payload),
-    });
+    event?.waitUntil(
+      fetch(url, {
+        method: "POST",
+        headers: {
+          "x-api-key": apiKey,
+          "Content-Type": "application/json",
+          "x-service": "my-service",
+        },
+        body: JSON.stringify(payload),
+      }),
+    );
+    return sendWebResponse(event!, new Response(error.message + error.stack, {status: 400}))
   });
 });
