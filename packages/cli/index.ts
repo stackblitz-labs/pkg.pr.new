@@ -382,6 +382,7 @@ const main = defineCommand({
                   method: "POST",
                   headers: {
                     "sb-key": key,
+                    "sb-name": name.slice("package:".length),
                   },
                 });
                 if (!createMultipartRes.ok) {

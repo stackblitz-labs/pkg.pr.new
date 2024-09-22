@@ -20,7 +20,6 @@
     "nitropack": "^2.9.6",
     "octokit": "^3.2.1",
     "query-registry": "^3.0.1",
-    "wrangler": "^3.57.1",
-    "@paralleldrive/cuid2": "^2.2.2"
+    "wrangler": "^3.57.1"
   }
 }

@@ -108,15 +108,6 @@ export default eventHandler(async (event) => {
       if (file instanceof File) {
         const stream = file.stream();
         return write(stream);
-      } else {
-        const objectKey = file.slice("object:".length);
-        const binding = useBinding(event);
-        const object = (await binding.get(objectKey))!;
-
-        const stream = object.body;
-        await write(stream);
-
-        return binding.delete(object.key);
       }
     }),
   );

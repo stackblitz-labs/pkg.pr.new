@@ -1,10 +1,7 @@
-import { isWhitelisted } from "@pkg-pr-new/utils";
-import { init } from "@paralleldrive/cuid2";
-
-const createId = init({ length: 32 });
+import { abbreviateCommitHash, isWhitelisted } from "@pkg-pr-new/utils";
 
 export default eventHandler(async (event) => {
-  const { "sb-key": key } = getHeaders(event);
+  const { "sb-key": key, "sb-name": packageName } = getHeaders(event);
 
   if (!key) {
     throw createError({
@@ -31,7 +28,11 @@ export default eventHandler(async (event) => {
 
   const binding = useBinding(event);
 
-  const upload = await binding.createMultipartUpload(`${key}:${createId()}`);
+  const abbreviatedSha = abbreviateCommitHash(workflowData.sha);
+  const baseKey = `${workflowData.owner}:${workflowData.repo}`;
+  const packageKey = `${baseKey}:${abbreviatedSha}:${packageName}`;
+
+  const upload = await binding.createMultipartUpload(packageKey);
 
   return {
     ok: true,
