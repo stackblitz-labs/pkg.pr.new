@@ -2,6 +2,7 @@ import {
   Comment,
   abbreviateCommitHash,
   isPullRequest,
+  isWhitelisted,
 } from "@pkg-pr-new/utils";
 import { randomUUID } from "uncrypto";
 import { setItemStream, useTemplatesBucket } from "~/utils/bucket";
@@ -89,15 +90,22 @@ export default eventHandler(async (event) => {
 
   await Promise.all(
     packages.map(async (packageNameWithPrefix) => {
-      const file = formData.get(packageNameWithPrefix)! as File;
       const packageName = packageNameWithPrefix.slice("package:".length);
-
       const packageKey = `${baseKey}:${abbreviatedSha}:${packageName}`;
 
-      const stream = file.stream();
-      return setItemStream(event, usePackagesBucket.base, packageKey, stream, {
-        sha1: shasums[packageName],
-      });
+      const file = formData.get(packageNameWithPrefix)!;
+      if (file instanceof File) {
+        const stream = file.stream();
+        return setItemStream(
+          event,
+          usePackagesBucket.base,
+          packageKey,
+          stream,
+          {
+            sha1: shasums[packageName],
+          },
+        );
+      }
     }),
   );
 
@@ -211,7 +219,7 @@ export default eventHandler(async (event) => {
           if (c.performed_via_github_app?.id === Number(appId)) {
             prevComment = c;
             done();
-            break
+            break;
           }
         }
         return [];
@@ -265,25 +273,8 @@ export default eventHandler(async (event) => {
 
   return {
     ok: true,
-    urls: packagesWithoutPrefix.map(
-      (packageName) =>
-        generatePublishUrl("sha", origin, packageName, workflowData, compact),
+    urls: packagesWithoutPrefix.map((packageName) =>
+      generatePublishUrl("sha", origin, packageName, workflowData, compact),
     ),
   };
 });
-
-const whitelist =
-  "https://raw.githubusercontent.com/stackblitz-labs/pkg.pr.new/main/.whitelist";
-
-async function isWhitelisted(owner: string, repo: string) {
-  const combination = `${owner}/${repo}`;
-
-  try {
-    const response = await fetch(whitelist);
-    const content = await response.text();
-
-    return content.includes(combination);
-  } catch {
-    return false;
-  }
-}
