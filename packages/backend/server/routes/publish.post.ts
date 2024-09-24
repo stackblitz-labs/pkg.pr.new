@@ -90,9 +90,12 @@ export default eventHandler(async (event) => {
 
   await Promise.all(
     packages.map(async (packageNameWithPrefix) => {
-      function write(stream: ReadableStream) {
-        const packageName = packageNameWithPrefix.slice("package:".length);
-        const packageKey = `${baseKey}:${abbreviatedSha}:${packageName}`;
+      const packageName = packageNameWithPrefix.slice("package:".length);
+      const packageKey = `${baseKey}:${abbreviatedSha}:${packageName}`;
+
+      const file = formData.get(packageNameWithPrefix)!;
+      if (file instanceof File) {
+        const stream = file.stream();
         return setItemStream(
           event,
           usePackagesBucket.base,
@@ -103,12 +106,12 @@ export default eventHandler(async (event) => {
           },
         );
       }
+      const objectKey = file.slice("object:".length);
+      const binding = useBinding(event);
 
-      const file = formData.get(packageNameWithPrefix)!;
-      if (file instanceof File) {
-        const stream = file.stream();
-        return write(stream);
-      }
+      return binding.put(objectKey, null, {
+        sha1: shasums[packageName],
+      });
     }),
   );
 

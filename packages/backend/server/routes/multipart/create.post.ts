@@ -10,6 +10,14 @@ export default eventHandler(async (event) => {
     });
   }
   const workflowsBucket = useWorkflowsBucket(event);
+  
+  if (!(await workflowsBucket.hasItem(key))) {
+    throw createError({
+      statusCode: 401,
+      message:
+        "Try doing multipart uploads from a github workflow! Also make sure you install https://github.com/apps/pkg-pr-new Github app on the repo",
+    });
+  }
   const workflowData = (await workflowsBucket.getItem(key))!;
 
   const whitelisted = await isWhitelisted(
@@ -29,12 +37,13 @@ export default eventHandler(async (event) => {
   const binding = useBinding(event);
 
   const abbreviatedSha = abbreviateCommitHash(workflowData.sha);
-  const baseKey = `${workflowData.owner}:${workflowData.repo}`;
-  const packageKey = `${baseKey}:${abbreviatedSha}:${packageName}`;
+  const base = `${workflowData.owner}:${workflowData.repo}:${abbreviatedSha}`
+  const packageKey = `${base}:${packageName}`;
 
   const upload = await binding.createMultipartUpload(packageKey);
 
   return {
+    packageKey,
     ok: true,
     key: upload.key,
     id: upload.uploadId,
