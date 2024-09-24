@@ -43,6 +43,7 @@ export default eventHandler(async (event) => {
   const upload = await binding.createMultipartUpload(packageKey);
 
   return {
+    packageKey,
     ok: true,
     key: upload.key,
     id: upload.uploadId,
