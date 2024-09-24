@@ -106,12 +106,6 @@ export default eventHandler(async (event) => {
           },
         );
       }
-      const objectKey = file.slice("object:".length);
-      const binding = useBinding(event);
-
-      return binding.put(objectKey, null, {
-        sha1: shasums[packageName],
-      });
     }),
   );
 
