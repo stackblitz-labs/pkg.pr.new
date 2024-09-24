@@ -52,7 +52,6 @@ export default eventHandler(async (event) => {
   }
 
   throw createError({
-    message: packageKey,
     status: 404,
   });
 });

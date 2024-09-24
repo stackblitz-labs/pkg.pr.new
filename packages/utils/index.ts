@@ -43,7 +43,6 @@ const whitelist =
   "https://raw.githubusercontent.com/stackblitz-labs/pkg.pr.new/main/.whitelist";
 
 export async function isWhitelisted(owner: string, repo: string) {
-  return true
   const combination = `${owner}/${repo}`;
 
   try {
