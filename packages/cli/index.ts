@@ -391,7 +391,6 @@ const main = defineCommand({
                 }
                 const { key: uploadKey, id: uploadId, ...data } =
                   await createMultipartRes.json();
-                console.log('multipart', data)
 
                 interface R2UploadedPart {
                   partNumber: number;

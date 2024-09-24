@@ -1,9 +1,10 @@
+import { joinKeys } from "unstorage";
 import { abbreviateCommitHash, isWhitelisted } from "@pkg-pr-new/utils";
 
 export default eventHandler(async (event) => {
-  const { "sb-key": key, "sb-name": packageName } = getHeaders(event);
+  const { "sb-key": workflowKey, "sb-name": packageName } = getHeaders(event);
 
-  if (!key) {
+  if (!workflowKey) {
     throw createError({
       statusCode: 400,
       message: "sb-key is required",
@@ -11,14 +12,14 @@ export default eventHandler(async (event) => {
   }
   const workflowsBucket = useWorkflowsBucket(event);
   
-  if (!(await workflowsBucket.hasItem(key))) {
+  if (!(await workflowsBucket.hasItem(workflowKey))) {
     throw createError({
       statusCode: 401,
       message:
         "Try doing multipart uploads from a github workflow! Also make sure you install https://github.com/apps/pkg-pr-new Github app on the repo",
     });
   }
-  const workflowData = (await workflowsBucket.getItem(key))!;
+  const workflowData = (await workflowsBucket.getItem(workflowKey))!;
 
   const whitelisted = await isWhitelisted(
     workflowData.owner,
@@ -40,10 +41,10 @@ export default eventHandler(async (event) => {
   const base = `${workflowData.owner}:${workflowData.repo}:${abbreviatedSha}`
   const packageKey = `${base}:${packageName}`;
 
-  const upload = await binding.createMultipartUpload(packageKey);
+  const key = joinKeys(usePackagesBucket.base, packageKey);
+  const upload = await binding.createMultipartUpload(key);
 
   return {
-    packageKey,
     ok: true,
     key: upload.key,
     id: upload.uploadId,
