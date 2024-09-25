@@ -554,10 +554,10 @@ function hijackDeps(
 }
 
 function getFormEntrySize(entry: FormDataEntryValue) {
-  if (typeof entry === 'string') {
-    return entry.length;
+  if (entry instanceof File) {
+    return entry.size;
   }
-  return entry.size;
+  return entry.length;
 }
 
 async function verifyCompactMode(packageName: string) {
