@@ -95,11 +95,14 @@ After installing on your repository, you can run `npx pkg-pr-new publish` in you
 npm install --save-dev pkg-pr-new # or `npx pkg-pr-new publish`
 ```
 
-For workspaces:
+For workspaces and monorepos:
 
 ```sh
 npx pkg-pr-new publish './packages/A' './packages/B' # or `npx pkg-pr-new publish './packages/*'`
 ```
+
+> [!IMPORTANT]
+> Make sure the pkg-pr-new command runs only once in a defined workflow (that's part of how it avoids spam)! So instead of multiple times running pkg-pr-new for each workspace package, the command should be run one time for all the desired packages using the pattern above. 
 
 For templates (experimental):
 
