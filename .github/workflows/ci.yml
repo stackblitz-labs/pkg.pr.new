@@ -108,3 +108,6 @@ jobs:
 
       - name: pkg.pr.new
         run: pnpm publish:playgrounds
+
+      - name: log files
+        run: ls
