@@ -37,7 +37,15 @@ export default eventHandler(async (event) => {
   }
   const runId = Number(runIdHeader);
   const workflowsBucket = useWorkflowsBucket(event);
-  const workflowData = (await workflowsBucket.getItem(key))!;
+  const workflowData = await workflowsBucket.getItem(key);
+
+  if (!workflowData) {
+    throw createError({
+      statusCode: 404,
+      fatal: true,
+      message: `There is no workflow defined for ${key}`,
+    });
+  }
 
   const whitelisted = await isWhitelisted(
     workflowData.owner,
