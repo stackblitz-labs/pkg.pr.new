@@ -352,12 +352,15 @@ const main = defineCommand({
               )!;
               outputPkg.shasum = shasum;
 
-              const file = await fs.readFile(path.resolve(p, filename));
+              const filePath = path.resolve(p, filename)
+              const buffer = await fs.readFile(filePath);
 
-              const blob = new Blob([file], {
+              const blob = new Blob([buffer], {
                 type: "application/octet-stream",
               });
               formData.append(`package:${pJson.name}`, blob, filename);
+
+              await fs.rm(filePath)
             } finally {
               await restoreMap.get(p)?.();
             }
