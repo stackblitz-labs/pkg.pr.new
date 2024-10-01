@@ -90,7 +90,7 @@ const main = defineCommand({
           },
         },
         run: async ({ args }) => {
-          const paths = args._.length > 0
+          const paths = args._.length
             ? await glob(args._, {
                 expandDirectories: false,
                 onlyDirectories: true,
@@ -98,11 +98,27 @@ const main = defineCommand({
               })
             : [process.cwd()];
 
-          const templates = await glob(args.template ?? [], {
+          if (args._.includes(".") || args._.includes("./")) {
+            paths.push(process.cwd());
+          }
+
+          const templatePatterns =
+            typeof args.template === "string"
+              ? [args.template]
+              : ([...(args.template || [])] as string[]);
+
+          const templates = await glob(templatePatterns, {
             expandDirectories: false,
             onlyDirectories: true,
             absolute: true,
           });
+
+          if (
+            templatePatterns.includes(".") ||
+            templatePatterns.includes("./")
+          ) {
+            templates.push(process.cwd());
+          }
 
           const formData = new FormData();
 
