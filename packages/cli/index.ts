@@ -91,11 +91,13 @@ const main = defineCommand({
         },
         run: async ({ args }) => {
           console.log('args', args)
+          const ignore = ['**/node_modules/**', '.git']
           const paths = args._.length > 0
             ? await glob(args._, {
                 expandDirectories: false,
                 onlyDirectories: true,
                 absolute: true,
+                ignore,
               })
             : [process.cwd()];
           console.log('paths', paths)
@@ -104,6 +106,7 @@ const main = defineCommand({
             expandDirectories: false,
             onlyDirectories: true,
             absolute: true,
+            ignore,
           });
 
           const formData = new FormData();
