@@ -91,7 +91,6 @@ const main = defineCommand({
         },
         run: async ({ args }) => {
           console.log('args', args)
-          const ignore = ['**/node_modules/**', '.git']
           const paths = args._.length > 0
             ? await glob(args._, {
                 expandDirectories: false,
