@@ -90,6 +90,7 @@ const main = defineCommand({
           },
         },
         run: async ({ args }) => {
+          console.log('args', args)
           const paths = args._.length > 0
             ? await glob(args._, {
                 expandDirectories: false,
@@ -97,6 +98,7 @@ const main = defineCommand({
                 absolute: true,
               })
             : [process.cwd()];
+          console.log('paths', paths)
 
           const templates = await glob(args.template ?? [], {
             expandDirectories: false,
