@@ -90,23 +90,18 @@ const main = defineCommand({
           },
         },
         run: async ({ args }) => {
-          console.log('args', args)
-          const ignoredPaths = ["**/node_modules/**", ".git"]
           const paths = args._.length > 0
             ? await glob(args._, {
                 expandDirectories: false,
                 onlyDirectories: true,
                 absolute: true,
-                ignore: ignoredPaths,
               })
             : [process.cwd()];
-          console.log('paths', paths)
 
           const templates = await glob(args.template ?? [], {
             expandDirectories: false,
             onlyDirectories: true,
             absolute: true,
-            ignore: ignoredPaths,
           });
 
           const formData = new FormData();
@@ -244,7 +239,7 @@ const main = defineCommand({
               cwd: templateDir,
               dot: true,
               onlyFiles: true,
-              ignore: ignoredPaths, // always ignore node_modules and .git
+              ignore: ["**/node_modules", ".git"], // always ignore node_modules and .git
             });
 
             const filteredFiles = files.filter((file) => !ig.ignores(file));
