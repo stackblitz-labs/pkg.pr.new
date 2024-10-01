@@ -97,7 +97,7 @@ const main = defineCommand({
                 expandDirectories: false,
                 onlyDirectories: true,
                 absolute: true,
-                ignore,
+                ignore: ["**/node_modules", ".git"],
               })
             : [process.cwd()];
           console.log('paths', paths)
@@ -106,7 +106,7 @@ const main = defineCommand({
             expandDirectories: false,
             onlyDirectories: true,
             absolute: true,
-            ignore,
+            ignore: ["**/node_modules", ".git"],
           });
 
           const formData = new FormData();
