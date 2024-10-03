@@ -131,7 +131,7 @@ const main = defineCommand({
 
           if (!process.env.TEST && process.env.GITHUB_ACTIONS !== "true") {
             console.error(
-              "Continuous Releases are only available in Github Actions.",
+              "Continuous Releases are only available in GitHub Actions.",
             );
             process.exit(1);
           }

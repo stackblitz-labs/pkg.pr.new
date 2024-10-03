@@ -9,7 +9,7 @@ With pkg.pr.new, each of your commits and pull requests will trigger an instant 
 
 - 🚀 Instant Builds
 - 🍕 No Need for NPM Access
-- 🛠️ Github Workflows Friendly
+- 🛠️ GitHub Workflows Friendly
 - 📦️ No Configuration
 - 🔩 Single Command
 - ✉️ Pull Request Comments
@@ -84,7 +84,7 @@ Feel free to add your project or company here to join the pkg.pr.new family :)
 
 ## Setup
 
-First [install the Github Application](https://github.com/apps/pkg-pr-new).
+First [install the GitHub Application](https://github.com/apps/pkg-pr-new).
 
 > [!IMPORTANT]
 > Make sure it's installed on the repository before trying to publish a package.
@@ -102,7 +102,7 @@ npx pkg-pr-new publish './packages/A' './packages/B' # or `npx pkg-pr-new publis
 ```
 
 > [!IMPORTANT]
-> Make sure the pkg-pr-new command runs only once in a defined workflow (that's part of how it avoids spam)! So instead of multiple times running pkg-pr-new for each workspace package, the command should be run one time for all the desired packages using the pattern above. 
+> Make sure the pkg-pr-new command runs only once in a defined workflow (that's part of how it avoids spam)! So instead of multiple times running pkg-pr-new for each workspace package, the command should be run one time for all the desired packages using the pattern above.
 
 For templates (experimental):
 
@@ -121,7 +121,7 @@ For shorter urls, `--compact` can be useful:
 npx pkg-pr-new publish --compact './packages/A' './packages/B'
 ```
 
-> `--compact` requires your package to be a valid (published) package on npm with a specified `repository` field in the package.json! See [this](https://docs.npmjs.com/cli/v7/configuring-npm/package-json#repository). pkg.pr.new is case sensitive, if the Github owner is `PuruVJ`, the package.json `repository` field should not have `puruvj`. 
+> `--compact` requires your package to be a valid (published) package on npm with a specified `repository` field in the package.json! See [this](https://docs.npmjs.com/cli/v7/configuring-npm/package-json#repository). pkg.pr.new is case sensitive, if the GitHub owner is `PuruVJ`, the package.json `repository` field should not have `puruvj`.
 
 With `--compact`:
 
