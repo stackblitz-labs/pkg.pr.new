@@ -258,12 +258,7 @@ This custom script does the following:
 - For pushes with an associated open PR: It adds or updates a comment on that PR.
 - For pushes without an open PR (e.g., direct pushes to main): It logs the publish information to the GitHub Actions console.
 
-By using this approach, you can:
-
-- Customize the format and content of the comments.
-- Control when and where comments are posted.
-- Handle different scenarios (PRs vs. direct pushes) differently.
-- Ensure publish information is always available, either as a PR comment or in the Actions log.
+This is a sample recipe that users can adapt with `--json` and `--comment=off` to create custom comments tailored to their workflow needs.
 
 Remember to set the necessary permissions in your workflow.
 
