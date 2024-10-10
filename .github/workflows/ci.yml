@@ -109,9 +109,6 @@ jobs:
       - name: pkg.pr.new
         run: pnpm publish:playgrounds --json output.json --comment=off
 
-  post-comment:
-    runs-on: ubuntu-latest
-    steps:
       - name: Post or update comment
         uses: actions/github-script@v6
         with:
@@ -150,7 +147,7 @@ jobs:
                 console.log('No issue number provided. Cannot post or update comment.');
                 return;
               }
-              
+
               const existingComment = await findBotComment(issueNumber);
               if (existingComment) {
                 await github.rest.issues.updateComment({
@@ -169,7 +166,7 @@ jobs:
               }
             }
 
-            function logPublishInfo() {
+            async function logPublishInfo() {
               console.log('\n' + '='.repeat(50));
               console.log('Publish Information for commit:', context.sha.substring(0, 7));
               console.log('='.repeat(50));
@@ -189,10 +186,10 @@ jobs:
                 state: 'open',
                 head: `${context.repo.owner}:${context.ref.replace('refs/heads/', '')}`
               });
-              
+
               if (pullRequests.data.length > 0) {
                 await createOrUpdateComment(pullRequests.data[0].number);
               } else {
                 console.log('No open pull request found for this push. Logging publish information to console:');
-                logPublishInfo();
+                await logPublishInfo();
               }
