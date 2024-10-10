@@ -193,3 +193,4 @@ jobs:
                 console.log('No open pull request found for this push. Logging publish information to console:');
                 await logPublishInfo();
               }
+            }
