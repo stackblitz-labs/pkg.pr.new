@@ -125,7 +125,10 @@ jobs:
             const packages = output.packages.map(p => `- ${p.name}: ${p.url}`).join('\n');
             const templates = output.templates.map(t => `- [${t.name}](${t.url})`).join('\n');
 
-            const body = `## Custom Publish Message for ${context.sha.substring(0, 7)}
+            const commitSha = context.eventName === 'pull_request' ? github.event.pull_request.head.sha : github.sha;
+
+            const body = `## Custom Publish Message for ${commitSha.substring(0, 7)}`;
+
 
             ### Published Packages:
 
