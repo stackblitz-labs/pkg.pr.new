@@ -147,6 +147,86 @@ And `--comment=off` would turn off comments for maintainers who prefer minimal p
 
 For repositories with many packages, comments might get too long. In that case, you can use `--only-templates` to only show templates.
 
+pkg.pr.new uses `npm pack --json` under the hood, in case you face issues, you can also use the `--pnpm` flag so it starts using `pnpm pack`. This is not necessary in most cases.
+
+<img width="100%" src="https://github.com/stackblitz-labs/pkg.pr.new/assets/37929992/2fc03b94-ebae-4c47-a271-03a4ad5d2449" />
+
+pkg.pr.new is not available in your local environment and it only works in workflows.
+
+### Examples
+
+#### Release each commit and pull request:
+
+```yml
+name: Publish Any Commit
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build
+        run: pnpm build
+
+      - run: pnpx pkg-pr-new publish
+```
+
+#### Release approved pull requests only:
+
+```yml
+name: Publish Approved Pull Requests
+on:
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  approved:
+    if: github.event.review.state == 'APPROVED'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - run: pnpx pkg-pr-new publish
+```
+
+#### Avoid publishing on tags
+
+```yml
+on:
+  pull_request:
+  push:
+    branches:
+      - "**"
+    tags:
+      - "!**"
+```
+
+As noted in [#140](https://github.com/stackblitz-labs/pkg.pr.new/issues/140), workflows run on tags too, that's not an issue at all, but in case users would like to avoid duplicate publishes.
+
 ## Custom GitHub Messages and Comments
 
 For advanced use cases where you want more control over the messages posted by pkg.pr.new, you can use the `--json` option in combination with `--comment=off`. This allows you to generate metadata about the publish operation without creating a default comment, which you can then use to create custom comments via the GitHub Actions API.
@@ -263,86 +343,6 @@ This is a sample recipe that users can adapt with `--json` and `--comment=off` t
 Remember to set the necessary permissions in your workflow.
 
 This custom approach gives you full control over how pkg.pr.new communicates its results, allowing you to integrate it seamlessly into your development workflow.
-
-pkg.pr.new uses `npm pack --json` under the hood, in case you face issues, you can also use the `--pnpm` flag so it starts using `pnpm pack`. This is not necessary in most cases.
-
-<img width="100%" src="https://github.com/stackblitz-labs/pkg.pr.new/assets/37929992/2fc03b94-ebae-4c47-a271-03a4ad5d2449" />
-
-pkg.pr.new is not available in your local environment and it only works in workflows.
-
-### Examples
-
-#### Release each commit and pull request:
-
-```yml
-name: Publish Any Commit
-on: [push, pull_request]
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - run: corepack enable
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install
-
-      - name: Build
-        run: pnpm build
-
-      - run: pnpx pkg-pr-new publish
-```
-
-#### Release approved pull requests only:
-
-```yml
-name: Publish Approved Pull Requests
-on:
-  pull_request_review:
-    types: [submitted]
-
-jobs:
-  approved:
-    if: github.event.review.state == 'APPROVED'
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - run: corepack enable
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install
-
-      - run: pnpx pkg-pr-new publish
-```
-
-#### Avoid publishing on tags
-
-```yml
-on:
-  pull_request:
-  push:
-    branches:
-      - "**"
-    tags:
-      - "!**"
-```
-
-As noted in [#140](https://github.com/stackblitz-labs/pkg.pr.new/issues/140), workflows run on tags too, that's not an issue at all, but in case users would like to avoid duplicate publishes.
 
 ---
 
