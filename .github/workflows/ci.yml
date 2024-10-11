@@ -125,7 +125,11 @@ jobs:
             const packages = output.packages.map(p => `- ${p.name}: ${p.url}`).join('\n');
             const templates = output.templates.map(t => `- [${t.name}](${t.url})`).join('\n');
 
-            const commitUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${context.sha}`;
+            const sha = context.event_name === 'pull_request'
+              ? context.payload.pull_request.head.sha
+              : context.payload.after;
+
+            const commitUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${sha}`;
 
             const body = `## Custom Publish Message
 
