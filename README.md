@@ -163,93 +163,93 @@ run: npx pkg-pr-new publish --json output.json --comment=off
 2. Add a custom step in your workflow to process the JSON output and create a custom comment:
 
 ```yml
-name: Post or update comment
-uses: actions/github-script@v6
-with:
-  github-token: ${{secrets.GITHUB_TOKEN}}
-  script: |
-    const fs = require('fs');
-    const output = JSON.parse(fs.readFileSync('output.json', 'utf8'));
+- name: Post or update comment
+  uses: actions/github-script@v6
+  with:
+    github-token: ${{ secrets.GITHUB_TOKEN }}
+    script: |
+      const fs = require('fs');
+      const output = JSON.parse(fs.readFileSync('output.json', 'utf8'));
 
-    const packages = output.packages.map(p => `- ${p.name}: ${p.url}`).join('\n');
-    const templates = output.templates.map(t => `- [${t.name}](${t.url})`).join('\n');
-    const body = `
-      ## Custom Publish Message for ${context.sha.substring(0, 7)}
+      const packages = output.packages.map(p => `- ${p.name}: ${p.url}`).join('\n');
+      const templates = output.templates.map(t => `- [${t.name}](${t.url})`).join('\n');
+
+      const body = `## pkg.pr.new custom message
 
       ### Published Packages:
+
       ${packages}
 
       ### Templates:
-      ${templates}
-    `;
 
-    const botCommentIdentifier = '## Custom Publish Message';
+      ${templates}`;
 
-    async function findBotComment(issueNumber) {
-      if (!issueNumber) return null;
-      
-      const comments = await github.rest.issues.listComments({
-        owner: context.repo.owner,
-        repo: context.repo.repo,
-        issue_number: issueNumber
-      });
+      const botCommentIdentifier = '## Custom Publish Message';
 
-      return comments.data.find(comment => comment.body.includes(botCommentIdentifier));
-    }
-
-    async function createOrUpdateComment(issueNumber) {
-      if (!issueNumber) {
-        console.log('No issue number provided. Cannot post or update comment.');
-        return;
-      }
-
-      const existingComment = await findBotComment(issueNumber);
-
-      if (existingComment) {
-        await github.rest.issues.updateComment({
+      async function findBotComment(issueNumber) {
+        if (!issueNumber) return null;
+        const comments = await github.rest.issues.listComments({
           owner: context.repo.owner,
           repo: context.repo.repo,
-          comment_id: existingComment.id,
-          body: body
+          issue_number: issueNumber
         });
-      } else {
-        await github.rest.issues.createComment({
-          issue_number: issueNumber,
+        return comments.data.find(comment => comment.body.includes(botCommentIdentifier));
+      }
+
+      async function createOrUpdateComment(issueNumber) {
+        if (!issueNumber) {
+          console.log('No issue number provided. Cannot post or update comment.');
+          return;
+        }
+
+        const existingComment = await findBotComment(issueNumber);
+        if (existingComment) {
+          await github.rest.issues.updateComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            comment_id: existingComment.id,
+            body: body
+          });
+        } else {
+          await github.rest.issues.createComment({
+            issue_number: issueNumber,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: body
+          });
+        }
+      }
+
+      async function logPublishInfo() {
+        console.log('\n' + '='.repeat(50));
+        console.log('Publish Information');
+        console.log('='.repeat(50));
+        console.log('\nPublished Packages:');
+        console.log(packages);
+        console.log('\nTemplates:');
+        console.log(templates);
+        console.log('\n' + '='.repeat(50));
+      }
+
+      if (context.eventName === 'pull_request') {
+        if (context.issue.number) {
+          await createOrUpdateComment(context.issue.number);
+        }
+      } else if (context.eventName === 'push') {
+        const pullRequests = await github.rest.pulls.list({
           owner: context.repo.owner,
           repo: context.repo.repo,
-          body: body
+          state: 'open',
+          head: `${context.repo.owner}:${context.ref.replace('refs/heads/', '')}`
         });
+
+        if (pullRequests.data.length > 0) {
+          await createOrUpdateComment(pullRequests.data[0].number);
+        } else {
+          console.log('No open pull request found for this push. Logging publish information to console:');
+          await logPublishInfo();
+        }
       }
-    }
-
-    function logPublishInfo() {
-      console.log('\n' + '='.repeat(50));
-      console.log('Publish Information for commit:', context.sha.substring(0, 7));
-      console.log('='.repeat(50));
-      console.log('\nPublished Packages:');
-      console.log(packages);
-      console.log('\nTemplates:');
-      console.log(templates);
-      console.log('\n' + '='.repeat(50));
-    }
-
-    if (context.eventName === 'pull_request') {
-      await createOrUpdateComment(context.issue.number);
-    } else if (context.eventName === 'push') {
-      const pullRequests = await github.rest.pulls.list({
-        owner: context.repo.owner,
-        repo: context.repo.repo,
-        state: 'open',
-        head: `${context.repo.owner}:${context.ref.replace('refs/heads/', '')}`
-      });
-
-      if (pullRequests.data.length > 0) {
-        await createOrUpdateComment(pullRequests.data[0].number);
-      } else {
-        console.log('No open pull request found for this push. Logging publish information to console:');
-        logPublishInfo();
-      }
-    }
 ```
 
 This custom script does the following:
