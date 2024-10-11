@@ -364,7 +364,7 @@ This is a sample recipe that users can adapt with `--json` and `--comment=off` t
 
 Remember to set the necessary permissions in your workflow.
 
-This custom approach gives you full control over how pkg.pr.new communicates its results, allowing you to integrate it seamlessly into your development workflow.
+This custom approach gives you full control over how pkg.pr.new communicates its results.
 
 ---
 
