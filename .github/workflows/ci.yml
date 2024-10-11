@@ -125,10 +125,11 @@ jobs:
             const packages = output.packages.map(p => `- ${p.name}: ${p.url}`).join('\n');
             const templates = output.templates.map(t => `- [${t.name}](${t.url})`).join('\n');
 
-            const commitSha = context.eventName === 'pull_request' ? github.event.pull_request.head.sha : github.sha;
+            const commitSha = context.eventName === 'pull_request'
+              ? github.event.pull_request.head.sha
+              : github.sha;
 
-            const body = `## Custom Publish Message for ${commitSha.substring(0, 7)}`;
-
+            const body = `## Custom Publish Message for ${commitSha.substring(0, 7)}
 
             ### Published Packages:
 
@@ -176,7 +177,7 @@ jobs:
 
             async function logPublishInfo() {
               console.log('\n' + '='.repeat(50));
-              console.log('Publish Information for commit:', context.sha.substring(0, 7));
+              console.log('Publish Information for commit:', commitSha.substring(0, 7));
               console.log('='.repeat(50));
               console.log('\nPublished Packages:');
               console.log(packages);
