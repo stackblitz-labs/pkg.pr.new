@@ -267,15 +267,15 @@ run: npx pkg-pr-new publish --json output.json --comment=off
 
       const body = `## Custom Publish Message
 
-### Published Packages:
+      ### Published Packages:
 
-${packages}
+      ${packages}
 
-### Templates:
+      ### Templates:
 
-${templates}
+      ${templates}
 
-[View Commit](${commitUrl})`;
+      [View Commit](${commitUrl})`;
 
       const botCommentIdentifier = '## Custom Publish Message';
 
@@ -351,7 +351,6 @@ ${templates}
           await logPublishInfo();
         }
       }
-
 ```
 
 This custom script does the following:
