@@ -187,7 +187,9 @@ jobs:
             }
 
             if (context.eventName === 'pull_request') {
-              await createOrUpdateComment(context.issue.number);
+              if (context.issue.number) {
+                await createOrUpdateComment(context.issue.number);
+              }
             } else if (context.eventName === 'push') {
               const pullRequests = await github.rest.pulls.list({
                 owner: context.repo.owner,
