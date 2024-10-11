@@ -125,7 +125,9 @@ jobs:
             const packages = output.packages.map(p => `- ${p.name}: ${p.url}`).join('\n');
             const templates = output.templates.map(t => `- [${t.name}](${t.url})`).join('\n');
 
-            const body = `## pkg.pr.new custom message
+            const commitUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${context.sha}`;
+
+            const body = `## Custom Publish Message
 
             ### Published Packages:
 
@@ -133,7 +135,9 @@ jobs:
 
             ### Templates:
 
-            ${templates}`;
+            ${templates}
+
+            [View Commit](${commitUrl})`;
 
             const botCommentIdentifier = '## Custom Publish Message';
 
@@ -179,6 +183,7 @@ jobs:
               console.log(packages);
               console.log('\nTemplates:');
               console.log(templates);
+              console.log(`\nCommit URL: ${commitUrl}`);
               console.log('\n' + '='.repeat(50));
             }
 
