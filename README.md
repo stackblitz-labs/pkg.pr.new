@@ -251,18 +251,31 @@ run: npx pkg-pr-new publish --json output.json --comment=off
       const fs = require('fs');
       const output = JSON.parse(fs.readFileSync('output.json', 'utf8'));
 
-      const packages = output.packages.map(p => `- ${p.name}: ${p.url}`).join('\n');
-      const templates = output.templates.map(t => `- [${t.name}](${t.url})`).join('\n');
+      const packages = output.packages
+        .map((p) => `- ${p.name}: ${p.url}`)
+        .join('\n');
+      const templates = output.templates
+        .map((t) => `- [${t.name}](${t.url})`)
+        .join('\n');
 
-      const body = `## pkg.pr.new custom message
+      const sha =
+        context.event_name === 'pull_request'
+          ? context.payload.pull_request.head.sha
+          : context.payload.after;
 
-      ### Published Packages:
+      const commitUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${sha}`;
 
-      ${packages}
+      const body = `## Custom Publish Message
 
-      ### Templates:
+### Published Packages:
 
-      ${templates}`;
+${packages}
+
+### Templates:
+
+${templates}
+
+[View Commit](${commitUrl})`;
 
       const botCommentIdentifier = '## Custom Publish Message';
 
@@ -271,9 +284,11 @@ run: npx pkg-pr-new publish --json output.json --comment=off
         const comments = await github.rest.issues.listComments({
           owner: context.repo.owner,
           repo: context.repo.repo,
-          issue_number: issueNumber
+          issue_number: issueNumber,
         });
-        return comments.data.find(comment => comment.body.includes(botCommentIdentifier));
+        return comments.data.find((comment) =>
+          comment.body.includes(botCommentIdentifier)
+        );
       }
 
       async function createOrUpdateComment(issueNumber) {
@@ -288,14 +303,14 @@ run: npx pkg-pr-new publish --json output.json --comment=off
             owner: context.repo.owner,
             repo: context.repo.repo,
             comment_id: existingComment.id,
-            body: body
+            body: body,
           });
         } else {
           await github.rest.issues.createComment({
             issue_number: issueNumber,
             owner: context.repo.owner,
             repo: context.repo.repo,
-            body: body
+            body: body,
           });
         }
       }
@@ -308,6 +323,7 @@ run: npx pkg-pr-new publish --json output.json --comment=off
         console.log(packages);
         console.log('\nTemplates:');
         console.log(templates);
+        console.log(`\nCommit URL: ${commitUrl}`);
         console.log('\n' + '='.repeat(50));
       }
 
@@ -320,16 +336,22 @@ run: npx pkg-pr-new publish --json output.json --comment=off
           owner: context.repo.owner,
           repo: context.repo.repo,
           state: 'open',
-          head: `${context.repo.owner}:${context.ref.replace('refs/heads/', '')}`
+          head: `${context.repo.owner}:${context.ref.replace(
+            'refs/heads/',
+            ''
+          )}`,
         });
 
         if (pullRequests.data.length > 0) {
           await createOrUpdateComment(pullRequests.data[0].number);
         } else {
-          console.log('No open pull request found for this push. Logging publish information to console:');
+          console.log(
+            'No open pull request found for this push. Logging publish information to console:'
+          );
           await logPublishInfo();
         }
       }
+
 ```
 
 This custom script does the following:
