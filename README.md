@@ -1,6 +1,5 @@
 <p align="center"><img src="https://github.com/user-attachments/assets/314d5112-f67f-4758-82bf-7b0c19c01ba6" /></p>
 
-
 # pkg.pr.new <span><img src="https://emoji.slack-edge.com/TFHDVN56F/stackblitz/fd010078dcccebca.png" width="30" /></span>
 
 > We call it "Continuous Releases" too.
@@ -26,7 +25,6 @@ npm i https://pkg.pr.new/tinylibs/tinybench/tinybench@a832a55
 It is aiming to reduce the number of these comments :)
 
 > This was fixed in #18. Can we release that fix?
-
 
 These are some of the projects and companies using pkg.pr.new:
 
@@ -215,6 +213,8 @@ jobs:
       - run: pnpx pkg-pr-new publish
 ```
 
+> Releasing approved pull requests is the recommended way of having continuous releases. This ensures users always install approved and safe packages.
+
 #### Avoid publishing on tags
 
 ```yml
@@ -222,15 +222,150 @@ on:
   pull_request:
   push:
     branches:
-      - '**'
+      - "**"
     tags:
-      - '!**'
+      - "!**"
 ```
+
 As noted in [#140](https://github.com/stackblitz-labs/pkg.pr.new/issues/140), workflows run on tags too, that's not an issue at all, but in case users would like to avoid duplicate publishes.
 
----
+## Custom GitHub Messages and Comments
 
-> Releasing approved pull requests is the recommended way of having continuous releases. This ensures users always install approved and safe packages.
+For advanced use cases where you want more control over the messages posted by pkg.pr.new, you can use the `--json` option in combination with `--comment=off`. This allows you to generate metadata about the publish operation without creating a default comment, which you can then use to create custom comments via the GitHub Actions API.
+
+### Steps:
+
+1. Use pkg.pr.new with the `--json` and `--comment=off` options in your workflow:
+
+```yml
+- name: Publish packages
+  run: npx pkg-pr-new publish --json output.json --comment=off
+```
+
+2. Add a custom step in your workflow to process the JSON output and create a custom comment:
+
+```yml
+- name: Post or update comment
+  uses: actions/github-script@v6
+  with:
+    github-token: ${{ secrets.GITHUB_TOKEN }}
+    script: |
+      const fs = require('fs');
+      const output = JSON.parse(fs.readFileSync('output.json', 'utf8'));
+
+      const packages = output.packages
+        .map((p) => `- ${p.name}: ${p.url}`)
+        .join('\n');
+      const templates = output.templates
+        .map((t) => `- [${t.name}](${t.url})`)
+        .join('\n');
+
+      const sha =
+        context.event_name === 'pull_request'
+          ? context.payload.pull_request.head.sha
+          : context.payload.after;
+
+      const commitUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${sha}`;
+
+      const body = `## Custom Publish Message
+
+      ### Published Packages:
+
+      ${packages}
+
+      ### Templates:
+
+      ${templates}
+
+      [View Commit](${commitUrl})`;
+
+      const botCommentIdentifier = '## Custom Publish Message';
+
+      async function findBotComment(issueNumber) {
+        if (!issueNumber) return null;
+        const comments = await github.rest.issues.listComments({
+          owner: context.repo.owner,
+          repo: context.repo.repo,
+          issue_number: issueNumber,
+        });
+        return comments.data.find((comment) =>
+          comment.body.includes(botCommentIdentifier)
+        );
+      }
+
+      async function createOrUpdateComment(issueNumber) {
+        if (!issueNumber) {
+          console.log('No issue number provided. Cannot post or update comment.');
+          return;
+        }
+
+        const existingComment = await findBotComment(issueNumber);
+        if (existingComment) {
+          await github.rest.issues.updateComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            comment_id: existingComment.id,
+            body: body,
+          });
+        } else {
+          await github.rest.issues.createComment({
+            issue_number: issueNumber,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: body,
+          });
+        }
+      }
+
+      async function logPublishInfo() {
+        console.log('\n' + '='.repeat(50));
+        console.log('Publish Information');
+        console.log('='.repeat(50));
+        console.log('\nPublished Packages:');
+        console.log(packages);
+        console.log('\nTemplates:');
+        console.log(templates);
+        console.log(`\nCommit URL: ${commitUrl}`);
+        console.log('\n' + '='.repeat(50));
+      }
+
+      if (context.eventName === 'pull_request') {
+        if (context.issue.number) {
+          await createOrUpdateComment(context.issue.number);
+        }
+      } else if (context.eventName === 'push') {
+        const pullRequests = await github.rest.pulls.list({
+          owner: context.repo.owner,
+          repo: context.repo.repo,
+          state: 'open',
+          head: `${context.repo.owner}:${context.ref.replace(
+            'refs/heads/',
+            ''
+          )}`,
+        });
+
+        if (pullRequests.data.length > 0) {
+          await createOrUpdateComment(pullRequests.data[0].number);
+        } else {
+          console.log(
+            'No open pull request found for this push. Logging publish information to console:'
+          );
+          await logPublishInfo();
+        }
+      }
+```
+
+This custom script does the following:
+
+- For pull requests: It creates or updates a comment with the publish information.
+- For pushes with an associated open PR: It adds or updates a comment on that PR.
+- For pushes without an open PR (e.g., direct pushes to main): It logs the publish information to the GitHub Actions console.
+
+This is a sample recipe that users can adapt with `--json` and `--comment=off` to create custom comments.
+
+This custom approach gives you full control over how pkg.pr.new communicates its results.
+
+---
 
 Publishing is only available in workflows and it supports any workflow trigger event, more information [here](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#about-events-that-trigger-workflows).
 

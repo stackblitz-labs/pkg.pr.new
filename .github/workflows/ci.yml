@@ -32,7 +32,7 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           preCommands: pnpm install && pnpm build
-          command: pages deploy dist --project-name=pkg-pr-new --branch=main 
+          command: pages deploy dist --project-name=pkg-pr-new --branch=main
       - name: Deployment Url
         env:
           DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
@@ -43,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ startsWith(github.ref, 'refs/tags/v') }}
     needs: deploy
-    
+
     steps:
       - uses: actions/checkout@v4
       - run: corepack enable
@@ -55,7 +55,7 @@ jobs:
       - run: pnpm install
       - run: |
           pnpm build:publish
-          npm publish --access public # new version is already set before the tag event 
+          npm publish --access public # new version is already set before the tag event
         working-directory: ./packages/cli
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
