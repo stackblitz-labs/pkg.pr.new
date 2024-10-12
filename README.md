@@ -239,7 +239,7 @@ For advanced use cases where you want more control over the messages posted by p
 
 ```yml
 - name: Publish packages
-run: npx pkg-pr-new publish --json output.json --comment=off
+  run: npx pkg-pr-new publish --json output.json --comment=off
 ```
 
 2. Add a custom step in your workflow to process the JSON output and create a custom comment:
