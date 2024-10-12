@@ -213,6 +213,8 @@ jobs:
       - run: pnpx pkg-pr-new publish
 ```
 
+> Releasing approved pull requests is the recommended way of having continuous releases. This ensures users always install approved and safe packages.
+
 #### Avoid publishing on tags
 
 ```yml
@@ -236,7 +238,7 @@ For advanced use cases where you want more control over the messages posted by p
 1. Use pkg.pr.new with the `--json` and `--comment=off` options in your workflow:
 
 ```yml
-name: Publish packages
+- name: Publish packages
 run: npx pkg-pr-new publish --json output.json --comment=off
 ```
 
@@ -366,8 +368,6 @@ Remember to set the necessary permissions in your workflow.
 This custom approach gives you full control over how pkg.pr.new communicates its results.
 
 ---
-
-> Releasing approved pull requests is the recommended way of having continuous releases. This ensures users always install approved and safe packages.
 
 Publishing is only available in workflows and it supports any workflow trigger event, more information [here](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#about-events-that-trigger-workflows).
 
