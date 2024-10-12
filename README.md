@@ -361,9 +361,7 @@ This custom script does the following:
 - For pushes with an associated open PR: It adds or updates a comment on that PR.
 - For pushes without an open PR (e.g., direct pushes to main): It logs the publish information to the GitHub Actions console.
 
-This is a sample recipe that users can adapt with `--json` and `--comment=off` to create custom comments tailored to their workflow needs.
-
-Remember to set the necessary permissions in your workflow.
+This is a sample recipe that users can adapt with `--json` and `--comment=off` to create custom comments.
 
 This custom approach gives you full control over how pkg.pr.new communicates its results.
 
