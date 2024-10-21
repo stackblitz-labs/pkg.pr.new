@@ -432,6 +432,7 @@ const main = defineCommand({
           }
 
           const packageManager = await detect();
+          const agent = packageManager.agent.includes('@') ? packageManager.agent.split('@')[0] : packageManager.agent;
           const res = await fetch(publishUrl, {
             method: "POST",
             headers: {
@@ -440,7 +441,7 @@ const main = defineCommand({
               "sb-key": key,
               "sb-shasums": JSON.stringify(shasums),
               "sb-run-id": GITHUB_RUN_ID,
-              "sb-package-manager": packageManager.agent ?? "npm",
+              "sb-package-manager": agent ?? "npm",
               "sb-only-templates": `${isOnlyTemplates}`,
             },
             body: formData,
