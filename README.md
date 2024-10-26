@@ -76,6 +76,7 @@ These are some of the projects and companies using pkg.pr.new:
    <a href="https://vue-mess-detector.webmania.cc"><img src="https://vue-mess-detector.webmania.cc/logo.png" alt="Vue Mess Detector Logo" height="40" /></a>
    <a href="https://wxt.dev/"><img src="https://raw.githubusercontent.com/wxt-dev/wxt/HEAD/docs/public/hero-logo.svg" alt="WXT Framework Logo" height="40" /></a>
    <a href="https://rspack.dev/"><img src="https://assets.rspack.dev/rspack/rspack-logo.svg" height="40"></a>
+   <a href="https://kermanx.github.io/reactive-vscode/"><img src="https://kermanx.github.io/reactive-vscode/logo.svg" height="40"></a>
 </p>
 
 Feel free to add your project or company here to join the pkg.pr.new family :)
