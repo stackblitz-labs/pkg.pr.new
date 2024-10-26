@@ -392,7 +392,7 @@ const main = defineCommand({
                   console.error(await createMultipartRes.text());
                   continue;
                 }
-                const { key: uploadKey, id: uploadId, ...data } =
+                const { key: uploadKey, id: uploadId } =
                   await createMultipartRes.json();
 
                 interface R2UploadedPart {
