@@ -207,7 +207,7 @@ jobs:
         with:
           # In this example, the approver must have the write access
           # to the repository to trigger the package preview.
-          require: 'write'
+          require: "write"
 
   publish:
     needs: check
@@ -231,6 +231,9 @@ jobs:
 ```
 
 > Releasing approved pull requests is the recommended way of having continuous releases. This ensures users always install approved and safe packages.
+
+> [!TIP]
+> For any in-repo branch that has not yet been opened as a pull request, if pkg.pr.new has already been built on that branch, a @branch-name tag will be available to reference the latest commit in that branch. This allows you to access and test your code changes directly using @branch-name without needing a pull request.
 
 #### Avoid publishing on tags
 
