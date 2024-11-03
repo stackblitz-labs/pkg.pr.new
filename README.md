@@ -233,7 +233,7 @@ jobs:
 > Releasing approved pull requests is the recommended way of having continuous releases. This ensures users always install approved and safe packages.
 
 > [!TIP]
-> For any in-repo branch that has not yet been opened as a pull request, if pkg.pr.new has already been built on that branch, a @branch-name tag will be available to reference the latest commit in that branch. This allows you to access and test your code changes directly using @branch-name without needing a pull request. <br/> Example: http://pkg.pr.new/vite@main
+> For any in-repo branch not yet opened as a pull request, if pkg.pr.new has already built on it, a `@branch-name` tag will link to the latest commit. <br/> Example: http://pkg.pr.new/vite@main
 
 #### Avoid publishing on tags
 
