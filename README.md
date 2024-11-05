@@ -82,6 +82,8 @@ These are some of the projects and companies using pkg.pr.new:
 
 Feel free to add your project or company here to join the pkg.pr.new family :)
 
+You can also join our discord server [here](https://discord.gg/stackblitz), so we all have fun together! 
+
 ## Setup
 
 First [install the GitHub Application](https://github.com/apps/pkg-pr-new).
