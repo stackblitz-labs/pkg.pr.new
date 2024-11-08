@@ -78,6 +78,7 @@ These are some of the projects and companies using pkg.pr.new:
    <a href="https://rspack.dev/"><img src="https://assets.rspack.dev/rspack/rspack-logo.svg" height="40"></a>
    <a href="https://kermanx.github.io/reactive-vscode/"><img src="https://kermanx.github.io/reactive-vscode/logo.svg" height="40"></a>
    <a href="https://fast-check.dev/"><img src="https://raw.githubusercontent.com/dubzzz/fast-check/252853fa2984d7f1a060d92423ffd6603735c086/website/static/img/mug.svg" height="40"></a>
+  <a href="https://svelte.dev"><img src="https://svelte.dev/favicon.png" height="40" /></a>
 </p>
 
 Feel free to add your project or company here to join the pkg.pr.new family :)
