@@ -466,7 +466,7 @@ const main = defineCommand({
             .map((name, i) => {
               const packageName = name.slice("package:".length);
               const url = new URL(laterRes.urls[i])
-              const publintUrl = new URL(url.pathname, "https://publint.dev/pkg.pr.new/")
+              const publintUrl = new URL(`/pkg.pr.new${url.pathname}`, "https://publint.dev")
               return `${packageName}:
 - sha: ${shasums[packageName]}
 - publint: ${publintUrl}
