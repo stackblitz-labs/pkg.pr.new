@@ -90,13 +90,14 @@ const main = defineCommand({
           },
         },
         run: async ({ args }) => {
-          const paths = args._.length > 0
-            ? await glob(args._, {
-                expandDirectories: false,
-                onlyDirectories: true,
-                absolute: true,
-              })
-            : [process.cwd()];
+          const paths =
+            args._.length > 0
+              ? await glob(args._, {
+                  expandDirectories: false,
+                  onlyDirectories: true,
+                  absolute: true,
+                })
+              : [process.cwd()];
 
           const templates = await glob(args.template ?? [], {
             expandDirectories: false,
@@ -329,14 +330,13 @@ const main = defineCommand({
               );
 
               shasums[pJson.name] = shasum;
-              console.warn(`shasum for ${pJson.name}(${filename}): ${shasum}`);
 
               const outputPkg = outputMetadata.packages.find(
                 (p) => p.name === pJson.name,
               )!;
               outputPkg.shasum = shasum;
 
-              const filePath = path.resolve(p, filename)
+              const filePath = path.resolve(p, filename);
               const buffer = await fs.readFile(filePath);
 
               const blob = new Blob([buffer], {
@@ -344,7 +344,7 @@ const main = defineCommand({
               });
               formData.append(`package:${pJson.name}`, blob, filename);
 
-              await fs.rm(filePath)
+              await fs.rm(filePath);
             } finally {
               await restoreMap.get(p)?.();
             }
@@ -376,8 +376,11 @@ const main = defineCommand({
                   console.error(await createMultipartRes.text());
                   continue;
                 }
-                const { key: uploadKey, id: uploadId, ...data } =
-                  await createMultipartRes.json();
+                const {
+                  key: uploadKey,
+                  id: uploadId,
+                  ...data
+                } = await createMultipartRes.json();
 
                 interface R2UploadedPart {
                   partNumber: number;
@@ -432,7 +435,9 @@ const main = defineCommand({
           }
 
           const packageManager = await detect();
-          const agent = packageManager.agent.includes('@') ? packageManager.agent.split('@')[0] : packageManager.agent;
+          const agent = packageManager.agent.includes("@")
+            ? packageManager.agent.split("@")[0]
+            : packageManager.agent;
           const res = await fetch(publishUrl, {
             method: "POST",
             headers: {
@@ -454,15 +459,22 @@ const main = defineCommand({
           );
 
           console.warn("\n");
-          console.warn(
-            `⚡️ Your npm packages are published.\n${[...formData.keys()]
-              .filter((k) => k.startsWith("package:"))
-              .map(
-                (name, i) =>
-                  `${name.slice("package:".length)}: npm i ${laterRes.urls[i]}`,
-              )
-              .join("\n")}`,
-          );
+          console.warn("⚡️ Your npm packages are published.\n");
+
+          const packageLogs = [...formData.keys()]
+            .filter((k) => k.startsWith("package:"))
+            .map((name, i) => {
+              const packageName = name.slice("package:".length);
+              const url = new URL(laterRes.urls[i])
+              const publintUrl = new URL(url.pathname, "https://publint.dev/pkg.pr.new/")
+              return `${packageName}:
+- sha: ${shasums[packageName]}
+- publint: ${publintUrl}
+- npm: npm i ${url}`;
+            })
+            .join("\n\n");
+
+          console.warn(packageLogs);
 
           const output = JSON.stringify(outputMetadata, null, 2);
           if (printJson) {
@@ -542,7 +554,7 @@ function hijackDeps(
 }
 
 function getFormEntrySize(entry: FormDataEntryValue) {
-  if (typeof entry === 'string') {
+  if (typeof entry === "string") {
     return entry.length;
   }
   return entry.size;
