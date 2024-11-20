@@ -35,6 +35,7 @@ These are some of the projects and companies using pkg.pr.new:
   <a href="https://about.meta.com/"><img src="https://github.com/facebook.png" height="40"></a>
   <a href="https://nuxt.com/"><img src="https://nuxt.com/assets/design-kit/icon-green.png" height="40"></a>
   <a href="https://vitejs.dev/"><img src="https://vitejs.dev/logo.svg" height="40"></a>
+  <a href="https://vitest.dev/"><img src="https://vitest.dev/logo.svg" height="40"></a>
   <a href="https://github.com/volarjs"><img src="https://github.com/volarjs.png" height="40"></a>
   <a href="https://qwik.builder.io/"><img src="https://qwik.builder.io/logos/qwik-logo.svg" height="40"></a>
   <a href="https://qwikui.com/"><img src="https://qwikui.com/favicon.svg" height="40"></a>
@@ -85,7 +86,7 @@ These are some of the projects and companies using pkg.pr.new:
 
 Feel free to add your project or company here to join the pkg.pr.new family :)
 
-You can also join our discord server [here](https://discord.gg/stackblitz), so we all have fun together! 
+You can also join our discord server [here](https://discord.gg/stackblitz), so we all have fun together!
 
 ## Setup
 
