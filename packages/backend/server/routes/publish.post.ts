@@ -1,6 +1,5 @@
 import {
   Comment,
-  abbreviateCommitHash,
   isPullRequest,
   isWhitelisted,
 } from "@pkg-pr-new/utils";
@@ -89,7 +88,6 @@ export default eventHandler(async (event) => {
     });
   }
 
-  const abbreviatedSha = abbreviateCommitHash(workflowData.sha);
   const baseKey = `${workflowData.owner}:${workflowData.repo}`;
 
   const cursorKey = `${baseKey}:${workflowData.ref}`;
@@ -99,7 +97,7 @@ export default eventHandler(async (event) => {
   await Promise.all(
     packages.map(async (packageNameWithPrefix) => {
       const packageName = packageNameWithPrefix.slice("package:".length);
-      const packageKey = `${baseKey}:${abbreviatedSha}:${packageName}`;
+      const packageKey = `${baseKey}:${workflowData.sha}:${packageName}`;
 
       const file = formData.get(packageNameWithPrefix)!;
       if (file instanceof File) {
@@ -158,7 +156,7 @@ export default eventHandler(async (event) => {
 
   if (!currentCursor || currentCursor.timestamp < runId) {
     await cursorBucket.setItem(cursorKey, {
-      sha: abbreviatedSha,
+      sha: workflowData.sha,
       timestamp: runId,
     });
   }

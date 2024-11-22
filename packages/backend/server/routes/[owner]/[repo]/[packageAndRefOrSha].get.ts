@@ -7,21 +7,37 @@ type Params = Omit<WorkflowData, "sha" | "ref"> & {
 
 export default eventHandler(async (event) => {
   const params = getRouterParams(event) as Params;
-  let [encodedPackageName, refOrSha] = params.packageAndRefOrSha.split("@");
+  let [encodedPackageName, longerRefOrSha] = params.packageAndRefOrSha.split("@");
   const packageName = decodeURIComponent(encodedPackageName);
-  refOrSha = refOrSha.split('.tgz')[0] // yarn support
+  longerRefOrSha = longerRefOrSha.split('.tgz')[0] // yarn support
+  const isSha = isValidGitHash(longerRefOrSha);
+  const refOrSha = isSha ? abbreviateCommitHash(longerRefOrSha) : longerRefOrSha;
 
-  if (isValidGitHash(refOrSha)) {
-    refOrSha = abbreviateCommitHash(refOrSha);
-  }
-
-  const base = `${params.owner}:${params.repo}:${refOrSha}`
-  const packageKey = `${base}:${packageName}`;
+  let base = `${params.owner}:${params.repo}:${refOrSha}`;
+  
   const cursorKey = base;
 
   const packagesBucket = usePackagesBucket(event);
   const downloadedAtBucket = useDownloadedAtBucket(event);
   const cursorBucket = useCursorsBucket(event);
+  // sample full git sha: 0123456789abcdef0123456789abcdef01234567
+  // abbreviated 7 chars: 0123456
+  // abbreviated 10 chars: 0123456789
+
+  // longer sha support with precision
+  if (isSha) {
+    const keys = await packagesBucket.getKeys(base);
+    for (const key of keys.filter(key => key.endsWith(`:${packageName}`))) {
+      const sha = key.split(":")[2];
+      console.log(sha)
+      if (sha.startsWith(longerRefOrSha)) {
+        base = base.replace(refOrSha, longerRefOrSha);
+        break;
+      }
+    }
+  }
+
+  const packageKey = `${base}:${packageName}`;
 
   if (await packagesBucket.hasItem(packageKey)) {
     const stream = await getItemStream(

@@ -1,5 +1,5 @@
 import { joinKeys } from "unstorage";
-import { abbreviateCommitHash, isWhitelisted } from "@pkg-pr-new/utils";
+import { isWhitelisted } from "@pkg-pr-new/utils";
 
 export default eventHandler(async (event) => {
   const { "sb-key": workflowKey, "sb-name": packageName } = getHeaders(event);
@@ -37,8 +37,7 @@ export default eventHandler(async (event) => {
 
   const binding = useBinding(event);
 
-  const abbreviatedSha = abbreviateCommitHash(workflowData.sha);
-  const base = `${workflowData.owner}:${workflowData.repo}:${abbreviatedSha}`
+  const base = `${workflowData.owner}:${workflowData.repo}:${workflowData.sha}`
   const packageKey = `${base}:${packageName}`;
 
   const key = joinKeys(usePackagesBucket.base, packageKey);
