@@ -14,6 +14,7 @@ export default eventHandler(async (event) => {
   const refOrSha = isSha ? abbreviateCommitHash(longerRefOrSha) : longerRefOrSha;
 
   let base = `${params.owner}:${params.repo}:${refOrSha}`;
+  let packageKey = `${base}:${packageName}`;
   
   const cursorKey = base;
 
@@ -27,13 +28,11 @@ export default eventHandler(async (event) => {
     for (const key of keys.filter(key => key.endsWith(`:${packageName}`))) {
       const sha = key.split(":")[2];
       if (sha.startsWith(longerRefOrSha)) {
-        base = base.replace(refOrSha, longerRefOrSha);
+        packageKey = key;
         break;
       }
     }
   }
-
-  const packageKey = `${base}:${packageName}`;
 
   if (await packagesBucket.hasItem(packageKey)) {
     const stream = await getItemStream(
