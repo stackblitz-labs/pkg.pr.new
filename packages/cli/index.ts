@@ -118,9 +118,6 @@ const main = defineCommand({
           const isOnlyTemplates = !!args["only-templates"];
 
           const comment: Comment = args.comment as Comment;
-
-          console.log(`Selected Package Manager: ${args.packageManager}`);
-
           const selectedPackageManager = args.packageManager as "npm" | "bun" | "pnpm" | "yarn";
 
           if (!["npm", "bun", "pnpm", "yarn"].includes(selectedPackageManager)) {
