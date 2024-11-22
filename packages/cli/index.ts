@@ -127,17 +127,6 @@ const main = defineCommand({
             process.exit(1);
           }
 
-          console.log(`Selected Package Manager: ${args.packageManager}`);
-
-          const selectedPackageManager = args.packageManager as "npm" | "bun" | "pnpm" | "yarn";
-
-          if (!["npm", "bun", "pnpm", "yarn"].includes(selectedPackageManager)) {
-            console.error(
-              `Unsupported package manager: ${selectedPackageManager}. Supported managers are npm, bun, pnpm, yarn.`
-            );
-            process.exit(1);
-          }
-
           if (!process.env.TEST && process.env.GITHUB_ACTIONS !== "true") {
             console.error(
               "Continuous Releases are only available in GitHub Actions.",
