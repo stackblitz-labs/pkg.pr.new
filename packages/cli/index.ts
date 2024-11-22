@@ -127,6 +127,8 @@ const main = defineCommand({
             process.exit(1);
           }
 
+          console.log(`Selected Package Manager: ${args.packageManager}`);
+
           const selectedPackageManager = args.packageManager as "npm" | "bun" | "pnpm" | "yarn";
 
           if (!["npm", "bun", "pnpm", "yarn"].includes(selectedPackageManager)) {
