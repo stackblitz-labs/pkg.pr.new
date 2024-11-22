@@ -28,7 +28,7 @@ export default eventHandler(async (event) => {
     for (const key of keys.filter(key => key.endsWith(`:${packageName}`))) {
       const sha = key.split(":")[2];
       if (sha.startsWith(longerRefOrSha)) {
-        packageKey = key;
+        packageKey = key.slice(usePackagesBucket.base.length + 1);
         break;
       }
     }
