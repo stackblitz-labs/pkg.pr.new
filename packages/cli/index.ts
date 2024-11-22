@@ -87,7 +87,7 @@ const main = defineCommand({
             type: "mixed",
             description: `Save metadata to a JSON file. If true, log the output for piping. If a string, save the output to the specified file path.`,
           },
-          packageManager: {
+          package-manager: {
             type: "string",
             description: "Specify the package manager to use (npm, bun, pnpm, yarn)",
             enum: ["npm", "bun", "pnpm", "yarn"],
