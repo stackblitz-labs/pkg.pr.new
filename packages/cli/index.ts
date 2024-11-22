@@ -87,7 +87,7 @@ const main = defineCommand({
             type: "mixed",
             description: `Save metadata to a JSON file. If true, log the output for piping. If a string, save the output to the specified file path.`,
           },
-          package-manager: {
+          packageManager: {
             type: "string",
             description: "Specify the package manager to use (npm, bun, pnpm, yarn)",
             enum: ["npm", "bun", "pnpm", "yarn"],
@@ -118,6 +118,8 @@ const main = defineCommand({
           const isOnlyTemplates = !!args["only-templates"];
 
           const comment: Comment = args.comment as Comment;
+
+          console.log(`Selected Package Manager: ${args.packageManager}`);
 
           const selectedPackageManager = args.packageManager as "npm" | "bun" | "pnpm" | "yarn";
 
