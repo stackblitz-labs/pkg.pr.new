@@ -6,7 +6,6 @@ import { createHash } from "node:crypto";
 import { hash } from "ohash";
 import fsSync from "fs";
 import fs from "fs/promises";
-import { detect } from "package-manager-detector";
 import { getPackageManifest, type PackageManifest } from "query-registry";
 import type { Comment } from "@pkg-pr-new/utils";
 import {
@@ -88,6 +87,12 @@ const main = defineCommand({
             type: "mixed",
             description: `Save metadata to a JSON file. If true, log the output for piping. If a string, save the output to the specified file path.`,
           },
+          packageManager: {
+            type: "string",
+            description: "Specify the package manager to use (npm, bun, pnpm, yarn)",
+            enum: ["npm", "bun", "pnpm", "yarn"],
+            default: "npm",
+          },
         },
         run: async ({ args }) => {
           const paths =
@@ -113,6 +118,15 @@ const main = defineCommand({
           const isOnlyTemplates = !!args["only-templates"];
 
           const comment: Comment = args.comment as Comment;
+
+          const selectedPackageManager = args.packageManager as "npm" | "bun" | "pnpm" | "yarn";
+
+          if (!["npm", "bun", "pnpm", "yarn"].includes(selectedPackageManager)) {
+            console.error(
+              `Unsupported package manager: ${selectedPackageManager}. Supported managers are npm, bun, pnpm, yarn.`
+            );
+            process.exit(1);
+          }
 
           if (!process.env.TEST && process.env.GITHUB_ACTIONS !== "true") {
             console.error(
@@ -433,10 +447,6 @@ const main = defineCommand({
             }
           }
 
-          const packageManager = await detect();
-          const agent = packageManager.agent.includes("@")
-            ? packageManager.agent.split("@")[0]
-            : packageManager.agent;
           const res = await fetch(publishUrl, {
             method: "POST",
             headers: {
@@ -445,7 +455,7 @@ const main = defineCommand({
               "sb-key": key,
               "sb-shasums": JSON.stringify(shasums),
               "sb-run-id": GITHUB_RUN_ID,
-              "sb-package-manager": agent ?? "npm",
+              "sb-package-manager": selectedPackageManager,
               "sb-only-templates": `${isOnlyTemplates}`,
             },
             body: formData,
