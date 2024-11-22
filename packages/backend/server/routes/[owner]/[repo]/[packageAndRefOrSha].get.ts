@@ -20,16 +20,12 @@ export default eventHandler(async (event) => {
   const packagesBucket = usePackagesBucket(event);
   const downloadedAtBucket = useDownloadedAtBucket(event);
   const cursorBucket = useCursorsBucket(event);
-  // sample full git sha: 0123456789abcdef0123456789abcdef01234567
-  // abbreviated 7 chars: 0123456
-  // abbreviated 10 chars: 0123456789
 
   // longer sha support with precision
   if (isSha) {
     const keys = await packagesBucket.getKeys(base);
     for (const key of keys.filter(key => key.endsWith(`:${packageName}`))) {
       const sha = key.split(":")[2];
-      console.log(sha)
       if (sha.startsWith(longerRefOrSha)) {
         base = base.replace(refOrSha, longerRefOrSha);
         break;
