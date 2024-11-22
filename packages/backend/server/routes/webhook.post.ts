@@ -14,7 +14,6 @@ export default eventHandler(async (event) => {
   const app = useOctokitApp(event);
 
   const { test } = useRuntimeConfig(event);
-  console.log("test", test, useRuntimeConfig(event));
   const workflowsBucket = useWorkflowsBucket(event);
   const pullRequestNumbersBucket = usePullRequestNumbersBucket(event);
   const cursorBucket = useCursorsBucket(event);
