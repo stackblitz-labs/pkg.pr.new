@@ -22,16 +22,12 @@ await ezSpawn.async(
   },
 );
 
-ezSpawn.async(
-  "pnpm cross-env TEST=true pnpm --filter=backend run preview",
-  [],
-  {
-    stdio: "inherit",
-    shell: true,
-    signal: c.signal,
-    killSignal: "SIGINT",
-  },
-);
+ezSpawn.async("pnpm --filter=backend run preview", [], {
+  stdio: "inherit",
+  shell: true,
+  signal: c.signal,
+  killSignal: "SIGINT",
+});
 
 await wp({ port: PORT });
 
