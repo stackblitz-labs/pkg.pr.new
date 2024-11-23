@@ -1,14 +1,24 @@
-import { usePackagesBucket } from "~/utils/bucket";
+import { useBinding } from "~/utils/bucket";
 
 export default eventHandler(async (event) => {
   try {
-    const packagesBucket = usePackagesBucket(event);
+    const binding = useBinding(event);
 
-    const keys = await packagesBucket.getKeys();
+    let truncated = true;
+    let cursor: string | undefined;
+    let totalObjects = 0;
+
+    while (truncated) {
+      const list = await binding.list({ cursor });
+
+      totalObjects += list.objects.length;
+      truncated = list.truncated;
+      cursor = list.cursor;
+    }
 
     return {
       ok: true,
-      totalObjects: keys.length,
+      totalObjects,
     };
   } catch (error) {
     throw createError({
@@ -16,4 +26,4 @@ export default eventHandler(async (event) => {
       message: "Failed to fetch R2 stats",
     });
   }
-}); 
+});
