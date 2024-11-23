@@ -1,29 +1,37 @@
 export default eventHandler(async (event) => {
   try {
-    const packagesBucket = usePackagesBucket(event);
+    const binding = useBinding(event);
 
-    const keys = await packagesBucket.getKeys();
-
+    let cursor: string | undefined = undefined;
+    let totalObjects = 0;
     const orgs = new Set<string>();
     const packages = new Set<string>();
 
-    for (const key of keys) {
+    do {
+      const result = await binding.list({ cursor });
+      const keys = result.objects.map((obj) => obj.key);
 
-      const parts = key.split(":"); 
+      totalObjects += keys.length;
 
-      if (parts.length >= 2) {
-        const org = parts[0];
-        const pkg = parts[1];
-        orgs.add(org);
-        packages.add(pkg);
-      } else {
-        console.warn(`Key does not conform to expected structure: ${key}`);
+      for (const key of keys) {
+        const parts = key.split(":");
+
+        if (parts.length >= 2) {
+          const org = parts[0];
+          const pkg = parts[1];
+          orgs.add(org);
+          packages.add(pkg);
+        } else {
+          console.warn(`Key does not conform to expected structure: ${key}`);
+        }
       }
-    }
+
+      cursor = result.truncated ? result.cursor : undefined;
+    } while (cursor);
 
     return {
       ok: true,
-      totalKeys: keys.length,
+      totalObjects,
       totalOrgs: orgs.size,
       totalPackages: packages.size,
     };
