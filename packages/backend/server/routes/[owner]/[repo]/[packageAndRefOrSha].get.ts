@@ -15,22 +15,35 @@ export default eventHandler(async (event) => {
 
   let base = `${params.owner}:${params.repo}:${refOrSha}`;
   let packageKey = `${base}:${packageName}`;
-  
+
   const cursorKey = base;
 
   const packagesBucket = usePackagesBucket(event);
   const downloadedAtBucket = useDownloadedAtBucket(event);
   const cursorBucket = useCursorsBucket(event);
 
+  if (await cursorBucket.hasItem(cursorKey)) {
+    const currentCursor = (await cursorBucket.getItem(cursorKey))!;
+
+    sendRedirect(
+      event,
+      `/${params.owner}/${params.repo}/${packageName}@${currentCursor.sha}`,
+    );
+    return;
+  }
+
   // longer sha support with precision
-  if (isSha) {
-    const keys = await packagesBucket.getKeys(base);
-    for (const key of keys.filter(key => key.endsWith(`:${packageName}`))) {
-      const sha = key.split(":")[2];
-      if (sha.startsWith(longerRefOrSha)) {
-        packageKey = key.slice(usePackagesBucket.base.length + 1);
-        break;
-      }
+  const binding = useBinding(event);
+  const { objects } = await binding.list({ prefix: `${usePackagesBucket.base}:${base}` })
+  for (const { key } of objects) {
+    // bucket:package:stackblitz-labs:pkg.pr.new:ded05e838c418096e5dd77a29101c8af9e73daea:playground-b
+    const trimmedKey = key.slice(usePackagesBucket.base.length + 1);
+    const [keySha, keyPackageName] = trimmedKey.split(":").slice(2);
+    if (keyPackageName !== packageName) continue;
+
+    if (keySha.startsWith(longerRefOrSha)) {
+      packageKey = trimmedKey;
+      break;
     }
   }
 
@@ -52,14 +65,6 @@ export default eventHandler(async (event) => {
     setResponseHeader(event, "content-type", "application/tar+gzip");
     // TODO: add HTTP caching
     return stream;
-  } else if (await cursorBucket.hasItem(cursorKey)) {
-    const currentCursor = (await cursorBucket.getItem(cursorKey))!;
-
-    sendRedirect(
-      event,
-      `/${params.owner}/${params.repo}/${packageName}@${currentCursor.sha}`,
-    );
-    return;
   }
 
   throw createError({
