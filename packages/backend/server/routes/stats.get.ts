@@ -1,49 +1,37 @@
-import { useBinding } from "~/utils/bucket";
-
 export default eventHandler(async (event) => {
   try {
-    const binding = useBinding(event);
+    const packagesBucket = usePackagesBucket(event);
 
-    let truncated = true;
-    let cursor: string | undefined;
-    let totalObjects = 0;
+    const keys = await packagesBucket.getKeys();
+
     const orgs = new Set<string>();
     const packages = new Set<string>();
 
-    while (truncated) {
-      const list = await binding.list({ cursor });
+    for (const key of keys) {
 
-      totalObjects += list.objects.length;
+      const parts = key.split(":"); 
 
-      for (const object of list.objects) {
-        try {
-          const [org, pkg] = object.key.split(":");
-          if (org) orgs.add(org);
-          if (pkg) packages.add(pkg);
-        } catch (err) {
-          console.error(`Error processing object key: ${object.key}`, err);
-        }
+      if (parts.length >= 2) {
+        const org = parts[0];
+        const pkg = parts[1];
+        orgs.add(org);
+        packages.add(pkg);
+      } else {
+        console.warn(`Key does not conform to expected structure: ${key}`);
       }
-
-      truncated = list.truncated;
-      cursor = list.cursor;
     }
-
-    console.log(`Total objects processed: ${totalObjects}`);
-    console.log(`Total unique orgs: ${orgs.size}`);
-    console.log(`Total unique packages: ${packages.size}`);
 
     return {
       ok: true,
-      totalObjects,
+      totalKeys: keys.length,
       totalOrgs: orgs.size,
       totalPackages: packages.size,
     };
   } catch (error) {
-    console.error("Failed to fetch R2 stats", error);
+    console.error("Failed to fetch package stats", error);
     throw createError({
       statusCode: 500,
-      message: "Failed to fetch R2 stats",
+      message: `Failed to fetch package stats: ${error.message || "Unknown error"}`,
     });
   }
 });
