@@ -7,21 +7,45 @@ type Params = Omit<WorkflowData, "sha" | "ref"> & {
 
 export default eventHandler(async (event) => {
   const params = getRouterParams(event) as Params;
-  let [encodedPackageName, refOrSha] = params.packageAndRefOrSha.split("@");
+  let [encodedPackageName, longerRefOrSha] = params.packageAndRefOrSha.split("@");
   const packageName = decodeURIComponent(encodedPackageName);
-  refOrSha = refOrSha.split('.tgz')[0] // yarn support
+  longerRefOrSha = longerRefOrSha.split('.tgz')[0] // yarn support
+  const isSha = isValidGitHash(longerRefOrSha);
+  const refOrSha = isSha ? abbreviateCommitHash(longerRefOrSha) : longerRefOrSha;
 
-  if (isValidGitHash(refOrSha)) {
-    refOrSha = abbreviateCommitHash(refOrSha);
-  }
+  let base = `${params.owner}:${params.repo}:${refOrSha}`;
+  let packageKey = `${base}:${packageName}`;
 
-  const base = `${params.owner}:${params.repo}:${refOrSha}`
-  const packageKey = `${base}:${packageName}`;
   const cursorKey = base;
 
   const packagesBucket = usePackagesBucket(event);
   const downloadedAtBucket = useDownloadedAtBucket(event);
   const cursorBucket = useCursorsBucket(event);
+
+  if (await cursorBucket.hasItem(cursorKey)) {
+    const currentCursor = (await cursorBucket.getItem(cursorKey))!;
+
+    sendRedirect(
+      event,
+      `/${params.owner}/${params.repo}/${packageName}@${currentCursor.sha}`,
+    );
+    return;
+  }
+
+  // longer sha support with precision
+  const binding = useBinding(event);
+  const { objects } = await binding.list({ prefix: `${usePackagesBucket.base}:${base}` })
+  for (const { key } of objects) {
+    // bucket:package:stackblitz-labs:pkg.pr.new:ded05e838c418096e5dd77a29101c8af9e73daea:playground-b
+    const trimmedKey = key.slice(usePackagesBucket.base.length + 1);
+    const [keySha, keyPackageName] = trimmedKey.split(":").slice(2);
+    if (keyPackageName !== packageName) continue;
+
+    if (keySha.startsWith(longerRefOrSha)) {
+      packageKey = trimmedKey;
+      break;
+    }
+  }
 
   if (await packagesBucket.hasItem(packageKey)) {
     const stream = await getItemStream(
@@ -41,14 +65,6 @@ export default eventHandler(async (event) => {
     setResponseHeader(event, "content-type", "application/tar+gzip");
     // TODO: add HTTP caching
     return stream;
-  } else if (await cursorBucket.hasItem(cursorKey)) {
-    const currentCursor = (await cursorBucket.getItem(cursorKey))!;
-
-    sendRedirect(
-      event,
-      `/${params.owner}/${params.repo}/${packageName}@${currentCursor.sha}`,
-    );
-    return;
   }
 
   throw createError({
