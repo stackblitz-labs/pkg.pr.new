@@ -3,7 +3,7 @@ export default eventHandler(async (event) => {
     const binding = useBinding(event);
 
     let cursor: string | undefined;
-    let totalObjects = 0;
+    let objectCount = 0;
     const orgs = new Set<string>();
     const repos = new Set<string>();
     const commits = new Set<string>();
@@ -12,38 +12,36 @@ export default eventHandler(async (event) => {
     const prefix = `${usePackagesBucket.base}:`;
 
     do {
-      const result = await binding.list({ prefix, cursor });
-      const keys = result.objects.map((obj) => obj.key);
+      const { objects, truncated, cursor: nextCursor } = await binding.list({ prefix, cursor });
+      objectCount += objects.length;
 
-      totalObjects += keys.length;
-
-      for (const key of keys) {
+      for (const { key } of objects) {
         const trimmedKey = key.slice(prefix.length);
         const parts = trimmedKey.split(":");
-        const [org, repo, commit, packageName] = parts;
 
-        if (org && repo && commit && packageName) {
-          orgs.add(org);
-          repos.add(repo);
-          commits.add(commit);
-          packages.add(packageName);
+        if (parts[0] && parts[1] && parts[2] && parts[3]) {
+          orgs.add(parts[0]);
+          repos.add(parts[1]);
+          commits.add(parts[2]);
+          packages.add(parts[3]);
         }
       }
 
-      cursor = result.truncated ? result.cursor : undefined;
+      cursor = truncated ? nextCursor : undefined;
     } while (cursor);
 
     return {
       ok: true,
-      totalObjects,
-      totalOrgs: orgs.size,
-      totalRepos: repos.size,
-      totalCommits: commits.size,
-      totalPackages: packages.size,
+      objects: objectCount,
+      orgs: orgs.size,
+      repos: repos.size,
+      commits: commits.size,
+      packages: packages.size,
     };
   } catch (error) {
     throw createError({
-      statusCode: 500
+      statusCode: 500,
+      message: error?.message 
     });
   }
 });
