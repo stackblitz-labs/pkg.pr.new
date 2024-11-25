@@ -35,7 +35,9 @@ export default eventHandler(async (event) => {
 
   // longer sha support with precision
   const binding = useBinding(event);
+  console.log(base);
   const { objects } = await binding.list({ prefix: `${usePackagesBucket.base}:${base}` })
+  console.log(objects.map(o => o.key));
   for (const { key } of objects) {
     // bucket:package:stackblitz-labs:pkg.pr.new:ded05e838c418096e5dd77a29101c8af9e73daea:playground-b
     const trimmedKey = key.slice(usePackagesBucket.base.length + 1);
