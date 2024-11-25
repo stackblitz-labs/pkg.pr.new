@@ -15,13 +15,14 @@ export default eventHandler(async (event) => {
     const cursorsPrefix = `${useCursorsBucket.base}:`;
 
     do {
-      const { objects, truncated, cursor: nextCursor } = await binding.list({ cursor });
-      objectCount += objects.length;
+      const response = await binding.list({ cursor });
+      objectCount += response.objects.length;
 
-      for (const { key } of objects) {
+      for (const { key } of response.objects) {
         if (key.startsWith(packagesPrefix)) {
           const trimmedKey = key.slice(packagesPrefix.length);
-          const [org, repo, commit, packageName] = trimmedKey.split(":");
+          const [org, repo, commit, ...packageNameParts] = trimmedKey.split(":");
+          const packageName = packageNameParts.join(":");
   
           orgs.add(org);
           repos.add(repo);
@@ -39,7 +40,7 @@ export default eventHandler(async (event) => {
         }
       }
 
-      cursor = truncated ? nextCursor : undefined;
+      cursor = response.truncated ? response.cursor : undefined;
     } while (cursor);
 
     return {
@@ -55,7 +56,7 @@ export default eventHandler(async (event) => {
   } catch (error) {
     throw createError({
       statusCode: 500,
-      message: error?.message 
+      message: error instanceof Error ? error.message : String(error)
     });
   }
 });

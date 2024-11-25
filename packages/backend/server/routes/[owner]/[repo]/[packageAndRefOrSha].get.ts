@@ -1,5 +1,6 @@
 import { WorkflowData } from "../../../types";
 import { abbreviateCommitHash } from "@pkg-pr-new/utils";
+import { normalizeKey } from 'unstorage'
 
 type Params = Omit<WorkflowData, "sha" | "ref"> & {
   packageAndRefOrSha: string;
@@ -35,21 +36,21 @@ export default eventHandler(async (event) => {
 
   // longer sha support with precision
   const binding = useBinding(event);
-  console.log(base);
   const { objects } = await binding.list({ prefix: `${usePackagesBucket.base}:${base}` })
-  console.log(objects.map(o => o.key));
   for (const { key } of objects) {
     // bucket:package:stackblitz-labs:pkg.pr.new:ded05e838c418096e5dd77a29101c8af9e73daea:playground-b
     const trimmedKey = key.slice(usePackagesBucket.base.length + 1);
-    const [keySha, keyPackageName] = trimmedKey.split(":").slice(2);
-    if (keyPackageName !== packageName) continue;
+
+    // https://github.com/unjs/unstorage/blob/e42c01d0c22092f394f57e3ec114371fc8dcf6dd/src/drivers/utils/index.ts#L14-L19
+    const [keySha, ...keyPackageNameParts] = trimmedKey.split(":").slice(2);
+    const keyPackageName = keyPackageNameParts.join(":");
+    if (keyPackageName !== normalizeKey(packageName)) continue;
 
     if (keySha.startsWith(longerRefOrSha)) {
       packageKey = trimmedKey;
       break;
     }
   }
-  console.log(packageKey);
 
   if (await packagesBucket.hasItem(packageKey)) {
     const stream = await getItemStream(
