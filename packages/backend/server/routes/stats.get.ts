@@ -4,25 +4,38 @@ export default eventHandler(async (event) => {
 
     let cursor: string | undefined;
     let objectCount = 0;
+    let branches = 0
+    let prs = 0
     const orgs = new Set<string>();
     const repos = new Set<string>();
     const commits = new Set<string>();
     const packages = new Set<string>();
 
-    const prefix = `${usePackagesBucket.base}:`;
+    const packagesPrefix = `${usePackagesBucket.base}:`;
+    const cursorsPrefix = `${useCursorsBucket.base}:`;
 
     do {
-      const { objects, truncated, cursor: nextCursor } = await binding.list({ prefix, cursor });
+      const { objects, truncated, cursor: nextCursor } = await binding.list({ cursor });
       objectCount += objects.length;
 
       for (const { key } of objects) {
-        const trimmedKey = key.slice(prefix.length);
-        const [org, repo, commit, packageName] = trimmedKey.split(":");
-
-        orgs.add(org);
-        repos.add(repo);
-        commits.add(commit);
-        packages.add(packageName);
+        if (key.startsWith(packagesPrefix)) {
+          const trimmedKey = key.slice(packagesPrefix.length);
+          const [org, repo, commit, packageName] = trimmedKey.split(":");
+  
+          orgs.add(org);
+          repos.add(repo);
+          commits.add(commit);
+          packages.add(packageName);
+        } else if (key.startsWith(cursorsPrefix)) {
+          const trimmedKey = key.slice(cursorsPrefix.length);
+          const ref = trimmedKey.split(":")[2];
+          if (!Number.isNaN(ref)) {
+            prs ++
+          } else {
+            branches.add(ref)
+          }
+        }
       }
 
       cursor = truncated ? nextCursor : undefined;
@@ -34,6 +47,8 @@ export default eventHandler(async (event) => {
       orgs: orgs.size,
       repos: repos.size,
       commits: commits.size,
+      branches: branches,
+      prs: prs,
       packages: packages.size,
     };
   } catch (error) {
