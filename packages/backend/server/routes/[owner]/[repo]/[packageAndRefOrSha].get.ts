@@ -12,6 +12,7 @@ export default eventHandler(async (event) => {
   longerRefOrSha = longerRefOrSha.split('.tgz')[0] // yarn support
   const isSha = isValidGitHash(longerRefOrSha);
   const refOrSha = isSha ? abbreviateCommitHash(longerRefOrSha) : longerRefOrSha;
+  console.log(packageName, refOrSha, longerRefOrSha);
 
   let base = `${params.owner}:${params.repo}:${refOrSha}`;
   let packageKey = `${base}:${packageName}`;
@@ -46,6 +47,7 @@ export default eventHandler(async (event) => {
       break;
     }
   }
+  console.log(packageKey);
 
   if (await packagesBucket.hasItem(packageKey)) {
     const stream = await getItemStream(
