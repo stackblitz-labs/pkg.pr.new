@@ -17,14 +17,12 @@ export default eventHandler(async (event) => {
 
       for (const { key } of objects) {
         const trimmedKey = key.slice(prefix.length);
-        const parts = trimmedKey.split(":");
+        const [org, repo, commit, packageName] = trimmedKey.split(":");
 
-        if (parts[0] && parts[1] && parts[2] && parts[3]) {
-          orgs.add(parts[0]);
-          repos.add(parts[1]);
-          commits.add(parts[2]);
-          packages.add(parts[3]);
-        }
+        orgs.add(org);
+        repos.add(repo);
+        commits.add(commit);
+        packages.add(packageName);
       }
 
       cursor = truncated ? nextCursor : undefined;
