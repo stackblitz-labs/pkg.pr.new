@@ -30,10 +30,11 @@ export default eventHandler(async (event) => {
         } else if (key.startsWith(cursorsPrefix)) {
           const trimmedKey = key.slice(cursorsPrefix.length);
           const ref = trimmedKey.split(":")[2];
-          if (!Number.isNaN(ref)) {
-            prs ++
+          const prNumber = Number(ref)
+          if (!isNaN(prNumber)) {
+            prs++
           } else {
-            branches.add(ref)
+            branches++
           }
         }
       }
