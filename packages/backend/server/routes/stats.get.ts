@@ -5,11 +5,12 @@ export default eventHandler(async (event) => {
     const binding = useBinding(event);
     const query = getQuery(event);
 
-    let cursor = query.cursor || undefined;
+    let cursor = query.cursor as string || undefined;
     let objectCount = 0;
 
     const packagesPrefix = `${usePackagesBucket.base}:`;
     const cursorsPrefix = `${useCursorsBucket.base}:`;
+    const templatesPrefix = `${useTemplatesBucket.base}:`;
 
     const results = [];
 
@@ -34,13 +35,24 @@ export default eventHandler(async (event) => {
       } else if (key.startsWith(cursorsPrefix)) {
         const trimmedKey = key.slice(cursorsPrefix.length);
         const parts = trimmedKey.split(":");
-        const ref = parts[2];
+        const ref = parts.slice(2).join(":");
 
         result = {
           type: "cursor",
           org: sha256(parts[0]),
           repo: sha256(parts[1]),
           ref: sha256(ref),
+        };
+      } else if (key.startsWith(templatesPrefix)) {
+        const trimmedKey = key.slice(useTemplatesBucket.base.length);
+        const [org, repo, ...templateNameParts] = trimmedKey.split(":");
+        const template = templateNameParts.join(":");
+
+        result = {
+          type: "template",
+          org: sha256(org),
+          repo: sha256(repo),
+          template: sha256(template),
         };
       }
 
