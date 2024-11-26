@@ -3,7 +3,6 @@
 export default eventHandler(async (event) => {
   try {
     const binding = useBinding(event);
-
     const query = getQuery(event);
 
     let cursor = query.cursor || undefined;
@@ -14,53 +13,46 @@ export default eventHandler(async (event) => {
 
     const results = [];
 
-    while (cursor !== null) {
-      const response = await binding.list({ cursor, limit: 500 });
-      objectCount += response.objects.length;
+    const response = await binding.list({ cursor, limit: 500 });
+    objectCount += response.objects.length;
 
-      for (const { key } of response.objects) {
-        let result = null;
+    for (const { key } of response.objects) {
+      let result = null;
 
-        if (key.startsWith(packagesPrefix)) {
-          const trimmedKey = key.slice(packagesPrefix.length);
-          const [org, repo, commit, ...packageNameParts] = trimmedKey.split(":");
-          const packageName = packageNameParts.join(":");
+      if (key.startsWith(packagesPrefix)) {
+        const trimmedKey = key.slice(packagesPrefix.length);
+        const [org, repo, commit, ...packageNameParts] = trimmedKey.split(":");
+        const packageName = packageNameParts.join(":");
 
-          result = {
-            type: "package",
-            org: org,
-            repo: repo,
-            commit: commit,
-            packageName: (packageName),
-          };
-        } else if (key.startsWith(cursorsPrefix)) {
-          const trimmedKey = key.slice(cursorsPrefix.length);
-          const parts = trimmedKey.split(":");
-          const ref = parts[2];
+        result = {
+          type: "package",
+          org: org,
+          repo: repo,
+          commit: commit,
+          packageName: packageName,
+        };
+      } else if (key.startsWith(cursorsPrefix)) {
+        const trimmedKey = key.slice(cursorsPrefix.length);
+        const parts = trimmedKey.split(":");
+        const ref = parts[2];
 
-          result = {
-            type: "cursor",
-            org: parts[0],
-            repo: parts[1],
-            ref: ref,
-          };
-        }
-
-        if (result) {
-          results.push(result);
-        }
+        result = {
+          type: "cursor",
+          org: parts[0],
+          repo: parts[1],
+          ref: ref,
+        };
       }
 
-      const nextCursor = response.truncated ? response.cursor : null;
-      cursor = nextCursor;
-
-      if (!cursor) {
-        break;
+      if (result) {
+        results.push(result);
       }
     }
 
+    const nextCursor = response.truncated ? response.cursor : null;
+
     results.push({
-      nextCursor: cursor,
+      nextCursor: nextCursor,
     });
 
     return results;
