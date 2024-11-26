@@ -51,11 +51,10 @@ export default eventHandler(async (event) => {
 
     const nextCursor = response.truncated ? response.cursor : null;
 
-    results.push({
+    return {
+      data: results,
       nextCursor: nextCursor,
-    });
-
-    return results;
+    };
   } catch (error) {
     throw createError({
       statusCode: 500,
