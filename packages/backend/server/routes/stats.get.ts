@@ -1,4 +1,4 @@
-// import { sha256 } from "ohash";
+import { sha256 } from "ohash";
 
 export default eventHandler(async (event) => {
   try {
@@ -26,10 +26,10 @@ export default eventHandler(async (event) => {
 
         result = {
           type: "package",
-          org: org,
-          repo: repo,
-          commit: commit,
-          packageName: packageName,
+          org: sha256(org),
+          repo: sha256(repo),
+          commit: sha256(commit),
+          packageName: sha256(packageName),
         };
       } else if (key.startsWith(cursorsPrefix)) {
         const trimmedKey = key.slice(cursorsPrefix.length);
@@ -38,9 +38,9 @@ export default eventHandler(async (event) => {
 
         result = {
           type: "cursor",
-          org: parts[0],
-          repo: parts[1],
-          ref: ref,
+          org: sha256(parts[0]),
+          repo: sha256(parts[1]),
+          ref: sha256(ref),
         };
       }
 
