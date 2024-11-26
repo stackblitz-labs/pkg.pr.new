@@ -1,14 +1,16 @@
-import { sha256 } from "ohash"
+import { sha256 } from "ohash";
 
 export default eventHandler(async (event) => {
   try {
     const binding = useBinding(event);
 
-    let started = false
+    const query = getQuery(event);
+    let cursor = query.cursor || undefined;
 
-    let cursor: string | undefined;
-
+    const limit = 100;
+    let currentCount = 0;
     let objectCount = 0;
+    let started = false;
 
     const encoder = new TextEncoder();
 
@@ -24,6 +26,7 @@ export default eventHandler(async (event) => {
                 summary: {
                   ok: true,
                   objects: objectCount,
+                  nextCursor: null,
                 },
               }) + "\n"
             )
@@ -32,12 +35,25 @@ export default eventHandler(async (event) => {
           return;
         }
 
-        started = true
+        started = true;
+
         try {
           const response = await binding.list({ cursor });
-          objectCount += response.objects.length;
+          let responseCount = 0;
 
           for (const { key } of response.objects) {
+            if (currentCount >= limit) {
+              cursor = response.cursor;
+              controller.enqueue(
+                encoder.encode(
+                  JSON.stringify({
+                    nextCursor: cursor,
+                  }) + "\n"
+                )
+              );
+              return;
+            }
+
             let result = null;
 
             if (key.startsWith(packagesPrefix)) {
@@ -54,7 +70,6 @@ export default eventHandler(async (event) => {
               };
             } else if (key.startsWith(cursorsPrefix)) {
               const trimmedKey = key.slice(cursorsPrefix.length);
-              //TODO: merge parts like package names. 
               const ref = trimmedKey.split(":")[2];
 
               result = {
@@ -67,10 +82,32 @@ export default eventHandler(async (event) => {
 
             if (result) {
               controller.enqueue(encoder.encode(JSON.stringify(result) + "\n"));
+              objectCount++;
+              currentCount++;
+              responseCount++;
             }
           }
 
-          cursor = response.truncated ? response.cursor : undefined;
+          if (response.truncated && responseCount === response.objects.length) {
+            cursor = response.cursor;
+          } else {
+            cursor = null;
+          }
+
+          if (!cursor) {
+            controller.enqueue(
+              encoder.encode(
+                JSON.stringify({
+                  summary: {
+                    ok: true,
+                    objects: objectCount,
+                    nextCursor: null,
+                  },
+                }) + "\n"
+              )
+            );
+            controller.close();
+          }
         } catch (err) {
           controller.error(err);
         }
