@@ -5,55 +5,22 @@ export default eventHandler(async (event) => {
     const binding = useBinding(event);
 
     const query = getQuery(event);
-    let cursor = query.cursor || undefined;
 
-    const limit = 100;
-    let currentCount = 0;
+    let cursor = query.cursor || undefined;
     let objectCount = 0;
-    let started = false;
 
     const encoder = new TextEncoder();
-
+    
     const packagesPrefix = `${usePackagesBucket.base}:`;
     const cursorsPrefix = `${useCursorsBucket.base}:`;
 
     const stream = new ReadableStream({
       async pull(controller) {
-        if (started && !cursor) {
-          controller.enqueue(
-            encoder.encode(
-              JSON.stringify({
-                summary: {
-                  ok: true,
-                  objects: objectCount,
-                  nextCursor: null,
-                },
-              }) + "\n"
-            )
-          );
-          controller.close();
-          return;
-        }
-
-        started = true;
-
         try {
-          const response = await binding.list({ cursor });
-          let responseCount = 0;
+          const response = await binding.list({ cursor, limit: 500 });
+          objectCount += response.objects.length;
 
           for (const { key } of response.objects) {
-            if (currentCount >= limit) {
-              cursor = response.cursor;
-              controller.enqueue(
-                encoder.encode(
-                  JSON.stringify({
-                    nextCursor: cursor,
-                  }) + "\n"
-                )
-              );
-              return;
-            }
-
             let result = null;
 
             if (key.startsWith(packagesPrefix)) {
@@ -82,32 +49,21 @@ export default eventHandler(async (event) => {
 
             if (result) {
               controller.enqueue(encoder.encode(JSON.stringify(result) + "\n"));
-              objectCount++;
-              currentCount++;
-              responseCount++;
             }
           }
 
-          if (response.truncated && responseCount === response.objects.length) {
-            cursor = response.cursor;
-          } else {
-            cursor = null;
-          }
+          const nextCursor = response.truncated ? response.cursor : null;
+          cursor = nextCursor;
 
-          if (!cursor) {
-            controller.enqueue(
-              encoder.encode(
-                JSON.stringify({
-                  summary: {
-                    ok: true,
-                    objects: objectCount,
-                    nextCursor: null,
-                  },
-                }) + "\n"
-              )
-            );
-            controller.close();
-          }
+          controller.enqueue(
+            encoder.encode(
+              JSON.stringify({
+                nextCursor,
+              }) + "\n"
+            )
+          );
+
+          controller.close();
         } catch (err) {
           controller.error(err);
         }
