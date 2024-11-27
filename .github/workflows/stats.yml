@@ -16,6 +16,8 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
+            const fetch = require('node-fetch');
+
             async function fetchAndCountData(url) {
               const counts = {
                 templates: 0,
@@ -30,13 +32,13 @@ jobs:
               do {
                 try {
                   // Construct the URL with cursor if available
-                  const fetchUrl = cursor ? ${url}?cursor=${encodeURIComponent(cursor)} : url;
+                  const fetchUrl = cursor ? `${url}?cursor=${encodeURIComponent(cursor)}` : url;
 
                   // Fetch the data from the API
                   const response = await fetch(fetchUrl);
 
                   if (!response.ok) {
-                    throw new Error(HTTP error! status: ${response.status});
+                    throw new Error(`HTTP error! status: ${response.status}`);
                   }
 
                   const responseData = await response.json();
@@ -64,7 +66,7 @@ jobs:
                   // Update the cursor for the next page
                   cursor = responseData.nextCursor || null;
                 } catch (error) {
-                  core.setFailed(Error fetching data: ${error.message});
+                  console.error(`Error fetching data: ${error.message}`);
                   cursor = null; // Exit the loop on error
                 }
               } while (cursor);
