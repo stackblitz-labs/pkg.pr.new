@@ -44,14 +44,11 @@ export default eventHandler(async (event) => {
           ref: sha256(ref),
         };
       } else if (key.startsWith(templatesPrefix)) {
-        const trimmedKey = key.slice(useTemplatesBucket.base.length);
-        const [org, repo, ...templateNameParts] = trimmedKey.split(":");
-        const template = templateNameParts.join(":");
+        const trimmedKey = key.slice(templatesPrefix.length);
+        const template = trimmedKey;
 
         result = {
           type: "template",
-          org: sha256(org),
-          repo: sha256(repo),
           template: sha256(template),
         };
       }
