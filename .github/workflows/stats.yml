@@ -1,0 +1,85 @@
+name: pkg.pr.new stats
+
+on:
+  push:
+
+jobs:
+  stats:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Fetch and Count Data Iteratively
+        uses: actions/github-script@v6
+        with:
+          script: |
+            async function fetchAndCountData(url) {
+              const counts = {
+                templates: 0,
+                packages: 0,
+                orgs: new Set(),
+                repos: new Set(),
+                commits: 0,
+                prsAndBranches: 0,
+              };
+              let cursor = null;
+
+              do {
+                try {
+                  // Construct the URL with cursor if available
+                  const fetchUrl = cursor ? ${url}?cursor=${encodeURIComponent(cursor)} : url;
+
+                  // Fetch the data from the API
+                  const response = await fetch(fetchUrl);
+
+                  if (!response.ok) {
+                    throw new Error(HTTP error! status: ${response.status});
+                  }
+
+                  const responseData = await response.json();
+
+                  // Process the current page of data
+                  if (responseData.data) {
+                    for (const item of responseData.data) {
+                      if (item.type === "template") {
+                        counts.templates += 1;
+                      } else if (item.type === "package") {
+                        counts.packages += 1;
+                        counts.orgs.add(item.org);
+                        counts.repos.add(item.repo);
+                        counts.commits += 1; // Count one commit per package
+                      } else if (item.type === "cursor") {
+                        counts.orgs.add(item.org);
+                        counts.repos.add(item.repo);
+
+                        // Count PR numbers and branch names combined
+                        counts.prsAndBranches += 1;
+                      }
+                    }
+                  }
+
+                  // Update the cursor for the next page
+                  cursor = responseData.nextCursor || null;
+                } catch (error) {
+                  core.setFailed(Error fetching data: ${error.message});
+                  cursor = null; // Exit the loop on error
+                }
+              } while (cursor);
+
+              return {
+                templates: counts.templates,
+                packages: counts.packages,
+                orgs: counts.orgs.size,
+                repos: counts.repos.size,
+                commits: counts.commits,
+                prsAndBranches: counts.prsAndBranches,
+              };
+            }
+
+            const url = "https://pkg.pr.new/stats";
+            const counts = await fetchAndCountData(url);
+
+            console.log("Counts:", counts);
