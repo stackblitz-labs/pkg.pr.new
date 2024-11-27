@@ -16,8 +16,6 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const fetch = require('node-fetch');
-
             async function fetchAndCountData(url) {
               const counts = {
                 templates: 0,
