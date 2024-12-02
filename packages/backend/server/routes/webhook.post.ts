@@ -73,33 +73,11 @@ export default eventHandler(async (event) => {
     const prDataHash = hash(key);
     if (prMarkEvents.includes(payload.action)) {
       await pullRequestNumbersBucket.setItem(prDataHash, payload.number);
-    } else if (payload.action === "closed") {
-      await pullRequestNumbersBucket.removeItem(prDataHash);
-
-      const baseKey = `${owner}:${repo}`;
-      const cursorKey = `${baseKey}:${payload.number}`;
-
-      await cursorBucket.removeItem(cursorKey);
     }
   };
 
-  const branchDeletionHandler: HandlerFunction<"delete", unknown> = async ({
-    payload,
-  }) => {
-    const [owner, repo] = payload.repository.full_name.split("/");
-
-    const baseKey = `${owner}:${repo}`;
-    const cursorKey = `${baseKey}:${payload.ref}`;
-
-    await cursorBucket.removeItem(cursorKey);
-  }
-  
-
   app.webhooks.on("workflow_run", workflowHandler);
   app.webhooks.on("pull_request", pullRequestHandler);
-  app.webhooks.on("delete", branchDeletionHandler)
-  // TODO: create branch cursors on create
-  // app.webhooks.on("create", branchDeletionHandler)
 
   type EmitterWebhookEvent = Parameters<
     typeof app.webhooks.receive | typeof app.webhooks.verifyAndReceive
@@ -135,6 +113,5 @@ export default eventHandler(async (event) => {
   } finally {
     app.webhooks.removeListener("workflow_run", workflowHandler);
     app.webhooks.removeListener("pull_request", pullRequestHandler);
-    app.webhooks.removeListener("delete", branchDeletionHandler);
   }
 });
