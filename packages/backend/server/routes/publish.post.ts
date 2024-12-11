@@ -210,6 +210,7 @@ export default eventHandler(async (event) => {
     checkRunUrl = html_url!;
   }
 
+  console.log("isPullRequest", isPullRequest(workflowData.ref), workflowData);
   if (isPullRequest(workflowData.ref)) {
     let prevComment: OctokitComponents["schemas"]["issue-comment"];
 
