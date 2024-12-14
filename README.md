@@ -94,7 +94,7 @@ You can also join our discord server [here](https://discord.gg/stackblitz), so w
 First [install the GitHub Application](https://github.com/apps/pkg-pr-new).
 
 > [!IMPORTANT]
-> Make sure it's installed on the repository before trying to publish a package.
+> Make sure it's installed on the repository before trying to publish a package. To read about the permissions the app needs, check [#305](https://github.com/stackblitz-labs/pkg.pr.new/issues/305).
 
 After installing on your repository, you can run `npx pkg-pr-new publish` in your workflows and then you have continuous releases!
 
