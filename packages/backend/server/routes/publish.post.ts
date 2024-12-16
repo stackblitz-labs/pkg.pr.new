@@ -254,46 +254,25 @@ export default eventHandler(async (event) => {
           },
         );
       } else {
-        try {
-          await installation.request(
-            "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
-            {
-              owner: workflowData.owner,
-              repo: workflowData.repo,
-              issue_number: Number(workflowData.ref),
-              body: generatePullRequestPublishMessage(
-                origin,
-                templatesHtmlMap,
-                packagesWithoutPrefix,
-                workflowData,
-                compact,
-                onlyTemplates,
-                checkRunUrl,
-                packageManager,
-                comment === "update" ? "ref" : "sha",
-              ),
-            },
-          );
-        } catch (error) {
-          throw createError({
-            statusCode: 500,
-            message: `Failed to create pull request comment. Details:
-            Error: ${error instanceof Error ? error.message : String(error)}
-            Context:
-            - Owner: ${workflowData.owner}
-            - Repo: ${workflowData.repo}
-            - Issue Number: ${Number(workflowData.ref)}
-            - Origin: ${origin}
-            - Templates: ${JSON.stringify(templatesHtmlMap)}
-            - Packages: ${packagesWithoutPrefix.join(', ')}
-            - Workflow Data: ${JSON.stringify(workflowData)}
-            - Compact: ${compact}
-            - Only Templates: ${onlyTemplates}
-            - Check Run URL: ${checkRunUrl}
-            - Package Manager: ${packageManager}
-            - Comment Type: ${comment === "update" ? "ref" : "sha"}`,
-          });
-        }
+        await installation.request(
+          "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
+          {
+            owner: workflowData.owner,
+            repo: workflowData.repo,
+            issue_number: Number(workflowData.ref),
+            body: generatePullRequestPublishMessage(
+              origin,
+              templatesHtmlMap,
+              packagesWithoutPrefix,
+              workflowData,
+              compact,
+              onlyTemplates,
+              checkRunUrl,
+              packageManager,
+              comment === "update" ? "ref" : "sha",
+            ),
+          },
+        );
       }
     }
   }
