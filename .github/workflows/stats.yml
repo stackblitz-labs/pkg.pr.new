@@ -2,8 +2,6 @@ name: pkg.pr.new stats
 
 on:
   push:
-    branches:
-      - main
 
 jobs:
   stats:
