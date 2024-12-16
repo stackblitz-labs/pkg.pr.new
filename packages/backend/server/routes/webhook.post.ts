@@ -1,7 +1,7 @@
 import type { PullRequestEvent } from "@octokit/webhooks-types";
 import type { HandlerFunction } from "@octokit/webhooks/dist-types/types";
 import type { PullRequestData, WorkflowData } from "../types";
-import { hash } from "ohash";
+import { hash, sha256 } from "ohash";
 
 // mark a PR as a PR :)
 const prMarkEvents: PullRequestEvent["action"][] = [
@@ -42,9 +42,19 @@ export default eventHandler(async (event) => {
         full_name: payload.workflow_run.head_repository.full_name,
         ref: payload.workflow_run.head_branch,
       };
-      const prDataHash = hash(prData);
-      const isPullRequest = await pullRequestNumbersBucket.hasItem(prDataHash);
-      const prNumber = await pullRequestNumbersBucket.getItem(prDataHash);
+      const prKey = `${prData.full_name}:${prData.ref}`;
+      const isNewPullRequest = await pullRequestNumbersBucket.hasItem(prKey);
+
+      // the old of hashing the prData started to hit collision, so we need to use the new one (https://github.com/element-plus/element-plus/actions/runs/12351113750/job/34465376908)
+      const oldPrDataHash = hash(prData);
+      const isOldPullRequest = await pullRequestNumbersBucket.hasItem(
+        oldPrDataHash,
+      );
+
+      const isPullRequest = isNewPullRequest || isOldPullRequest;
+      const prNumber = await pullRequestNumbersBucket.getItem(
+        isNewPullRequest ? prKey : oldPrDataHash,
+      );
 
       const data: WorkflowData = {
         owner,
@@ -64,15 +74,16 @@ export default eventHandler(async (event) => {
   const pullRequestHandler: HandlerFunction<"pull_request", unknown> = async ({
     payload,
   }) => {
-    const [owner, repo] = payload.repository.full_name.split("/");
     // TODO: functions that generate these kinda keys
     const key: PullRequestData = {
       full_name: payload.pull_request.head.repo?.full_name!,
       ref: payload.pull_request.head.ref,
     };
-    const prDataHash = hash(key);
     if (prMarkEvents.includes(payload.action)) {
-      await pullRequestNumbersBucket.setItem(prDataHash, payload.number);
+      await pullRequestNumbersBucket.setItem(
+        `${key.full_name}:${key.ref}`,
+        payload.number,
+      );
     }
   };
 
