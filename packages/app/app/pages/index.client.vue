@@ -41,6 +41,7 @@ const examples = [
         icon="i-ph-magnifying-glass"
         class="w-full"
         size="xl"
+        autofocus
       />
 
       <div v-if="data?.nodes.length">

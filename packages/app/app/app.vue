@@ -19,8 +19,10 @@ useSeoMeta({
   <UApp>
     <div class="flex flex-col min-h-screen">
       <div class="flex-1">
-        <NuxtLoadingIndicator color="orange" />
-        <NuxtPage />
+        <NuxtLoadingIndicator color="#06b6d4" />
+        <NuxtLayout>
+          <NuxtPage />
+        </NuxtLayout>
       </div>
 
       <footer class="text-center p-12 opacity-50 hover:opacity-100 focus-within:opacity-100">

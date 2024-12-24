@@ -14,6 +14,9 @@ if (!data.value) {
 
 const repository = data.value
 
+definePageMeta({
+  layout: 'main',
+})
 useHead({
   link: [
     { rel: 'icon', href: '/favicon.png' },
@@ -35,7 +38,7 @@ useSeoMeta({
 </script>
 
 <template>
-  <UContainer class="p-4 sm:p-6 lg:p-8 lg:pt-10 max-w-3xl space-y-6">
+  <UContainer class="p-4 sm:p-6 lg:p-8 max-w-3xl space-y-6">
     <div class="flex flex-col items-center gap-2">
       <a :href="repository.url" target="_blank">
         <UAvatar
