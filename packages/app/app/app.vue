@@ -16,20 +16,16 @@ useSeoMeta({
 </script>
 
 <template>
-  <div class="flex flex-col min-h-screen">
-    <div class="flex-1">
-      <NuxtLoadingIndicator color="orange" />
-      <NuxtPage />
+  <UApp>
+    <div class="flex flex-col min-h-screen">
+      <div class="flex-1">
+        <NuxtLoadingIndicator color="orange" />
+        <NuxtPage />
+      </div>
+
+      <footer class="text-center p-12 opacity-50 hover:opacity-100 focus-within:opacity-100">
+        Made with ❤️ by <a href="https://github.com/Akryum" target="_blank" class="text-primary">Akryum</a>
+      </footer>
     </div>
-
-    <footer class="text-center p-12 opacity-50 hover:opacity-100 focus-within:opacity-100">
-      Made with ❤️ by <a href="https://github.com/Akryum" target="_blank" class="text-primary">Akryum</a>
-    </footer>
-  </div>
+  </UApp>
 </template>
-
-<style lang="postcss">
-body {
-  @apply min-h-screen bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 font-sans;
-}
-</style>

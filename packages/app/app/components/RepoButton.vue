@@ -11,7 +11,7 @@ defineProps<{
     :to="`/${owner}/${name}`"
     class="w-full"
     size="lg"
-    color="gray"
+    color="neutral"
     variant="ghost"
   >
     <UAvatar

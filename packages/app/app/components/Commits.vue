@@ -118,11 +118,11 @@ async function fetchMore() {
           <UButton
             :to="commit.url"
             target="_blank"
-            color="gray"
-            size="2xs"
+            color="neutral"
+            size="xs"
             aria-label="View Commit"
             :ui="{
-              font: 'font-mono',
+              base: 'font-mono',
             }"
             @click.stop
           >
@@ -137,7 +137,7 @@ async function fetchMore() {
       class="flex justify-center"
     >
       <UButton
-        color="gray"
+        color="neutral"
         :loading="fetching"
         @click="fetchMore()"
       >
@@ -162,38 +162,40 @@ async function fetchMore() {
     <USlideover
       :model-value="!!selectedCommit"
       :ui="{
-        width: 'w-screen max-w-[800px]',
+        content: 'w-screen max-w-[800px]',
       }"
       @update:model-value="selectedCommit = null"
     >
-      <div
-        v-if="selectedCommit"
-        class="p-4 flex flex-col items-stretch gap-4 overflow-auto"
-      >
-        <div class="flex items-center gap-2">
-          <UIcon name="i-ph-git-commit" class="opacity-50 flex-none" />
-          <span>{{ selectedCommit.message }}</span>
-          <span class="opacity-50 flex-none">
-            {{ useTimeAgo(selectedCommit.authoredDate) }}
-          </span>
-          <span class="flex-1" />
-          <UButton
-            :to="selectedCommit.url"
-            target="_blank"
-            color="gray"
-            size="2xs"
-            aria-label="View Commit"
-            @click.stop
-          >
-            {{ selectedCommit.abbreviatedOid }}
-          </UButton>
-        </div>
-
+      <template #content>
         <div
-          class="max-w-full p-4 border border-gray-100 dark:border-gray-800 rounded-lg prose dark:prose-invert"
-          v-html="marked(selectedCommit.release.text)"
-        />
-      </div>
+          v-if="selectedCommit"
+          class="p-4 flex flex-col items-stretch gap-4 overflow-auto"
+        >
+          <div class="flex items-center gap-2">
+            <UIcon name="i-ph-git-commit" class="opacity-50 flex-none" />
+            <span>{{ selectedCommit.message }}</span>
+            <span class="opacity-50 flex-none">
+              {{ useTimeAgo(selectedCommit.authoredDate) }}
+            </span>
+            <span class="flex-1" />
+            <UButton
+              :to="selectedCommit.url"
+              target="_blank"
+              color="neutral"
+              size="xs"
+              aria-label="View Commit"
+              @click.stop
+            >
+              {{ selectedCommit.abbreviatedOid }}
+            </UButton>
+          </div>
+  
+          <div
+            class="max-w-full p-4 border border-gray-100 dark:border-gray-800 rounded-lg prose dark:prose-invert"
+            v-html="marked(selectedCommit.release.text)"
+          />
+        </div>
+      </template>
     </USlideover>
   </div>
 </template>
