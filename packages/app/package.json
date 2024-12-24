@@ -15,20 +15,31 @@
   "dependencies": {
     "@iconify-json/ph": "^1.1.14",
     "@nuxt/ui": "^3.0.0-alpha.10",
+    "@octokit/app": "^15.1.1",
     "@octokit/graphql": "^8.1.1",
+    "@octokit/plugin-paginate-rest": "^11.3.6",
+    "@octokit/webhooks": "^13.4.1",
     "@vueuse/core": "^12.2.0",
     "@vueuse/nuxt": "^12.2.0",
     "marked": "^15.0.4",
     "nuxt": "^3.12.4",
+    "octokit": "^4.0.2",
+    "query-registry": "^3.0.1",
     "vue": "^3.4.38",
     "vue-router": "^4.4.3",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^3.12.1",
+    "@cloudflare/workers-types": "^4.20240512.0",
     "@nuxt/eslint": "^0.7.4",
+    "@pkg-pr-new/utils": "workspace:^",
+    "dotenv": "^16.4.5",
     "eslint": "^9.17.0",
+    "fast-jwt": "^4.0.2",
+    "nitro-cloudflare-dev": "0.1.2",
     "typescript": "^5.7.2",
-    "vue-tsc": "^2.2.0"
+    "vue-tsc": "~2.1.6",
+    "wrangler": "^3.57.1"
   }
 }

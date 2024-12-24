@@ -1,0 +1,10 @@
+compatibility_date = "2024-03-14"
+logpush = true
+
+[[r2_buckets]]
+binding = 'CR_BUCKET'
+bucket_name = 'cr-bucket'
+
+[[r2_buckets]]
+binding = 'PROD_CR_BUCKET'
+bucket_name = 'prod-cr-bucket'

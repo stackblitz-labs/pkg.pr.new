@@ -1,3 +1,5 @@
+import ncb from 'nitro-cloudflare-dev'
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2024-07-30',
@@ -23,4 +25,17 @@ export default defineNuxtConfig({
 
   // https://devtools.nuxt.com
   devtools: { enabled: true },
+
+  nitro: {
+    sourceMap: 'inline',
+    modules: [ncb],
+  },
+
+  runtimeConfig: {
+    appId: '',
+    webhookSecret: '',
+    privateKey: '',
+    rmStaleKey: '',
+    test: '' as '' | 'true',
+  },
 })
