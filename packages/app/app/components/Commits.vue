@@ -119,6 +119,7 @@ async function fetchMore() {
             :to="commit.url"
             target="_blank"
             color="neutral"
+            variant="subtle"
             size="xs"
             aria-label="View Commit"
             :ui="{
@@ -138,6 +139,7 @@ async function fetchMore() {
     >
       <UButton
         color="neutral"
+        variant="subtle"
         :loading="fetching"
         @click="fetchMore()"
       >
@@ -160,11 +162,11 @@ async function fetchMore() {
 
     <!-- Commit sidepane -->
     <USlideover
-      :model-value="!!selectedCommit"
+      :open="!!selectedCommit"
       :ui="{
         content: 'w-screen max-w-[800px]',
       }"
-      @update:model-value="selectedCommit = null"
+      @update:open="selectedCommit = null"
     >
       <template #content>
         <div
@@ -172,8 +174,17 @@ async function fetchMore() {
           class="p-4 flex flex-col items-stretch gap-4 overflow-auto"
         >
           <div class="flex items-center gap-2">
+            <UButton
+              icon="ph-x"
+              color="neutral"
+              variant="subtle"
+              size="sm"
+              class="mr-2"
+              @click="selectedCommit = null"
+            />
+
             <UIcon name="i-ph-git-commit" class="opacity-50 flex-none" />
-            <span>{{ selectedCommit.message }}</span>
+            <span class="truncate">{{ selectedCommit.message }}</span>
             <span class="opacity-50 flex-none">
               {{ useTimeAgo(selectedCommit.authoredDate) }}
             </span>
@@ -182,7 +193,8 @@ async function fetchMore() {
               :to="selectedCommit.url"
               target="_blank"
               color="neutral"
-              size="xs"
+              variant="subtle"
+              size="sm"
               aria-label="View Commit"
               @click.stop
             >
@@ -199,13 +211,3 @@ async function fetchMore() {
     </USlideover>
   </div>
 </template>
-
-<style>
-details {
-  @apply my-2;
-}
-
-summary {
-  @apply cursor-pointer;
-}
-</style>
