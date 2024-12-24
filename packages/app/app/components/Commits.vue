@@ -201,7 +201,7 @@ async function fetchMore() {
               {{ selectedCommit.abbreviatedOid }}
             </UButton>
           </div>
-  
+
           <div
             class="max-w-full p-4 border border-gray-100 dark:border-gray-800 rounded-lg prose dark:prose-invert"
             v-html="marked(selectedCommit.release.text)"
