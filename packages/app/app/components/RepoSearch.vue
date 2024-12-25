@@ -1,9 +1,11 @@
 <script lang="ts" setup>
 const search = useSessionStorage('search', '')
 
+const throttledSearch = useThrottle(search, 500, true, false)
+
 const { data, status } = useFetch('/api/repo/search', {
-  query: computed(() => ({ text: search.value })),
-  immediate: !!search.value,
+  query: computed(() => ({ text: throttledSearch.value })),
+  immediate: !!throttledSearch.value,
 })
 
 const examples = [
@@ -56,6 +58,10 @@ function openFirstResult() {
       autofocus
       @keydown.enter="openFirstResult()"
     />
+
+    <div v-if="status === 'pending'" class="-mb-2 relative">
+      <UProgress size="xs" class="absolute inset-x-0 top-0" />
+    </div>
 
     <div v-if="data?.nodes.length">
       <RepoButton
