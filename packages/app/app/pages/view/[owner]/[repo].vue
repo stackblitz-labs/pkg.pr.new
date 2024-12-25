@@ -22,7 +22,6 @@ useHead({
   link: [
     { rel: 'icon', href: '/favicon.png' },
     { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
-    // { rel: 'alternate', type: 'application/rss+xml', title: `${repository.value.name} Continuous Releases`, href: '/feed.xml' },
   ],
 })
 useSeoMeta({
@@ -30,16 +29,12 @@ useSeoMeta({
   description: `See all ${repository.name} recent continuous releases.`,
   ogTitle: `${repository.owner.login}/${repository.name} Continuous Releases`,
   ogDescription: `See all ${repository.name} recent continuous releases.`,
-  // twitterCard: 'summary_large_image',
-  // // Feel free to change this image with your own once deployed to NuxtHub
-  // ogImage: 'https://assets.hub.nuxt.com/eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJodHRwczovL3Bycy5hdGludXguY29tIiwiaWF0IjoxNzI0MTYwMTkxfQ.yYRD-Gs6EyYQSfg27fZVx1Kle7nq7QBSciDui-mbnnU.jpg?theme=light',
-  // twitterImage: 'https://assets.hub.nuxt.com/eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJodHRwczovL3Bycy5hdGludXguY29tIiwiaWF0IjoxNzI0MTYwMTkxfQ.yYRD-Gs6EyYQSfg27fZVx1Kle7nq7QBSciDui-mbnnU.jpg?theme=light',
 })
 // TODO: OG Image
 </script>
 
 <template>
-  <UContainer class="p-4 sm:p-6 lg:p-8 max-w-3xl space-y-6">
+  <div class="space-y-6">
     <div class="flex flex-col items-center gap-2">
       <a :href="repository.url" target="_blank">
         <UAvatar
@@ -87,18 +82,9 @@ useSeoMeta({
           color="neutral"
           variant="link"
         />
-        <!-- <UButton
-          to="/feed.xml"
-          external
-          target="_blank"
-          aria-label="RSS Feed"
-          icon="i-ph-rss-simple-duotone"
-          color="neutral"
-          variant="link"
-        /> -->
       </div>
     </div>
 
     <Commits :owner="repository.owner.login" :repo="repository.name" />
-  </UContainer>
+  </div>
 </template>

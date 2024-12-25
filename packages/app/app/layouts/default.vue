@@ -24,7 +24,10 @@ const route = useRoute()
         color="neutral"
       />
     </nav>
-    <slot />
+
+    <main class="p-4 sm:p-6 lg:p-8 w-screen max-w-192 mx-auto">
+      <slot />
+    </main>
   </div>
 </template>
 

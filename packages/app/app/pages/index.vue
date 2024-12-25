@@ -35,7 +35,7 @@ const examples = [
 </script>
 
 <template>
-  <div class="p-4 md:p-12 flex flex-col items-center gap-4 md:gap-12 w-screen max-w-[600px] mx-auto">
+  <div class="flex flex-col items-center gap-4 md:gap-12">
     <img src="/favicon.svg" alt="logo" width="64" height="64">
 
     <div class="flex flex-col gap-2 w-full">
