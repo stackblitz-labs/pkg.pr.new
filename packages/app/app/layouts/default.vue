@@ -25,12 +25,10 @@ const route = useRoute()
       />
     </nav>
 
-    <main class="flex-1 p-4 sm:p-6 lg:p-8 w-screen max-w-192 mx-auto">
+    <main :class="route.meta.mainClass ?? 'my-container'">
       <slot />
     </main>
 
     <AppFooter />
   </div>
 </template>
-
-<style scoped></style>
