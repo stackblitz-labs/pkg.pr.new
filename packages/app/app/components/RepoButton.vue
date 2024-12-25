@@ -8,7 +8,13 @@ defineProps<{
 
 <template>
   <UButton
-    :to="`/${owner}/${name}`"
+    :to="{
+      name: 'repo:details',
+      params: {
+        owner,
+        repo: name,
+      },
+    }"
     class="w-full"
     size="lg"
     color="neutral"

@@ -4,7 +4,9 @@
   <div>
     <nav class="p-6">
       <UButton
-        to="/"
+        :to="{
+          name: 'home',
+        }"
         icon="ph-magnifying-glass"
         variant="ghost"
       />

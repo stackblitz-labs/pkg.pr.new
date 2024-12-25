@@ -1,4 +1,9 @@
 <script setup lang="ts">
+definePageMeta({
+  name: 'repo:details',
+  layout: 'main',
+})
+
 const colorMode = useColorMode()
 const route = useRoute()
 const { data } = await useFetch('/api/repo', {
@@ -14,9 +19,6 @@ if (!data.value) {
 
 const repository = data.value
 
-definePageMeta({
-  layout: 'main',
-})
 useHead({
   link: [
     { rel: 'icon', href: '/favicon.png' },

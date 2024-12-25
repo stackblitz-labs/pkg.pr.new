@@ -1,4 +1,8 @@
 <script lang="ts" setup>
+definePageMeta({
+  name: 'home',
+})
+
 const search = useSessionStorage('search', '')
 
 const { data, status } = useFetch('/api/repo/search', {
