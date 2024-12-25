@@ -32,6 +32,21 @@ const examples = [
     avatar: 'https://avatars.githubusercontent.com/u/119253150?v=4',
   },
 ]
+
+const router = useRouter()
+
+function openFirstResult() {
+  if (data.value?.nodes[0]) {
+    const { owner, name } = data.value.nodes[0]
+    router.push({
+      name: 'repo:details',
+      params: {
+        owner: owner.login,
+        repo: name,
+      },
+    })
+  }
+}
 </script>
 
 <template>
@@ -46,6 +61,7 @@ const examples = [
         class="w-full"
         size="xl"
         autofocus
+        @keydown.enter="openFirstResult()"
       />
 
       <div v-if="data?.nodes.length">
