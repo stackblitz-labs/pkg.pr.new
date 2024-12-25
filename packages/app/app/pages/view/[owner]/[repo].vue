@@ -1,7 +1,6 @@
 <script setup lang="ts">
 definePageMeta({
   name: 'repo:details',
-  layout: 'main',
 })
 
 const colorMode = useColorMode()
