@@ -54,4 +54,16 @@ export default defineNuxtConfig({
       })
     },
   },
+
+  icon: {
+    clientBundle: {
+      icons: [
+        'mdi-github',
+      ],
+      // scan all components in the project and include icons
+      scan: true,
+      // guard for uncompressed bundle size, will fail the build if exceeds
+      sizeLimitKb: 256,
+    },
+  },
 })
