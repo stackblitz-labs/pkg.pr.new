@@ -22,7 +22,7 @@
     "@vueuse/core": "^12.2.0",
     "@vueuse/nuxt": "^12.2.0",
     "marked": "^15.0.4",
-    "nuxt": "^3.12.4",
+    "nuxt": "^3.15.0",
     "octokit": "^4.0.2",
     "query-registry": "^3.0.1",
     "vue": "^3.4.38",
