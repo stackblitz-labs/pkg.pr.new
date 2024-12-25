@@ -37,6 +37,7 @@ export default defineNuxtConfig({
     webhookSecret: '',
     privateKey: '',
     rmStaleKey: '',
+    githubToken: '',
     test: '' as '' | 'true',
   },
 

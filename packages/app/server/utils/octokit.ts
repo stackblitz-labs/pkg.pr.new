@@ -9,9 +9,10 @@ let graphQlWithAuth: typeof graphql
 
 export function useGithubGraphQL() {
   if (!graphQlWithAuth) {
+    const { githubToken } = useRuntimeConfig()
     graphQlWithAuth = graphql.defaults({
       headers: {
-        authorization: `token ${process.env.NUXT_GITHUB_TOKEN}`,
+        authorization: `token ${githubToken}`,
       },
     })
   }
