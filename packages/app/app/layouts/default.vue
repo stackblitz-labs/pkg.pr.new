@@ -3,7 +3,7 @@ const route = useRoute()
 </script>
 
 <template>
-  <div>
+  <div class="flex flex-col min-h-screen">
     <nav class="p-6 flex items-center">
       <UButton
         v-if="route.name !== 'home'"
@@ -25,9 +25,13 @@ const route = useRoute()
       />
     </nav>
 
-    <main class="p-4 sm:p-6 lg:p-8 w-screen max-w-192 mx-auto">
+    <main class="flex-1 p-4 sm:p-6 lg:p-8 w-screen max-w-192 mx-auto">
       <slot />
     </main>
+
+    <footer class="text-center p-12 opacity-50 hover:opacity-100 focus-within:opacity-100">
+      Made with ❤️ by <a href="https://github.com/Akryum" target="_blank" class="text-primary">Akryum</a>
+    </footer>
   </div>
 </template>
 

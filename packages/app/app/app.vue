@@ -17,17 +17,9 @@ useSeoMeta({
 
 <template>
   <UApp>
-    <div class="flex flex-col min-h-screen">
-      <div class="flex-1">
-        <NuxtLoadingIndicator color="#0ea5e9" />
-        <NuxtLayout>
-          <NuxtPage />
-        </NuxtLayout>
-      </div>
-
-      <footer class="text-center p-12 opacity-50 hover:opacity-100 focus-within:opacity-100">
-        Made with ❤️ by <a href="https://github.com/Akryum" target="_blank" class="text-primary">Akryum</a>
-      </footer>
-    </div>
+    <NuxtLoadingIndicator color="#0ea5e9" />
+    <NuxtLayout>
+      <NuxtPage />
+    </NuxtLayout>
   </UApp>
 </template>
