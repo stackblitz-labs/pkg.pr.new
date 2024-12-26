@@ -24,6 +24,10 @@ defineProps<{
       :src="avatar"
       :alt="name"
       size="sm"
+      :ui="{
+        root: 'rounded-md',
+        image: 'rounded-md',
+      }"
     />
 
     <div class="font-mono">

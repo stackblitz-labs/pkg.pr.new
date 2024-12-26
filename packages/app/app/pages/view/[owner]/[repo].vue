@@ -40,6 +40,10 @@ useSeoMeta({
           :src="repository.owner.avatarUrl"
           :alt="repository.name"
           size="xl"
+          :ui="{
+            root: 'rounded-md',
+            image: 'rounded-md',
+          }"
         />
       </a>
       <h1 class="text-2xl sm:text-3xl text-center">
