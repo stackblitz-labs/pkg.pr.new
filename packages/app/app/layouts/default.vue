@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const colorMode = useColorMode()
 const route = useRoute()
 </script>
 
@@ -15,6 +16,26 @@ const route = useRoute()
       />
 
       <div class="flex-1" />
+
+      <ClientOnly>
+        <UButton
+          aria-label="Toggle theme"
+          :icon="colorMode.preference === 'dark'
+            ? 'ph-moon'
+            : colorMode.preference === 'light'
+              ? 'ph-sun'
+              : 'ph-moon-stars' "
+          color="neutral"
+          variant="link"
+          @click="colorMode.preference = colorMode.preference === 'dark'
+            ? 'system'
+            : colorMode.preference === 'system'
+              ? 'light' : 'dark'"
+        />
+        <template #fallback>
+          <div class="w-8 h-8" />
+        </template>
+      </ClientOnly>
 
       <UButton
         to="https://github.com/stackblitz-labs/pkg.pr.new"

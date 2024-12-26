@@ -3,7 +3,6 @@ definePageMeta({
   name: 'repo:details',
 })
 
-const colorMode = useColorMode()
 const route = useRoute()
 const { data } = await useFetch('/api/repo', {
   query: computed(() => ({
@@ -51,18 +50,6 @@ useSeoMeta({
         </a>
       </h1>
       <div class="flex items-center justify-center gap-2 text-gray-700 dark:text-gray-300">
-        <ClientOnly>
-          <UButton
-            :aria-label="`Toggle ${colorMode.value === 'dark' ? 'light' : 'dark'} mode`"
-            :icon="colorMode.value === 'dark' ? 'i-ph-moon-stars' : 'i-ph-sun'"
-            color="neutral"
-            variant="link"
-            @click="colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'"
-          />
-          <template #fallback>
-            <div class="w-8 h-8" />
-          </template>
-        </ClientOnly>
         <UButton
           :to="repository.url"
           external
