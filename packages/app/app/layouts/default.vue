@@ -5,15 +5,17 @@ const route = useRoute()
 
 <template>
   <div class="flex flex-col min-h-screen">
-    <nav class="p-6 flex items-center">
-      <UButton
-        v-if="route.name !== 'home'"
-        :to="{
-          name: 'home',
-        }"
-        icon="ph-magnifying-glass"
-        variant="ghost"
-      />
+    <header class="p-6 flex items-center">
+      <nav>
+        <UButton
+          v-if="route.name !== 'home'"
+          :to="{
+            name: 'home',
+          }"
+          icon="ph-magnifying-glass"
+          variant="ghost"
+        />
+      </nav>
 
       <div class="flex-1" />
 
@@ -44,7 +46,7 @@ const route = useRoute()
         variant="ghost"
         color="neutral"
       />
-    </nav>
+    </header>
 
     <main :class="route.meta.mainClass ?? 'my-container'">
       <slot />
