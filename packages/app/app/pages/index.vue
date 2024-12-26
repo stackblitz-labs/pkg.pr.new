@@ -41,7 +41,7 @@ function scrollToGettingStarted() {
       </div>
     </div>
 
-    <div ref="getting-started" class="min-h-screen p-6 flex items-center bg-gray-800">
+    <div ref="getting-started" class="min-h-screen p-6 flex items-center bg-gray-100 dark:bg-gray-800">
       <GettingStarted id="getting-started" class="my-container" />
     </div>
   </div>

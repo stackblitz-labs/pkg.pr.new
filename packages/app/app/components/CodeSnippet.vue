@@ -19,7 +19,7 @@ function copyCode() {
 
 <template>
   <div class="relative group">
-    <pre class="bg-black rounded-lg p-6"><code>{{ props.code }}</code></pre>
+    <pre class="text-white bg-gray-500 dark:bg-black rounded-lg p-6"><code>{{ props.code }}</code></pre>
 
     <ClientOnly>
       <UTooltip
