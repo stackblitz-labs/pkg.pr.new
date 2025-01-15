@@ -18,7 +18,7 @@ import ignore from "ignore";
 import "./environments";
 import pkg from "./package.json" with { type: "json" };
 import { isBinaryFile } from "isbinaryfile";
-import { readPackageJSON, writePackageJSON } from "pkg-types";
+import { writePackageJSON, type PackageJson } from "pkg-types";
 import { createDefaultTemplate } from "./template";
 
 declare global {
@@ -183,11 +183,12 @@ const main = defineCommand({
           };
 
           for (const p of paths) {
-            if (!(await hasPackageJson(p))) {
+            const pJsonPath = path.resolve(p, "package.json");
+            const pJson = await readPackageJson(pJsonPath);
+
+            if (!pJson) {
               continue;
             }
-            const pJsonPath = path.resolve(p, "package.json");
-            const pJson = await readPackageJSON(pJsonPath);
 
             if (!pJson.name) {
               throw new Error(`"name" field in ${pJsonPath} should be defined`);
@@ -223,14 +224,18 @@ const main = defineCommand({
           }
 
           for (const templateDir of templates) {
-            if (!(await hasPackageJson(templateDir))) {
+            const pJsonPath = path.resolve(templateDir, "package.json");
+            const pJsonContents = await tryReadFile(pJsonPath);
+            const pJson = pJsonContents
+              ? parsePackageJson(pJsonContents)
+              : null;
+
+            if (!pJson || !pJsonContents) {
               console.warn(
                 `skipping ${templateDir} because there's no package.json file`,
               );
               continue;
             }
-            const pJsonPath = path.resolve(templateDir, "package.json");
-            const pJson = await readPackageJSON(pJsonPath);
 
             if (!pJson.name) {
               throw new Error(`"name" field in ${pJsonPath} should be defined`);
@@ -238,7 +243,13 @@ const main = defineCommand({
 
             console.warn("preparing template:", pJson.name);
 
-            const restore = await writeDeps(templateDir, deps, realDeps);
+            const restore = await writeDeps(
+              templateDir,
+              pJsonContents,
+              pJson,
+              deps,
+              realDeps,
+            );
 
             const gitignorePath = path.join(templateDir, ".gitignore");
             const ig = ignore().add("node_modules").add(".git");
@@ -301,31 +312,38 @@ const main = defineCommand({
             Awaited<ReturnType<typeof writeDeps>>
           >();
           for (const p of paths) {
-            if (!(await hasPackageJson(p))) {
+            const pJsonPath = path.resolve(p, "package.json");
+            const pJsonContents = await tryReadFile(pJsonPath);
+            const pJson = pJsonContents
+              ? parsePackageJson(pJsonContents)
+              : null;
+
+            if (!pJson || !pJsonContents) {
               continue;
             }
-            const pJsonPath = path.resolve(p, "package.json");
-            const pJson = await readPackageJSON(pJsonPath);
 
             if (pJson.private) {
               continue;
             }
 
-            restoreMap.set(p, await writeDeps(p, deps, realDeps));
+            restoreMap.set(
+              p,
+              await writeDeps(p, pJsonContents, pJson, deps, realDeps),
+            );
           }
 
           const shasums: Record<string, string> = {};
           for (const p of paths) {
-            if (!(await hasPackageJson(p))) {
+            const pJsonPath = path.resolve(p, "package.json");
+            const pJson = await readPackageJson(pJsonPath);
+            if (!pJson) {
               console.warn(
                 `skipping ${p} because there's no package.json file`,
               );
               continue;
             }
-            const pJsonPath = path.resolve(p, "package.json");
-            try {
-              const pJson = await readPackageJSON(pJsonPath);
 
+            try {
               if (!pJson.name) {
                 throw new Error(
                   `"name" field in ${pJsonPath} should be defined`,
@@ -526,13 +544,12 @@ async function resolveTarball(pm: "npm" | "pnpm", p: string) {
 
 async function writeDeps(
   p: string,
+  pJsonContents: string,
+  pJson: PackageJson,
   deps: Map<string, string>,
   realDeps: Map<string, string> | null,
 ) {
   const pJsonPath = path.resolve(p, "package.json");
-  const content = await fs.readFile(pJsonPath, "utf-8");
-
-  const pJson = await readPackageJSON(pJsonPath);
 
   hijackDeps(deps, pJson.dependencies);
   hijackDeps(deps, pJson.devDependencies);
@@ -544,7 +561,7 @@ async function writeDeps(
 
   await writePackageJSON(pJsonPath, pJson);
 
-  return () => fs.writeFile(pJsonPath, content);
+  return () => fs.writeFile(pJsonPath, pJsonContents);
 }
 
 function hijackDeps(
@@ -600,11 +617,30 @@ ${instruction}`,
   }
 }
 
-async function hasPackageJson(p: string) {
+async function tryReadFile(p: string) {
   try {
-    await fs.access(path.resolve(p, "package.json"), fs.constants.F_OK);
-    return true;
+    return await fs.readFile(p, "utf8");
   } catch {
-    return false;
+    return null;
+  }
+}
+
+async function readPackageJson(p: string) {
+  const contents = await tryReadFile(p);
+  if (contents === null) {
+    return null;
+  }
+  try {
+    return parsePackageJson(contents);
+  } catch {
+    return null;
+  }
+}
+
+function parsePackageJson(contents: string) {
+  try {
+    return JSON.parse(contents) as PackageJson;
+  } catch {
+    return null;
   }
 }
