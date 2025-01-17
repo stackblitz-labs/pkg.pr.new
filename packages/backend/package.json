@@ -8,12 +8,22 @@
     "dev": "nitro dev",
     "vendor:octokit": "tsx script/octokit.ts",
     "prepare": "nitro prepare && pnpm vendor:octokit",
-    "preview": "wrangler pages dev dist "
+    "preview": "wrangler pages dev dist ",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240512.0",
     "@octokit/action": "^6.1.0",
     "@octokit/app": "^14.1.0",
+    "@octokit/openapi-types": "^22.2.0",
+    "@octokit/types": "^13.5.0",
+    "@octokit/webhooks-types": "^7.4.0",
+    "@octokit/oauth-app": "^6.1.0",
+    "@octokit/auth-app": "^6.0.4",
+    "@octokit/webhooks": "^12.2.0",
+    "@octokit/auth-unauthenticated": "^5.0.1",
+    "@octokit/core": "^5.1.0",
+    "h3": "^1.11.1",
     "@pkg-pr-new/utils": "workspace:^",
     "dotenv": "^16.4.5",
     "fast-jwt": "^4.0.2",
@@ -21,6 +31,7 @@
     "nitropack": "^2.9.6",
     "octokit": "^3.2.1",
     "query-registry": "^3.0.1",
-    "wrangler": "^3.57.1"
+    "wrangler": "^3.57.1",
+    "unstorage": "^1.10.2"
   }
 }
