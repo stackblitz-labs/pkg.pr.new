@@ -1,6 +1,6 @@
 import { WorkflowData } from "../../../types";
 import { abbreviateCommitHash } from "@pkg-pr-new/utils";
-import { normalizeKey } from 'unstorage'
+import { normalizeKey } from "unstorage";
 
 type Params = Omit<WorkflowData, "sha" | "ref"> & {
   packageAndRefOrSha: string;
@@ -8,11 +8,14 @@ type Params = Omit<WorkflowData, "sha" | "ref"> & {
 
 export default eventHandler(async (event) => {
   const params = getRouterParams(event) as Params;
-  let [encodedPackageName, longerRefOrSha] = params.packageAndRefOrSha.split("@");
+  let [encodedPackageName, longerRefOrSha] =
+    params.packageAndRefOrSha.split("@");
   const packageName = decodeURIComponent(encodedPackageName);
-  longerRefOrSha = longerRefOrSha.split('.tgz')[0] // yarn support
+  longerRefOrSha = longerRefOrSha.split(".tgz")[0]; // yarn support
   const isSha = isValidGitHash(longerRefOrSha);
-  const refOrSha = isSha ? abbreviateCommitHash(longerRefOrSha) : longerRefOrSha;
+  const refOrSha = isSha
+    ? abbreviateCommitHash(longerRefOrSha)
+    : longerRefOrSha;
 
   let base = `${params.owner}:${params.repo}:${refOrSha}`;
   let packageKey = `${base}:${packageName}`;
@@ -35,7 +38,9 @@ export default eventHandler(async (event) => {
 
   // longer sha support with precision
   const binding = useBinding(event);
-  const { objects } = await binding.list({ prefix: `${usePackagesBucket.base}:${base}` })
+  const { objects } = await binding.list({
+    prefix: `${usePackagesBucket.base}:${base}`,
+  });
   for (const { key } of objects) {
     // bucket:package:stackblitz-labs:pkg.pr.new:ded05e838c418096e5dd77a29101c8af9e73daea:playground-b
     const trimmedKey = key.slice(usePackagesBucket.base.length + 1);

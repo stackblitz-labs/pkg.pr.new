@@ -1,8 +1,4 @@
-import {
-  Comment,
-  isPullRequest,
-  isWhitelisted,
-} from "@pkg-pr-new/utils";
+import { Comment, isPullRequest, isWhitelisted } from "@pkg-pr-new/utils";
 import { randomUUID } from "uncrypto";
 import { setItemStream, useTemplatesBucket } from "~/utils/bucket";
 import { useOctokitInstallation } from "~/utils/octokit";

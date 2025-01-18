@@ -5,7 +5,7 @@ export default eventHandler(async (event) => {
     const binding = useBinding(event);
     const query = getQuery(event);
 
-    let cursor = query.cursor as string || undefined;
+    let cursor = (query.cursor as string) || undefined;
     let objectCount = 0;
 
     const packagesPrefix = `${usePackagesBucket.base}:`;

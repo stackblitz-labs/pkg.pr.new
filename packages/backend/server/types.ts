@@ -6,9 +6,9 @@ export type WorkflowData = {
 };
 
 export type PullRequestData = {
-  full_name: string,
-  ref: string
-}
+  full_name: string;
+  ref: string;
+};
 
 export type Cursor = {
   timestamp: number;

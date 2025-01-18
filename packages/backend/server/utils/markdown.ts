@@ -27,8 +27,8 @@ export function generateCommitPublishMessage(
         compact,
       );
 
-      if (packageManager === 'yarn') {
-        shaUrl = shaUrl + '.tgz'
+      if (packageManager === "yarn") {
+        shaUrl = shaUrl + ".tgz";
       }
 
       return `
@@ -38,7 +38,9 @@ ${packageManager} ${packageCommands[packageManager]} ${shaUrl}
       `;
     })
     .map((message, i) =>
-      isMoreThanFour ? createCollapsibleBlock(`<b>${packages[i]}</b>`, message) : message,
+      isMoreThanFour
+        ? createCollapsibleBlock(`<b>${packages[i]}</b>`, message)
+        : message,
     )
     .join("\n");
 
@@ -73,8 +75,8 @@ export function generatePullRequestPublishMessage(
         compact,
       );
 
-      if (packageManager === 'yarn') {
-        refUrl = refUrl + '.tgz'
+      if (packageManager === "yarn") {
+        refUrl = refUrl + ".tgz";
       }
 
       return `
@@ -84,7 +86,9 @@ ${packageManager} ${packageCommands[packageManager]} ${refUrl}
 `;
     })
     .map((message, i) =>
-      isMoreThanFour ? createCollapsibleBlock(`<b>${packages[i]}</b>`, message) : message,
+      isMoreThanFour
+        ? createCollapsibleBlock(`<b>${packages[i]}</b>`, message)
+        : message,
     )
     .join("\n");
 
@@ -101,10 +105,14 @@ _commit: <a href="${checkRunUrl}"><code>${abbreviateCommitHash(workflowData.sha)
 
 function generateTemplatesStr(templates: Record<string, string>) {
   const entries = Object.entries(templates).filter(([k]) => k !== "default");
-  let str = templates["default"] ? `[Open in Stackblitz](${templates["default"]})` : '';
+  let str = templates["default"]
+    ? `[Open in Stackblitz](${templates["default"]})`
+    : "";
 
   if (entries.length && entries.length <= 2) {
-    str = [str, ...entries.map(([k, v]) => `[${k}](${v})`)].filter(Boolean).join(" • ");
+    str = [str, ...entries.map(([k, v]) => `[${k}](${v})`)]
+      .filter(Boolean)
+      .join(" • ");
   } else if (entries.length > 2) {
     str += createCollapsibleBlock(
       "<b>More templates</b>",

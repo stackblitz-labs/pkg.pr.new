@@ -12,7 +12,11 @@ export function useOctokitApp(event: H3Event): AppType {
   }) as unknown as AppType;
 }
 
-export async function useOctokitInstallation(event: H3Event, owner: string, repo: string) {
+export async function useOctokitInstallation(
+  event: H3Event,
+  owner: string,
+  repo: string,
+) {
   const app = useOctokitApp(event);
   const { data: installationData } = await app.octokit.request(
     "GET /repos/{owner}/{repo}/installation",

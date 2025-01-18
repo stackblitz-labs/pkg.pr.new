@@ -89,7 +89,8 @@ const main = defineCommand({
           },
           packageManager: {
             type: "string",
-            description: "Specify the package manager to use (npm, bun, pnpm, yarn)",
+            description:
+              "Specify the package manager to use (npm, bun, pnpm, yarn)",
             enum: ["npm", "bun", "pnpm", "yarn"],
             default: "npm",
           },
@@ -118,11 +119,17 @@ const main = defineCommand({
           const isOnlyTemplates = !!args["only-templates"];
 
           const comment: Comment = args.comment as Comment;
-          const selectedPackageManager = args.packageManager as "npm" | "bun" | "pnpm" | "yarn";
+          const selectedPackageManager = args.packageManager as
+            | "npm"
+            | "bun"
+            | "pnpm"
+            | "yarn";
 
-          if (!["npm", "bun", "pnpm", "yarn"].includes(selectedPackageManager)) {
+          if (
+            !["npm", "bun", "pnpm", "yarn"].includes(selectedPackageManager)
+          ) {
             console.error(
-              `Unsupported package manager: ${selectedPackageManager}. Supported managers are npm, bun, pnpm, yarn.`
+              `Unsupported package manager: ${selectedPackageManager}. Supported managers are npm, bun, pnpm, yarn.`,
             );
             process.exit(1);
           }
@@ -491,8 +498,11 @@ const main = defineCommand({
             .filter((k) => k.startsWith("package:"))
             .map((name, i) => {
               const packageName = name.slice("package:".length);
-              const url = new URL(laterRes.urls[i])
-              const publintUrl = new URL(`/pkg.pr.new${url.pathname}`, "https://publint.dev")
+              const url = new URL(laterRes.urls[i]);
+              const publintUrl = new URL(
+                `/pkg.pr.new${url.pathname}`,
+                "https://publint.dev",
+              );
               return `${packageName}:
 - sha: ${shasums[packageName]}
 - publint: ${publintUrl}

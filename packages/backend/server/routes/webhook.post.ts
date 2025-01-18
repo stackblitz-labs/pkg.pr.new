@@ -47,9 +47,8 @@ export default eventHandler(async (event) => {
 
       // old: the old of hashing the prData started to hit collision, so we need to use the new one (e.g. https://github.com/element-plus/element-plus/actions/runs/12351113750/job/34465376908)
       const oldPrDataHash = hash(prData);
-      const isOldPullRequest = await pullRequestNumbersBucket.hasItem(
-        oldPrDataHash,
-      );
+      const isOldPullRequest =
+        await pullRequestNumbersBucket.hasItem(oldPrDataHash);
 
       const isPullRequest = isNewPullRequest || isOldPullRequest;
       const prNumber = await pullRequestNumbersBucket.getItem(

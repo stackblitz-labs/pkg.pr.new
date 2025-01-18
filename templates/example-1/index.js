@@ -1,1 +1,1 @@
-console.log('template')
+console.log("template");

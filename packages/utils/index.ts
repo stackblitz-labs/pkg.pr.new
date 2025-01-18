@@ -37,8 +37,6 @@ export function isPullRequest(ref: string) {
 export type Comment = "off" | "create" | "update";
 export type PackageManager = "npm" | "pnpm" | "yarn" | "bun";
 
-
-
 const whitelist =
   "https://raw.githubusercontent.com/stackblitz-labs/pkg.pr.new/main/.whitelist";
 
