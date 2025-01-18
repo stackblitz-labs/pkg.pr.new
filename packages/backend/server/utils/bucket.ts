@@ -38,7 +38,7 @@ export async function getItemStream(
   const binding = useBinding(event);
   key = joinKeys(base, key);
 
-  const value = await binding.get(key, opts)
+  const value = await binding.get(key, opts);
   return value?.body;
 }
 

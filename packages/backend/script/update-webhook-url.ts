@@ -7,7 +7,7 @@ config({ path: ".dev.vars" });
 const nitroSigner = createSigner({
   algorithm: "RS256",
   key: process.env.NITRO_PRIVATE_KEY!,
-})
+});
 
 function generateJWT() {
   const payload = {

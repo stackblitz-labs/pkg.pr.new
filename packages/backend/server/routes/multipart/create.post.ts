@@ -11,7 +11,7 @@ export default eventHandler(async (event) => {
     });
   }
   const workflowsBucket = useWorkflowsBucket(event);
-  
+
   if (!(await workflowsBucket.hasItem(workflowKey))) {
     throw createError({
       statusCode: 401,
@@ -37,7 +37,7 @@ export default eventHandler(async (event) => {
 
   const binding = useBinding(event);
 
-  const base = `${workflowData.owner}:${workflowData.repo}:${workflowData.sha}`
+  const base = `${workflowData.owner}:${workflowData.repo}:${workflowData.sha}`;
   const packageKey = `${base}:${packageName}`;
 
   const key = joinKeys(usePackagesBucket.base, packageKey);
