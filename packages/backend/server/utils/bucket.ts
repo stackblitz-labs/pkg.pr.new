@@ -1,5 +1,6 @@
 import { prefixStorage, createStorage, joinKeys } from "unstorage";
 import cloudflareR2BindingDriver from "unstorage/drivers/cloudflare-r2-binding";
+import { getR2Binding } from "unstorage/drivers/utils/cloudflare";
 import { WorkflowData, Cursor } from "../types";
 import type { H3EventContext } from "h3";
 
@@ -9,11 +10,11 @@ type Event = { context: { cloudflare: H3EventContext["cloudflare"] } };
 export const baseKey = "bucket";
 
 export function useBinding(event: Event) {
-  return getBinding(
+  return getR2Binding(
     event.context.cloudflare.env.ENV === "production"
       ? "PROD_CR_BUCKET"
       : "CR_BUCKET",
-  ) as unknown as R2Bucket;
+  );
 }
 
 export async function setItemStream(
