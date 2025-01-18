@@ -10,8 +10,10 @@
     "build": "pnpm -r run build",
     "publish:playgrounds": "pnpm pkg-pr-new publish './playgrounds/*' ./packages/cli --template './templates/*' --peerDeps",
     "format": "prettier --write --cache .",
-    "lint": "eslint --cache .",
-    "typecheck": "pnpm -r --parallel run typecheck",
+    "lint": "pnpm run \"/lint:.*/\"",
+    "lint:js": "eslint --cache .",
+    "lint:format": "prettier --check --cache .",
+    "lint:types": "pnpm -r --parallel run typecheck",
     "release": "tsx script/release.ts",
     "test": "tsx e2e/publish.test.mts"
   },
