@@ -15,7 +15,8 @@
     "lint:format": "prettier --check --cache .",
     "lint:types": "pnpm -r --parallel run typecheck",
     "release": "tsx script/release.ts",
-    "test": "tsx e2e/publish.test.mts"
+    "test": "tsx e2e/publish.test.mts",
+    "test:unit": "vitest run"
   },
   "keywords": [],
   "author": "",
@@ -35,6 +36,7 @@
     "tsx": "^4.10.5",
     "typescript": "^5.4.5",
     "uncrypto": "^0.1.3",
+    "vitest": "^3.0.2",
     "wait-port": "^1.1.0"
   },
   "pnpm": {
