@@ -13,7 +13,6 @@ export function createResolver(rootYaml: PnpmWorkspaceYaml) {
   const catalog = rootYaml.catalog ?? {};
   const catalogs = rootYaml.catalogs ?? {};
 
-  // see
   function resolveVersion(name: string, version: string) {
     if (!version.startsWith("catalog:")) {
       return version;
