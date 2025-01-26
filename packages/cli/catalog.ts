@@ -18,8 +18,8 @@ export function createResolver(rootYaml: PnpmWorkspaceYaml) {
       return version;
     }
 
-    const useName = version.slice("catalog:".length).trim();
-    if (useName.length === 0 || useName === "default") {
+    const useCatalog = version.slice("catalog:".length).trim();
+    if (useCatalog.length === 0 || useCatalog === "default") {
       const catalogVersion = catalog[name];
       if (!catalogVersion) {
         throw new Error(`Missing pnpm catalog version for ${name}`);
@@ -27,10 +27,10 @@ export function createResolver(rootYaml: PnpmWorkspaceYaml) {
       return catalogVersion;
     }
 
-    const catalogVersion = catalogs[useName]?.[name];
+    const catalogVersion = catalogs[useCatalog]?.[name];
     if (!catalogVersion) {
       throw new Error(
-        `Missing pnpm catalog version for ${name} in catalogs.${useName}`,
+        `Missing pnpm catalog version for ${name} in catalogs.${useCatalog}`,
       );
     }
     return catalogVersion;
@@ -62,7 +62,5 @@ export async function loadCatalogs(root = process.cwd()) {
     return undefined;
   }
 
-  const rootYaml: PnpmWorkspaceYaml = await readYamlFile(pnpmWorkspace);
-
-  return createResolver(rootYaml);
+  return createResolver(await readYamlFile(pnpmWorkspace));
 }
