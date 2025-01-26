@@ -13,7 +13,7 @@ it("pnpm catalogs", () => {
       d: "catalog:named",
     },
     peerDependencies: {
-      e: "catalog:",
+      e: "catalog:default",
       f: "catalog:named1",
     },
   };
