@@ -49,7 +49,9 @@ export default eventHandler(async (event) => {
     // https://github.com/unjs/unstorage/blob/e42c01d0c22092f394f57e3ec114371fc8dcf6dd/src/drivers/utils/index.ts#L14-L19
     const [keySha, ...keyPackageNameParts] = trimmedKey.split(":").slice(2);
     const keyPackageName = keyPackageNameParts.join(":");
-    if (keyPackageName !== normalizeKey(packageName)) { continue; }
+    if (keyPackageName !== normalizeKey(packageName)) {
+      continue;
+    }
 
     if (keySha.startsWith(longerRefOrSha)) {
       packageKey = trimmedKey;

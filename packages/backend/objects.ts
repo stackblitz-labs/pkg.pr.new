@@ -1,3 +1,5 @@
 export class Workflows {
-  fetch() { return new Response("Hello World"); }
+  fetch() {
+    return new Response("Hello World");
+  }
 }

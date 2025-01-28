@@ -1,11 +1,7 @@
 import type { R2UploadedPart } from "@cloudflare/workers-types";
 
 export default eventHandler(async (event) => {
-  const {
-    key,
-    id,
-    "uploaded-parts": uploadedPartsHeader,
-  } = getHeaders(event);
+  const { key, id, "uploaded-parts": uploadedPartsHeader } = getHeaders(event);
 
   const binding = useBinding(event);
 

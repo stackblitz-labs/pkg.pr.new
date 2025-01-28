@@ -177,12 +177,11 @@ export function webhooks(
           return new auth.octokit.constructor({
             ...auth.octokitOptions,
             authStrategy: createAppAuth,
-            
-              auth: {
-                ...auth,
-                installationId,
-              }
-            ,
+
+            auth: {
+              ...auth,
+              installationId,
+            },
           });
         },
       })) as Octokit;

@@ -100,10 +100,10 @@ const main = defineCommand({
           const paths =
             args._.length > 0
               ? await glob(args._, {
-                expandDirectories: false,
-                onlyDirectories: true,
-                absolute: true,
-              })
+                  expandDirectories: false,
+                  onlyDirectories: true,
+                  absolute: true,
+                })
               : [process.cwd()];
 
           const templates = await glob(args.template || [], {
@@ -414,10 +414,8 @@ const main = defineCommand({
                   console.error(await createMultipartRes.text());
                   continue;
                 }
-                const {
-                  key: uploadKey,
-                  id: uploadId,
-                } = await createMultipartRes.json();
+                const { key: uploadKey, id: uploadId } =
+                  await createMultipartRes.json();
 
                 interface R2UploadedPart {
                   partNumber: number;

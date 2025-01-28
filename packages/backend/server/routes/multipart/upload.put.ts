@@ -1,9 +1,5 @@
 export default eventHandler(async (event) => {
-  const {
-    key,
-    id,
-    "part-number": partNumberHeader,
-  } = getHeaders(event);
+  const { key, id, "part-number": partNumberHeader } = getHeaders(event);
 
   const partNumber = Number(partNumberHeader);
   const binding = useBinding(event);

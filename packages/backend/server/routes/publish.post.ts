@@ -136,7 +136,7 @@ export default eventHandler(async (event) => {
         const stream = file.stream();
         return setItemStream(event, useTemplatesBucket.base, uuid, stream);
       }
-      return null
+      return null;
     }),
   );
 
@@ -233,43 +233,43 @@ export default eventHandler(async (event) => {
     if (comment !== "off") {
       await (comment === "update" && prevComment!
         ? installation.request(
-          "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}",
-          {
-            owner: workflowData.owner,
-            repo: workflowData.repo,
-            comment_id: prevComment.id,
-            body: generatePullRequestPublishMessage(
-              origin,
-              templatesHtmlMap,
-              packagesWithoutPrefix,
-              workflowData,
-              compact,
-              onlyTemplates,
-              checkRunUrl,
-              packageManager,
-              "ref",
-            ),
-          },
-        )
+            "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}",
+            {
+              owner: workflowData.owner,
+              repo: workflowData.repo,
+              comment_id: prevComment.id,
+              body: generatePullRequestPublishMessage(
+                origin,
+                templatesHtmlMap,
+                packagesWithoutPrefix,
+                workflowData,
+                compact,
+                onlyTemplates,
+                checkRunUrl,
+                packageManager,
+                "ref",
+              ),
+            },
+          )
         : installation.request(
-          "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
-          {
-            owner: workflowData.owner,
-            repo: workflowData.repo,
-            issue_number: Number(workflowData.ref),
-            body: generatePullRequestPublishMessage(
-              origin,
-              templatesHtmlMap,
-              packagesWithoutPrefix,
-              workflowData,
-              compact,
-              onlyTemplates,
-              checkRunUrl,
-              packageManager,
-              comment === "update" ? "ref" : "sha",
-            ),
-          },
-        ));
+            "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
+            {
+              owner: workflowData.owner,
+              repo: workflowData.repo,
+              issue_number: Number(workflowData.ref),
+              body: generatePullRequestPublishMessage(
+                origin,
+                templatesHtmlMap,
+                packagesWithoutPrefix,
+                workflowData,
+                compact,
+                onlyTemplates,
+                checkRunUrl,
+                packageManager,
+                comment === "update" ? "ref" : "sha",
+              ),
+            },
+          ));
     }
   }
 
