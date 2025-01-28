@@ -1,7 +1,7 @@
 export default eventHandler(async (event) => {
   const {
-    key: key,
-    id: id,
+    key,
+    id,
     "part-number": partNumberHeader,
   } = getHeaders(event);
 

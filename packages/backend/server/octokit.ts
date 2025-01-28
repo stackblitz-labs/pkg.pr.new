@@ -27,6 +27,12 @@ import { createAppAuth } from "@octokit/auth-app";
 import { OAuthApp } from "@octokit/oauth-app";
 import { Webhooks, type EmitterWebhookEvent } from "@octokit/webhooks";
 
+import type { Octokit } from "@octokit/core";
+import { createUnauthenticatedAuth } from "@octokit/auth-unauthenticated";
+
+// https://github.com/octokit/app.js/blob/main/src/types.ts
+import type { Endpoints } from "@octokit/types";
+
 type Constructor<T> = new (...args: any[]) => T;
 
 type OctokitType<TOptions extends Options> =
@@ -64,6 +70,7 @@ export class App<TOptions extends Options = Options> {
     clientType: "github-app";
     Octokit: OctokitClassType<TOptions>;
   }>;
+
   log: {
     debug: (message: string, additionalInfo?: object) => void;
     info: (message: string, additionalInfo?: object) => void;
@@ -136,9 +143,6 @@ export class App<TOptions extends Options = Options> {
   }
 }
 
-import type { Octokit } from "@octokit/core";
-import { createUnauthenticatedAuth } from "@octokit/auth-unauthenticated";
-
 export function webhooks(
   appOctokit: Octokit,
   options: Required<Options>["webhooks"],
@@ -173,12 +177,12 @@ export function webhooks(
           return new auth.octokit.constructor({
             ...auth.octokitOptions,
             authStrategy: createAppAuth,
-            ...{
+            
               auth: {
                 ...auth,
                 installationId,
-              },
-            },
+              }
+            ,
           });
         },
       })) as Octokit;
@@ -200,9 +204,6 @@ export function webhooks(
     },
   });
 }
-
-// https://github.com/octokit/app.js/blob/main/src/types.ts
-import type { Endpoints } from "@octokit/types";
 
 export type Options = {
   appId?: number | string;

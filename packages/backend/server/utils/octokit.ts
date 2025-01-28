@@ -21,8 +21,8 @@ export async function useOctokitInstallation(
   const { data: installationData } = await app.octokit.request(
     "GET /repos/{owner}/{repo}/installation",
     {
-      owner: owner,
-      repo: repo,
+      owner,
+      repo,
     },
   );
 

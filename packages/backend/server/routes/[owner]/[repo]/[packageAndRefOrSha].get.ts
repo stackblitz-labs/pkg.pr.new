@@ -1,6 +1,6 @@
-import { WorkflowData } from "../../../types";
 import { abbreviateCommitHash } from "@pkg-pr-new/utils";
 import { normalizeKey } from "unstorage";
+import { WorkflowData } from "../../../types";
 
 type Params = Omit<WorkflowData, "sha" | "ref"> & {
   packageAndRefOrSha: string;
@@ -8,6 +8,7 @@ type Params = Omit<WorkflowData, "sha" | "ref"> & {
 
 export default eventHandler(async (event) => {
   const params = getRouterParams(event) as Params;
+  // eslint-disable-next-line prefer-const
   let [encodedPackageName, longerRefOrSha] =
     params.packageAndRefOrSha.split("@");
   const packageName = decodeURIComponent(encodedPackageName);
@@ -17,7 +18,7 @@ export default eventHandler(async (event) => {
     ? abbreviateCommitHash(longerRefOrSha)
     : longerRefOrSha;
 
-  let base = `${params.owner}:${params.repo}:${refOrSha}`;
+  const base = `${params.owner}:${params.repo}:${refOrSha}`;
   let packageKey = `${base}:${packageName}`;
 
   const cursorKey = base;
@@ -48,7 +49,7 @@ export default eventHandler(async (event) => {
     // https://github.com/unjs/unstorage/blob/e42c01d0c22092f394f57e3ec114371fc8dcf6dd/src/drivers/utils/index.ts#L14-L19
     const [keySha, ...keyPackageNameParts] = trimmedKey.split(":").slice(2);
     const keyPackageName = keyPackageNameParts.join(":");
-    if (keyPackageName !== normalizeKey(packageName)) continue;
+    if (keyPackageName !== normalizeKey(packageName)) { continue; }
 
     if (keySha.startsWith(longerRefOrSha)) {
       packageKey = trimmedKey;
@@ -81,8 +82,8 @@ export default eventHandler(async (event) => {
   });
 });
 
-const sha1Regex = /^[a-f0-9]{40}$/i;
-const sha256Regex = /^[a-f0-9]{64}$/i;
+const sha1Regex = /^[\da-f]{40}$/i;
+const sha256Regex = /^[\da-f]{64}$/i;
 
 function isValidGitHash(hash: string): boolean {
   return sha1Regex.test(hash) || sha256Regex.test(hash);

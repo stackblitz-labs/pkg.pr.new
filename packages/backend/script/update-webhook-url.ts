@@ -26,7 +26,7 @@ const octokit = new Octokit({
   auth: jwtToken,
 });
 
-let {
+const {
   data: { url },
 } = await octokit.request("GET /app/hook/config");
 

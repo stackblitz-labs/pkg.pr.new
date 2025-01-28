@@ -1,18 +1,18 @@
 import type { PackageManifest } from "query-registry";
 
 const githubUrlRegex =
-  /^(?:git\+)?https?:\/\/github\.com\/([^\/]+)\/([^\/]+)\.git$/;
+  /^(?:git\+)?https?:\/\/github\.com\/([^/]+)\/([^/]+)\.git$/;
 
 export function extractOwnerAndRepo(
   repositoryUrl: string,
-): [string, string] | null {
+): [string, string] | undefined {
   const match = repositoryUrl.match(githubUrlRegex);
 
   if (match) {
     return [match[1], match[2]];
   }
 
-  return null;
+  return undefined;
 }
 
 export function extractRepository(manifest: PackageManifest) {

@@ -5,8 +5,8 @@ export default eventHandler(async (event) => {
     const binding = useBinding(event);
     const query = getQuery(event);
 
-    let cursor = (query.cursor as string) || undefined;
-    let objectCount = 0;
+    const cursor = (query.cursor as string) || undefined;
+    // let objectCount = 0;
 
     const packagesPrefix = `${usePackagesBucket.base}:`;
     const cursorsPrefix = `${useCursorsBucket.base}:`;
@@ -15,7 +15,7 @@ export default eventHandler(async (event) => {
     const results = [];
 
     const response = await binding.list({ cursor, limit: 500 });
-    objectCount += response.objects.length;
+    // objectCount += response.objects.length;
 
     for (const { key } of response.objects) {
       let result = null;
@@ -62,7 +62,7 @@ export default eventHandler(async (event) => {
 
     return {
       data: results,
-      nextCursor: nextCursor,
+      nextCursor,
     };
   } catch (error) {
     throw createError({

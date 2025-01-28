@@ -1,5 +1,5 @@
 export default defineEventHandler((event) => {
   if (handleCors(event, {})) {
-    return;
+    console.log('CORS was successfully handled');
   }
 });
