@@ -229,7 +229,19 @@ export default eventHandler(async (event) => {
     );
 
     if (comment !== "off") {
-      if (comment === "update" && prevComment!) {
+      const { data: permissions } = await installation.request(
+        "GET /repos/{owner}/{repo}/installation",
+        {
+          owner: workflowData.owner,
+          repo: workflowData.repo,
+        }
+      );
+
+      if (permissions.permissions.issues !== 'write') {
+        console.warn(
+          `No permission to create comments in ${workflowData.owner}/${workflowData.repo}:${workflowData.ref}`,
+        );
+      } else if (comment === "update" && prevComment!) {
         await installation.request(
           "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}",
           {
