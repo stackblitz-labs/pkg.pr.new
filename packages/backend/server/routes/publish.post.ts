@@ -229,7 +229,7 @@ export default eventHandler(async (event) => {
     );
 
     if (comment !== "off") {
-      const { data: permissions } = await installation.request(
+      const { data: { permissions } } = await installation.request(
         "GET /repos/{owner}/{repo}/installation",
         {
           owner: workflowData.owner,
@@ -237,7 +237,8 @@ export default eventHandler(async (event) => {
         }
       );
 
-      if (permissions.permissions.issues !== 'write') {
+      console.log(permissions);
+      if (permissions.issues !== 'write') {
         console.warn(
           `No permission to create comments in ${workflowData.owner}/${workflowData.repo}:${workflowData.ref}`,
         );
