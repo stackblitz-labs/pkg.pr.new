@@ -237,51 +237,50 @@ export default eventHandler(async (event) => {
         }
       );
 
-      console.log(permissions);
-      if (permissions.issues !== 'write') {
-        console.warn(
-          `No permission to create comments in ${workflowData.owner}/${workflowData.repo}:${workflowData.ref}`,
-        );
-      } else if (comment === "update" && prevComment!) {
-        await installation.request(
-          "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}",
-          {
-            owner: workflowData.owner,
-            repo: workflowData.repo,
-            comment_id: prevComment.id,
-            body: generatePullRequestPublishMessage(
-              origin,
-              templatesHtmlMap,
-              packagesWithoutPrefix,
-              workflowData,
-              compact,
-              onlyTemplates,
-              checkRunUrl,
-              packageManager,
-              "ref",
-            ),
-          },
-        );
-      } else {
-        await installation.request(
-          "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
-          {
-            owner: workflowData.owner,
-            repo: workflowData.repo,
-            issue_number: Number(workflowData.ref),
-            body: generatePullRequestPublishMessage(
-              origin,
-              templatesHtmlMap,
-              packagesWithoutPrefix,
-              workflowData,
-              compact,
-              onlyTemplates,
-              checkRunUrl,
-              packageManager,
-              comment === "update" ? "ref" : "sha",
-            ),
-          },
-        );
+      try {
+        if (comment === "update" && prevComment!) {
+          await installation.request(
+            "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}",
+            {
+              owner: workflowData.owner,
+              repo: workflowData.repo,
+              comment_id: prevComment.id,
+              body: generatePullRequestPublishMessage(
+                origin,
+                templatesHtmlMap,
+                packagesWithoutPrefix,
+                workflowData,
+                compact,
+                onlyTemplates,
+                checkRunUrl,
+                packageManager,
+                "ref",
+              ),
+            },
+          );
+        } else {
+          await installation.request(
+            "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
+            {
+              owner: workflowData.owner,
+              repo: workflowData.repo,
+              issue_number: Number(workflowData.ref),
+              body: generatePullRequestPublishMessage(
+                origin,
+                templatesHtmlMap,
+                packagesWithoutPrefix,
+                workflowData,
+                compact,
+                onlyTemplates,
+                checkRunUrl,
+                packageManager,
+                comment === "update" ? "ref" : "sha",
+              ),
+            },
+          );
+        }
+      } catch (e) {
+        console.error("failed to create/update comment", e, permissions);
       }
     }
   }
