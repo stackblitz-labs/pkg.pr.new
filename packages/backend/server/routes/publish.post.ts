@@ -231,8 +231,17 @@ export default eventHandler(async (event) => {
     );
 
     if (comment !== "off") {
-      await (comment === "update" && prevComment!
-        ? installation.request(
+      const { data: { permissions } } = await installation.request(
+        "GET /repos/{owner}/{repo}/installation",
+        {
+          owner: workflowData.owner,
+          repo: workflowData.repo,
+        }
+      );
+
+      try {
+        if (comment === "update" && prevComment!) {
+          await installation.request(
             "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}",
             {
               owner: workflowData.owner,
@@ -250,8 +259,9 @@ export default eventHandler(async (event) => {
                 "ref",
               ),
             },
-          )
-        : installation.request(
+          );
+        } else {
+          await installation.request(
             "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
             {
               owner: workflowData.owner,
@@ -269,7 +279,11 @@ export default eventHandler(async (event) => {
                 comment === "update" ? "ref" : "sha",
               ),
             },
-          ));
+          );
+        }
+      } catch (e) {
+        console.error("failed to create/update comment", e, permissions);
+      }
     }
   }
 
