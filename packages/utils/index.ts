@@ -5,14 +5,14 @@ const githubUrlRegex =
 
 export function extractOwnerAndRepo(
   repositoryUrl: string,
-): [string, string] | undefined {
+): [string, string] | null {
   const match = repositoryUrl.match(githubUrlRegex);
 
   if (match) {
     return [match[1], match[2]];
   }
 
-  return undefined;
+  return null;
 }
 
 export function extractRepository(manifest: PackageManifest) {

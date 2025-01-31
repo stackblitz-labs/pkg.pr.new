@@ -4,11 +4,11 @@ import { hash } from "ohash";
 import type { PullRequestData, WorkflowData } from "../types";
 
 // mark a PR as a PR :)
-const prMarkEvents = new Set<PullRequestEvent["action"]>([
+const prMarkEvents: PullRequestEvent["action"][] = [
   "opened",
   "reopened",
   "synchronize",
-]);
+];
 
 export default eventHandler(async (event) => {
   const app = useOctokitApp(event);
@@ -80,7 +80,7 @@ export default eventHandler(async (event) => {
       ref: payload.pull_request.head.ref,
     };
 
-    if (prMarkEvents.has(payload.action)) {
+    if (prMarkEvents.includes(payload.action)) {
       await pullRequestNumbersBucket.setItem(
         `${key.full_name}:${key.ref}`,
         payload.number,
