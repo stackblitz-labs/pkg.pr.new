@@ -240,6 +240,7 @@ export default eventHandler(async (event) => {
       );
 
       try {
+        // eslint-disable-next-line unicorn/prefer-ternary
         if (comment === "update" && prevComment!) {
           await installation.request(
             "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}",
@@ -281,8 +282,8 @@ export default eventHandler(async (event) => {
             },
           );
         }
-      } catch (e) {
-        console.error("failed to create/update comment", e, permissions);
+      } catch (error) {
+        console.error("failed to create/update comment", error, permissions);
       }
     }
   }
