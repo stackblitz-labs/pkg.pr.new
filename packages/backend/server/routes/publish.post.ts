@@ -231,13 +231,12 @@ export default eventHandler(async (event) => {
     );
 
     if (comment !== "off") {
-      const { data: { permissions } } = await installation.request(
-        "GET /repos/{owner}/{repo}/installation",
-        {
-          owner: workflowData.owner,
-          repo: workflowData.repo,
-        }
-      );
+      const {
+        data: { permissions },
+      } = await installation.request("GET /repos/{owner}/{repo}/installation", {
+        owner: workflowData.owner,
+        repo: workflowData.repo,
+      });
 
       try {
         // eslint-disable-next-line unicorn/prefer-ternary
