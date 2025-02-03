@@ -1,6 +1,6 @@
-import { WorkflowData } from "../types";
 import { getPackageManifest } from "query-registry";
 import { extractOwnerAndRepo, extractRepository } from "@pkg-pr-new/utils";
+import { WorkflowData } from "../types";
 
 type Params = Omit<WorkflowData, "sha" | "ref"> & {
   packageAndRefOrSha: string;

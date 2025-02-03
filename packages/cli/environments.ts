@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-namespace */
 // https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables
 declare global {
   namespace NodeJS {

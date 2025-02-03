@@ -1,11 +1,12 @@
-import { defineCommand, runMain } from "citty";
+/* eslint-disable unicorn/no-process-exit */
 import assert from "node:assert";
-import path from "path";
-import ezSpawn from "@jsdevtools/ez-spawn";
+import path from "node:path";
 import { createHash } from "node:crypto";
+import fsSync from "node:fs";
+import fs from "node:fs/promises";
 import { hash } from "ohash";
-import fsSync from "fs";
-import fs from "fs/promises";
+import ezSpawn from "@jsdevtools/ez-spawn";
+import { defineCommand, runMain } from "citty";
 import { getPackageManifest, type PackageManifest } from "query-registry";
 import type { Comment } from "@pkg-pr-new/utils";
 import {
@@ -16,13 +17,13 @@ import {
 import { glob } from "tinyglobby";
 import ignore from "ignore";
 import "./environments";
-import pkg from "./package.json" with { type: "json" };
 import { isBinaryFile } from "isbinaryfile";
 import { writePackageJSON, type PackageJson } from "pkg-types";
+import pkg from "./package.json" with { type: "json" };
 import { createDefaultTemplate } from "./template";
 
 declare global {
-  var API_URL: string;
+  const API_URL: string;
 }
 
 type OutputMetadata = {
@@ -394,7 +395,7 @@ const main = defineCommand({
 
           // multipart uploading
           if (formDataPackagesSize > 1024 * 1024 * 99) {
-            for (const [name, entry] of [...formData]) {
+            for (const [name, entry] of formData) {
               if (name.startsWith("package:")) {
                 const file = entry as File;
                 const chunkSize = 1024 * 1024 * 5;
@@ -413,11 +414,8 @@ const main = defineCommand({
                   console.error(await createMultipartRes.text());
                   continue;
                 }
-                const {
-                  key: uploadKey,
-                  id: uploadId,
-                  ...data
-                } = await createMultipartRes.json();
+                const { key: uploadKey, id: uploadId } =
+                  await createMultipartRes.json();
 
                 interface R2UploadedPart {
                   partNumber: number;
@@ -526,7 +524,9 @@ const main = defineCommand({
     link: () => {
       return {
         meta: {},
-        run: () => {},
+        run: () => {
+          // noop
+        },
       };
     },
   },

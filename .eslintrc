@@ -1,3 +1,35 @@
 {
-  "extends": ["eslint-config-unjs"]
+  "extends": ["eslint-config-unjs"],
+  "rules": {
+    "unicorn/no-null": "off",
+    "require-await": "error",
+    "unicorn/filename-case": "off",
+    "unicorn/no-process-exit": "error",
+    "unicorn/prefer-ternary": "error",
+    "unicorn/prefer-top-level-await": "off",
+    "no-useless-constructor": "error",
+    "@typescript-eslint/no-unused-vars": [
+      "warn",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+      },
+    ],
+    "@typescript-eslint/no-namespace": "error",
+    "camelcase": "off",
+    "unicorn/prefer-code-point": "error",
+    "unicorn/prefer-string-slice": "off",
+    "unicorn/prefer-at": "off",
+    "unicorn/explicit-length-check": "off",
+    "unicorn/prefer-set-has": "off",
+    "no-empty": [
+      "error",
+      {
+        "allowEmptyCatch": true,
+      },
+    ],
+    "prefer-const": "error",
+    "unicorn/no-empty-file": "error",
+    "@typescript-eslint/no-non-null-assertion": "off",
+  },
 }
