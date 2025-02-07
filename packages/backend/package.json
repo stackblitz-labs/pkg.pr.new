@@ -28,7 +28,6 @@
     "dotenv": "^16.4.5",
     "fast-jwt": "^4.0.2",
     "h3": "^1.11.1",
-    "msw": "^2.7.0",
     "nitro-cloudflare-dev": "0.1.2",
     "nitropack": "^2.9.6",
     "octokit": "^3.2.1",
