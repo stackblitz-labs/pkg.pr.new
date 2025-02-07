@@ -115,7 +115,7 @@ const main = defineCommand({
           const formData = new FormData();
 
           const isCompact = !!args.compact;
-          let packMethod: 'npm' | 'pnpm' | 'yarn' = 'npm'
+          let packMethod: PackMethod = 'npm'
 
           if (args.pnpm) {
             packMethod = "pnpm";
