@@ -27,8 +27,8 @@ importers:
         specifier: ^3.0.4
         version: 3.0.4
       '@simulacrum/github-api-simulator':
-        specifier: ^0.5.2
-        version: 0.5.2(ajv@8.17.1)(picomatch@4.0.2)(react@18.3.1)
+        specifier: ^0.5.3
+        version: 0.5.3(ajv@8.17.1)(picomatch@4.0.2)(react@18.3.1)
       '@types/node':
         specifier: ^20.14.2
         version: 20.14.2
@@ -1777,8 +1777,8 @@ packages:
   '@simulacrum/foundation-simulator@0.3.0':
     resolution: {integrity: sha512-sQoX8HaiLHpUVQZTjflfp9NIJMx15daDfACooaSrx7Shed8LR+QcUIKF2DOokzbKJqRoWkAfvnFwwzSl5kVB5g==}
 
-  '@simulacrum/github-api-simulator@0.5.2':
-    resolution: {integrity: sha512-+4wNsWLz9eYABY6KeZyDo03gyu1o10ofq53qcWyNaMtMos1iQxK+Ly0Pa6p/5fRJl1v6wzACuWKiDCLE8+I0qA==}
+  '@simulacrum/github-api-simulator@0.5.3':
+    resolution: {integrity: sha512-Bos7K/whTQ2ZAEqq07Ncw/uZwIrfPpJ8KAY5vYpG8KbLJO3DaNThWSyJwcCO8Bd8H0PRTc3M4gu9vZQbGyybRw==}
     hasBin: true
 
   '@sindresorhus/merge-streams@2.3.0':
@@ -6557,7 +6557,7 @@ snapshots:
       - redux
       - supports-color
 
-  '@simulacrum/github-api-simulator@0.5.2(ajv@8.17.1)(picomatch@4.0.2)(react@18.3.1)':
+  '@simulacrum/github-api-simulator@0.5.3(ajv@8.17.1)(picomatch@4.0.2)(react@18.3.1)':
     dependencies:
       '@faker-js/faker': 9.4.0
       '@simulacrum/foundation-simulator': 0.3.0(ajv@8.17.1)(picomatch@4.0.2)(react@18.3.1)
