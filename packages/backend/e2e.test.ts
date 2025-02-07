@@ -26,8 +26,8 @@ beforeAll(async () => {
     stdio: "inherit",
     shell: true,
   });
-  worker = await unstable_dev('dist/_worker.js', {
-    config: './wrangler.toml',
+  worker = await unstable_dev(`${import.meta.dirname}/dist/_worker.js`, {
+    config: `${import.meta.dirname}/wrangler.toml`,
   })
   const url = `${worker.proxyData.userWorkerUrl.protocol}//${worker.proxyData.userWorkerUrl.hostname}:${worker.proxyData.userWorkerUrl.port}` 
   console.log(url)
