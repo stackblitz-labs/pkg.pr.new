@@ -8,6 +8,7 @@ import prPullRequestSynchronizeFixture from './fixtures/pr.pull_request.json'
 import { simulation } from '@simulacrum/github-api-simulator'
 
 let server;
+let workerUrl: string;
 
 let worker: UnstableDevWorker
 beforeAll(async () => {
@@ -31,6 +32,7 @@ beforeAll(async () => {
   })
   const url = `${worker.proxyData.userWorkerUrl.protocol}//${worker.proxyData.userWorkerUrl.hostname}:${worker.proxyData.userWorkerUrl.port}` 
   console.log(url)
+  workerUrl = url
   await ezSpawn.async(`pnpm cross-env TEST=true API_URL=${url} pnpm --filter=pkg-pr-new run build`, [], {
     stdio: "inherit",
     shell: true,
@@ -125,7 +127,7 @@ describe.sequential.each([
     expect(shaBlobSize).toEqual(refBlobSize);
 
     // Test installation
-    const url = `/${owner}/${repo}/playground-a@${sha}?id=${Date.now()}`
+    const url = new URL(`/${owner}/${repo}/playground-a@${sha}?id=${Date.now()}`,workerUrl)
     const installProcess = await ezSpawn.async(`pnpm cross-env CI=true npx -f playground-a@${url}`, {
       stdio: "overlapped",
       shell: true,
@@ -142,7 +144,7 @@ describe.sequential.each([
     expect(response.status).toBe(200)
 
     // Test installation
-    const url = `/${owner}/${repo}/playground-b@${sha}?id=${Date.now()}`
+    const url = new URL(`/${owner}/${repo}/playground-b@${sha}?id=${Date.now()}`,workerUrl)
     const installProcess = await ezSpawn.async(`pnpm cross-env CI=true npx -f playground-b@${url}`, {
       stdio: "overlapped",
       shell: true,
