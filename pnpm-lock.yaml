@@ -113,6 +113,9 @@ importers:
       '@pkg-pr-new/utils':
         specifier: workspace:^
         version: link:../utils
+      '@simulacrum/github-api-simulator':
+        specifier: ^0.5.3
+        version: 0.5.3(ajv@8.17.1)(picomatch@4.0.2)(react@18.3.1)
       dotenv:
         specifier: ^16.4.5
         version: 16.4.5
