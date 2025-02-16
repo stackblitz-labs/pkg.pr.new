@@ -5,51 +5,43 @@ import ezSpawn from "@jsdevtools/ez-spawn"
 import pushWorkflowRunInProgressFixture from './fixtures/workflow_run.in_progress.json'
 import prWorkflowRunRequestedFixture from './fixtures/pr.workflow_run.requested.json'
 import prPullRequestSynchronizeFixture from './fixtures/pr.pull_request.json'
-import { setupServer } from 'msw/node'
-import { http, HttpResponse } from 'msw'
+import { simulation } from '@simulacrum/github-api-simulator'
 
-const server = setupServer(
-  // Mock the GitHub API installation endpoint
-  http.get('https://api.github.com/repos/:owner/:repo/installation', (ctx) => {
-    return HttpResponse.json({
-        id: 1234567,
-        access_tokens_url: 'https://api.github.com/app/installations/1234567/access_tokens',
-      })
-  }),
-
-  // Mock the GitHub API token endpoint
-  http.post('https://api.github.com/app/installations/:installation_id/access_tokens', (ctx) => {
-    return HttpResponse.json({
-      token: 'ghs_mock_token',
-      expires_at: '2024-03-22T00:00:00Z',
-    })
-  })
-)
+let server;
+let workerUrl: string;
 
 let worker: UnstableDevWorker
-
 beforeAll(async () => {
-  // Start MSW server
-  server.listen()
+  const app = simulation({
+    initialState: {
+      users: [],
+      organizations: [{ login: "stackblitz-labs" }],
+      repositories: [{ owner: "stackblitz-labs", name: "temporary-test" }],
+      branches: [{ name: "main" }],
+      blobs: [],
+    },
+  });
+  server = await app.listen(3300);
 
   await ezSpawn.async('pnpm cross-env TEST=true pnpm --filter=backend run build', [], {
     stdio: "inherit",
     shell: true,
   });
-  worker = await unstable_dev('dist/_worker.js', {
-    config: './wrangler.toml',
+  worker = await unstable_dev(`${import.meta.dirname}/dist/_worker.js`, {
+    config: `${import.meta.dirname}/wrangler.toml`,
   })
   const url = `${worker.proxyData.userWorkerUrl.protocol}//${worker.proxyData.userWorkerUrl.hostname}:${worker.proxyData.userWorkerUrl.port}` 
   console.log(url)
+  workerUrl = url
   await ezSpawn.async(`pnpm cross-env TEST=true API_URL=${url} pnpm --filter=pkg-pr-new run build`, [], {
     stdio: "inherit",
     shell: true,
   });
 })
 
-afterAll(() => {
-  server.close()
-})
+afterAll(async () => {
+  await server.ensureClose();
+});
 
 describe.sequential.each([
   [pushWorkflowRunInProgressFixture],
@@ -135,7 +127,7 @@ describe.sequential.each([
     expect(shaBlobSize).toEqual(refBlobSize);
 
     // Test installation
-    const url = `/${owner}/${repo}/playground-a@${sha}?id=${Date.now()}`
+    const url = new URL(`/${owner}/${repo}/playground-a@${sha}?id=${Date.now()}`,workerUrl)
     const installProcess = await ezSpawn.async(`pnpm cross-env CI=true npx -f playground-a@${url}`, {
       stdio: "overlapped",
       shell: true,
@@ -152,7 +144,7 @@ describe.sequential.each([
     expect(response.status).toBe(200)
 
     // Test installation
-    const url = `/${owner}/${repo}/playground-b@${sha}?id=${Date.now()}`
+    const url = new URL(`/${owner}/${repo}/playground-b@${sha}?id=${Date.now()}`,workerUrl)
     const installProcess = await ezSpawn.async(`pnpm cross-env CI=true npx -f playground-b@${url}`, {
       stdio: "overlapped",
       shell: true,
