@@ -2,10 +2,10 @@ import type { Response } from "@cloudflare/workers-types";
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { unstable_dev, UnstableDevWorker } from "wrangler";
 import ezSpawn from "@jsdevtools/ez-spawn";
+import { simulation } from "@simulacrum/github-api-simulator";
 import pushWorkflowRunInProgressFixture from "./fixtures/workflow_run.in_progress.json";
 import prWorkflowRunRequestedFixture from "./fixtures/pr.workflow_run.requested.json";
 import prPullRequestSynchronizeFixture from "./fixtures/pr.pull_request.json";
-import { simulation } from "@simulacrum/github-api-simulator";
 
 let server: Awaited<ReturnType<ReturnType<typeof simulation>["listen"]>>;
 let workerUrl: string;
