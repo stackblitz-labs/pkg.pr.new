@@ -25,7 +25,7 @@
     "@octokit/webhooks": "^12.2.0",
     "@octokit/webhooks-types": "^7.4.0",
     "@pkg-pr-new/utils": "workspace:^",
-    "@simulacrum/github-api-simulator": "^0.5.3",
+    "@simulacrum/github-api-simulator": "https://pkg.pr.new/thefrontside/simulacrum/@simulacrum/github-api-simulator@299",
     "dotenv": "^16.4.5",
     "fast-jwt": "^4.0.2",
     "h3": "^1.11.1",
