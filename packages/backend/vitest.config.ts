@@ -12,7 +12,6 @@ export default defineConfig({
     alias: {
       "@simulacrum/foundation-simulator": simulacrumFoundationSimulator,
     },
-    preserveSymlinks: true,
   },
   test: {},
 });
