@@ -16,7 +16,7 @@
     "lint:fix": "prettier --write --cache .",
     "lint:types": "pnpm -r --parallel run typecheck",
     "release": "tsx script/release.ts",
-    "test": "tsx e2e/publish.test.mts",
+    "test": "pnpm --filter=backend test",
     "test:unit": "vitest run"
   },
   "keywords": [],
