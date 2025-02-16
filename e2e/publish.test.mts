@@ -1,7 +1,8 @@
-import { exec } from "child_process";
-import { platform } from "os";
-import wp from "wait-port";
+/* eslint-disable unicorn/no-process-exit */
+import { exec } from "node:child_process";
+import { platform } from "node:os";
 import assert from "node:assert";
+import wp from "wait-port";
 import ezSpawn from "@jsdevtools/ez-spawn";
 import pushWorkflowRunInProgressFixture from "./fixtures/workflow_run.in_progress.json" with { type: "json" };
 import prWorkflowRunRequestedFixture from "./fixtures/pr.workflow_run.requested.json" with { type: "json" };
@@ -246,8 +247,8 @@ async function killPort() {
         killSignal: "SIGINT",
       });
     }
-  } catch (e) {
-    console.error(e);
+  } catch (error) {
+    console.error(error);
     c.abort();
     process.exit(1);
   } finally {

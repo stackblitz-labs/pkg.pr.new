@@ -1,8 +1,8 @@
 import { prefixStorage, createStorage, joinKeys } from "unstorage";
 import cloudflareR2BindingDriver from "unstorage/drivers/cloudflare-r2-binding";
 import { getR2Binding } from "unstorage/drivers/utils/cloudflare";
-import { WorkflowData, Cursor } from "../types";
 import type { H3EventContext } from "h3";
+import { WorkflowData, Cursor } from "../types";
 
 type Binary = Parameters<R2Bucket["put"]>[1];
 type Event = { context: { cloudflare: H3EventContext["cloudflare"] } };

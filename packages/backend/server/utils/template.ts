@@ -1,3 +1,6 @@
+/* eslint-disable unicorn/no-abusive-eslint-disable */
+/* eslint-disable */
+
 export function generateTemplateHtml(
   name: string,
   files: Record<string, string>,

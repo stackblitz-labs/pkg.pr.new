@@ -1,7 +1,7 @@
 import type { PullRequestEvent } from "@octokit/webhooks-types";
 import type { HandlerFunction } from "@octokit/webhooks/dist-types/types";
-import type { PullRequestData, WorkflowData } from "../types";
 import { hash } from "ohash";
+import type { PullRequestData, WorkflowData } from "../types";
 
 // mark a PR as a PR :)
 const prMarkEvents: PullRequestEvent["action"][] = [
@@ -59,10 +59,7 @@ export default eventHandler(async (event) => {
         owner,
         repo,
         sha: payload.workflow_run.head_sha,
-        ref: isPullRequest
-          ? // it's a pull request workflow
-            `${prNumber}`
-          : payload.workflow_run.head_branch!,
+        ref: isPullRequest ? `${prNumber}` : payload.workflow_run.head_branch!, // it's a pull request workflow
       };
 
       // Publishing is only available throughout the lifetime of a workflow_job
@@ -73,11 +70,16 @@ export default eventHandler(async (event) => {
   const pullRequestHandler: HandlerFunction<"pull_request", unknown> = async ({
     payload,
   }) => {
-    // TODO: functions that generate these kinda keys
+    const headRepo = payload.pull_request.head.repo;
+    if (!headRepo || !headRepo.full_name) {
+      throw new Error("Invalid payload: 'full_name' is undefined.");
+    }
+
     const key: PullRequestData = {
-      full_name: payload.pull_request.head.repo?.full_name!,
+      full_name: headRepo.full_name,
       ref: payload.pull_request.head.ref,
     };
+
     if (prMarkEvents.includes(payload.action)) {
       await pullRequestNumbersBucket.setItem(
         `${key.full_name}:${key.ref}`,
@@ -100,11 +102,12 @@ export default eventHandler(async (event) => {
   const payload = (await readRawBody(event))!;
 
   try {
+    // eslint-disable-next-line unicorn/prefer-ternary
     if (test) {
       // TODO: fix typing with infer
       await app.webhooks.receive({
-        id: id,
-        name: name,
+        id,
+        name,
         payload: JSON.parse(payload),
       } as any);
     } else {
