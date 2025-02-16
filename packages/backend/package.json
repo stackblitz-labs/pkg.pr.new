@@ -36,5 +36,8 @@
     "unstorage": "^1.10.2",
     "vitest": "2.1.8",
     "wrangler": "^3.57.1"
+  },
+  "dependencies": {
+    "@simulacrum/foundation-simulator": "^0.3.0"
   }
 }

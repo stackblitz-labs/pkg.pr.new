@@ -7,7 +7,7 @@ import prWorkflowRunRequestedFixture from './fixtures/pr.workflow_run.requested.
 import prPullRequestSynchronizeFixture from './fixtures/pr.pull_request.json'
 import { simulation } from '@simulacrum/github-api-simulator'
 
-let server;
+let server: Awaited<ReturnType<ReturnType<typeof simulation>['listen']>>;
 let workerUrl: string;
 
 let worker: UnstableDevWorker
@@ -30,7 +30,7 @@ beforeAll(async () => {
   worker = await unstable_dev(`${import.meta.dirname}/dist/_worker.js`, {
     config: `${import.meta.dirname}/wrangler.toml`,
   })
-  const url = `${worker.proxyData.userWorkerUrl.protocol}//${worker.proxyData.userWorkerUrl.hostname}:${worker.proxyData.userWorkerUrl.port}` 
+  const url = `${worker.proxyData.userWorkerUrl.protocol}//${worker.proxyData.userWorkerUrl.hostname}:${worker.proxyData.userWorkerUrl.port}`
   console.log(url)
   workerUrl = url
   await ezSpawn.async(`pnpm cross-env TEST=true API_URL=${url} pnpm --filter=pkg-pr-new run build`, [], {
@@ -47,8 +47,8 @@ describe.sequential.each([
   [pushWorkflowRunInProgressFixture],
   [prWorkflowRunRequestedFixture, prPullRequestSynchronizeFixture]
 ] as const)('webhook endpoints', (...fixture) => {
-  const [{event, payload}, pr] = fixture
-  const mode = pr ? 'pr' : 'commit' 
+  const [{ event, payload }, pr] = fixture
+  const mode = pr ? 'pr' : 'commit'
   it(`handles ${mode} events`, async () => {
     // Send PR event if exists
     if (pr) {
@@ -93,18 +93,18 @@ describe.sequential.each([
       .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
       .join(" ");
 
-      try {
-    const process = await ezSpawn.async(`pnpm cross-env ${env} pnpm run -w publish:playgrounds`, [], {
-      stdio: "overlapped",
-      shell: true,
-    });
-    console.log(process.stdout)
+    try {
+      const process = await ezSpawn.async(`pnpm cross-env ${env} pnpm run -w publish:playgrounds`, [], {
+        stdio: "overlapped",
+        shell: true,
+      });
+      console.log(process.stdout)
 
-      } catch (e) {
-        console.log(e)
+    } catch (e) {
+      console.log(e)
 
-      }
-      
+    }
+
   })
 
   it(`serves and installs playground-a for ${mode}`, async () => {
@@ -127,7 +127,7 @@ describe.sequential.each([
     expect(shaBlobSize).toEqual(refBlobSize);
 
     // Test installation
-    const url = new URL(`/${owner}/${repo}/playground-a@${sha}?id=${Date.now()}`,workerUrl)
+    const url = new URL(`/${owner}/${repo}/playground-a@${sha}?id=${Date.now()}`, workerUrl)
     const installProcess = await ezSpawn.async(`pnpm cross-env CI=true npx -f playground-a@${url}`, {
       stdio: "overlapped",
       shell: true,
@@ -144,7 +144,7 @@ describe.sequential.each([
     expect(response.status).toBe(200)
 
     // Test installation
-    const url = new URL(`/${owner}/${repo}/playground-b@${sha}?id=${Date.now()}`,workerUrl)
+    const url = new URL(`/${owner}/${repo}/playground-b@${sha}?id=${Date.now()}`, workerUrl)
     const installProcess = await ezSpawn.async(`pnpm cross-env CI=true npx -f playground-b@${url}`, {
       stdio: "overlapped",
       shell: true,
@@ -184,13 +184,13 @@ describe('URL redirects', () => {
 
 async function fetchWithRedirect(url: string, maxRedirects = 999): Promise<Response> {
   const response = await worker.fetch(url, { redirect: 'manual' })
-  
+
   if (response.status >= 300 && response.status < 400 && maxRedirects > 0) {
     const location = response.headers.get('location')
     if (location) {
       return fetchWithRedirect(location, maxRedirects - 1)
     }
   }
-  
+
   return response
 }
