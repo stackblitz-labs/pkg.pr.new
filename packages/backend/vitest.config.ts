@@ -5,7 +5,6 @@ const simulacrumFoundationSimulator = path.resolve(
   __dirname,
   "node_modules/@simulacrum/foundation-simulator/dist/cjs/index.js",
 );
-console.log(simulacrumFoundationSimulator);
 
 export default defineConfig({
   resolve: {
