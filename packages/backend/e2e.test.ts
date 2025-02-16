@@ -114,7 +114,7 @@ describe.sequential.each([
     } catch (e) {
       console.log(e);
     }
-  });
+  }, 3000);
 
   it(`serves and installs playground-a for ${mode}`, async () => {
     const [owner, repo] = payload.repository.full_name.split("/");
