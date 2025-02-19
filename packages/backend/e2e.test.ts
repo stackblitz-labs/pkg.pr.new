@@ -22,7 +22,6 @@ beforeAll(async () => {
     },
   });
   server = await app.listen(3300);
-  console.log("server", server);
 
   await ezSpawn.async(
     "pnpm cross-env TEST=true pnpm --filter=backend run build",
@@ -36,7 +35,6 @@ beforeAll(async () => {
     config: `${import.meta.dirname}/wrangler.toml`,
   });
   const url = `${worker.proxyData.userWorkerUrl.protocol}//${worker.proxyData.userWorkerUrl.hostname}:${worker.proxyData.userWorkerUrl.port}`;
-  console.log(url);
   workerUrl = url;
   await ezSpawn.async(
     `pnpm cross-env TEST=true API_URL=${url} pnpm --filter=pkg-pr-new run build`,
@@ -46,7 +44,6 @@ beforeAll(async () => {
       shell: true,
     },
   );
-  console.log('hereee')
 }, 30_000);
 
 afterAll(async () => {
