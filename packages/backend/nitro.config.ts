@@ -27,6 +27,7 @@ export default defineNitroConfig({
   srcDir: "server",
   runtimeConfig: {
     appId: "",
+    ghBaseUrl: "https://api.github.com",
     webhookSecret: "",
     privateKey: "",
     rmStaleKey: "",
