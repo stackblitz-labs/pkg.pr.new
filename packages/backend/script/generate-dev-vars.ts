@@ -37,7 +37,7 @@ async function generateDevVars() {
   };
 
   // Only generate private key if missing
-  if (!("NITRO_PRIVATE_KEY" in existingVars)) {
+  if ("NITRO_PRIVATE_KEY" in existingVars === false) {
     const { privateKey } = crypto.generateKeyPairSync("rsa", {
       modulusLength: 2048,
       publicKeyEncoding: {
