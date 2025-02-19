@@ -31,9 +31,12 @@ beforeAll(async () => {
       shell: true,
     },
   );
-  worker = await unstable_dev(`${import.meta.dirname}/dist/_worker.js/index.js`, {
-    config: `${import.meta.dirname}/wrangler.toml`,
-  });
+  worker = await unstable_dev(
+    `${import.meta.dirname}/dist/_worker.js/index.js`,
+    {
+      config: `${import.meta.dirname}/wrangler.toml`,
+    },
+  );
   const url = `${worker.proxyData.userWorkerUrl.protocol}//${worker.proxyData.userWorkerUrl.hostname}:${worker.proxyData.userWorkerUrl.port}`;
   workerUrl = url;
   await ezSpawn.async(
