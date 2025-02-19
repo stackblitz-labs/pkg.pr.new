@@ -1,6 +1,6 @@
-import crypto from "crypto";
-import fs from "fs/promises";
-import path from "path";
+import crypto from "node:crypto";
+import fs from "node:fs/promises";
+import path from "node:path";
 
 async function generateDevVars() {
   const filePath = path.join(
@@ -11,7 +11,7 @@ async function generateDevVars() {
   // Try to read existing vars
   let existingVars: Record<string, string> = {};
   try {
-    const content = await fs.readFile(filePath, "utf-8");
+    const content = await fs.readFile(filePath, "utf8");
     existingVars = Object.fromEntries(
       content
         .split("\n")
@@ -19,7 +19,7 @@ async function generateDevVars() {
         .map(([key, ...values]) => [key, values.join("=")])
         .filter(([key]) => key),
     );
-  } catch (error) {
+  } catch {
     // File doesn't exist, continue with empty vars
   }
 
@@ -37,7 +37,7 @@ async function generateDevVars() {
   };
 
   // Only generate private key if missing
-  if (!existingVars.NITRO_PRIVATE_KEY) {
+  if (!("NITRO_PRIVATE_KEY" in existingVars)) {
     const { privateKey } = crypto.generateKeyPairSync("rsa", {
       modulusLength: 2048,
       publicKeyEncoding: {
@@ -60,7 +60,7 @@ async function generateDevVars() {
     .join("\n");
 
   // Write to .dev.vars file
-  await fs.writeFile(filePath, envContent, "utf-8");
+  await fs.writeFile(filePath, envContent, "utf8");
 
   console.log("Updated .dev.vars file successfully!");
 }
