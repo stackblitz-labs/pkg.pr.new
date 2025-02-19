@@ -547,6 +547,7 @@ runMain(main)
 type PackMethod = "npm" | "pnpm" | "yarn";
 
 async function resolveTarball(pm: PackMethod, p: string, pJson: PackageJson) {
+  console.log('pack', p, pJson)
   let cmd = `${pm} pack`;
   let filename: string = `${pJson.name!.replace('/', '-')}-${pJson.version}.tgz`;
   if (pm === "yarn") {
