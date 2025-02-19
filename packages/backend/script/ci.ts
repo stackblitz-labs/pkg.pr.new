@@ -4,6 +4,7 @@ if (process.env.CI) {
     ...Object.entries(process.env)
       .filter(([k]) => k.startsWith("NITRO"))
       .map(([k, v]) => `${k}="${v}"`),
+    "NITRO_GH_BASE_URL=http://localhost:3300",
     "NITRO_TEST=true",
     "GITHUB_TOKEN=" + process.env.GITHUB_TOKEN!,
   ].join("\n");

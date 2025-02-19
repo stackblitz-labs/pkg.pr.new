@@ -22,6 +22,7 @@ beforeAll(async () => {
     },
   });
   server = await app.listen(3300);
+  console.log("server", server);
 
   await ezSpawn.async(
     "pnpm cross-env TEST=true pnpm --filter=backend run build",
@@ -31,7 +32,7 @@ beforeAll(async () => {
       shell: true,
     },
   );
-  worker = await unstable_dev(`${import.meta.dirname}/dist/_worker.js`, {
+  worker = await unstable_dev(`${import.meta.dirname}/dist/_worker.js/index.js`, {
     config: `${import.meta.dirname}/wrangler.toml`,
   });
   const url = `${worker.proxyData.userWorkerUrl.protocol}//${worker.proxyData.userWorkerUrl.hostname}:${worker.proxyData.userWorkerUrl.port}`;
@@ -45,7 +46,8 @@ beforeAll(async () => {
       shell: true,
     },
   );
-});
+  console.log('hereee')
+}, 30000);
 
 afterAll(async () => {
   await server.ensureClose();
@@ -114,7 +116,7 @@ describe.sequential.each([
     } catch (e) {
       console.log(e);
     }
-  }, 3000);
+  }, 10000);
 
   it(`serves and installs playground-a for ${mode}`, async () => {
     const [owner, repo] = payload.repository.full_name.split("/");
@@ -230,5 +232,5 @@ async function fetchWithRedirect(
     }
   }
 
-  return response;
+  return response as unknown as Response;
 }
