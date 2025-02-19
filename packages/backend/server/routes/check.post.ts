@@ -1,5 +1,5 @@
 export default eventHandler(async (event) => {
-  const { test } = useRuntimeConfig(event)
+  const { test } = useRuntimeConfig(event);
   const data = await readRawBody(event);
   const workflowsBucket = useWorkflowsBucket(event);
 
