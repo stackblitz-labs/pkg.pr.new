@@ -47,7 +47,7 @@ beforeAll(async () => {
     },
   );
   console.log('hereee')
-}, 30000);
+}, 30_000);
 
 afterAll(async () => {
   await server.ensureClose();
@@ -105,7 +105,7 @@ describe.sequential.each([
 
     try {
       const process = await ezSpawn.async(
-        `pnpm cross-env ${env} pnpm run -w publish:playgrounds`,
+        `pnpm cross-env ${env} pnpm run -w publishh:playgrounds`,
         [],
         {
           stdio: "overlapped",
@@ -113,10 +113,10 @@ describe.sequential.each([
         },
       );
       console.log(process.stdout);
-    } catch (e) {
-      console.log(e);
+    } catch (error) {
+      console.log(error);
     }
-  }, 10000);
+  }, 10_000);
 
   it(`serves and installs playground-a for ${mode}`, async () => {
     const [owner, repo] = payload.repository.full_name.split("/");
