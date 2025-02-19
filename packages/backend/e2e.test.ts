@@ -105,7 +105,7 @@ describe.sequential.each([
 
     try {
       const process = await ezSpawn.async(
-        `pnpm cross-env ${env} pnpm run -w publishh:playgrounds`,
+        `pnpm cross-env ${env} pnpm run -w publish:playgrounds`,
         [],
         {
           stdio: "overlapped",
