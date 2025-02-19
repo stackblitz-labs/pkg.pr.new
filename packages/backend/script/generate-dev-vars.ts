@@ -3,7 +3,7 @@ import fs from 'fs/promises';
 import path from 'path';
 
 async function generateDevVars() {
-  const filePath = path.join(__dirname, '../.dev.vars');
+  const filePath = path.join(path.dirname(new URL(import.meta.url).pathname), '../.dev.vars');
   
   // Try to read existing vars
   let existingVars: Record<string, string> = {};
