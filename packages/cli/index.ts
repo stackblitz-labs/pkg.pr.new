@@ -372,6 +372,7 @@ const main = defineCommand({
               const { filename, shasum } = await resolveTarball(
                 packMethod,
                 p,
+                pJson,
               );
 
               shasums[pJson.name] = shasum;
