@@ -10,7 +10,8 @@
     "prepare": "nitro prepare && pnpm vendor:octokit",
     "preview": "wrangler pages dev dist ",
     "test": "pnpm vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "postinstall": "tsx script/generate-dev-vars.ts"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240512.0",
