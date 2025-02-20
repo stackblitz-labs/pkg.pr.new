@@ -73,7 +73,7 @@ export default eventHandler(async (event) => {
     });
   }
 
-  const { appId, test } = useRuntimeConfig(event);
+  const { appId } = useRuntimeConfig(event);
   const cursorBucket = useCursorsBucket(event);
 
   if (!(await workflowsBucket.hasItem(key))) {
@@ -164,14 +164,6 @@ export default eventHandler(async (event) => {
   const urls = packagesWithoutPrefix.map((packageName) =>
     generatePublishUrl("sha", origin, packageName, workflowData, compact),
   );
-
-  // TODO: remove this once the simulator can handle the installation part (it is giving 404s now)
-  if (test) {
-    return {
-      ok: true,
-      urls,
-    };
-  }
 
   const installation = await useOctokitInstallation(
     event,
