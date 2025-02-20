@@ -26,7 +26,7 @@
     "@octokit/webhooks": "^12.2.0",
     "@octokit/webhooks-types": "^7.4.0",
     "@pkg-pr-new/utils": "workspace:^",
-    "@simulacrum/github-api-simulator": "https://pkg.pr.new/thefrontside/simulacrum/@simulacrum/github-api-simulator@303",
+    "@simulacrum/github-api-simulator": "^0.5.4",
     "dotenv": "^16.4.5",
     "fast-jwt": "^4.0.2",
     "h3": "^1.11.1",
@@ -37,8 +37,5 @@
     "unstorage": "^1.10.2",
     "vitest": "2.1.8",
     "wrangler": "^3.57.1"
-  },
-  "dependencies": {
-    "@simulacrum/foundation-simulator": "^0.3.0"
   }
 }
