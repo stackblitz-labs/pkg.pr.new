@@ -159,7 +159,7 @@ To customize which package manager is reflected in the comments, use the `--pack
 
 For repositories with many packages, comments might get too long. In that case, you can use `--only-templates` to only show templates.
 
-pkg.pr.new uses `npm pack --json` under the hood, in case you face issues, you can also use the `--pnpm` flag so it starts using `pnpm pack`. This is not necessary in most cases.
+pkg.pr.new uses `npm pack --json` under the hood, in case you face issues, you can also use the `--pnpm` or `--yarn` flag so it starts using `pnpm pack` or `yarn pack`. This is not necessary in most cases.
 
 <img width="100%" src="https://github.com/stackblitz-labs/pkg.pr.new/assets/37929992/2fc03b94-ebae-4c47-a271-03a4ad5d2449" />
 

@@ -115,7 +115,14 @@ const main = defineCommand({
           const formData = new FormData();
 
           const isCompact = !!args.compact;
-          const isPnpm = !!args.pnpm;
+          let packMethod: PackMethod = "npm";
+
+          if (args.pnpm) {
+            packMethod = "pnpm";
+          } else if (args.yarn) {
+            packMethod = "yarn";
+          }
+
           const isPeerDepsEnabled = !!args.peerDeps;
           const isOnlyTemplates = !!args["only-templates"];
 
@@ -363,8 +370,9 @@ const main = defineCommand({
               }
 
               const { filename, shasum } = await resolveTarball(
-                isPnpm ? "pnpm" : "npm",
+                packMethod,
                 p,
+                pJson,
               );
 
               shasums[pJson.name] = shasum;
@@ -536,14 +544,23 @@ runMain(main)
   .then(() => process.exit(0))
   .catch(() => process.exit(1));
 
-// TODO: we'll add support for yarn if users hit issues with npm
-async function resolveTarball(pm: "npm" | "pnpm", p: string) {
-  const { stdout } = await ezSpawn.async(`${pm} pack`, {
+type PackMethod = "npm" | "pnpm" | "yarn";
+
+async function resolveTarball(pm: PackMethod, p: string, pJson: PackageJson) {
+  let cmd = `${pm} pack`;
+  let filename = `${pJson.name!.replace("/", "-")}-${pJson.version}.tgz`;
+  if (pm === "yarn") {
+    cmd += ` --filename ${filename}`;
+  }
+  const { stdout } = await ezSpawn.async(cmd, {
     stdio: "overlapped",
     cwd: p,
   });
   const lines = stdout.split("\n").filter(Boolean);
-  const filename = lines[lines.length - 1].trim();
+
+  if (pm !== "yarn") {
+    filename = lines[lines.length - 1].trim();
+  }
 
   const shasum = createHash("sha1")
     .update(await fs.readFile(path.resolve(p, filename)))
