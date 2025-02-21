@@ -547,7 +547,6 @@ runMain(main)
 type PackMethod = "npm" | "pnpm" | "yarn";
 
 async function resolveTarball(pm: PackMethod, p: string, pJson: PackageJson) {
-  console.log("pack", p, pm, pJson);
   let cmd = `${pm} pack`;
   let filename = `${pJson.name!.replace("/", "-")}-${pJson.version}.tgz`;
   if (pm === "yarn") {
@@ -557,7 +556,6 @@ async function resolveTarball(pm: PackMethod, p: string, pJson: PackageJson) {
     stdio: "overlapped",
     cwd: p,
   });
-  console.log("stdout", stdout);
   const lines = stdout.split("\n").filter(Boolean);
 
   if (pm !== "yarn") {
