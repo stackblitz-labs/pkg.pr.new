@@ -21,6 +21,7 @@ import { isBinaryFile } from "isbinaryfile";
 import { writePackageJSON, type PackageJson } from "pkg-types";
 import pkg from "./package.json" with { type: "json" };
 import { createDefaultTemplate } from "./template";
+import { loadCatalogs } from "./catalog";
 
 declare global {
   const API_URL: string;
@@ -322,6 +323,9 @@ const main = defineCommand({
             }
           }
 
+          const resolveCatalogVersions = isPnpm
+            ? await loadCatalogs(process.cwd())
+            : null;
           const restoreMap = new Map<
             string,
             Awaited<ReturnType<typeof writeDeps>>
@@ -340,6 +344,8 @@ const main = defineCommand({
             if (pJson.private) {
               continue;
             }
+
+            resolveCatalogVersions?.(pJson);
 
             restoreMap.set(
               p,
