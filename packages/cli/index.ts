@@ -115,7 +115,7 @@ const main = defineCommand({
           const formData = new FormData();
 
           const isCompact = !!args.compact;
-          let packMethod: PackMethod = 'npm'
+          let packMethod: PackMethod = "npm";
 
           if (args.pnpm) {
             packMethod = "pnpm";
@@ -547,9 +547,9 @@ runMain(main)
 type PackMethod = "npm" | "pnpm" | "yarn";
 
 async function resolveTarball(pm: PackMethod, p: string, pJson: PackageJson) {
-  console.log('pack', p, pJson)
+  console.log("pack", p, pJson);
   let cmd = `${pm} pack`;
-  let filename = `${pJson.name!.replace('/', '-')}-${pJson.version}.tgz`;
+  let filename = `${pJson.name!.replace("/", "-")}-${pJson.version}.tgz`;
   if (pm === "yarn") {
     cmd += ` --filename ${filename}`;
   }
