@@ -15,8 +15,17 @@ beforeAll(async () => {
   const app = simulation({
     initialState: {
       users: [],
-      organizations: [{ login: "stackblitz-labs" }],
-      repositories: [{ owner: "stackblitz-labs", name: "temporary-test" }],
+      organizations: [
+        { login: "stackblitz-labs" },
+        { login: "tinylibs" },
+        { login: "stackblitz" },
+      ],
+      repositories: [
+        { owner: "stackblitz-labs", name: "temporary-test" },
+        { owner: "stackblitz-labs", name: "pkg.pr.new" },
+        { owner: "tinylibs", name: "tinybench" },
+        { owner: "stackblitz", name: "sdk" },
+      ],
       branches: [{ name: "main" }],
       blobs: [],
     },
@@ -156,7 +165,7 @@ describe.sequential.each([
     expect(installProcess.stdout).toContain(
       "playground-a installed successfully!",
     );
-  });
+  }, 10_000);
 
   it(`serves and installs playground-b for ${mode}`, async () => {
     const [owner, repo] = payload.repository.full_name.split("/");
@@ -186,7 +195,7 @@ describe.sequential.each([
     expect(installProcess.stdout).toContain(
       "playground-b installed successfully!",
     );
-  });
+  }, 10_000);
 });
 
 describe("URL redirects", () => {

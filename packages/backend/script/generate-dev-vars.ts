@@ -49,7 +49,7 @@ async function generateDevVars() {
         format: "pem",
       },
     });
-    updates.NITRO_PRIVATE_KEY = privateKey;
+    updates.NITRO_PRIVATE_KEY = `"${privateKey.split("\n").join("\\n")}"`;
   } else {
     updates.NITRO_PRIVATE_KEY = existingVars.NITRO_PRIVATE_KEY;
   }

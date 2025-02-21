@@ -1,5 +1,4 @@
 export default eventHandler(async (event) => {
-  const { test } = useRuntimeConfig(event);
   const data = await readRawBody(event);
   const workflowsBucket = useWorkflowsBucket(event);
 
@@ -24,7 +23,7 @@ export default eventHandler(async (event) => {
     authenticated = true;
   } catch {}
 
-  if (!authenticated && !test) {
+  if (!authenticated) {
     throw createError({
       statusCode: 404,
       fatal: true,
