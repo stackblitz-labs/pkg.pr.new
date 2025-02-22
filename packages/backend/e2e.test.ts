@@ -140,8 +140,6 @@ describe.sequential.each([
     const shaBlob = await shaResponse.blob();
     expect(shaBlob.size).toBeGreaterThan(0);
 
-    console.log(shaBlob, shaBlob.size);
-
     // Test download with ref matches SHA content
     const refResponse = await fetchWithRedirect(
       `/${owner}/${repo}/playground-a@${ref}`,
