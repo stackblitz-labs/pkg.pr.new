@@ -176,6 +176,8 @@ describe.sequential.each([
       `/${owner}/${repo}/playground-b@${sha}`,
     );
     expect(response.status).toBe(200);
+    const blob = await response.blob();
+    expect(blob.size).toBeGreaterThan(0);
 
     // Test installation
     const url = new URL(
