@@ -193,7 +193,7 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - run: pnpx pkg-pr-new publish
+      - run: pnpm dlx pkg-pr-new publish
 ```
 
 #### Release approved pull requests only:
@@ -238,7 +238,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - run: pnpx pkg-pr-new publish
+      - run: pnpm dlx pkg-pr-new publish
 ```
 
 > Releasing approved pull requests is the recommended way of having continuous releases. This ensures users always install approved and safe packages.
