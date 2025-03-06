@@ -14,12 +14,14 @@ export default eventHandler(async (event) => {
     "sb-shasums": shasumsHeader,
     "sb-comment": commentHeader,
     "sb-compact": compactHeader,
+    "sb-bin": binHeader,
     "sb-package-manager": packageManagerHeader,
     "sb-only-templates": onlyTemplatesHeader,
   } = getHeaders(event);
   const compact = compactHeader === "true";
   const onlyTemplates = onlyTemplatesHeader === "true";
   const comment: Comment = (commentHeader ?? "update") as Comment;
+  const bin = binHeader === "true";
   const packageManager: PackageManager =
     (packageManagerHeader as PackageManager) || "npm";
 
@@ -205,6 +207,7 @@ export default eventHandler(async (event) => {
           workflowData,
           compact,
           packageManager,
+          bin
         ),
       },
       conclusion: "success",
@@ -261,6 +264,7 @@ export default eventHandler(async (event) => {
                 checkRunUrl,
                 packageManager,
                 "ref",
+                bin
               ),
             },
           );
@@ -281,6 +285,7 @@ export default eventHandler(async (event) => {
                 checkRunUrl,
                 packageManager,
                 comment === "update" ? "ref" : "sha",
+                bin
               ),
             },
           );

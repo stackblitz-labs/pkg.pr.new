@@ -95,6 +95,11 @@ const main = defineCommand({
             enum: ["npm", "bun", "pnpm", "yarn"],
             default: "npm",
           },
+          bin: {
+            type: "boolean",
+            description:
+              "Set to true if your package is a binary application and you would like to show an execute command instead of an install command.",
+          },
         },
         run: async ({ args }) => {
           const paths =
@@ -126,6 +131,7 @@ const main = defineCommand({
           const isPeerDepsEnabled = !!args.peerDeps;
           const isOnlyTemplates = !!args["only-templates"];
 
+          const isBinaryApplication = !!args.binaryApplication;
           const comment: Comment = args.comment as Comment;
           const selectedPackageManager = args.packageManager as
             | "npm"
@@ -485,6 +491,7 @@ const main = defineCommand({
               "sb-key": key,
               "sb-shasums": JSON.stringify(shasums),
               "sb-run-id": GITHUB_RUN_ID,
+              "sb-bin": `${isBinaryApplication}`,
               "sb-package-manager": selectedPackageManager,
               "sb-only-templates": `${isOnlyTemplates}`,
             },
