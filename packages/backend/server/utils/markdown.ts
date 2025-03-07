@@ -1,11 +1,18 @@
 import { abbreviateCommitHash, PackageManager } from "@pkg-pr-new/utils";
 import { WorkflowData } from "../types";
 
-const packageCommands: Record<PackageManager, string> = {
-  npm: "i",
-  pnpm: "add",
-  yarn: "add",
-  bun: "add",
+const installCommands: Record<PackageManager, string> = {
+  npm: "npm i",
+  pnpm: "pnpm add",
+  yarn: "yarn add",
+  bun: "bun add",
+};
+
+const binCommands: Record<PackageManager, string> = {
+  npm: "npx",
+  pnpm: "pnpm dlx",
+  yarn: "npx",
+  bun: "bunx",
 };
 
 export function generateCommitPublishMessage(
@@ -15,6 +22,7 @@ export function generateCommitPublishMessage(
   workflowData: WorkflowData,
   compact: boolean,
   packageManager: PackageManager,
+  bin: boolean,
 ) {
   const isMoreThanFour = packages.length > 4;
   const shaMessages = packages
@@ -33,7 +41,7 @@ export function generateCommitPublishMessage(
 
       return `
 \`\`\`
-${packageManager} ${packageCommands[packageManager]} ${shaUrl}
+${bin ? binCommands[packageManager] : installCommands[packageManager]} ${shaUrl}
 \`\`\`
       `;
     })
@@ -63,6 +71,7 @@ export function generatePullRequestPublishMessage(
   checkRunUrl: string,
   packageManager: PackageManager,
   base: "sha" | "ref",
+  bin: boolean,
 ) {
   const isMoreThanFour = packages.length > 4;
   const refMessages = packages
@@ -81,7 +90,7 @@ export function generatePullRequestPublishMessage(
 
       return `
 \`\`\`
-${packageManager} ${packageCommands[packageManager]} ${refUrl}
+${bin ? binCommands[packageManager] : installCommands[packageManager]} ${refUrl}
 \`\`\`
 `;
     })
