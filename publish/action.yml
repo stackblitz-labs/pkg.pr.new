@@ -4,7 +4,7 @@ inputs:
   args:
     description: args passed to `pkg-pr-new publish`
     required: false
-    default: ''
+    default: ""
   pkg-pr-new-version:
     description: version of pkg-pr-new to use
     required: false
