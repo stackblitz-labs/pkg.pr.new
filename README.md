@@ -146,15 +146,17 @@ npm i https://pkg.pr.new/tinylibs/tinybench/tinybench@a832a55
 For CLI applications you might want to show `npx` instead of `npm i` for the preview command. This can be accomplished with the `--bin` flag:
 
 ```sh
-npx pkg-pr-new publish --bin 
+npx pkg-pr-new publish --bin
 ```
 
 With `--bin`:
+
 ```sh
 npx https://pkg.pr.new/pkg-pr-new@a832a55
 ```
 
 Without `--bin`:
+
 ```sh
 npm i https://pkg.pr.new/pkg-pr-new@a832a55
 ```

@@ -130,8 +130,7 @@ const main = defineCommand({
 
           const isPeerDepsEnabled = !!args.peerDeps;
           const isOnlyTemplates = !!args["only-templates"];
-
-          const isBinaryApplication = !!args.binaryApplication;
+          const isBinaryApplication = !!args.bin;
           const comment: Comment = args.comment as Comment;
           const selectedPackageManager = args.packageManager as
             | "npm"
