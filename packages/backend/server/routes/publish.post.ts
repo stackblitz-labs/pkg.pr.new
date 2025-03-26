@@ -207,7 +207,7 @@ export default eventHandler(async (event) => {
           workflowData,
           compact,
           packageManager,
-          bin
+          bin,
         ),
       },
       conclusion: "success",
@@ -264,7 +264,7 @@ export default eventHandler(async (event) => {
                 checkRunUrl,
                 packageManager,
                 "ref",
-                bin
+                bin,
               ),
             },
           );
@@ -285,7 +285,7 @@ export default eventHandler(async (event) => {
                 checkRunUrl,
                 packageManager,
                 comment === "update" ? "ref" : "sha",
-                bin
+                bin,
               ),
             },
           );
