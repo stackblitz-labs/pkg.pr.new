@@ -105,10 +105,10 @@ const main = defineCommand({
           const paths =
             args._.length > 0
               ? await glob(args._, {
-                  expandDirectories: false,
-                  onlyDirectories: true,
-                  absolute: true,
-                })
+                expandDirectories: false,
+                onlyDirectories: true,
+                absolute: true,
+              })
               : [process.cwd()];
 
           const templates = await glob(args.template || [], {
@@ -222,7 +222,7 @@ const main = defineCommand({
             }
 
             const depUrl = new URL(
-              `/${owner}/${repo}/${pJson.name}@${sha}`,
+              `/${owner}/${repo}/${pJson.name}@${isCompact ? abbreviateCommitHash(sha) : sha}`,
               apiUrl,
             ).href;
             deps.set(pJson.name, depUrl);
@@ -231,7 +231,7 @@ const main = defineCommand({
             const resource = await fetch(depUrl);
             if (resource.ok) {
               console.warn(
-                `${pJson.name}@${abbreviateCommitHash(sha)} was already published on ${depUrl}`,
+                `${pJson.name}@${isCompact ? abbreviateCommitHash(sha) : sha} was already published on ${depUrl}`,
               );
             }
 
