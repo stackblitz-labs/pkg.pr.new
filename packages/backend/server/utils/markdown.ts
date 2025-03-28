@@ -114,9 +114,10 @@ _commit: <a href="${checkRunUrl}"><code>${abbreviateCommitHash(workflowData.sha)
 
 function generateTemplatesStr(templates: Record<string, string>) {
   const entries = Object.entries(templates).filter(([k]) => k !== "default");
-  let str = Object.keys(templates).length === 0
-    ? `[Open in StackBlitz](${templates.default})`
-    : "";
+  let str =
+    Object.keys(templates).length === 0
+      ? `[Open in StackBlitz](${templates.default})`
+      : "";
 
   if (entries.length > 0 && entries.length <= 2) {
     str = [str, ...entries.map(([k, v]) => `[${k}](${v})`)]
