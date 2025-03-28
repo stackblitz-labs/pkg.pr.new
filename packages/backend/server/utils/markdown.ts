@@ -113,23 +113,28 @@ _commit: <a href="${checkRunUrl}"><code>${abbreviateCommitHash(workflowData.sha)
 }
 
 function generateTemplatesStr(templates: Record<string, string>) {
-  const entries = Object.entries(templates).filter(
+  const actualEntries = Object.entries(templates).filter(
     ([k]) => k !== "default" && !k.startsWith("example-"),
   );
+  const exampleEntries = Object.entries(templates).filter(([k]) =>
+    k.startsWith("example-"),
+  );
+
   let str =
-    entries.length === 0 && templates.default
+    actualEntries.length === 0 && templates.default
       ? `[Open in StackBlitz](${templates.default})`
       : "";
 
-  if (entries.length > 0 && entries.length <= 2) {
-    str = [str, ...entries.map(([k, v]) => `[${k}](${v})`)]
+  const allEntries = [...actualEntries, ...exampleEntries];
+  if (allEntries.length > 0 && allEntries.length <= 2) {
+    str = [str, ...allEntries.map(([k, v]) => `[${k}](${v})`)]
       .filter(Boolean)
       .join(" • ");
-  } else if (entries.length > 2) {
+  } else if (allEntries.length > 2) {
     str += createCollapsibleBlock(
       "<b>More templates</b>",
       `
-${entries.map(([k, v]) => `- [${k}](${v})`).join("\n")}
+${allEntries.map(([k, v]) => `- [${k}](${v})`).join("\n")}
 `,
     );
   }
