@@ -221,8 +221,9 @@ const main = defineCommand({
               await verifyCompactMode(pJson.name);
             }
 
+            const formattedSha = isCompact ? abbreviateCommitHash(sha) : sha;
             const depUrl = new URL(
-              `/${owner}/${repo}/${pJson.name}@${isCompact ? abbreviateCommitHash(sha) : sha}`,
+              `/${owner}/${repo}/${pJson.name}@${formattedSha}`,
               apiUrl,
             ).href;
             deps.set(pJson.name, depUrl);
@@ -231,7 +232,7 @@ const main = defineCommand({
             const resource = await fetch(depUrl);
             if (resource.ok) {
               console.warn(
-                `${pJson.name}@${isCompact ? abbreviateCommitHash(sha) : sha} was already published on ${depUrl}`,
+                `${pJson.name}@${formattedSha} was already published on ${depUrl}`,
               );
             }
 
