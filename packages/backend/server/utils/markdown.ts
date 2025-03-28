@@ -113,9 +113,11 @@ _commit: <a href="${checkRunUrl}"><code>${abbreviateCommitHash(workflowData.sha)
 }
 
 function generateTemplatesStr(templates: Record<string, string>) {
-  const entries = Object.entries(templates).filter(([k]) => k !== "default");
+  const entries = Object.entries(templates).filter(
+    ([k]) => k !== "default" && !k.startsWith("example-"),
+  );
   let str =
-    Object.keys(templates).length === 0
+    entries.length === 0 && templates.default
       ? `[Open in StackBlitz](${templates.default})`
       : "";
 
