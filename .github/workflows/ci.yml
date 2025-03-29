@@ -114,5 +114,3 @@ jobs:
           head -c $file_size_in_bytes </dev/urandom >$file_path
           echo "File $file_path created with random content of size $file_size MB."
         working-directory: ./playgrounds/playground-b
-
-
