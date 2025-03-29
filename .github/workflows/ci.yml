@@ -115,5 +115,4 @@ jobs:
           echo "File $file_path created with random content of size $file_size MB."
         working-directory: ./playgrounds/playground-b
 
-      - name: pkg.pr.new
-        run: pnpm publish:playgrounds
+
