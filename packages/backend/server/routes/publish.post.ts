@@ -1,10 +1,10 @@
 import { Comment, isPullRequest, isWhitelisted } from "@pkg-pr-new/utils";
 import { randomUUID } from "uncrypto";
+import type { PackageManager } from "@pkg-pr-new/utils";
+import type { components as OctokitComponents } from "@octokit/openapi-types";
 import { setItemStream, useTemplatesBucket } from "~/utils/bucket";
 import { useOctokitInstallation } from "~/utils/octokit";
 import { generateTemplateHtml } from "~/utils/template";
-import type { PackageManager } from "@pkg-pr-new/utils";
-import type { components as OctokitComponents } from "@octokit/openapi-types";
 
 export default eventHandler(async (event) => {
   const origin = getRequestURL(event).origin;
@@ -14,12 +14,14 @@ export default eventHandler(async (event) => {
     "sb-shasums": shasumsHeader,
     "sb-comment": commentHeader,
     "sb-compact": compactHeader,
+    "sb-bin": binHeader,
     "sb-package-manager": packageManagerHeader,
     "sb-only-templates": onlyTemplatesHeader,
   } = getHeaders(event);
   const compact = compactHeader === "true";
   const onlyTemplates = onlyTemplatesHeader === "true";
   const comment: Comment = (commentHeader ?? "update") as Comment;
+  const bin = binHeader === "true";
   const packageManager: PackageManager =
     (packageManagerHeader as PackageManager) || "npm";
 
@@ -66,7 +68,7 @@ export default eventHandler(async (event) => {
     k.startsWith("template:"),
   );
 
-  if (!packages.length) {
+  if (packages.length === 0) {
     throw createError({
       statusCode: 400,
       message: "No packages",
@@ -91,7 +93,7 @@ export default eventHandler(async (event) => {
   const currentCursor = await cursorBucket.getItem(cursorKey);
 
   await Promise.all(
-    packages.map(async (packageNameWithPrefix) => {
+    packages.map((packageNameWithPrefix) => {
       const packageName = packageNameWithPrefix.slice("package:".length);
       const packageKey = `${baseKey}:${workflowData.sha}:${packageName}`;
 
@@ -108,13 +110,14 @@ export default eventHandler(async (event) => {
           },
         );
       }
+      return null;
     }),
   );
 
   const templatesMap = new Map<string, Record<string, string>>();
 
   await Promise.all(
-    templateAssets.map(async (templateAssetWithPrefix) => {
+    templateAssets.map((templateAssetWithPrefix) => {
       const file = formData.get(templateAssetWithPrefix)!;
       const [template, encodedTemplateAsset] = templateAssetWithPrefix
         .slice("template:".length)
@@ -135,6 +138,7 @@ export default eventHandler(async (event) => {
         const stream = file.stream();
         return setItemStream(event, useTemplatesBucket.base, uuid, stream);
       }
+      return null;
     }),
   );
 
@@ -159,6 +163,10 @@ export default eventHandler(async (event) => {
 
   await workflowsBucket.removeItem(key);
 
+  const urls = packagesWithoutPrefix.map((packageName) =>
+    generatePublishUrl("sha", origin, packageName, workflowData, compact),
+  );
+
   const installation = await useOctokitInstallation(
     event,
     workflowData.owner,
@@ -181,7 +189,7 @@ export default eventHandler(async (event) => {
 
   let checkRunUrl = check_runs[0]?.html_url ?? "";
 
-  if (!check_runs.length) {
+  if (check_runs.length === 0) {
     const {
       data: { html_url },
     } = await installation.request("POST /repos/{owner}/{repo}/check-runs", {
@@ -199,6 +207,7 @@ export default eventHandler(async (event) => {
           workflowData,
           compact,
           packageManager,
+          bin,
         ),
       },
       conclusion: "success",
@@ -229,54 +238,66 @@ export default eventHandler(async (event) => {
     );
 
     if (comment !== "off") {
-      if (comment === "update" && prevComment!) {
-        await installation.request(
-          "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}",
-          {
-            owner: workflowData.owner,
-            repo: workflowData.repo,
-            comment_id: prevComment.id,
-            body: generatePullRequestPublishMessage(
-              origin,
-              templatesHtmlMap,
-              packagesWithoutPrefix,
-              workflowData,
-              compact,
-              onlyTemplates,
-              checkRunUrl,
-              packageManager,
-              "ref",
-            ),
-          },
-        );
-      } else {
-        await installation.request(
-          "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
-          {
-            owner: workflowData.owner,
-            repo: workflowData.repo,
-            issue_number: Number(workflowData.ref),
-            body: generatePullRequestPublishMessage(
-              origin,
-              templatesHtmlMap,
-              packagesWithoutPrefix,
-              workflowData,
-              compact,
-              onlyTemplates,
-              checkRunUrl,
-              packageManager,
-              comment === "update" ? "ref" : "sha",
-            ),
-          },
-        );
+      const {
+        data: { permissions },
+      } = await installation.request("GET /repos/{owner}/{repo}/installation", {
+        owner: workflowData.owner,
+        repo: workflowData.repo,
+      });
+
+      try {
+        // eslint-disable-next-line unicorn/prefer-ternary
+        if (comment === "update" && prevComment!) {
+          await installation.request(
+            "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}",
+            {
+              owner: workflowData.owner,
+              repo: workflowData.repo,
+              comment_id: prevComment.id,
+              body: generatePullRequestPublishMessage(
+                origin,
+                templatesHtmlMap,
+                packagesWithoutPrefix,
+                workflowData,
+                compact,
+                onlyTemplates,
+                checkRunUrl,
+                packageManager,
+                "ref",
+                bin,
+              ),
+            },
+          );
+        } else {
+          await installation.request(
+            "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
+            {
+              owner: workflowData.owner,
+              repo: workflowData.repo,
+              issue_number: Number(workflowData.ref),
+              body: generatePullRequestPublishMessage(
+                origin,
+                templatesHtmlMap,
+                packagesWithoutPrefix,
+                workflowData,
+                compact,
+                onlyTemplates,
+                checkRunUrl,
+                packageManager,
+                comment === "update" ? "ref" : "sha",
+                bin,
+              ),
+            },
+          );
+        }
+      } catch (error) {
+        console.error("failed to create/update comment", error, permissions);
       }
     }
   }
 
   return {
     ok: true,
-    urls: packagesWithoutPrefix.map((packageName) =>
-      generatePublishUrl("sha", origin, packageName, workflowData, compact),
-    ),
+    urls,
   };
 });

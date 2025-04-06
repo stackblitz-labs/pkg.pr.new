@@ -1,11 +1,12 @@
-import { defineCommand, runMain } from "citty";
+/* eslint-disable unicorn/no-process-exit */
 import assert from "node:assert";
-import path from "path";
-import ezSpawn from "@jsdevtools/ez-spawn";
+import path from "node:path";
 import { createHash } from "node:crypto";
+import fsSync from "node:fs";
+import fs from "node:fs/promises";
 import { hash } from "ohash";
-import fsSync from "fs";
-import fs from "fs/promises";
+import ezSpawn from "@jsdevtools/ez-spawn";
+import { defineCommand, runMain } from "citty";
 import { getPackageManifest, type PackageManifest } from "query-registry";
 import type { Comment } from "@pkg-pr-new/utils";
 import {
@@ -16,13 +17,13 @@ import {
 import { glob } from "tinyglobby";
 import ignore from "ignore";
 import "./environments";
-import pkg from "./package.json" with { type: "json" };
 import { isBinaryFile } from "isbinaryfile";
 import { writePackageJSON, type PackageJson } from "pkg-types";
+import pkg from "./package.json" with { type: "json" };
 import { createDefaultTemplate } from "./template";
 
 declare global {
-  var API_URL: string;
+  const API_URL: string;
 }
 
 type OutputMetadata = {
@@ -94,6 +95,11 @@ const main = defineCommand({
             enum: ["npm", "bun", "pnpm", "yarn"],
             default: "npm",
           },
+          bin: {
+            type: "boolean",
+            description:
+              "Set to true if your package is a binary application and you would like to show an execute command instead of an install command.",
+          },
         },
         run: async ({ args }) => {
           const paths =
@@ -114,10 +120,17 @@ const main = defineCommand({
           const formData = new FormData();
 
           const isCompact = !!args.compact;
-          const isPnpm = !!args.pnpm;
+          let packMethod: PackMethod = "npm";
+
+          if (args.pnpm) {
+            packMethod = "pnpm";
+          } else if (args.yarn) {
+            packMethod = "yarn";
+          }
+
           const isPeerDepsEnabled = !!args.peerDeps;
           const isOnlyTemplates = !!args["only-templates"];
-
+          const isBinaryApplication = !!args.bin;
           const comment: Comment = args.comment as Comment;
           const selectedPackageManager = args.packageManager as
             | "npm"
@@ -208,8 +221,9 @@ const main = defineCommand({
               await verifyCompactMode(pJson.name);
             }
 
+            const formattedSha = isCompact ? abbreviateCommitHash(sha) : sha;
             const depUrl = new URL(
-              `/${owner}/${repo}/${pJson.name}@${sha}`,
+              `/${owner}/${repo}/${pJson.name}@${formattedSha}`,
               apiUrl,
             ).href;
             deps.set(pJson.name, depUrl);
@@ -218,7 +232,7 @@ const main = defineCommand({
             const resource = await fetch(depUrl);
             if (resource.ok) {
               console.warn(
-                `${pJson.name}@${abbreviateCommitHash(sha)} was already published on ${depUrl}`,
+                `${pJson.name}@${formattedSha} was already published on ${depUrl}`,
               );
             }
 
@@ -301,7 +315,7 @@ const main = defineCommand({
 
           const noDefaultTemplate = args.template === false;
 
-          if (!noDefaultTemplate) {
+          if (!noDefaultTemplate && templates.length === 0) {
             const project = createDefaultTemplate(
               Object.fromEntries(deps.entries()),
             );
@@ -362,8 +376,9 @@ const main = defineCommand({
               }
 
               const { filename, shasum } = await resolveTarball(
-                isPnpm ? "pnpm" : "npm",
+                packMethod,
                 p,
+                pJson,
               );
 
               shasums[pJson.name] = shasum;
@@ -394,7 +409,7 @@ const main = defineCommand({
 
           // multipart uploading
           if (formDataPackagesSize > 1024 * 1024 * 99) {
-            for (const [name, entry] of [...formData]) {
+            for (const [name, entry] of formData) {
               if (name.startsWith("package:")) {
                 const file = entry as File;
                 const chunkSize = 1024 * 1024 * 5;
@@ -413,11 +428,8 @@ const main = defineCommand({
                   console.error(await createMultipartRes.text());
                   continue;
                 }
-                const {
-                  key: uploadKey,
-                  id: uploadId,
-                  ...data
-                } = await createMultipartRes.json();
+                const { key: uploadKey, id: uploadId } =
+                  await createMultipartRes.json();
 
                 interface R2UploadedPart {
                   partNumber: number;
@@ -479,6 +491,7 @@ const main = defineCommand({
               "sb-key": key,
               "sb-shasums": JSON.stringify(shasums),
               "sb-run-id": GITHUB_RUN_ID,
+              "sb-bin": `${isBinaryApplication}`,
               "sb-package-manager": selectedPackageManager,
               "sb-only-templates": `${isOnlyTemplates}`,
             },
@@ -526,7 +539,9 @@ const main = defineCommand({
     link: () => {
       return {
         meta: {},
-        run: () => {},
+        run: () => {
+          // noop
+        },
       };
     },
   },
@@ -536,14 +551,23 @@ runMain(main)
   .then(() => process.exit(0))
   .catch(() => process.exit(1));
 
-// TODO: we'll add support for yarn if users hit issues with npm
-async function resolveTarball(pm: "npm" | "pnpm", p: string) {
-  const { stdout } = await ezSpawn.async(`${pm} pack`, {
+type PackMethod = "npm" | "pnpm" | "yarn";
+
+async function resolveTarball(pm: PackMethod, p: string, pJson: PackageJson) {
+  let cmd = `${pm} pack`;
+  let filename = `${pJson.name!.replace("/", "-")}-${pJson.version}.tgz`;
+  if (pm === "yarn") {
+    cmd += ` --filename ${filename}`;
+  }
+  const { stdout } = await ezSpawn.async(cmd, {
     stdio: "overlapped",
     cwd: p,
   });
   const lines = stdout.split("\n").filter(Boolean);
-  const filename = lines[lines.length - 1].trim();
+
+  if (pm !== "yarn") {
+    filename = lines[lines.length - 1].trim();
+  }
 
   const shasum = createHash("sha1")
     .update(await fs.readFile(path.resolve(p, filename)))

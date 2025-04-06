@@ -5,7 +5,7 @@ type Params = Omit<WorkflowData, "sha" | "isPullRequest" | "ref"> & {
   packageAndRefOrSha: string;
 };
 
-export default eventHandler(async (event) => {
+export default eventHandler((event) => {
   const params = getRouterParams(event) as Params;
   const [noScopePackageName, refOrSha] = params.packageAndRefOrSha.split("@");
   const packageName = params.npmOrg + "/" + noScopePackageName;

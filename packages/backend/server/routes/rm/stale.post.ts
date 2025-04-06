@@ -48,7 +48,7 @@ async function iterateAndDelete(event: H3Event, opts: R2ListOptions) {
     // TODO: Avoid using context.cloudflare and migrate to unstorage, but it does not have truncated for now
     const next = await binding.list({
       ...opts,
-      cursor: cursor,
+      cursor,
     });
     for (const object of next.objects) {
       const uploaded = Date.parse(object.uploaded.toString());

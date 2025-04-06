@@ -1,7 +1,7 @@
 import type { PackageManifest } from "query-registry";
 
 const githubUrlRegex =
-  /^(?:git\+)?https?:\/\/github\.com\/([^\/]+)\/([^\/]+)\.git$/;
+  /^(?:git\+)?https?:\/\/github\.com\/([^/]+)\/([^/]+)\.git$/;
 
 export function extractOwnerAndRepo(
   repositoryUrl: string,

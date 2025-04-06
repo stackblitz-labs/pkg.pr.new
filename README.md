@@ -67,7 +67,7 @@ These are some of the projects and companies using pkg.pr.new:
    <a href="https://github.com/forge42dev/open-source-stack"><img src="https://avatars.githubusercontent.com/u/161314831?s=200&v=4" height="40"></a>
    <a href="https://sidebase.io"><img src="https://avatars.githubusercontent.com/u/112630501?s=200&v=4" height="40"></a>
    <a href="https://rolldown.rs/"><img src="https://avatars.githubusercontent.com/u/94954945" height="40"></a>
-   <a href="https://element-plus.org/"><img src="https://avatars.githubusercontent.com/u/68583457?s=48&v=4" height="40"></a>
+   <a href="https://element-plus.org/"><img src="https://avatars.githubusercontent.com/u/68583457" height="40"></a>
    <a href="https://valibot.dev/"><img src="https://raw.githubusercontent.com/fabian-hiller/valibot/main/brand/valibot-icon.svg" height="40"></a>
    <a href="https://codemod.com/"><img src="https://github.com/codemod-com.png" height="40"></a>
    <a href="https://uploadthing.com/"><img src="https://uploadthing.com/UploadThing-Logo.svg" height="40"></a>
@@ -143,6 +143,24 @@ Without `--compact`:
 npm i https://pkg.pr.new/tinylibs/tinybench/tinybench@a832a55
 ```
 
+For CLI applications you might want to show `npx` instead of `npm i` for the preview command. This can be accomplished with the `--bin` flag:
+
+```sh
+npx pkg-pr-new publish --bin
+```
+
+With `--bin`:
+
+```sh
+npx https://pkg.pr.new/pkg-pr-new@a832a55
+```
+
+Without `--bin`:
+
+```sh
+npm i https://pkg.pr.new/pkg-pr-new@a832a55
+```
+
 You can control publishing comments with `--comment`:
 
 ```sh
@@ -159,7 +177,7 @@ To customize which package manager is reflected in the comments, use the `--pack
 
 For repositories with many packages, comments might get too long. In that case, you can use `--only-templates` to only show templates.
 
-pkg.pr.new uses `npm pack --json` under the hood, in case you face issues, you can also use the `--pnpm` flag so it starts using `pnpm pack`. This is not necessary in most cases.
+pkg.pr.new uses `npm pack --json` under the hood, in case you face issues, you can also use the `--pnpm` or `--yarn` flag so it starts using `pnpm pack` or `yarn pack`. This is not necessary in most cases.
 
 <img width="100%" src="https://github.com/stackblitz-labs/pkg.pr.new/assets/37929992/2fc03b94-ebae-4c47-a271-03a4ad5d2449" />
 
@@ -193,7 +211,7 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - run: pnpx pkg-pr-new publish
+      - run: pnpm dlx pkg-pr-new publish
 ```
 
 #### Release approved pull requests only:
@@ -238,7 +256,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - run: pnpx pkg-pr-new publish
+      - run: pnpm dlx pkg-pr-new publish
 ```
 
 > Releasing approved pull requests is the recommended way of having continuous releases. This ensures users always install approved and safe packages.
