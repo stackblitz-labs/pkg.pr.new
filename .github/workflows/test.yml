@@ -31,4 +31,4 @@ jobs:
 
       - run: pnpm test
         env:
-          NUXT_GITHUB_TOKEN: ${{ secrets.NUXT_GITHUB_TOKEN }}
+          NITRO_APP_ID: ${{ secrets.NITRO_APP_ID }}
