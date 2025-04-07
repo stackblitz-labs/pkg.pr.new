@@ -54,6 +54,7 @@ export default defineNuxtConfig({
     privateKey: '',
     rmStaleKey: '',
     githubToken: '',
+    ghBaseUrl: "https://api.github.com",
     test: '' as '' | 'true',
   },
 
