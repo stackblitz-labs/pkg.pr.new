@@ -28,8 +28,24 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
 
   nitro: {
+    preset: 'cloudflare-pages',
     sourceMap: 'inline',
     modules: [ncb],
+    externals: {
+      inline: [
+        '@octokit',
+        '@vue',
+        'vue',
+        '@tanstack',
+        '@vueuse',
+        '@iconify',
+        '@nuxt',
+        'nuxt',
+        'query-registry',
+        '@simulacrum',
+        '@jsdevtools'
+      ]
+    },
   },
 
   runtimeConfig: {
