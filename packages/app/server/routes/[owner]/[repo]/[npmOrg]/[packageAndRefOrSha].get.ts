@@ -1,19 +1,17 @@
-import { z } from 'zod'
+import { WorkflowData } from "../../../../types";
 
-const paramsSchema = z.object({
-  owner: z.string(),
-  repo: z.string(),
-  npmOrg: z.string(),
-  packageAndRefOrSha: z.string(),
-})
+type Params = Omit<WorkflowData, "sha" | "isPullRequest" | "ref"> & {
+  npmOrg: string;
+  packageAndRefOrSha: string;
+};
 
-export default eventHandler(async (event) => {
-  const params = await getValidatedRouterParams(event, paramsSchema.parse)
-  const [noScopePackageName, refOrSha] = params.packageAndRefOrSha.split('@')
-  const packageName = `${params.npmOrg}/${noScopePackageName}`
+export default eventHandler((event) => {
+  const params = getRouterParams(event) as Params;
+  const [noScopePackageName, refOrSha] = params.packageAndRefOrSha.split("@");
+  const packageName = params.npmOrg + "/" + noScopePackageName;
 
   sendRedirect(
     event,
     `/${params.owner}/${params.repo}/${encodeURIComponent(packageName)}@${refOrSha}`,
-  )
-})
+  );
+});

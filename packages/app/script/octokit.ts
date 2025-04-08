@@ -1,9 +1,12 @@
-import { fileURLToPath } from "node:url";
 import esbuild from "esbuild";
 import { polyfillNode } from "esbuild-plugin-polyfill-node";
+import { createRequire } from "node:module";
+
+const require = createRequire(import.meta.url);
+const octokitPath = require.resolve("octokit");
 
 await esbuild.build({
-  entryPoints: [fileURLToPath(import.meta.resolve("octokit/dist-web"))],
+  entryPoints: [octokitPath],
   bundle: true,
   format: "esm",
   sourcemap: "inline",
