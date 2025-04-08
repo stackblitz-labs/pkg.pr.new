@@ -13,7 +13,8 @@
     "start": "node .output/server/index.mjs",
     "start:generate": "npx serve .output/public",
     "lint": "eslint .",
-    "typecheck": "vue-tsc --noEmit"
+    "typecheck": "vue-tsc --noEmit",
+    "postinstall": "tsx script/generate-dev-vars.ts"
   },
   "dependencies": {
     "@iconify-json/ph": "^1.1.14",

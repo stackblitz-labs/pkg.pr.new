@@ -30,11 +30,3 @@ jobs:
       #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - run: pnpm test
-        env:
-          NITRO_APP_ID: ${{ secrets.NITRO_APP_ID }}
-          NUXT_APP_ID: ${{ secrets.NITRO_APP_ID }}
-          NITRO_PRIVATE_KEY: ${{ secrets.NITRO_PRIVATE_KEY }}
-          NUXT_PRIVATE_KEY: ${{ secrets.NITRO_PRIVATE_KEY }}
-          NITRO_WEBHOOK_SECRET: ${{ secrets.NITRO_WEBHOOK_SECRET }}
-          NITRO_RM_STALE_KEY: ${{ secrets.NITRO_RM_STALE_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
