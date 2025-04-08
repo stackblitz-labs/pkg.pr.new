@@ -132,19 +132,10 @@ describe.sequential.each([
     const sha = payload.workflow_run.head_sha.substring(0, 7);
     const ref = pr?.payload.number ?? payload.workflow_run.head_branch;
 
-    console.log(`Attempting to fetch: /${owner}/${repo}/playground-a@${sha}`);
-
+    // Test download with SHA
     const shaResponse = await worker.fetch(
       `/${owner}/${repo}/playground-a@${sha}`,
     );
-    console.log(`Response status: ${shaResponse.status}`);
-
-    if (shaResponse.status !== 200) {
-      console.log(`Response headers:`, Object.fromEntries(shaResponse.headers.entries()));
-      const text = await shaResponse.clone().text();
-      console.log(`Response body:`, text.substring(0, 500));
-    }
-
     expect(shaResponse.status).toBe(200);
     const shaBlob = await shaResponse.blob();
     expect(shaBlob.size).toBeGreaterThan(0);
