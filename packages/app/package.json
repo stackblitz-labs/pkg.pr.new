@@ -9,7 +9,6 @@
     "vendor:octokit": "tsx script/octokit.ts",
     "prepare": "nuxi prepare",
     "test": "vitest run",
-    "test:e2e": "cross-env TEST=true nuxi build && cross-env TEST=true vitest run --update",
     "start": "node .output/server/index.mjs",
     "start:generate": "npx serve .output/public",
     "lint": "eslint .",
