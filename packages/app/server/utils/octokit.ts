@@ -1,49 +1,50 @@
-import type { H3Event } from "h3";
-import type { App as AppType } from "octokit";
+import type { H3Event } from 'h3'
+import type { App as AppType } from 'octokit'
 import { graphql } from '@octokit/graphql'
 import { paginateRest } from '@octokit/plugin-paginate-rest'
-import { App, Octokit } from "octokit";
+import { App, Octokit } from 'octokit'
 
 let graphQlWithAuth: typeof graphql
 
 export function useGithubGraphQL(event?: H3Event) {
   if (!graphQlWithAuth) {
     try {
-      const config = useRuntimeConfig(event);
-      const githubToken = config?.githubToken;
+      const config = useRuntimeConfig(event)
+      const githubToken = config?.githubToken
 
       if (!githubToken) {
-        console.warn("GitHub token is not available in runtime config");
-        graphQlWithAuth = graphql.defaults({});
-        return { graphql: graphQlWithAuth };
+        console.warn('GitHub token is not available in runtime config')
+        graphQlWithAuth = graphql.defaults({})
+        return { graphql: graphQlWithAuth }
       }
 
       graphQlWithAuth = graphql.defaults({
         headers: {
           authorization: `token ${githubToken}`,
         },
-      });
-    } catch (error) {
-      console.error("Error initializing GitHub GraphQL client:", error);
-      graphQlWithAuth = graphql.defaults({});
+      })
+    }
+    catch (error) {
+      console.error('Error initializing GitHub GraphQL client:', error)
+      graphQlWithAuth = graphql.defaults({})
     }
   }
   return {
     graphql: graphQlWithAuth,
-  };
+  }
 }
 
 export function useOctokitApp(event: H3Event): AppType {
   try {
-    const config = useRuntimeConfig(event);
-    const { appId, privateKey, webhookSecret, ghBaseUrl } = config;
+    const config = useRuntimeConfig(event)
+    const { appId, privateKey, webhookSecret, ghBaseUrl } = config
 
     if (!appId || !privateKey || !webhookSecret) {
-      console.warn("Missing required GitHub App credentials in runtime config");
+      console.warn('Missing required GitHub App credentials in runtime config')
       return {
         octokit: { request: async () => ({ data: { id: 0 } }) },
-        getInstallationOctokit: async () => ({})
-      } as any;
+        getInstallationOctokit: async () => ({}),
+      } as any
     }
 
     return new App({
@@ -52,15 +53,16 @@ export function useOctokitApp(event: H3Event): AppType {
       webhooks: { secret: webhookSecret },
       Octokit: Octokit.defaults({
         baseUrl: ghBaseUrl,
-        paginateRest
+        paginateRest,
       }),
-    }) as unknown as AppType;
-  } catch (error) {
-    console.error("Error initializing GitHub App:", error);
+    }) as unknown as AppType
+  }
+  catch (error) {
+    console.error('Error initializing GitHub App:', error)
     return {
       octokit: { request: async () => ({ data: { id: 0 } }) },
-      getInstallationOctokit: async () => ({})
-    } as any;
+      getInstallationOctokit: async () => ({}),
+    } as any
   }
 }
 
@@ -69,11 +71,11 @@ export async function useOctokitInstallation(
   owner: string,
   repo: string,
 ) {
-  const app = useOctokitApp(event);
+  const app = useOctokitApp(event)
   const { data: installationData } = await app.octokit.request(
-    "GET /repos/{owner}/{repo}/installation",
+    'GET /repos/{owner}/{repo}/installation',
     { owner, repo },
-  );
+  )
 
-  return app.getInstallationOctokit(installationData.id);
+  return app.getInstallationOctokit(installationData.id)
 }

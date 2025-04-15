@@ -1,3 +1,4 @@
+import process from 'node:process'
 import ncb from 'nitro-cloudflare-dev'
 import { resolve } from 'pathe'
 
@@ -30,7 +31,7 @@ export default defineNuxtConfig({
   nitro: {
     preset: 'cloudflare-pages',
     sourceMap: 'inline',
-    compatibilityDate: "2024-09-19",
+    compatibilityDate: '2024-09-19',
     modules: [ncb],
     externals: {
       inline: [
@@ -44,8 +45,8 @@ export default defineNuxtConfig({
         'nuxt',
         'query-registry',
         '@simulacrum',
-        '@jsdevtools'
-      ]
+        '@jsdevtools',
+      ],
     },
   },
 
@@ -55,7 +56,7 @@ export default defineNuxtConfig({
     privateKey: process.env.NITRO_PRIVATE_KEY || '',
     rmStaleKey: process.env.NITRO_RM_STALE_KEY || '',
     githubToken: process.env.GITHUB_TOKEN || process.env.NITRO_GITHUB_TOKEN || '',
-    ghBaseUrl: process.env.NITRO_GH_BASE_URL || "https://api.github.com",
+    ghBaseUrl: process.env.NITRO_GH_BASE_URL || 'https://api.github.com',
     test: process.env.NITRO_TEST || '',
   },
 

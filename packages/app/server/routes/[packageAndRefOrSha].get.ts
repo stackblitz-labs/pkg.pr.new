@@ -1,31 +1,31 @@
-import { getPackageManifest } from "query-registry";
-import { extractOwnerAndRepo, extractRepository } from "@pkg-pr-new/utils";
-import { WorkflowData } from "../types";
+import type { WorkflowData } from '../types'
+import { extractOwnerAndRepo, extractRepository } from '@pkg-pr-new/utils'
+import { getPackageManifest } from 'query-registry'
 
-type Params = Omit<WorkflowData, "sha" | "ref"> & {
-  packageAndRefOrSha: string;
-};
+type Params = Omit<WorkflowData, 'sha' | 'ref'> & {
+  packageAndRefOrSha: string
+}
 
 export default eventHandler(async (event) => {
-  const params = getRouterParams(event) as Params;
-  const [packageName, refOrSha] = params.packageAndRefOrSha.split("@");
+  const params = getRouterParams(event) as Params
+  const [packageName, refOrSha] = params.packageAndRefOrSha.split('@')
 
-  const manifest = await getPackageManifest(packageName);
+  const manifest = await getPackageManifest(packageName)
 
-  const repository = extractRepository(manifest);
+  const repository = extractRepository(manifest)
   if (!repository) {
     throw createError({
       status: 404,
-    });
+    })
   }
 
-  const match = extractOwnerAndRepo(repository);
+  const match = extractOwnerAndRepo(repository)
   if (!match) {
     throw createError({
       status: 404,
-    });
+    })
   }
-  const [owner, repo] = match;
+  const [owner, repo] = match
 
-  sendRedirect(event, `/${owner}/${repo}/${packageName}@${refOrSha}`);
-});
+  sendRedirect(event, `/${owner}/${repo}/${packageName}@${refOrSha}`)
+})

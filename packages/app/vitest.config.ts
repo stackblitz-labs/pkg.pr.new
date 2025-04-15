@@ -1,4 +1,4 @@
-import { defineConfig } from "vitest/config";
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
@@ -15,12 +15,12 @@ export default defineConfig({
             '@iconify',
             '@tanstack',
             'query-registry',
-          ]
-        }
-      }
+          ],
+        },
+      },
     },
     environment: 'node',
     testTimeout: 30000,
     hookTimeout: 60000,
   },
-});
+})

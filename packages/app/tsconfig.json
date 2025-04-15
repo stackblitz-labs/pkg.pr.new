@@ -1,4 +1,9 @@
 {
   "extends": "./.nuxt/tsconfig.json",
-  "resolveJsonModule": true
+  "compilerOptions": {
+    "resolveJsonModule": true,
+    "types": ["@cloudflare/workers-types", "@cloudflare/vitest-pool-workers"],
+    "strict": true,
+    "skipLibCheck": true
+  }
 }

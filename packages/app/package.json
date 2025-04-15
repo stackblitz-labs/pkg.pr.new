@@ -7,7 +7,7 @@
     "dev": "nuxi dev",
     "generate": "nuxi generate",
     "vendor:octokit": "tsx script/octokit.ts",
-    "prepare": "nuxi prepare && pnpm vendor:octokit",
+    "prepare": "nuxi prepare",
     "test": "vitest run",
     "start": "node .output/server/index.mjs",
     "start:generate": "npx serve .output/public",
