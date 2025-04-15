@@ -34,6 +34,8 @@ async function generateDevVars() {
       existingVars.NITRO_GH_BASE_URL || "http://localhost:3300",
     NITRO_RM_STALE_KEY:
       existingVars.NITRO_RM_STALE_KEY || crypto.randomBytes(32).toString("hex"),
+    NITRO_GITHUB_TOKEN:
+      existingVars.NITRO_GITHUB_TOKEN || "ghp",
   };
 
   // Only generate private key if missing

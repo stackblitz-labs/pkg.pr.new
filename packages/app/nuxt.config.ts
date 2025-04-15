@@ -54,7 +54,7 @@ export default defineNuxtConfig({
     webhookSecret: '',
     privateKey: '',
     rmStaleKey: '',
-    githubToken: '',
+    githubToken: process.env.GITHUB_TOKEN || '',
     ghBaseUrl: "https://api.github.com",
     test: '',
   },

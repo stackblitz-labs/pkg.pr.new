@@ -6,9 +6,9 @@ import { App, Octokit } from "octokit";
 
 let graphQlWithAuth: typeof graphql
 
-export function useGithubGraphQL() {
+export function useGithubGraphQL(event?: H3Event) {
   if (!graphQlWithAuth) {
-    const { githubToken } = useRuntimeConfig()
+    const { githubToken } = useRuntimeConfig(event)
     graphQlWithAuth = graphql.defaults({
       headers: {
         authorization: `token ${githubToken}`,

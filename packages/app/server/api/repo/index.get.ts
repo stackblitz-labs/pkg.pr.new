@@ -1,12 +1,13 @@
 import { z } from 'zod'
+import type { H3Event } from 'h3'
 
 const querySchema = z.object({
   owner: z.string(),
   repo: z.string(),
 })
 
-const getRepoInfo = defineCachedFunction(async (owner: string, repo: string) => {
-  const { repository } = await useGithubGraphQL().graphql<{
+const getRepoInfo = defineCachedFunction(async (owner: string, repo: string, event?: H3Event) => {
+  const { repository } = await useGithubGraphQL(event).graphql<{
     repository: {
       id: string
       name: string
@@ -41,12 +42,12 @@ query ($repoOwner: String!, $repoName: String!) {
 
   return repository
 }, {
-  getKey: (owner: string, repo: string) => `${owner}/${repo}`,
+  getKey: (owner: string, repo: string, _event?: H3Event) => `${owner}/${repo}`,
   maxAge: 60 * 30, // 5 minutes
   swr: true,
 })
 
 export default defineEventHandler(async (event) => {
   const query = await getValidatedQuery(event, data => querySchema.parse(data))
-  return getRepoInfo(query.owner, query.repo)
+  return getRepoInfo(query.owner, query.repo, event)
 })

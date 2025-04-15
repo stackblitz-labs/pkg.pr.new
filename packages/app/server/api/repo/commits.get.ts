@@ -9,7 +9,7 @@ const querySchema = z.object({
 export default defineEventHandler(async (event) => {
   const query = await getValidatedQuery(event, data => querySchema.parse(data))
 
-  const { repository } = await useGithubGraphQL().graphql<{
+  const { repository } = await useGithubGraphQL(event).graphql<{
     repository: {
       id: string
       defaultBranchRef: {

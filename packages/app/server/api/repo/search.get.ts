@@ -11,7 +11,7 @@ export default defineEventHandler(async (event) => {
     return null
   }
 
-  const result = await useGithubGraphQL().graphql<{
+  const result = await useGithubGraphQL(event).graphql<{
     search: {
       nodes: {
         id: string

@@ -36,6 +36,8 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           preCommands: pnpm install && pnpm build
           command: pages deploy dist --project-name=pkg-pr-new --branch=main
+        env:
+          NITRO_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Deployment Url
         env:
           DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
