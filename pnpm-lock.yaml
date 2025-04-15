@@ -160,8 +160,8 @@ importers:
         specifier: ^4.0.2
         version: 4.0.6
       nitro-cloudflare-dev:
-        specifier: 0.1.2
-        version: 0.1.2(patch_hash=ohlyzk6s4d4tp4huqq6lzvge7i)
+        specifier: ^0.2.2
+        version: 0.2.2
       typescript:
         specifier: ^5.7.2
         version: 5.7.2
@@ -6036,6 +6036,9 @@ packages:
 
   nitro-cloudflare-dev@0.1.2:
     resolution: {integrity: sha512-3orbkHmryZy3/3ObHwBhGOjbJSzapPA2zcWSRsMmFeF8CvkWwGtpWHSR1My0mlpPnzCB2KV76jUv/OPMkOBd1Q==}
+
+  nitro-cloudflare-dev@0.2.2:
+    resolution: {integrity: sha512-aZfNTVdgXPQeAmXW0Tw8hm3usAHr4qVG4Bg3WhHBGeZYuXr9OyT04Ztb+STkMzhyaXvfMHViAaPUPg06iAYqag==}
 
   nitropack@2.10.4:
     resolution: {integrity: sha512-sJiG/MIQlZCVSw2cQrFG1H6mLeSqHlYfFerRjLKz69vUfdu0EL2l0WdOxlQbzJr3mMv/l4cOlCCLzVRzjzzF/g==}
@@ -14942,9 +14945,15 @@ snapshots:
 
   nitro-cloudflare-dev@0.1.2(patch_hash=ohlyzk6s4d4tp4huqq6lzvge7i):
     dependencies:
-      consola: 3.3.1
+      consola: 3.4.2
       mlly: 1.7.4
       pkg-types: 1.3.1
+
+  nitro-cloudflare-dev@0.2.2:
+    dependencies:
+      consola: 3.4.2
+      mlly: 1.7.4
+      pkg-types: 2.1.0
 
   nitropack@2.10.4(typescript@5.7.2):
     dependencies:
