@@ -34,10 +34,36 @@ jobs:
           workingDirectory: "packages/app"
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          preCommands: pnpm install && pnpm build
+          preCommands: pnpm install && DEBUG=nitro:* pnpm build
           command: pages deploy dist --project-name=pkg-pr-new --branch=main
         env:
           NITRO_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NITRO_APP_ID: ${{ secrets.NITRO_APP_ID }}
+          NITRO_WEBHOOK_SECRET: ${{ secrets.NITRO_WEBHOOK_SECRET }}
+          NITRO_PRIVATE_KEY: ${{ secrets.NITRO_PRIVATE_KEY }}
+          NITRO_RM_STALE_KEY: ${{ secrets.NITRO_RM_STALE_KEY }}
+          NITRO_TEST: "true"
+          NITRO_GH_BASE_URL: "https://api.github.com"
+          NODE_OPTIONS: "--max-old-space-size=4096"
+      
+      - name: Capture Wrangler logs
+        if: failure()
+        run: |
+          echo "=== WRANGLER LOGS ==="
+          ls -la /home/runner/.config/.wrangler/logs/
+          LATEST_LOG=$(ls -t /home/runner/.config/.wrangler/logs/ | head -1)
+          cat /home/runner/.config/.wrangler/logs/$LATEST_LOG
+          echo "=== END WRANGLER LOGS ==="
+      
+      - name: Upload logs as artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wrangler-logs
+          path: /home/runner/.config/.wrangler/logs/
+          retention-days: 5
+      
       - name: Deployment Url
         env:
           DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
