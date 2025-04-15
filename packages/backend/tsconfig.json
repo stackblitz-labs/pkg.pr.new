@@ -1,9 +1,0 @@
-// https://nitro.unjs.io/guide/typescript
-{
-  "compilerOptions": {
-    "strict": true,
-    "skipLibCheck": true,
-    "types": ["@cloudflare/workers-types", "@cloudflare/vitest-pool-workers"]
-  },
-  "extends": "./.nitro/types/tsconfig.json"
-}
