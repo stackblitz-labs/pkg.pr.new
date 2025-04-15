@@ -34,7 +34,7 @@ jobs:
           workingDirectory: "packages/app"
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          preCommands: pnpm install && DEBUG=nitro:* pnpm build
+          preCommands: pnpm install && pnpm build
           command: pages deploy dist --project-name=pkg-pr-new --branch=main
         env:
           NITRO_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
