@@ -30,6 +30,7 @@ export default defineNuxtConfig({
   nitro: {
     preset: 'cloudflare-pages',
     sourceMap: 'inline',
+    compatibilityDate: "2024-09-19",
     modules: [ncb],
     externals: {
       inline: [

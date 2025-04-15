@@ -2,7 +2,7 @@ import type { H3Event } from "h3";
 import type { App as AppType } from "octokit";
 import { graphql } from '@octokit/graphql'
 import { paginateRest } from '@octokit/plugin-paginate-rest'
-import { App, Octokit } from "../../vendor/octokit.build.mjs";
+import { App, Octokit } from "octokit";
 
 let graphQlWithAuth: typeof graphql
 
