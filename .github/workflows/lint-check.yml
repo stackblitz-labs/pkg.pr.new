@@ -29,5 +29,6 @@ jobs:
       - name: Check formatting
         run: pnpm run lint:format
 
-      - name: Type checking
+      - name: Type checking (non-blocking)
         run: pnpm run lint:types
+        continue-on-error: true

@@ -4,5 +4,5 @@
     "strict": true,
     "skipLibCheck": true
   },
-  "extends": "../backend/.nitro/types/tsconfig.json"
+  "extends": "../app/.nuxt/tsconfig.json"
 }

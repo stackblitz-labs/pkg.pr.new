@@ -1,1 +1,4 @@
 pnpm-lock.yaml
+.nuxt
+*/.nuxt/**
+packages/app/.nuxt/**
