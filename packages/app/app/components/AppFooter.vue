@@ -20,12 +20,12 @@
     </a>
     <div class="flex gap-3 items-center">
       <div>
-        Built by
+        Built in
         <a
-          href="https://github.com/Aslemammad"
+          href="https://github.com/stackblitz-labs"
           target="_blank"
           class="text-primary"
-          >Aslemammad</a
+          >StackBlitz Labs</a
         >
       </div>
       <UIcon name="ph-dot" />
