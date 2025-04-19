@@ -1,90 +1,98 @@
 <script lang="ts" setup>
-import type { RendererObject } from 'marked'
-import { marked } from 'marked'
+import type { RendererObject } from "marked";
+import { marked } from "marked";
 
 const props = defineProps<{
-  owner: string
-  repo: string
-}>()
+  owner: string;
+  repo: string;
+}>();
 
-const data = await $fetch('/api/repo/commits', {
+const data = await $fetch("/api/repo/commits", {
   query: {
     owner: props.owner,
     repo: props.repo,
   },
-})
+});
 
 if (!data) {
-  throw createError('Could not load Commits')
+  throw createError("Could not load Commits");
 }
 
-const branch = shallowReactive(data)
+const branch = shallowReactive(data);
 
-const commitsWithRelease = computed(() => branch.target.history.nodes.filter(commit => commit.statusCheckRollup?.contexts.nodes.some(context => context.name === 'Continuous Releases')).map(commit => ({
-  ...commit,
-  release: commit.statusCheckRollup.contexts.nodes.find(context => context.name === 'Continuous Releases')!,
-})))
+const commitsWithRelease = computed(() =>
+  branch.target.history.nodes
+    .filter((commit) =>
+      commit.statusCheckRollup?.contexts.nodes.some(
+        (context) => context.name === "Continuous Releases",
+      ),
+    )
+    .map((commit) => ({
+      ...commit,
+      release: commit.statusCheckRollup.contexts.nodes.find(
+        (context) => context.name === "Continuous Releases",
+      )!,
+    })),
+);
 
-const selectedCommit = shallowRef<(typeof commitsWithRelease.value)[number] | null>(null)
+const selectedCommit = shallowRef<
+  (typeof commitsWithRelease.value)[number] | null
+>(null);
 
 // Markdown
 
 // Add target to links
 const renderer: RendererObject = {
   link(originalLink) {
-    const link = marked.Renderer.prototype.link.call(this, originalLink)
-    return link.replace('<a', '<a target=\'_blank\' rel=\'noreferrer\' ')
+    const link = marked.Renderer.prototype.link.call(this, originalLink);
+    return link.replace("<a", "<a target='_blank' rel='noreferrer' ");
   },
-}
-marked.use({ renderer })
+};
+marked.use({ renderer });
 
 // Pagination
 
-const fetching = ref(false)
-const fetchMoreForceDisabled = ref(!commitsWithRelease.value.length)
+const fetching = ref(false);
+const fetchMoreForceDisabled = ref(!commitsWithRelease.value.length);
 
 async function fetchMore() {
   if (!branch.target.history.pageInfo.hasNextPage) {
-    return
+    return;
   }
 
   if (fetching.value) {
-    return
+    return;
   }
 
   try {
-    fetching.value = true
+    fetching.value = true;
 
-    const cursor = branch.target.history.pageInfo.endCursor
+    const cursor = branch.target.history.pageInfo.endCursor;
 
-    const result = await $fetch('/api/repo/commits', {
+    const result = await $fetch("/api/repo/commits", {
       query: {
         owner: props.owner,
         repo: props.repo,
         cursor,
       },
-    })
+    });
 
-    const count = commitsWithRelease.value.length
+    const count = commitsWithRelease.value.length;
 
     branch.target = {
       ...branch.target,
       history: {
         ...branch.target.history,
-        nodes: [
-          ...branch.target.history.nodes,
-          ...result.target.history.nodes,
-        ],
+        nodes: [...branch.target.history.nodes, ...result.target.history.nodes],
         pageInfo: result.target.history.pageInfo,
       },
-    }
+    };
 
     if (count === commitsWithRelease.value.length) {
-      fetchMoreForceDisabled.value = true
+      fetchMoreForceDisabled.value = true;
     }
-  }
-  finally {
-    fetching.value = false
+  } finally {
+    fetching.value = false;
   }
 }
 </script>
@@ -134,7 +142,9 @@ async function fetchMore() {
     </div>
 
     <div
-      v-if="branch.target.history.pageInfo.hasNextPage && !fetchMoreForceDisabled"
+      v-if="
+        branch.target.history.pageInfo.hasNextPage && !fetchMoreForceDisabled
+      "
       class="flex justify-center"
     >
       <UButton
@@ -152,11 +162,16 @@ async function fetchMore() {
       class="flex flex-col items-center gap-4 border border-gray-100 dark:border-gray-800 rounded-xl p-8"
     >
       <UIcon name="i-ph-crane-tower-light" class="text-6xl opacity-50" />
-      <p class="text-center text-lg">
-        No Continuous Releases found
-      </p>
+      <p class="text-center text-lg">No Continuous Releases found</p>
       <p class="text-center">
-        Setup continuous releases with <a href="https://github.com/stackblitz-labs/pkg.pr.new" target="_blank" class="text-primary">pkg.pr.new</a> first!
+        Setup continuous releases with
+        <a
+          href="https://github.com/stackblitz-labs/pkg.pr.new"
+          target="_blank"
+          class="text-primary"
+          >pkg.pr.new</a
+        >
+        first!
       </p>
     </div>
 

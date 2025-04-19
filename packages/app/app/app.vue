@@ -1,18 +1,19 @@
 <script setup>
 useHead({
   htmlAttrs: {
-    lang: 'en',
+    lang: "en",
   },
   link: [
-    { rel: 'icon', href: '/favicon.png' },
-    { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+    { rel: "icon", href: "/favicon.png" },
+    { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
   ],
-})
+});
 
 useSeoMeta({
-  title: 'pkg.pr.new',
-  description: 'Search repositories on GitHub to list their continuous releases.',
-})
+  title: "pkg.pr.new",
+  description:
+    "Search repositories on GitHub to list their continuous releases.",
+});
 </script>
 
 <template>

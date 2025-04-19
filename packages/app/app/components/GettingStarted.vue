@@ -1,6 +1,4 @@
-<script lang="ts" setup>
-
-</script>
+<script lang="ts" setup></script>
 
 <template>
   <div class="flex flex-col gap-6">
@@ -21,7 +19,8 @@
 
     <GettingStartedStep step="2">
       <div>
-        Then, use the following command in your workflows to create continuous releases.
+        Then, use the following command in your workflows to create continuous
+        releases.
       </div>
 
       <CodeSnippet code="npx pkg-pr-new publish" />
@@ -48,11 +47,9 @@
     </GettingStartedStep>
 
     <GettingStartedStep step="3">
-      <div>
-        Done! Enjoy continuous releases on your Pull Requests!
-      </div>
+      <div>Done! Enjoy continuous releases on your Pull Requests!</div>
 
-      <img src="/pr-screenshot.png" alt="PR Screenshot" class="rounded-lg">
+      <img src="/pr-screenshot.png" alt="PR Screenshot" class="rounded-lg" />
     </GettingStartedStep>
   </div>
 </template>

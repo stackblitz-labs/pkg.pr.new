@@ -40,15 +40,17 @@
     "@octokit/auth-unauthenticated": "^5.0.1",
     "@pkg-pr-new/utils": "workspace:^",
     "@simulacrum/github-api-simulator": "^0.5.4",
+    "@typescript-eslint/eslint-plugin": "^5.62.0",
+    "@typescript-eslint/parser": "^5.62.0",
     "cross-env": "^7.0.3",
     "dotenv": "^16.4.5",
     "esbuild": "^0.20.2",
     "esbuild-plugin-polyfill-node": "^0.3.0",
-    "eslint": "^9.17.0",
+    "eslint": "^8.57.0",
     "fast-jwt": "^4.0.2",
     "nitro-cloudflare-dev": "^0.2.2",
     "typescript": "^5.7.2",
-    "vue-tsc": "~2.1.6",
+    "vue-tsc": "^2.0.7",
     "wrangler": "^3.57.1"
   }
 }

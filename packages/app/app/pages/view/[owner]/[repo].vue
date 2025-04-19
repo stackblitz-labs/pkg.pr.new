@@ -1,34 +1,34 @@
 <script setup lang="ts">
 definePageMeta({
-  name: 'repo:details',
-})
+  name: "repo:details",
+});
 
-const route = useRoute()
-const { data } = await useFetch('/api/repo', {
+const route = useRoute();
+const { data } = await useFetch("/api/repo", {
   query: computed(() => ({
     owner: route.params.owner,
     repo: route.params.repo,
   })),
-})
+});
 
 if (!data.value) {
-  throw createError('Could not load Repository')
+  throw createError("Could not load Repository");
 }
 
-const repository = data.value
+const repository = data.value;
 
 useHead({
   link: [
-    { rel: 'icon', href: '/favicon.png' },
-    { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+    { rel: "icon", href: "/favicon.png" },
+    { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
   ],
-})
+});
 useSeoMeta({
   title: `${repository.owner.login}/${repository.name} Continuous Releases`,
   description: `See all ${repository.name} recent continuous releases.`,
   ogTitle: `${repository.owner.login}/${repository.name} Continuous Releases`,
   ogDescription: `See all ${repository.name} recent continuous releases.`,
-})
+});
 // TODO: OG Image
 </script>
 
@@ -53,7 +53,9 @@ useSeoMeta({
           {{ repository.name }}
         </a>
       </h1>
-      <div class="flex items-center justify-center gap-2 text-gray-700 dark:text-gray-300">
+      <div
+        class="flex items-center justify-center gap-2 text-gray-700 dark:text-gray-300"
+      >
         <UButton
           :to="repository.url"
           external
