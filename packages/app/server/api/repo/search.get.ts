@@ -1,5 +1,5 @@
-import { z } from 'zod'
 import type { RestEndpointMethodTypes } from '@octokit/plugin-rest-endpoint-methods'
+import { z } from 'zod'
 import { useGithubREST } from '../../../server/utils/octokit'
 
 const querySchema = z.object({
@@ -11,7 +11,7 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number, errorMessage: st
     promise,
     new Promise<T>((_, reject) => {
       setTimeout(() => reject(new Error(errorMessage)), timeoutMs)
-    })
+    }),
   ])
 }
 
@@ -28,29 +28,32 @@ export default defineEventHandler(async (event) => {
     const { data } = await withTimeout(
       octokit.request('GET /search/repositories', {
         q: query.text,
-        per_page: 10
+        per_page: 10,
       }),
       10000,
-      'GitHub API search request timed out'
+      'GitHub API search request timed out',
     )
 
     return {
       nodes: data.items.map((repo: RestEndpointMethodTypes['search']['repos']['response']['data']['items'][0]) => ({
         id: repo.id.toString(),
         name: repo.name,
-        owner: repo.owner ? {
-          id: repo.owner.id.toString(),
-          login: repo.owner.login,
-          avatarUrl: repo.owner.avatar_url
-        } : null
-      }))
+        owner: repo.owner
+          ? {
+              id: repo.owner.id.toString(),
+              login: repo.owner.login,
+              avatarUrl: repo.owner.avatar_url,
+            }
+          : null,
+      })),
     }
-  } catch (error) {
-    console.error('Error in repository search:', error);
+  }
+  catch (error) {
+    console.error('Error in repository search:', error)
     return {
       nodes: [],
       error: true,
-      message: (error as Error).message
+      message: (error as Error).message,
     }
   }
 })

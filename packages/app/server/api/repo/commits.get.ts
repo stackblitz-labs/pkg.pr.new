@@ -14,7 +14,7 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number, errorMessage: st
     promise,
     new Promise<T>((_, reject) => {
       setTimeout(() => reject(new Error(errorMessage)), timeoutMs)
-    })
+    }),
   ])
 }
 
@@ -29,13 +29,13 @@ export default defineEventHandler(async (event) => {
         repo: query.repo,
       }),
       10000,
-      'GitHub API repository request timed out'
+      'GitHub API repository request timed out',
     )
 
     const defaultBranch = repo.default_branch
 
-    const page = query.page ? parseInt(query.page) : query.cursor ? parseInt(query.cursor) : 1
-    const per_page = parseInt(query.per_page)
+    const page = query.page ? Number.parseInt(query.page) : query.cursor ? Number.parseInt(query.cursor) : 1
+    const per_page = Number.parseInt(query.per_page)
 
     const { data: commits } = await withTimeout(
       octokit.request('GET /repos/{owner}/{repo}/commits', {
@@ -46,7 +46,7 @@ export default defineEventHandler(async (event) => {
         per_page,
       }),
       10000,
-      'GitHub API commits request timed out'
+      'GitHub API commits request timed out',
     )
 
     const commitsWithStatuses = await Promise.all(
@@ -59,7 +59,7 @@ export default defineEventHandler(async (event) => {
               ref: commit.sha,
             }),
             5000,
-            `Check runs request timed out for commit ${commit.sha}`
+            `Check runs request timed out for commit ${commit.sha}`,
           )
 
           return {
@@ -69,25 +69,29 @@ export default defineEventHandler(async (event) => {
             message: commit.commit.message,
             authoredDate: commit.commit.author?.date || '',
             url: commit.html_url,
-            statusCheckRollup: checkRuns.check_runs.length > 0 ? {
-              id: `status-${commit.sha}`,
-              state: checkRuns.check_runs.some(check => check.conclusion === 'failure') ? 'FAILURE' :
-                checkRuns.check_runs.some(check => check.conclusion === 'success') ? 'SUCCESS' : 'PENDING',
-              contexts: {
-                nodes: checkRuns.check_runs.map(check => ({
-                  id: check.id.toString(),
-                  status: check.status,
-                  name: check.name,
-                  title: check.name,
-                  summary: check.output?.summary || '',
-                  text: check.output?.text || '',
-                  detailsUrl: check.details_url || '',
-                  url: check.url || check.html_url || '',
-                }))
-              }
-            } : null
+            statusCheckRollup: checkRuns.check_runs.length > 0
+              ? {
+                  id: `status-${commit.sha}`,
+                  state: checkRuns.check_runs.some(check => check.conclusion === 'failure')
+                    ? 'FAILURE'
+                    : checkRuns.check_runs.some(check => check.conclusion === 'success') ? 'SUCCESS' : 'PENDING',
+                  contexts: {
+                    nodes: checkRuns.check_runs.map(check => ({
+                      id: check.id.toString(),
+                      status: check.status,
+                      name: check.name,
+                      title: check.name,
+                      summary: check.output?.summary || '',
+                      text: check.output?.text || '',
+                      detailsUrl: check.details_url || '',
+                      url: check.url || check.html_url || '',
+                    })),
+                  },
+                }
+              : null,
           }
-        } catch (error) {
+        }
+        catch (error) {
           console.warn(`Could not fetch check runs for commit ${commit.sha}:`, error)
           return {
             id: commit.node_id || commit.sha,
@@ -96,10 +100,10 @@ export default defineEventHandler(async (event) => {
             message: commit.commit.message,
             authoredDate: commit.commit.author?.date || '',
             url: commit.html_url,
-            statusCheckRollup: null
+            statusCheckRollup: null,
           }
         }
-      })
+      }),
     )
 
     // Check if there are more commits (GitHub API doesn't provide this directly)
@@ -116,12 +120,13 @@ export default defineEventHandler(async (event) => {
           nodes: commitsWithStatuses,
           pageInfo: {
             hasNextPage,
-            endCursor: nextPage
-          }
-        }
-      }
+            endCursor: nextPage,
+          },
+        },
+      },
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error fetching repository commits:', error)
 
     return {
@@ -135,10 +140,10 @@ export default defineEventHandler(async (event) => {
           nodes: [],
           pageInfo: {
             hasNextPage: false,
-            endCursor: null
-          }
-        }
-      }
+            endCursor: null,
+          },
+        },
+      },
     }
   }
 })

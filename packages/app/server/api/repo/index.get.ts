@@ -12,7 +12,7 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number, errorMessage: st
     promise,
     new Promise<T>((_, reject) => {
       setTimeout(() => reject(new Error(errorMessage)), timeoutMs)
-    })
+    }),
   ])
 }
 
@@ -26,7 +26,7 @@ const getRepoInfo = defineCachedFunction(async (owner: string, repo: string, eve
         repo,
       }),
       10000,
-      'GitHub API repository request timed out'
+      'GitHub API repository request timed out',
     )
 
     return {
@@ -41,7 +41,8 @@ const getRepoInfo = defineCachedFunction(async (owner: string, repo: string, eve
       homepageUrl: data.homepage || '',
       description: data.description || '',
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error(`Error fetching repository info for ${owner}/${repo}:`, error)
     throw error
   }
@@ -55,7 +56,8 @@ export default defineEventHandler(async (event) => {
   try {
     const query = await getValidatedQuery(event, data => querySchema.parse(data))
     return getRepoInfo(query.owner, query.repo, event)
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error in repo info endpoint:', error)
     return {
       error: true,
@@ -65,11 +67,11 @@ export default defineEventHandler(async (event) => {
       owner: {
         id: 'error',
         avatarUrl: '',
-        login: 'error'
+        login: 'error',
       },
       url: '',
       homepageUrl: '',
-      description: 'Error fetching repository data'
+      description: 'Error fetching repository data',
     }
   }
 })
