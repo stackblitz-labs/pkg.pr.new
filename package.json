@@ -42,7 +42,6 @@
   },
   "pnpm": {
     "patchedDependencies": {
-      "nitro-cloudflare-dev@0.1.2": "patches/nitro-cloudflare-dev@0.1.2.patch",
       "radix3@1.1.2": "patches/radix3@1.1.2.patch"
     }
   },

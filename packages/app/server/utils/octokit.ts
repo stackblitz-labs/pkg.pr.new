@@ -1,36 +1,34 @@
 import type { H3Event } from 'h3'
 import type { App as AppType } from 'octokit'
-import { graphql } from '@octokit/graphql'
 import { paginateRest } from '@octokit/plugin-paginate-rest'
 import { App, Octokit } from 'octokit'
 
-let graphQlWithAuth: typeof graphql
+export function useGithubREST(event?: H3Event) {
+  try {
+    const config = useRuntimeConfig(event)
+    const githubToken = config?.githubToken
+    const baseUrl = config?.ghBaseUrl
 
-export function useGithubGraphQL(event?: H3Event) {
-  if (!graphQlWithAuth) {
-    try {
-      const config = useRuntimeConfig(event)
-      const githubToken = config?.githubToken
-
-      if (!githubToken) {
-        console.warn('GitHub token is not available in runtime config')
-        graphQlWithAuth = graphql.defaults({})
-        return { graphql: graphQlWithAuth }
-      }
-
-      graphQlWithAuth = graphql.defaults({
-        headers: {
-          authorization: `token ${githubToken}`,
-        },
+    if (!githubToken) {
+      console.warn('GitHub token is not available in runtime config')
+      return new Octokit({
+        baseUrl,
+        plugins: [paginateRest],
       })
     }
-    catch (error) {
-      console.error('Error initializing GitHub GraphQL client:', error)
-      graphQlWithAuth = graphql.defaults({})
-    }
+
+    return new Octokit({
+      auth: githubToken,
+      baseUrl,
+      plugins: [paginateRest],
+    })
   }
-  return {
-    graphql: graphQlWithAuth,
+  catch (error) {
+    console.error('Error initializing GitHub REST client:', error)
+    return new Octokit({
+      baseUrl: 'https://api.github.com',
+      plugins: [paginateRest],
+    })
   }
 }
 
