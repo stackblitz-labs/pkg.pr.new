@@ -1,11 +1,18 @@
-import type { PackageManager } from "@pkg-pr-new/utils";
-import { abbreviateCommitHash } from "@pkg-pr-new/utils";
+import { abbreviateCommitHash, PackageManager } from "@pkg-pr-new/utils";
+import { WorkflowData } from "../types";
 
-const packageCommands: Record<PackageManager, string> = {
-  npm: "i",
-  pnpm: "add",
-  yarn: "add",
-  bun: "add",
+const installCommands: Record<PackageManager, string> = {
+  npm: "npm i",
+  pnpm: "pnpm add",
+  yarn: "yarn add",
+  bun: "bun add",
+};
+
+const binCommands: Record<PackageManager, string> = {
+  npm: "npx",
+  pnpm: "pnpm dlx",
+  yarn: "npx",
+  bun: "bunx",
 };
 
 export function generateCommitPublishMessage(
@@ -15,6 +22,7 @@ export function generateCommitPublishMessage(
   workflowData: WorkflowData,
   compact: boolean,
   packageManager: PackageManager,
+  bin: boolean,
 ) {
   const isMoreThanFour = packages.length > 4;
   const shaMessages = packages
@@ -28,12 +36,12 @@ export function generateCommitPublishMessage(
       );
 
       if (packageManager === "yarn") {
-        shaUrl = `${shaUrl}.tgz`;
+        shaUrl = shaUrl + ".tgz";
       }
 
       return `
 \`\`\`
-${packageManager} ${packageCommands[packageManager]} ${shaUrl}
+${bin ? binCommands[packageManager] : installCommands[packageManager]} ${shaUrl}
 \`\`\`
       `;
     })
@@ -63,6 +71,7 @@ export function generatePullRequestPublishMessage(
   checkRunUrl: string,
   packageManager: PackageManager,
   base: "sha" | "ref",
+  bin: boolean,
 ) {
   const isMoreThanFour = packages.length > 4;
   const refMessages = packages
@@ -76,12 +85,12 @@ export function generatePullRequestPublishMessage(
       );
 
       if (packageManager === "yarn") {
-        refUrl = `${refUrl}.tgz`;
+        refUrl = refUrl + ".tgz";
       }
 
       return `
 \`\`\`
-${packageManager} ${packageCommands[packageManager]} ${refUrl}
+${bin ? binCommands[packageManager] : installCommands[packageManager]} ${refUrl}
 \`\`\`
 `;
     })
@@ -97,7 +106,7 @@ ${packageManager} ${packageCommands[packageManager]} ${refUrl}
   return `
 ${templatesStr}
 
-${!onlyTemplates ? refMessages : ""}
+${onlyTemplates ? "" : refMessages}
 
 _commit: <a href="${checkRunUrl}"><code>${abbreviateCommitHash(workflowData.sha)}</code></a>_
 `;
@@ -105,11 +114,12 @@ _commit: <a href="${checkRunUrl}"><code>${abbreviateCommitHash(workflowData.sha)
 
 function generateTemplatesStr(templates: Record<string, string>) {
   const entries = Object.entries(templates).filter(([k]) => k !== "default");
-  let str = templates.default
-    ? `[Open in Stackblitz](${templates.default})`
-    : "";
+  let str =
+    entries.length === 0 && templates.default
+      ? `[Open in StackBlitz](${templates.default})`
+      : "";
 
-  if (entries.length && entries.length <= 2) {
+  if (entries.length > 0 && entries.length <= 2) {
     str = [str, ...entries.map(([k, v]) => `[${k}](${v})`)]
       .filter(Boolean)
       .join(" • ");

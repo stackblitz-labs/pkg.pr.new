@@ -1,19 +1,20 @@
-import type { H3EventContext } from "h3";
-import { createStorage, joinKeys, prefixStorage } from "unstorage";
+import { prefixStorage, createStorage, joinKeys } from "unstorage";
 import cloudflareR2BindingDriver from "unstorage/drivers/cloudflare-r2-binding";
+import { getR2Binding } from "unstorage/drivers/utils/cloudflare";
+import type { H3EventContext } from "h3";
+import { WorkflowData, Cursor } from "../types";
 
-interface Event {
-  context: { cloudflare: H3EventContext["cloudflare"] };
-}
+type Binary = Parameters<R2Bucket["put"]>[1];
+type Event = { context: { cloudflare: H3EventContext["cloudflare"] } };
 
 export const baseKey = "bucket";
 
 export function useBinding(event: Event) {
-  return getBinding(
+  return getR2Binding(
     event.context.cloudflare.env.ENV === "production"
       ? "PROD_CR_BUCKET"
       : "CR_BUCKET",
-  ) as unknown as R2Bucket;
+  );
 }
 
 export async function setItemStream(
@@ -45,9 +46,10 @@ export async function getItemStream(
 export function useBucket(event: Event) {
   const binding = useBinding(event);
 
-  return createStorage<any>({
+  return createStorage<Binary>({
     driver: cloudflareR2BindingDriver({
       base: useBucket.key,
+      // @ts-ignore TODO(upstream): fix type mismatch
       binding,
     }),
   });
