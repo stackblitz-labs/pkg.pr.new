@@ -9,19 +9,6 @@ const querySchema = z.object({
   per_page: z.string().optional().default("10"),
 });
 
-function withTimeout<T>(
-  promise: Promise<T>,
-  timeoutMs: number,
-  errorMessage: string,
-): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) => {
-      setTimeout(() => reject(new Error(errorMessage)), timeoutMs);
-    }),
-  ]);
-}
-
 export default defineEventHandler(async (event) => {
   try {
     const query = await getValidatedQuery(event, (data) =>
@@ -29,14 +16,10 @@ export default defineEventHandler(async (event) => {
     );
     const octokit = useGithubREST(event);
 
-    const { data: repo } = await withTimeout(
-      octokit.request("GET /repos/{owner}/{repo}", {
-        owner: query.owner,
-        repo: query.repo,
-      }),
-      10000,
-      "GitHub API repository request timed out",
-    );
+    const { data: repo } = await octokit.request("GET /repos/{owner}/{repo}", {
+      owner: query.owner,
+      repo: query.repo,
+    });
 
     const defaultBranch = repo.default_branch;
 
@@ -47,32 +30,24 @@ export default defineEventHandler(async (event) => {
         : 1;
     const per_page = Number.parseInt(query.per_page);
 
-    const { data: commits } = await withTimeout(
-      octokit.request("GET /repos/{owner}/{repo}/commits", {
-        owner: query.owner,
-        repo: query.repo,
-        sha: defaultBranch,
-        page,
-        per_page,
-      }),
-      10000,
-      "GitHub API commits request timed out",
-    );
+    const { data: commits } = await octokit.request("GET /repos/{owner}/{repo}/commits", {
+      owner: query.owner,
+      repo: query.repo,
+      sha: defaultBranch,
+      page,
+      per_page,
+    });
 
     const commitsWithStatuses = await Promise.all(
       commits.map(async (commit) => {
         try {
-          const { data: checkRuns } = await withTimeout(
-            octokit.request(
-              "GET /repos/{owner}/{repo}/commits/{ref}/check-runs",
-              {
-                owner: query.owner,
-                repo: query.repo,
-                ref: commit.sha,
-              },
-            ),
-            5000,
-            `Check runs request timed out for commit ${commit.sha}`,
+          const { data: checkRuns } = await octokit.request(
+            "GET /repos/{owner}/{repo}/commits/{ref}/check-runs",
+            {
+              owner: query.owner,
+              repo: query.repo,
+              ref: commit.sha,
+            },
           );
 
           return {
@@ -85,29 +60,29 @@ export default defineEventHandler(async (event) => {
             statusCheckRollup:
               checkRuns.check_runs.length > 0
                 ? {
-                    id: `status-${commit.sha}`,
-                    state: checkRuns.check_runs.some(
-                      (check) => check.conclusion === "failure",
+                  id: `status-${commit.sha}`,
+                  state: checkRuns.check_runs.some(
+                    (check) => check.conclusion === "failure",
+                  )
+                    ? "FAILURE"
+                    : checkRuns.check_runs.some(
+                      (check) => check.conclusion === "success",
                     )
-                      ? "FAILURE"
-                      : checkRuns.check_runs.some(
-                            (check) => check.conclusion === "success",
-                          )
-                        ? "SUCCESS"
-                        : "PENDING",
-                    contexts: {
-                      nodes: checkRuns.check_runs.map((check) => ({
-                        id: check.id.toString(),
-                        status: check.status,
-                        name: check.name,
-                        title: check.name,
-                        summary: check.output?.summary || "",
-                        text: check.output?.text || "",
-                        detailsUrl: check.details_url || "",
-                        url: check.url || check.html_url || "",
-                      })),
-                    },
-                  }
+                      ? "SUCCESS"
+                      : "PENDING",
+                  contexts: {
+                    nodes: checkRuns.check_runs.map((check) => ({
+                      id: check.id.toString(),
+                      status: check.status,
+                      name: check.name,
+                      title: check.name,
+                      summary: check.output?.summary || "",
+                      text: check.output?.text || "",
+                      detailsUrl: check.details_url || "",
+                      url: check.url || check.html_url || "",
+                    })),
+                  },
+                }
                 : null,
           };
         } catch (error) {

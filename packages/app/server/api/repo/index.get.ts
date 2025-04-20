@@ -7,32 +7,15 @@ const querySchema = z.object({
   repo: z.string(),
 });
 
-function withTimeout<T>(
-  promise: Promise<T>,
-  timeoutMs: number,
-  errorMessage: string,
-): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) => {
-      setTimeout(() => reject(new Error(errorMessage)), timeoutMs);
-    }),
-  ]);
-}
-
 const getRepoInfo = defineCachedFunction(
   async (owner: string, repo: string, event?: H3Event) => {
     try {
       const octokit = useGithubREST(event);
 
-      const { data } = await withTimeout(
-        octokit.request("GET /repos/{owner}/{repo}", {
-          owner,
-          repo,
-        }),
-        10000,
-        "GitHub API repository request timed out",
-      );
+      const { data } = await octokit.request("GET /repos/{owner}/{repo}", {
+        owner,
+        repo,
+      });
 
       return {
         id: data.id.toString(),

@@ -6,19 +6,6 @@ const querySchema = z.object({
   text: z.string(),
 });
 
-function withTimeout<T>(
-  promise: Promise<T>,
-  timeoutMs: number,
-  errorMessage: string,
-): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) => {
-      setTimeout(() => reject(new Error(errorMessage)), timeoutMs);
-    }),
-  ]);
-}
-
 export default defineEventHandler(async (event) => {
   try {
     const query = await getValidatedQuery(event, (data) =>
@@ -31,14 +18,10 @@ export default defineEventHandler(async (event) => {
 
     const octokit = useGithubREST(event);
 
-    const { data } = await withTimeout(
-      octokit.request("GET /search/repositories", {
-        q: query.text,
-        per_page: 10,
-      }),
-      10000,
-      "GitHub API search request timed out",
-    );
+    const { data } = await octokit.request("GET /search/repositories", {
+      q: query.text,
+      per_page: 10,
+    });
 
     return {
       nodes: data.items.map(
@@ -49,10 +32,10 @@ export default defineEventHandler(async (event) => {
           name: repo.name,
           owner: repo.owner
             ? {
-                id: repo.owner.id.toString(),
-                login: repo.owner.login,
-                avatarUrl: repo.owner.avatar_url,
-              }
+              id: repo.owner.id.toString(),
+              login: repo.owner.login,
+              avatarUrl: repo.owner.avatar_url,
+            }
             : null,
         }),
       ),
