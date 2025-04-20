@@ -32,10 +32,10 @@ export default defineEventHandler(async (event) => {
           name: repo.name,
           owner: repo.owner
             ? {
-              id: repo.owner.id.toString(),
-              login: repo.owner.login,
-              avatarUrl: repo.owner.avatar_url,
-            }
+                id: repo.owner.id.toString(),
+                login: repo.owner.login,
+                avatarUrl: repo.owner.avatar_url,
+              }
             : null,
         }),
       ),

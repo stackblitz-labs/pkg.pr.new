@@ -30,13 +30,16 @@ export default defineEventHandler(async (event) => {
         : 1;
     const per_page = Number.parseInt(query.per_page);
 
-    const { data: commits } = await octokit.request("GET /repos/{owner}/{repo}/commits", {
-      owner: query.owner,
-      repo: query.repo,
-      sha: defaultBranch,
-      page,
-      per_page,
-    });
+    const { data: commits } = await octokit.request(
+      "GET /repos/{owner}/{repo}/commits",
+      {
+        owner: query.owner,
+        repo: query.repo,
+        sha: defaultBranch,
+        page,
+        per_page,
+      },
+    );
 
     const commitsWithStatuses = await Promise.all(
       commits.map(async (commit) => {
@@ -60,29 +63,29 @@ export default defineEventHandler(async (event) => {
             statusCheckRollup:
               checkRuns.check_runs.length > 0
                 ? {
-                  id: `status-${commit.sha}`,
-                  state: checkRuns.check_runs.some(
-                    (check) => check.conclusion === "failure",
-                  )
-                    ? "FAILURE"
-                    : checkRuns.check_runs.some(
-                      (check) => check.conclusion === "success",
+                    id: `status-${commit.sha}`,
+                    state: checkRuns.check_runs.some(
+                      (check) => check.conclusion === "failure",
                     )
-                      ? "SUCCESS"
-                      : "PENDING",
-                  contexts: {
-                    nodes: checkRuns.check_runs.map((check) => ({
-                      id: check.id.toString(),
-                      status: check.status,
-                      name: check.name,
-                      title: check.name,
-                      summary: check.output?.summary || "",
-                      text: check.output?.text || "",
-                      detailsUrl: check.details_url || "",
-                      url: check.url || check.html_url || "",
-                    })),
-                  },
-                }
+                      ? "FAILURE"
+                      : checkRuns.check_runs.some(
+                            (check) => check.conclusion === "success",
+                          )
+                        ? "SUCCESS"
+                        : "PENDING",
+                    contexts: {
+                      nodes: checkRuns.check_runs.map((check) => ({
+                        id: check.id.toString(),
+                        status: check.status,
+                        name: check.name,
+                        title: check.name,
+                        summary: check.output?.summary || "",
+                        text: check.output?.text || "",
+                        detailsUrl: check.details_url || "",
+                        url: check.url || check.html_url || "",
+                      })),
+                    },
+                  }
                 : null,
           };
         } catch (error) {
