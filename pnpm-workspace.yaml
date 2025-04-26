@@ -1,4 +1,16 @@
 packages:
-  - "packages/*"
-  - "playgrounds/*"
-  - "templates/*"
+  - packages/*
+  - playgrounds/*
+  - templates/*
+
+patchedDependencies:
+  radix3@1.1.2: patches/radix3@1.1.2.patch
+
+shamefullyHoist: true
+
+onlyBuiltDependencies:
+  - "@parcel/watcher"
+  - esbuild
+  - sharp
+  - vue-demi
+  - workerd
