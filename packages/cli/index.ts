@@ -543,7 +543,7 @@ async function resolveTarball(pm: "npm" | "pnpm", p: string) {
   return { filename, shasum };
 }
 
- function writeDeps(
+function writeDeps(
   p: string,
   pJson: PackageJson,
   deps: Map<string, string>,
@@ -559,7 +559,7 @@ async function resolveTarball(pm: "npm" | "pnpm", p: string) {
     hijackDeps(realDeps, pJson.peerDependencies);
   }
 
-  return ()=> fs.writeFile(pJsonPath, JSON.stringify(pJson,null,2)) 
+  return () => fs.writeFile(pJsonPath, JSON.stringify(pJson, null, 2));
 }
 
 function hijackDeps(
