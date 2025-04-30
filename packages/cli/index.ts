@@ -559,8 +559,7 @@ function writeDeps(
     hijackDeps(realDeps, pJson.peerDependencies);
   }
 
-  return async () =>
-    await fs.writeFile(pJsonPath, JSON.stringify(pJson, null, 2));
+  return () => fs.writeFile(pJsonPath, JSON.stringify(pJson, null, 2));
 }
 
 function hijackDeps(
