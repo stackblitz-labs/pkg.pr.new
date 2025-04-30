@@ -251,12 +251,7 @@ const main = defineCommand({
 
             console.warn("preparing template:", pJson.name);
 
-            const restore = await writeDeps(
-              templateDir,
-              pJson,
-              deps,
-              realDeps,
-            );
+            const restore = await writeDeps(templateDir, pJson, deps, realDeps);
 
             const gitignorePath = path.join(templateDir, ".gitignore");
             const ig = ignore().add("node_modules").add(".git");
@@ -333,10 +328,7 @@ const main = defineCommand({
               continue;
             }
 
-            restoreMap.set(
-              p,
-              await writeDeps(p, pJson, deps, realDeps),
-            );
+            restoreMap.set(p, await writeDeps(p, pJson, deps, realDeps));
           }
 
           const shasums: Record<string, string> = {};
@@ -567,9 +559,8 @@ async function writeDeps(
     hijackDeps(realDeps, pJson.peerDependencies);
   }
 
-  
   const res = await writePackageJSON(pJsonPath, pJson);
-  return ()=> res;
+  return () => res;
 }
 
 function hijackDeps(
