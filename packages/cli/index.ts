@@ -18,7 +18,7 @@ import { glob } from "tinyglobby";
 import ignore from "ignore";
 import "./environments";
 import { isBinaryFile } from "isbinaryfile";
-import { type PackageJson } from "pkg-types";
+import type { PackageJson } from "pkg-types";
 import pkg from "./package.json" with { type: "json" };
 import { createDefaultTemplate } from "./template";
 
@@ -251,7 +251,7 @@ const main = defineCommand({
 
             console.warn("preparing template:", pJson.name);
 
-            const restore = await writeDeps(templateDir, pJson, deps, realDeps);
+            const restore = writeDeps(templateDir, pJson, deps, realDeps);
 
             const gitignorePath = path.join(templateDir, ".gitignore");
             const ig = ignore().add("node_modules").add(".git");
@@ -559,7 +559,8 @@ function writeDeps(
     hijackDeps(realDeps, pJson.peerDependencies);
   }
 
-  return () => fs.writeFile(pJsonPath, JSON.stringify(pJson, null, 2));
+  return async () =>
+    await fs.writeFile(pJsonPath, JSON.stringify(pJson, null, 2));
 }
 
 function hijackDeps(
