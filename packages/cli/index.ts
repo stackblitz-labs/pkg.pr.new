@@ -18,7 +18,7 @@ import { glob } from "tinyglobby";
 import ignore from "ignore";
 import "./environments";
 import { isBinaryFile } from "isbinaryfile";
-import { writePackageJSON, type PackageJson } from "pkg-types";
+import { type PackageJson } from "pkg-types";
 import pkg from "./package.json" with { type: "json" };
 import { createDefaultTemplate } from "./template";
 
@@ -543,7 +543,7 @@ async function resolveTarball(pm: "npm" | "pnpm", p: string) {
   return { filename, shasum };
 }
 
-async function writeDeps(
+ function writeDeps(
   p: string,
   pJson: PackageJson,
   deps: Map<string, string>,
@@ -559,8 +559,7 @@ async function writeDeps(
     hijackDeps(realDeps, pJson.peerDependencies);
   }
 
-  const res = await writePackageJSON(pJsonPath, pJson);
-  return () => res;
+  return ()=> fs.writeFile(pJsonPath, JSON.stringify(pJson,null,2)) 
 }
 
 function hijackDeps(
