@@ -159,6 +159,7 @@ const main = defineCommand({
             GITHUB_RUN_ID,
             GITHUB_RUN_ATTEMPT,
             GITHUB_ACTOR_ID,
+            GITHUB_OUTPUT,
           } = process.env;
 
           const [owner, repo] = GITHUB_REPOSITORY.split("/");
@@ -188,6 +189,7 @@ const main = defineCommand({
           }
 
           const { sha } = await checkResponse.json();
+          const formattedSha = isCompact ? abbreviateCommitHash(sha) : sha;
 
           const deps: Map<string, string> = new Map(); // pkg.pr.new versions of the package
           const realDeps: Map<string, string> | null = isPeerDepsEnabled
@@ -221,7 +223,6 @@ const main = defineCommand({
               await verifyCompactMode(pJson.name);
             }
 
-            const formattedSha = isCompact ? abbreviateCommitHash(sha) : sha;
             const depUrl = new URL(
               `/${owner}/${repo}/${pJson.name}@${formattedSha}`,
               apiUrl,
@@ -533,6 +534,13 @@ const main = defineCommand({
             await fs.writeFile(jsonFilePath, output);
             console.warn(`metadata written to ${jsonFilePath}`);
           }
+
+          await fs.appendFile(GITHUB_OUTPUT, `tag=${formattedSha}\n`, "utf8");
+          await fs.appendFile(
+            GITHUB_OUTPUT,
+            `packages=${outputMetadata.packages.map((pkg) => pkg.url).join(" ")}\n`,
+            "utf8",
+          );
         },
       };
     },
