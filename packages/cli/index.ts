@@ -253,7 +253,6 @@ const main = defineCommand({
 
             const restore = await writeDeps(
               templateDir,
-              pJsonContents,
               pJson,
               deps,
               realDeps,
@@ -336,7 +335,7 @@ const main = defineCommand({
 
             restoreMap.set(
               p,
-              await writeDeps(p, pJsonContents, pJson, deps, realDeps),
+              await writeDeps(p, pJson, deps, realDeps),
             );
           }
 
@@ -554,7 +553,6 @@ async function resolveTarball(pm: "npm" | "pnpm", p: string) {
 
 async function writeDeps(
   p: string,
-  pJsonContents: string,
   pJson: PackageJson,
   deps: Map<string, string>,
   realDeps: Map<string, string> | null,
@@ -569,9 +567,9 @@ async function writeDeps(
     hijackDeps(realDeps, pJson.peerDependencies);
   }
 
-  await writePackageJSON(pJsonPath, pJson);
-
-  return () => fs.writeFile(pJsonPath, pJsonContents);
+  
+  const res = await writePackageJSON(pJsonPath, pJson);
+  return ()=> res;
 }
 
 function hijackDeps(
