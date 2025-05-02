@@ -82,9 +82,11 @@ These are some of the projects and companies using pkg.pr.new:
    <a href="https://svelte.dev"><img src="https://svelte.dev/favicon.png" height="40" /></a>
    <a href="https://trpc.io"><img src="https://trpc.io/img/logo.svg" height="40" /></a>
    <a href="https://kysely.dev"><img src="https://kysely.dev/img/logo.svg" height="40" /></a>
+   <
    <a href="https://tutorialkit.dev/"><img src="https://raw.githubusercontent.com/stackblitz/tutorialkit/refs/tags/1.3.0/extensions/vscode/resources/tutorialkit-icon.png" height="40" /></a>
    <a href="https://heyapi.dev"><img src="https://heyapi.dev/images/logo-300w.png" height="40" /></a>
    <a href="https://github.com/ant-design"><img src="https://github.com/ant-design.png" height="40" /></a>
+   <a href="https://typeorm.io"><img src="https://github.com/typeorm/typeorm/blob/master/resources/typeorm-logo-colored-light.png" height="40" /></a>
 </p>
 
 Feel free to add your project or company here to join the pkg.pr.new family :)
