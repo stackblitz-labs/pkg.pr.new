@@ -1,148 +1,77 @@
 import { z } from "zod";
-import { useGithubREST } from "../../../server/utils/octokit";
+import { useR2GitHubService } from "../../../server/utils/r2-service";
 
 const querySchema = z.object({
   owner: z.string(),
   repo: z.string(),
-  cursor: z.string().optional(),
-  page: z.string().optional(),
-  per_page: z.string().optional().default("10"),
+  page: z.coerce.number().default(1),
+  per_page: z.coerce.number().default(10),
 });
 
 export default defineEventHandler(async (event) => {
   try {
+    console.log("[R2API] Commits endpoint called");
     const query = await getValidatedQuery(event, (data) =>
       querySchema.parse(data),
     );
-    const octokit = useGithubREST(event);
 
-    const { data: repo } = await octokit.request("GET /repos/{owner}/{repo}", {
-      owner: query.owner,
-      repo: query.repo,
+    console.log(`[R2API] Fetching commits for ${query.owner}/${query.repo} (page=${query.page}, per_page=${query.per_page})`);
+
+    // Use R2 service exclusively
+    const r2Service = useR2GitHubService(event);
+    
+    // Log storage configuration for debugging
+    console.log(`[R2API] R2 storage configuration: ${JSON.stringify(r2Service.getStorageInfo())}`);
+
+    // Verify repository exists first
+    const repository = await r2Service.getRepository(query.owner, query.repo);
+    if (!repository) {
+      console.log(`[R2API] Repository ${query.owner}/${query.repo} not found in R2 storage`);
+      throw new Error(`Repository ${query.owner}/${query.repo} not found in R2 storage`);
+    }
+    
+    console.log(`[R2API] Found repository in R2: ${query.owner}/${query.repo} (id: ${repository.id})`);
+
+    // Get commits from R2 storage
+    console.log(`[R2API] Fetching commits from R2 storage for ${query.owner}/${query.repo}`);
+    const commits = await r2Service.listCommits(query.owner, query.repo, query.page, query.per_page);
+    
+    if (commits.length === 0) {
+      console.log(`[R2API] No commits found for ${query.owner}/${query.repo} in R2 storage`);
+      return {
+        data: [],
+        message: `No commits found for ${query.owner}/${query.repo} in storage`,
+      };
+    }
+    
+    console.log(`[R2API] Found ${commits.length} commits in R2 storage`);
+    
+    // Format response with detailed logging
+    const responseData = commits.map((commit) => {
+      console.log(`[R2API] Processing commit: ${commit.sha.substring(0, 7)} - "${commit.commit.message.split('\n')[0]}"`);
+      
+      // For each commit, check if we have check runs
+      return {
+        sha: commit.sha,
+        commit: {
+          message: commit.commit.message,
+          author: commit.commit.author,
+        },
+        html_url: commit.html_url,
+        author: null, // In R2 storage we might not have author details
+        r2_source: true, // Flag to indicate source of data
+        indexed_at: commit.indexed_at || null,
+      };
     });
-
-    const defaultBranch = repo.default_branch;
-
-    const page = query.page
-      ? Number.parseInt(query.page)
-      : query.cursor
-        ? Number.parseInt(query.cursor)
-        : 1;
-    const per_page = Number.parseInt(query.per_page);
-
-    const { data: commits } = await octokit.request(
-      "GET /repos/{owner}/{repo}/commits",
-      {
-        owner: query.owner,
-        repo: query.repo,
-        sha: defaultBranch,
-        page,
-        per_page,
-      },
-    );
-
-    const commitsWithStatuses = await Promise.all(
-      commits.map(async (commit) => {
-        try {
-          const { data: checkRuns } = await octokit.request(
-            "GET /repos/{owner}/{repo}/commits/{ref}/check-runs",
-            {
-              owner: query.owner,
-              repo: query.repo,
-              ref: commit.sha,
-            },
-          );
-
-          return {
-            id: commit.node_id || commit.sha,
-            oid: commit.sha,
-            abbreviatedOid: commit.sha.substring(0, 7),
-            message: commit.commit.message,
-            authoredDate: commit.commit.author?.date || "",
-            url: commit.html_url,
-            statusCheckRollup:
-              checkRuns.check_runs.length > 0
-                ? {
-                    id: `status-${commit.sha}`,
-                    state: checkRuns.check_runs.some(
-                      (check) => check.conclusion === "failure",
-                    )
-                      ? "FAILURE"
-                      : checkRuns.check_runs.some(
-                            (check) => check.conclusion === "success",
-                          )
-                        ? "SUCCESS"
-                        : "PENDING",
-                    contexts: {
-                      nodes: checkRuns.check_runs.map((check) => ({
-                        id: check.id.toString(),
-                        status: check.status,
-                        name: check.name,
-                        title: check.name,
-                        summary: check.output?.summary || "",
-                        text: check.output?.text || "",
-                        detailsUrl: check.details_url || "",
-                        url: check.url || check.html_url || "",
-                      })),
-                    },
-                  }
-                : null,
-          };
-        } catch (error) {
-          console.warn(
-            `Could not fetch check runs for commit ${commit.sha}:`,
-            error,
-          );
-          return {
-            id: commit.node_id || commit.sha,
-            oid: commit.sha,
-            abbreviatedOid: commit.sha.substring(0, 7),
-            message: commit.commit.message,
-            authoredDate: commit.commit.author?.date || "",
-            url: commit.html_url,
-            statusCheckRollup: null,
-          };
-        }
-      }),
-    );
-
-    // Check if there are more commits (GitHub API doesn't provide this directly)
-    // We'll need to check if we got a full page of results
-    const hasNextPage = commits.length === per_page;
-    const nextPage = hasNextPage ? (page + 1).toString() : null;
-
-    return {
-      id: `branch-${defaultBranch}`,
-      name: defaultBranch,
-      target: {
-        id: `target-${defaultBranch}`,
-        history: {
-          nodes: commitsWithStatuses,
-          pageInfo: {
-            hasNextPage,
-            endCursor: nextPage,
-          },
-        },
-      },
-    };
+    
+    console.log(`[R2API] Returning ${responseData.length} commits`);
+    return { data: responseData };
   } catch (error) {
-    console.error("Error fetching repository commits:", error);
-
-    return {
-      id: "error",
-      name: "error",
-      error: true,
-      message: (error as Error).message,
-      target: {
-        id: "error-target",
-        history: {
-          nodes: [],
-          pageInfo: {
-            hasNextPage: false,
-            endCursor: null,
-          },
-        },
-      },
-    };
+    console.error("[R2API] Error in commits endpoint:", error);
+    
+    throw createError({
+      statusCode: 404,
+      statusMessage: `Commits could not be accessed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    });
   }
 });

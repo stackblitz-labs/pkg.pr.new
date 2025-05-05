@@ -1,6 +1,5 @@
-import type { RestEndpointMethodTypes } from "@octokit/plugin-rest-endpoint-methods";
 import { z } from "zod";
-import { useGithubREST } from "../../../server/utils/octokit";
+import { useR2GitHubService } from "../../../server/utils/r2-service";
 
 const querySchema = z.object({
   text: z.string(),
@@ -8,44 +7,61 @@ const querySchema = z.object({
 
 export default defineEventHandler(async (event) => {
   try {
+    console.log("[R2API] Search endpoint called");
     const query = await getValidatedQuery(event, (data) =>
       querySchema.parse(data),
     );
 
     if (!query.text) {
+      console.log("[R2API] Empty search query, returning empty results");
       return { nodes: [] };
     }
 
-    const octokit = useGithubREST(event);
+    // Use R2 service exclusively for searching
+    console.log(`[R2API] Searching repositories with query: "${query.text}"`);
+    const r2Service = useR2GitHubService(event);
+    
+    // Log R2 storage configuration for debugging
+    console.log(`[R2API] R2 storage configuration: ${JSON.stringify(r2Service.getStorageInfo())}`);
+    
+    // Get search results
+    const repositories = await r2Service.searchRepositories(query.text, 10);
 
-    const { data } = await octokit.request("GET /search/repositories", {
-      q: query.text,
-      per_page: 10,
-    });
+    console.log(`[R2API] Found ${repositories.length} repositories matching the query in R2 storage`);
+    
+    if (repositories.length === 0) {
+      console.log("[R2API] No repositories found in R2 storage matching the query");
+      return { 
+        nodes: [],
+        message: "No matching repositories found in storage"
+      };
+    }
 
-    return {
-      nodes: data.items.map(
-        (
-          repo: RestEndpointMethodTypes["search"]["repos"]["response"]["data"]["items"][0],
-        ) => ({
-          id: repo.id.toString(),
+    // Format the response with detailed logging
+    const formattedResponse = {
+      nodes: repositories.map((repo) => {
+        console.log(`[R2API] Including repository in results: ${repo.owner.login}/${repo.name} (ID: ${repo.id})`);
+        return {
+          id: repo.id,
           name: repo.name,
-          owner: repo.owner
-            ? {
-                id: repo.owner.id.toString(),
-                login: repo.owner.login,
-                avatarUrl: repo.owner.avatar_url,
-              }
-            : null,
-        }),
-      ),
+          owner: {
+            id: repo.owner.id,
+            login: repo.owner.login,
+            avatarUrl: repo.owner.avatar_url,
+          },
+        };
+      }),
     };
+    
+    console.log(`[R2API] Search response prepared with ${formattedResponse.nodes.length} repositories`);
+    return formattedResponse;
   } catch (error) {
-    console.error("Error in repository search:", error);
+    console.error("[R2API] Error in repository search:", error);
+    
     return {
       nodes: [],
       error: true,
-      message: (error as Error).message,
+      message: "Search failed. Only data in storage can be searched.",
     };
   }
 });

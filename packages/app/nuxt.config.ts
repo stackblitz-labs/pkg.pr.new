@@ -51,8 +51,8 @@ export default defineNuxtConfig({
     webhookSecret: process.env.NITRO_WEBHOOK_SECRET || "",
     privateKey: process.env.NITRO_PRIVATE_KEY || "",
     rmStaleKey: process.env.NITRO_RM_STALE_KEY || "",
-    githubToken:
-      process.env.GITHUB_TOKEN || process.env.NITRO_GITHUB_TOKEN || "",
+    // githubToken:
+    //   process.env.GITHUB_TOKEN || process.env.NITRO_GITHUB_TOKEN || "",
     ghBaseUrl: process.env.NITRO_GH_BASE_URL || "https://api.github.com",
     test: process.env.NITRO_TEST || "",
   },
