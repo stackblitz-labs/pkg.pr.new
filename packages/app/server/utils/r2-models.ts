@@ -65,7 +65,7 @@ export interface R2CheckRun {
 // Index metadata
 export interface R2IndexMetadata {
   lastFullIndexTime: string;
-  status: 'idle' | 'indexing';
+  status: "idle" | "indexing";
 }
 
 // Search index structure for efficient searching

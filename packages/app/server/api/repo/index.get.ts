@@ -9,27 +9,41 @@ const querySchema = z.object({
 export default defineEventHandler(async (event) => {
   try {
     console.log("[R2API] Repository index endpoint called");
-    
-    const query = await getValidatedQuery(event, (data) => querySchema.parse(data));
-    console.log(`[R2API] Fetching repository data for ${query.owner}/${query.repo}`);
-    
+
+    const query = await getValidatedQuery(event, (data) =>
+      querySchema.parse(data),
+    );
+    console.log(
+      `[R2API] Fetching repository data for ${query.owner}/${query.repo}`,
+    );
+
     // Use R2 service exclusively
     const r2Service = useR2GitHubService(event);
-    
+
     // Log storage info for debugging
-    console.log(`[R2API] R2 storage configuration: ${JSON.stringify(r2Service.getStorageInfo())}`);
-    
+    console.log(
+      `[R2API] R2 storage configuration: ${JSON.stringify(r2Service.getStorageInfo())}`,
+    );
+
     // Get repository from R2
     const repository = await r2Service.getRepository(query.owner, query.repo);
-    
+
     if (!repository) {
-      console.log(`[R2API] Repository ${query.owner}/${query.repo} not found in R2 storage`);
-      throw new Error(`Repository ${query.owner}/${query.repo} not found in R2 storage`);
+      console.log(
+        `[R2API] Repository ${query.owner}/${query.repo} not found in R2 storage`,
+      );
+      throw new Error(
+        `Repository ${query.owner}/${query.repo} not found in R2 storage`,
+      );
     }
-    
-    console.log(`[R2API] Successfully retrieved repository from R2: ${query.owner}/${query.repo}`);
-    console.log(`[R2API] Repository details: id=${repository.id}, default_branch=${repository.default_branch}, indexed_at=${repository.indexed_at}`);
-    
+
+    console.log(
+      `[R2API] Successfully retrieved repository from R2: ${query.owner}/${query.repo}`,
+    );
+    console.log(
+      `[R2API] Repository details: id=${repository.id}, default_branch=${repository.default_branch}, indexed_at=${repository.indexed_at}`,
+    );
+
     return {
       id: repository.id,
       name: repository.name,
@@ -52,10 +66,10 @@ export default defineEventHandler(async (event) => {
     };
   } catch (error) {
     console.error("[R2API] Error in repository index endpoint:", error);
-    
+
     throw createError({
       statusCode: 404,
-      statusMessage: `Repository not found or could not be accessed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      statusMessage: `Repository not found or could not be accessed: ${error instanceof Error ? error.message : "Unknown error"}`,
     });
   }
 });
