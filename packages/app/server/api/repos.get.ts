@@ -7,16 +7,65 @@ export default defineEventHandler(async (event) => {
     // Use R2 service
     const r2Service = useR2GitHubService(event);
 
-    // Get all repositories from R2
-    const repositories = await r2Service.listAllRepositories();
+    // First, dump all storage keys for debugging
+    console.log("[R2API] Dumping R2 storage structure for debugging");
+    const storageKeys = await r2Service.dumpStorageKeys();
+    console.log(`[R2API] R2 storage has ${storageKeys.total_keys} total keys`);
+
+    // Get sample values to understand the data structure
+    const sampleValues = await r2Service.getSampleValues();
+    console.log(
+      `[R2API] Got ${sampleValues.sample_count || 0} sample values from R2`,
+    );
+
+    // Try to get all repositories directly from storage keys
+    console.log("[R2API] Attempting to scan all keys for repositories");
+    // Use the getStorageAccess method to access storage safely
+    const storageAccess = r2Service.getStorageAccess();
+    const allKeys = await storageAccess.getKeys();
+    const repoKeys = allKeys.filter((key) => key.startsWith("repo:"));
+    console.log(`[R2API] Found ${repoKeys.length} repository keys`);
+
+    // Directly load repositories from keys
+    const loadedRepositories = [];
+    for (const key of repoKeys) {
+      try {
+        const data = await storageAccess.getItem(key);
+        if (data) {
+          const repo = typeof data === "string" ? JSON.parse(data) : data;
+          console.log(
+            `[R2API] Successfully loaded repository from key: ${key}`,
+          );
+          loadedRepositories.push(repo);
+        }
+      } catch (error) {
+        console.error(
+          `[R2API] Error loading repository from key ${key}:`,
+          error,
+        );
+      }
+    }
 
     console.log(
-      `[R2API] Found ${repositories.length} repositories in R2 storage`,
+      `[R2API] Directly loaded ${loadedRepositories.length} repositories from keys`,
+    );
+
+    // Also try the original method
+    const repositories = await r2Service.listAllRepositories();
+    console.log(
+      `[R2API] Found ${repositories.length} repositories using listAllRepositories()`,
+    );
+
+    // Determine which set of repositories to use
+    const effectiveRepositories =
+      loadedRepositories.length > 0 ? loadedRepositories : repositories;
+    console.log(
+      `[R2API] Using ${effectiveRepositories.length} repositories for response`,
     );
 
     // Get latest commit for each repository
     const reposWithLatestCommit = await Promise.all(
-      repositories.map(async (repo) => {
+      effectiveRepositories.map(async (repo) => {
         try {
           const commits = await r2Service.listCommits(
             repo.owner.login,
@@ -79,10 +128,16 @@ export default defineEventHandler(async (event) => {
     const clientDebugInfo = {
       timestamp: new Date().toISOString(),
       storage_info: r2Service.getStorageInfo(),
-      repository_count: repositories.length,
-      repository_names: repositories.map(
+      repository_count: effectiveRepositories.length,
+      repository_names: effectiveRepositories.map(
         (repo) => `${repo.owner.login}/${repo.name}`,
       ),
+      storage_structure: {
+        total_keys: storageKeys.total_keys,
+        key_counts: storageKeys.key_counts,
+        key_samples: storageKeys.key_samples,
+      },
+      sample_values: sampleValues,
     };
 
     return {

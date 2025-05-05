@@ -459,6 +459,125 @@ export class R2GitHubService {
     }
   }
 
+  // Get full details of all keys in the storage for debugging
+  async dumpStorageKeys(): Promise<{
+    total_keys: number;
+    key_counts: Record<string, number>;
+    key_samples: Record<string, string[]>;
+    all_keys: string[];
+  }> {
+    try {
+      this.log("Dumping all storage keys for debugging");
+      const keys = await this.storage.getKeys();
+      this.log(`Found ${keys.length} total keys in storage`);
+
+      // Organize keys by prefix for better debugging
+      const keysByPrefix: Record<string, string[]> = {};
+
+      keys.forEach((key) => {
+        const prefix = key.split(":")[0] || "unknown";
+        if (!keysByPrefix[prefix]) {
+          keysByPrefix[prefix] = [];
+        }
+        keysByPrefix[prefix].push(key);
+      });
+
+      // Count each type
+      const counts: Record<string, number> = {};
+      Object.keys(keysByPrefix).forEach((prefix) => {
+        counts[prefix] = keysByPrefix[prefix].length;
+      });
+
+      this.log(`Key counts by prefix: ${JSON.stringify(counts)}`);
+
+      // Sample a few keys from each prefix (max 5)
+      const samples: Record<string, string[]> = {};
+      Object.keys(keysByPrefix).forEach((prefix) => {
+        samples[prefix] = keysByPrefix[prefix].slice(0, 5);
+      });
+
+      return {
+        total_keys: keys.length,
+        key_counts: counts,
+        key_samples: samples,
+        all_keys: keys,
+      };
+    } catch (error) {
+      this.log(`Error dumping storage keys: ${error}`, true);
+      return {
+        total_keys: 0,
+        key_counts: {},
+        key_samples: {},
+        all_keys: [],
+      };
+    }
+  }
+
+  // Get a few sample values to see the structure
+  async getSampleValues(): Promise<{
+    sample_count: number;
+    samples: Record<string, any>;
+    error?: string;
+  }> {
+    try {
+      this.log("Fetching sample values from storage for debugging");
+      const keys = await this.storage.getKeys();
+
+      if (keys.length === 0) {
+        return {
+          sample_count: 0,
+          samples: {},
+          error: "No keys found in storage",
+        };
+      }
+
+      // Sample up to 5 keys of different types
+      const sampleValues: Record<string, any> = {};
+      const prefixes = ["repo:", "commit:", "check-run:", "search-index"];
+
+      for (const prefix of prefixes) {
+        const matchingKeys = keys
+          .filter((key) => key.startsWith(prefix))
+          .slice(0, 2);
+        if (matchingKeys.length > 0) {
+          sampleValues[prefix] = {};
+          for (const key of matchingKeys) {
+            try {
+              const value = await this.storage.getItem(key);
+              if (value) {
+                sampleValues[prefix][key] =
+                  typeof value === "string" ? JSON.parse(value) : value;
+              }
+            } catch (error) {
+              sampleValues[prefix][key] = `Error parsing value: ${error}`;
+            }
+          }
+        }
+      }
+
+      return {
+        sample_count: Object.keys(sampleValues).length,
+        samples: sampleValues,
+      };
+    } catch (error) {
+      this.log(`Error getting sample values: ${error}`, true);
+      return {
+        sample_count: 0,
+        samples: {},
+        error: `Could not get sample values: ${error}`,
+      };
+    }
+  }
+
+  // Expose the storage for debugging purposes
+  // This is normally not recommended but useful for debugging R2 issues
+  getStorageAccess() {
+    return {
+      getKeys: async () => await this.storage.getKeys(),
+      getItem: async (key: string) => await this.storage.getItem(key),
+    };
+  }
+
   // Index methods - fetching data from GitHub and storing in R2
   async indexRepository(owner: string, repo: string): Promise<void> {
     try {
