@@ -39,11 +39,11 @@ export function generateCommitPublishMessage(
         shaUrl = shaUrl + ".tgz";
       }
 
-      const packageSpec = `${packageManager === "yarn" ? `${packageName}@` : ""}${shaUrl}`;
+      const descriptor = `${packageManager === "yarn" ? `${packageName}@` : ""}${shaUrl}`;
 
       return `
 \`\`\`
-${bin ? binCommands[packageManager] : installCommands[packageManager]} ${packageSpec}
+${bin ? binCommands[packageManager] : installCommands[packageManager]} ${descriptor}
 \`\`\`
       `;
     })
