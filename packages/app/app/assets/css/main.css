@@ -117,3 +117,7 @@ details {
 summary {
   @apply cursor-pointer;
 }
+
+code > pre {
+  @apply rounded-lg overflow-x-scroll bg-transparent! text-sm;
+}

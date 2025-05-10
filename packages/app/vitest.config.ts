@@ -1,4 +1,4 @@
-import { defineConfig } from "vitest/config";
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
@@ -6,21 +6,21 @@ export default defineConfig({
       optimizer: {
         ssr: {
           include: [
-            "@simulacrum/github-api-simulator",
-            "@jsdevtools/ez-spawn",
-            "@octokit",
-            "@nuxt",
-            "@vueuse",
-            "vue",
-            "@iconify",
-            "@tanstack",
-            "query-registry",
+            '@simulacrum/github-api-simulator',
+            '@jsdevtools/ez-spawn',
+            '@octokit',
+            '@nuxt',
+            '@vueuse',
+            'vue',
+            '@iconify',
+            '@tanstack',
+            'query-registry',
           ],
         },
       },
     },
-    environment: "node",
+    environment: 'node',
     testTimeout: 30000,
     hookTimeout: 60000,
   },
-});
+})

@@ -1,15 +1,15 @@
 <script lang="ts" setup>
 definePageMeta({
-  name: "home",
-  mainClass: "",
-});
+  name: 'home',
+  mainClass: '',
+})
 
-const gettingStartedEl = useTemplateRef("getting-started");
+const gettingStartedEl = useTemplateRef('getting-started')
 
 function scrollToGettingStarted() {
   gettingStartedEl.value?.scrollIntoView({
-    behavior: "smooth",
-  });
+    behavior: 'smooth',
+  })
 }
 </script>
 
@@ -18,7 +18,7 @@ function scrollToGettingStarted() {
     <div
       class="my-container flex flex-col items-center gap-4 md:gap-12 min-h-[calc(100vh-80px)]"
     >
-      <img src="/favicon.svg" alt="logo" width="64" height="64" />
+      <img src="/favicon.svg" alt="logo" width="64" height="64">
 
       <RepoSearch />
 
@@ -34,8 +34,7 @@ function scrollToGettingStarted() {
             href="https://github.com/stackblitz-labs/pkg.pr.new"
             target="_blank"
             class="text-primary-500"
-            >pkg.pr.new</a
-          >
+          >pkg.pr.new</a>
         </div>
 
         <div class="flex flex-col mt-2">

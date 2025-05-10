@@ -1,19 +1,19 @@
 <script lang="ts" setup>
 const props = defineProps<{
-  code: string;
-}>();
+  code: string
+}>()
 
-const { copy, isSupported } = useClipboard();
+const { copy, isSupported } = useClipboard()
 
-const toast = useToast();
+const toast = useToast()
 
 function copyCode() {
-  copy(props.code);
+  copy(props.code)
   toast.add({
-    title: "Copied to clipboard",
-    color: "success",
-    icon: "ph-check",
-  });
+    title: 'Copied to clipboard',
+    color: 'success',
+    icon: 'ph-check',
+  })
 }
 </script>
 

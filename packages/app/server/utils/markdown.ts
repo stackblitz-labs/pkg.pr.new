@@ -1,19 +1,20 @@
-import { abbreviateCommitHash, PackageManager } from "@pkg-pr-new/utils";
-import { WorkflowData } from "../types";
+import type { PackageManager } from '@pkg-pr-new/utils'
+import type { WorkflowData } from '../types'
+import { abbreviateCommitHash } from '@pkg-pr-new/utils'
 
 const installCommands: Record<PackageManager, string> = {
-  npm: "npm i",
-  pnpm: "pnpm add",
-  yarn: "yarn add",
-  bun: "bun add",
-};
+  npm: 'npm i',
+  pnpm: 'pnpm add',
+  yarn: 'yarn add',
+  bun: 'bun add',
+}
 
 const binCommands: Record<PackageManager, string> = {
-  npm: "npx",
-  pnpm: "pnpm dlx",
-  yarn: "npx",
-  bun: "bunx",
-};
+  npm: 'npx',
+  pnpm: 'pnpm dlx',
+  yarn: 'npx',
+  bun: 'bunx',
+}
 
 export function generateCommitPublishMessage(
   origin: string,
@@ -24,41 +25,41 @@ export function generateCommitPublishMessage(
   packageManager: PackageManager,
   bin: boolean,
 ) {
-  const isMoreThanFour = packages.length > 4;
+  const isMoreThanFour = packages.length > 4
   const shaMessages = packages
     .map((packageName) => {
       let shaUrl = generatePublishUrl(
-        "sha",
+        'sha',
         origin,
         packageName,
         workflowData,
         compact,
-      );
+      )
 
-      if (packageManager === "yarn") {
-        shaUrl = shaUrl + ".tgz";
+      if (packageManager === 'yarn') {
+        shaUrl = `${shaUrl}.tgz`
       }
 
       return `
 \`\`\`
 ${bin ? binCommands[packageManager] : installCommands[packageManager]} ${shaUrl}
 \`\`\`
-      `;
+      `
     })
     .map((message, i) =>
       isMoreThanFour
         ? createCollapsibleBlock(`<b>${packages[i]}</b>`, message)
         : message,
     )
-    .join("\n");
+    .join('\n')
 
-  const templatesStr = generateTemplatesStr(templates);
+  const templatesStr = generateTemplatesStr(templates)
 
   return `
 ${templatesStr}
 
 ${shaMessages}
-`;
+`
 }
 
 export function generatePullRequestPublishMessage(
@@ -70,10 +71,10 @@ export function generatePullRequestPublishMessage(
   onlyTemplates: boolean,
   checkRunUrl: string,
   packageManager: PackageManager,
-  base: "sha" | "ref",
+  base: 'sha' | 'ref',
   bin: boolean,
 ) {
-  const isMoreThanFour = packages.length > 4;
+  const isMoreThanFour = packages.length > 4
   const refMessages = packages
     .map((packageName) => {
       let refUrl = generatePublishUrl(
@@ -82,74 +83,75 @@ export function generatePullRequestPublishMessage(
         packageName,
         workflowData,
         compact,
-      );
+      )
 
-      if (packageManager === "yarn") {
-        refUrl = refUrl + ".tgz";
+      if (packageManager === 'yarn') {
+        refUrl = `${refUrl}.tgz`
       }
 
       return `
 \`\`\`
 ${bin ? binCommands[packageManager] : installCommands[packageManager]} ${refUrl}
 \`\`\`
-`;
+`
     })
     .map((message, i) =>
       isMoreThanFour
         ? createCollapsibleBlock(`<b>${packages[i]}</b>`, message)
         : message,
     )
-    .join("\n");
+    .join('\n')
 
-  const templatesStr = generateTemplatesStr(templates);
+  const templatesStr = generateTemplatesStr(templates)
 
   return `
 ${templatesStr}
 
-${onlyTemplates ? "" : refMessages}
+${onlyTemplates ? '' : refMessages}
 
 _commit: <a href="${checkRunUrl}"><code>${abbreviateCommitHash(workflowData.sha)}</code></a>_
-`;
+`
 }
 
 function generateTemplatesStr(templates: Record<string, string>) {
-  const entries = Object.entries(templates).filter(([k]) => k !== "default");
-  let str =
-    entries.length === 0 && templates.default
+  const entries = Object.entries(templates).filter(([k]) => k !== 'default')
+  let str
+    = entries.length === 0 && templates.default
       ? `[Open in StackBlitz](${templates.default})`
-      : "";
+      : ''
 
   if (entries.length > 0 && entries.length <= 2) {
     str = [str, ...entries.map(([k, v]) => `[${k}](${v})`)]
       .filter(Boolean)
-      .join(" • ");
-  } else if (entries.length > 2) {
-    str += createCollapsibleBlock(
-      "<b>More templates</b>",
-      `
-${entries.map(([k, v]) => `- [${k}](${v})`).join("\n")}
-`,
-    );
+      .join(' • ')
   }
-  return str;
+  else if (entries.length > 2) {
+    str += createCollapsibleBlock(
+      '<b>More templates</b>',
+      `
+${entries.map(([k, v]) => `- [${k}](${v})`).join('\n')}
+`,
+    )
+  }
+  return str
 }
 
 export function generatePublishUrl(
-  base: "sha" | "ref",
+  base: 'sha' | 'ref',
   origin: string,
   packageName: string,
   workflowData: WorkflowData,
   compact: boolean,
 ) {
-  const tag =
-    base === "sha" ? abbreviateCommitHash(workflowData.sha) : workflowData.ref;
-  const shorter = workflowData.repo === packageName;
+  const tag
+    = base === 'sha' ? abbreviateCommitHash(workflowData.sha) : workflowData.ref
+  const shorter = workflowData.repo === packageName
 
   const urlPath = compact
     ? `/${packageName}@${tag}`
-    : `/${workflowData.owner}${shorter ? "" : `/${workflowData.repo}`}/${packageName}@${tag}`;
+    : `/${workflowData.owner}${shorter ? '' : `/${workflowData.repo}`}/${packageName}@${tag}`
 
-  return `${new URL(urlPath, origin)}`;
+  return `${new URL(urlPath, origin)}`
 }
 
 function createCollapsibleBlock(title: string, body: string) {
@@ -158,5 +160,5 @@ function createCollapsibleBlock(title: string, body: string) {
 ${body}
 </p></details>
       
-    `;
+    `
 }

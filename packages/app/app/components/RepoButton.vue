@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 defineProps<{
-  owner: string;
-  name: string;
-  avatar?: string;
-}>();
+  owner: string
+  name: string
+  avatar?: string
+}>()
 </script>
 
 <template>

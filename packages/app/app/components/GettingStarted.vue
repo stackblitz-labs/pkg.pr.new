@@ -49,7 +49,7 @@
     <GettingStartedStep step="3">
       <div>Done! Enjoy continuous releases on your Pull Requests!</div>
 
-      <img src="/pr-screenshot.png" alt="PR Screenshot" class="rounded-lg" />
+      <img src="/pr-screenshot.png" alt="PR Screenshot" class="rounded-lg">
     </GettingStartedStep>
   </div>
 </template>

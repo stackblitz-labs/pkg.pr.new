@@ -1,6 +1,6 @@
 <script setup lang="ts">
-const colorMode = useColorMode();
-const route = useRoute();
+const colorMode = useColorMode()
+const route = useRoute()
 </script>
 
 <template>
@@ -32,8 +32,8 @@ const route = useRoute();
           color="neutral"
           variant="link"
           @click="
-            colorMode.preference =
-              colorMode.preference === 'dark'
+            colorMode.preference
+              = colorMode.preference === 'dark'
                 ? 'system'
                 : colorMode.preference === 'system'
                   ? 'light'

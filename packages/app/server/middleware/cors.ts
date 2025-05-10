@@ -1,3 +1,3 @@
 export default defineEventHandler((event) => {
-  handleCors(event, {});
-});
+  handleCors(event, {})
+})
