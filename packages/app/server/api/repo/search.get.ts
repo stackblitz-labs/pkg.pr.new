@@ -39,11 +39,10 @@ export default defineEventHandler(async (event) => {
       for (const obj of objects) {
         const parts = parseKey(obj.key);
         const orgRepo = `${parts.org}/${parts.repo}`.toLowerCase();
-        const applies = (
+        const applies =
           parts.org.toLowerCase().includes(searchText) ||
           parts.repo.toLowerCase().includes(searchText) ||
-          orgRepo.includes(searchText)
-        )
+          orgRepo.includes(searchText);
         if (!applies) continue;
 
         const key = `${parts.org}/${parts.repo}`;
@@ -82,6 +81,6 @@ function parseKey(key: string) {
   const parts = key.split(":");
   return {
     org: parts[2],
-    repo: parts[3]
+    repo: parts[3],
   };
 }
