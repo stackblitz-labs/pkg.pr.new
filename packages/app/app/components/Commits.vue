@@ -53,8 +53,8 @@ let shiki: HighlighterCore
 
 onBeforeMount(async () => {
   if (typeof window === 'undefined') {
-    const {loadWasm} = await import('shiki')
-    // @ts-ignore
+    const { loadWasm } = await import('shiki')
+    // @ts-expect-error ignore error
     await loadWasm(import('shiki/onig.wasm'))
   }
 
