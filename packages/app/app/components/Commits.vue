@@ -52,11 +52,11 @@ const colorMode = useColorMode()
 let shiki: HighlighterCore
 
 onBeforeMount(async () => {
-  if (typeof window === 'undefined') {
-    const { loadWasm } = await import('shiki')
-    // @ts-expect-error ignore error
-    await loadWasm(import(/* @vite-ignore */ 'shiki/onig.wasm'))
-  }
+  // if (typeof window === 'undefined') {
+  //   const { loadWasm } = await import('shiki')
+  //   // @ts-expect-error ignore error
+  //   await loadWasm(import(/* @vite-ignore */ 'shiki/onig.wasm'))
+  // }
 
   shiki = createHighlighterCoreSync({
     themes: [githubDark, githubLight],
