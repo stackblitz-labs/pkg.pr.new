@@ -9,10 +9,13 @@ type Params = Omit<WorkflowData, 'sha' | 'ref'> & {
 export default eventHandler(async (event) => {
   const params = getRouterParams(event) as Params
 
-  let [encodedPackageName, longerRefOrSha]
-    = params.packageAndRefOrSha.split('@')
+  const packageAndRefOrShaSplit = params.packageAndRefOrSha.split('@')
+  const encodedPackageName = packageAndRefOrShaSplit[0]
   const packageName = decodeURIComponent(encodedPackageName)
+
+  let longerRefOrSha = packageAndRefOrShaSplit[1]
   longerRefOrSha = longerRefOrSha.split('.tgz')[0] // yarn support
+
   const isSha = isValidGitHash(longerRefOrSha)
   const refOrSha = isSha
     ? abbreviateCommitHash(longerRefOrSha)
