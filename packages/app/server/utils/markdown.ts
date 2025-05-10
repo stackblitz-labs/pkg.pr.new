@@ -1,5 +1,6 @@
-import { abbreviateCommitHash, PackageManager } from "@pkg-pr-new/utils";
-import { WorkflowData } from "../types";
+import type { PackageManager } from "@pkg-pr-new/utils";
+import type { WorkflowData } from "../types";
+import { abbreviateCommitHash } from "@pkg-pr-new/utils";
 
 const installCommands: Record<PackageManager, string> = {
   npm: "npm i",
@@ -36,7 +37,7 @@ export function generateCommitPublishMessage(
       );
 
       if (packageManager === "yarn") {
-        shaUrl = shaUrl + ".tgz";
+        shaUrl = `${shaUrl}.tgz`;
       }
 
       return `
@@ -85,7 +86,7 @@ export function generatePullRequestPublishMessage(
       );
 
       if (packageManager === "yarn") {
-        refUrl = refUrl + ".tgz";
+        refUrl = `${refUrl}.tgz`;
       }
 
       return `

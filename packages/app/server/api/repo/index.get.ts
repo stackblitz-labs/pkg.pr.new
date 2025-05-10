@@ -1,6 +1,5 @@
 import type { H3Event } from "h3";
 import { z } from "zod";
-import { useGithubREST } from "../../../server/utils/octokit";
 
 const querySchema = z.object({
   owner: z.string(),
@@ -8,11 +7,11 @@ const querySchema = z.object({
 });
 
 const getRepoInfo = defineCachedFunction(
-  async (owner: string, repo: string, event?: H3Event) => {
+  async (owner: string, repo: string, event: H3Event) => {
     try {
-      const octokit = useGithubREST(event);
+      const installation = await useOctokitInstallation(event, owner, repo);
 
-      const { data } = await octokit.request("GET /repos/{owner}/{repo}", {
+      const { data } = await installation.request("GET /repos/{owner}/{repo}", {
         owner,
         repo,
       });

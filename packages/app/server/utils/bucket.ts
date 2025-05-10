@@ -1,11 +1,13 @@
-import { prefixStorage, createStorage, joinKeys } from "unstorage";
+import type { H3EventContext } from "h3";
+import type { Cursor, WorkflowData } from "../types";
+import { createStorage, joinKeys, prefixStorage } from "unstorage";
 import cloudflareR2BindingDriver from "unstorage/drivers/cloudflare-r2-binding";
 import { getR2Binding } from "unstorage/drivers/utils/cloudflare";
-import type { H3EventContext } from "h3";
-import { WorkflowData, Cursor } from "../types";
 
 type Binary = Parameters<R2Bucket["put"]>[1];
-type Event = { context: { cloudflare: H3EventContext["cloudflare"] } };
+interface Event {
+  context: { cloudflare: H3EventContext["cloudflare"] };
+}
 
 export const baseKey = "bucket";
 
@@ -49,7 +51,6 @@ export function useBucket(event: Event) {
   return createStorage<Binary>({
     driver: cloudflareR2BindingDriver({
       base: useBucket.key,
-      // @ts-ignore TODO(upstream): fix type mismatch
       binding,
     }),
   });

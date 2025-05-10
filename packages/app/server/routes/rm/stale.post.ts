@@ -26,10 +26,7 @@ export default eventHandler(async (event) => {
 });
 
 async function iterateAndDelete(event: H3Event, opts: R2ListOptions) {
-  const binding =
-    event.context.cloudflare.env.ENV === "production"
-      ? event.context.cloudflare.env.PROD_CR_BUCKET
-      : event.context.cloudflare.env.CR_BUCKET;
+  const binding = useBinding(event);
 
   let truncated = true;
   let cursor: string | undefined;

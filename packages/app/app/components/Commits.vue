@@ -1,6 +1,11 @@
 <script lang="ts" setup>
 import type { RendererObject } from "marked";
+import bash from "@shikijs/langs/bash";
+import githubDark from "@shikijs/themes/github-dark";
+import githubLight from "@shikijs/themes/github-light";
 import { marked } from "marked";
+import { createHighlighterCoreSync, type HighlighterCore } from "shiki/core";
+import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
 
 const props = defineProps<{
   owner: string;
@@ -42,16 +47,47 @@ const selectedCommit = shallowRef<
 // Markdown
 
 // Add target to links
-const renderer: RendererObject = {
-  link(originalLink) {
-    const link = marked.Renderer.prototype.link.call(this, originalLink);
-    return link.replace("<a", "<a target='_blank' rel='noreferrer' ");
-  },
-};
-marked.use({ renderer });
+
+const colorMode = useColorMode();
+let shiki: HighlighterCore;
+
+onBeforeMount(async () => {
+  // if (typeof window === 'undefined') {
+  //   const { loadWasm } = await import('shiki')
+  //   // @ts-expect-error ignore error
+  //   await loadWasm(import(/* @vite-ignore */ 'shiki/onig.wasm'))
+  // }
+
+  shiki = createHighlighterCoreSync({
+    themes: [githubDark, githubLight],
+    langs: [bash],
+    engine: createJavaScriptRegexEngine(),
+  });
+
+  const renderer: RendererObject = {
+    link(originalLink) {
+      const link = marked.Renderer.prototype.link.call(this, originalLink);
+      return link.replace(
+        "<a",
+        "<a target='_blank' rel='noreferrer' class='text-primary underline'",
+      );
+    },
+    code({ text }) {
+      return `<code class="language-bash">${shiki.codeToHtml(text, {
+        theme: colorMode.preference === "dark" ? "github-dark" : "github-light",
+        lang: "bash",
+      })}</code>`;
+    },
+  };
+
+  marked.use({ renderer });
+});
+
+onBeforeUnmount(() => {
+  shiki?.dispose();
+});
 
 // Pagination
-
 const fetching = ref(false);
 const fetchMoreForceDisabled = ref(!commitsWithRelease.value.length);
 
@@ -218,7 +254,7 @@ async function fetchMore() {
           </div>
 
           <div
-            class="max-w-full p-4 border border-gray-100 dark:border-gray-800 rounded-lg prose dark:prose-invert"
+            class="max-w-full p-4 overflow-x-scroll border border-gray-100 dark:border-gray-800 rounded-lg prose dark:prose-invert flex flex-col gap-2"
             v-html="marked(selectedCommit.release.text)"
           />
         </div>

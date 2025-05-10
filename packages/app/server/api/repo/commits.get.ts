@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { useGithubREST } from "../../../server/utils/octokit";
 
 const querySchema = z.object({
   owner: z.string(),
@@ -14,12 +13,19 @@ export default defineEventHandler(async (event) => {
     const query = await getValidatedQuery(event, (data) =>
       querySchema.parse(data),
     );
-    const octokit = useGithubREST(event);
+    const installation = await useOctokitInstallation(
+      event,
+      query.owner,
+      query.repo,
+    );
 
-    const { data: repo } = await octokit.request("GET /repos/{owner}/{repo}", {
-      owner: query.owner,
-      repo: query.repo,
-    });
+    const { data: repo } = await installation.request(
+      "GET /repos/{owner}/{repo}",
+      {
+        owner: query.owner,
+        repo: query.repo,
+      },
+    );
 
     const defaultBranch = repo.default_branch;
 
@@ -30,7 +36,7 @@ export default defineEventHandler(async (event) => {
         : 1;
     const per_page = Number.parseInt(query.per_page);
 
-    const { data: commits } = await octokit.request(
+    const { data: commits } = await installation.request(
       "GET /repos/{owner}/{repo}/commits",
       {
         owner: query.owner,
@@ -44,7 +50,7 @@ export default defineEventHandler(async (event) => {
     const commitsWithStatuses = await Promise.all(
       commits.map(async (commit) => {
         try {
-          const { data: checkRuns } = await octokit.request(
+          const { data: checkRuns } = await installation.request(
             "GET /repos/{owner}/{repo}/commits/{ref}/check-runs",
             {
               owner: query.owner,

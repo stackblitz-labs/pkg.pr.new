@@ -15,14 +15,19 @@ const examples = [
     avatar: "https://avatars.githubusercontent.com/u/65625612?v=4",
   },
   {
+    owner: "rolldown",
+    name: "rolldown",
+    avatar: "https://avatars.githubusercontent.com/u/94954945?s=200&v=4",
+  },
+  {
     owner: "vuejs",
     name: "core",
     avatar: "https://avatars.githubusercontent.com/u/6128107?v=4",
   },
   {
-    owner: "QwikDev",
-    name: "qwik",
-    avatar: "https://avatars.githubusercontent.com/u/138123704?v=4",
+    owner: "sveltejs",
+    name: "svelte",
+    avatar: "https://avatars.githubusercontent.com/u/23617963?s=200&v=4",
   },
   {
     owner: "Tresjs",
