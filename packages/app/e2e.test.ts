@@ -34,7 +34,7 @@ beforeAll(async () => {
   server = await app.listen(3300)
 
   await ezSpawn.async(
-    'pnpm cross-env TEST=true GH_BASE_URL=http://localhost:3300 pnpm --filter=app run build',
+    'pnpm cross-env TEST=true NITRO_GH_BASE_URL=http://localhost:3300 pnpm --filter=app run build',
     [],
     {
       stdio: 'inherit',
