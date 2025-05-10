@@ -55,7 +55,7 @@ onBeforeMount(async () => {
   if (typeof window === 'undefined') {
     const { loadWasm } = await import('shiki')
     // @ts-expect-error ignore error
-    await loadWasm(import('shiki/onig.wasm'))
+    await loadWasm(import(/* @vite-ignore */ 'shiki/onig.wasm'))
   }
 
   shiki = createHighlighterCoreSync({
