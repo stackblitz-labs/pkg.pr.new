@@ -71,7 +71,7 @@ onBeforeMount(async () => {
     },
     code({ text }) {
       return `<code class="language-bash">${shiki.codeToHtml(text, {
-        theme: colorMode.value === 'dark' ? 'github-dark' : 'github-light',
+        theme: colorMode.preference === 'dark' ? 'github-dark' : 'github-light',
         lang: 'bash',
       })}</code>`
     },
@@ -81,7 +81,7 @@ onBeforeMount(async () => {
 })
 
 onBeforeUnmount(() => {
-  shiki.dispose()
+  shiki?.dispose()
 })
 
 // Pagination

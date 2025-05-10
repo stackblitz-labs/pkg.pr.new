@@ -23,21 +23,17 @@ const route = useRoute()
         <UButton
           aria-label="Toggle theme"
           :icon="
-            colorMode.preference === 'dark'
-              ? 'ph-moon'
-              : colorMode.preference === 'light'
-                ? 'ph-sun'
-                : 'ph-moon-stars'
+            colorMode.preference === 'light'
+              ? 'ph-sun'
+              : 'ph-moon-stars'
           "
           color="neutral"
           variant="link"
           @click="
             colorMode.preference
               = colorMode.preference === 'dark'
-                ? 'system'
-                : colorMode.preference === 'system'
-                  ? 'light'
-                  : 'dark'
+                ? 'light'
+                : 'dark'
           "
         />
         <template #fallback>

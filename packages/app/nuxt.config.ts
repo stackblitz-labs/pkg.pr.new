@@ -3,6 +3,7 @@ import { resolve } from 'pathe'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+  sourcemap: true,
   compatibilityDate: '2024-07-30',
 
   // https://nuxt.com/docs/getting-started/upgrade#testing-nuxt-4
@@ -32,7 +33,6 @@ export default defineNuxtConfig({
     preset: 'cloudflare-pages',
     sourceMap: 'inline',
     compatibilityDate: '2024-09-19',
-    // modules: ["nitro-cloudflare-dev"],
     externals: {
       inline: [
         '@octokit',
@@ -51,11 +51,13 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
+    nitro: {
+      envPrefix: 'NITRO_',
+    },
     appId: '',
     webhookSecret: '',
     privateKey: '',
     rmStaleKey: '',
-    githubToken: '',
     ghBaseUrl: 'https://api.github.com',
     test: '',
   },
