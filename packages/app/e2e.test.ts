@@ -203,7 +203,7 @@ describe.sequential.each([
   }, 10_000);
 });
 
-describe("uRL redirects", () => {
+describe("URL redirects", () => {
   describe("standard packages", () => {
     it("redirects full URLs correctly", async () => {
       const response = await fetchWithRedirect("/tinylibs/tinybench@a832a55");
