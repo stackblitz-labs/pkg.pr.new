@@ -28,33 +28,55 @@ export default defineEventHandler(async (event) => {
     let keepGoing = true;
 
     while (uniqueNodes.length < maxNodes && keepGoing && !signal.aborted) {
+      const prefix = `${usePackagesBucket.base}:`;
       const listResult = await r2Binding.list({
-        prefix: usePackagesBucket.base,
+        prefix,
         limit: 1000,
         cursor,
       });
       const { objects, truncated } = listResult;
       cursor = truncated ? listResult.cursor : undefined;
 
-      const parsedObjects = objects.map((obj) => parseKey(obj.key));
-      const filtered = parsedObjects.filter((obj) => {
-        const orgRepo = `${obj.org}/${obj.repo}`.toLowerCase();
-        return (
-          obj.org.toLowerCase().includes(searchText) ||
-          obj.repo.toLowerCase().includes(searchText) ||
-          orgRepo.includes(searchText)
-        );
-      });
+      const repoMap = new Map<string, { org: string; repo: string }>();
 
-      for (const obj of filtered) {
-        const key = `${obj.org}/${obj.repo}`;
+      for (const obj of objects) {
+        const parts = obj.key.split(":");
+        // bucket:package:org:repo:sha:packageName
+        if (parts.length >= 4) {
+          const org = parts[2];
+          const repo = parts[3];
+
+          if (org.includes("/") || repo.includes("/")) {
+            continue;
+          }
+
+          const key = `${org}/${repo}`;
+          if (!repoMap.has(key)) {
+            repoMap.set(key, { org, repo });
+          }
+        }
+      }
+
+      const filteredRepos = Array.from(repoMap.values()).filter(
+        ({ org, repo }) => {
+          const orgRepo = `${org}/${repo}`.toLowerCase();
+          return (
+            org.toLowerCase().includes(searchText) ||
+            repo.toLowerCase().includes(searchText) ||
+            orgRepo.includes(searchText)
+          );
+        },
+      );
+
+      for (const { org, repo } of filteredRepos) {
+        const key = `${org}/${repo}`;
         if (!seen.has(key)) {
           seen.add(key);
           uniqueNodes.push({
-            name: obj.repo,
+            name: repo,
             owner: {
-              login: obj.org,
-              avatarUrl: `https://github.com/${obj.org}.png`,
+              login: org,
+              avatarUrl: `https://github.com/${org}.png`,
             },
           });
           if (uniqueNodes.length >= maxNodes) break;
