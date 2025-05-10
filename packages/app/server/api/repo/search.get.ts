@@ -36,25 +36,24 @@ export default defineEventHandler(async (event) => {
       const { objects, truncated } = listResult;
       cursor = truncated ? listResult.cursor : undefined;
 
-      const parsedObjects = objects.map((obj) => parseKey(obj.key));
-      const filtered = parsedObjects.filter((obj) => {
-        const orgRepo = `${obj.org}/${obj.repo}`.toLowerCase();
-        return (
-          obj.org.toLowerCase().includes(searchText) ||
-          obj.repo.toLowerCase().includes(searchText) ||
+      for (const obj of objects) {
+        const parts = parseKey(obj.key);
+        const orgRepo = `${parts.org}/${parts.repo}`.toLowerCase();
+        const applies = (
+          parts.org.toLowerCase().includes(searchText) ||
+          parts.repo.toLowerCase().includes(searchText) ||
           orgRepo.includes(searchText)
-        );
-      });
+        )
+        if (!applies) continue;
 
-      for (const obj of filtered) {
-        const key = `${obj.org}/${obj.repo}`;
+        const key = `${parts.org}/${parts.repo}`;
         if (!seen.has(key)) {
           seen.add(key);
           uniqueNodes.push({
-            name: obj.repo,
+            name: parts.repo,
             owner: {
-              login: obj.org,
-              avatarUrl: `https://github.com/${obj.org}.png`,
+              login: parts.org,
+              avatarUrl: `https://github.com/${parts.org}.png`,
             },
           });
           if (uniqueNodes.length >= maxNodes) break;
@@ -83,9 +82,6 @@ function parseKey(key: string) {
   const parts = key.split(":");
   return {
     org: parts[2],
-    repo: parts[3],
-    hash: parts[4],
-    suffix: parts[5],
-    key,
+    repo: parts[3]
   };
 }
