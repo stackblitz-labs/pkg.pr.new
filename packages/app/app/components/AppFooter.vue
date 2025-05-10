@@ -9,14 +9,14 @@
         width="117"
         height="24"
         class="not-dark:hidden"
-      >
+      />
       <img
         src="/stackblitz-black.svg"
         alt="StackBlitz"
         width="117"
         height="24"
         class="dark:hidden"
-      >
+      />
     </a>
     <div class="flex gap-3 items-center">
       <div>
@@ -25,12 +25,15 @@
           href="https://github.com/stackblitz-labs"
           target="_blank"
           class="text-primary"
-        >StackBlitz Labs</a>
+          >StackBlitz Labs</a
+        >
       </div>
       <UIcon name="ph-dot" />
       <div>
         UI by
-        <a href="https://github.com/Akryum" target="_blank" class="text-primary">Akryum</a>
+        <a href="https://github.com/Akryum" target="_blank" class="text-primary"
+          >Akryum</a
+        >
       </div>
     </div>
   </footer>

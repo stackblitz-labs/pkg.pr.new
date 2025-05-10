@@ -1,6 +1,6 @@
 <script setup lang="ts">
-const colorMode = useColorMode()
-const route = useRoute()
+const colorMode = useColorMode();
+const route = useRoute();
 </script>
 
 <template>
@@ -22,18 +22,12 @@ const route = useRoute()
       <ClientOnly>
         <UButton
           aria-label="Toggle theme"
-          :icon="
-            colorMode.preference === 'light'
-              ? 'ph-sun'
-              : 'ph-moon-stars'
-          "
+          :icon="colorMode.preference === 'light' ? 'ph-sun' : 'ph-moon-stars'"
           color="neutral"
           variant="link"
           @click="
-            colorMode.preference
-              = colorMode.preference === 'dark'
-                ? 'light'
-                : 'dark'
+            colorMode.preference =
+              colorMode.preference === 'dark' ? 'light' : 'dark'
           "
         />
         <template #fallback>

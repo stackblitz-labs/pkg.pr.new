@@ -1,55 +1,55 @@
 <script lang="ts" setup>
-import type { RendererObject } from 'marked'
-import bash from '@shikijs/langs/bash'
-import githubDark from '@shikijs/themes/github-dark'
-import githubLight from '@shikijs/themes/github-light'
-import { marked } from 'marked'
-import { createHighlighterCoreSync, type HighlighterCore } from 'shiki/core'
-import { createJavaScriptRegexEngine } from 'shiki/engine/javascript'
+import type { RendererObject } from "marked";
+import bash from "@shikijs/langs/bash";
+import githubDark from "@shikijs/themes/github-dark";
+import githubLight from "@shikijs/themes/github-light";
+import { marked } from "marked";
+import { createHighlighterCoreSync, type HighlighterCore } from "shiki/core";
+import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
 
 const props = defineProps<{
-  owner: string
-  repo: string
-}>()
+  owner: string;
+  repo: string;
+}>();
 
-const data = await $fetch('/api/repo/commits', {
+const data = await $fetch("/api/repo/commits", {
   query: {
     owner: props.owner,
     repo: props.repo,
   },
-})
+});
 
 if (!data) {
-  throw createError('Could not load Commits')
+  throw createError("Could not load Commits");
 }
 
-const branch = shallowReactive(data)
+const branch = shallowReactive(data);
 
 const commitsWithRelease = computed(() =>
   branch.target.history.nodes
-    .filter(commit =>
+    .filter((commit) =>
       commit.statusCheckRollup?.contexts.nodes.some(
-        context => context.name === 'Continuous Releases',
+        (context) => context.name === "Continuous Releases",
       ),
     )
-    .map(commit => ({
+    .map((commit) => ({
       ...commit,
       release: commit.statusCheckRollup.contexts.nodes.find(
-        context => context.name === 'Continuous Releases',
+        (context) => context.name === "Continuous Releases",
       )!,
     })),
-)
+);
 
 const selectedCommit = shallowRef<
   (typeof commitsWithRelease.value)[number] | null
->(null)
+>(null);
 
 // Markdown
 
 // Add target to links
 
-const colorMode = useColorMode()
-let shiki: HighlighterCore
+const colorMode = useColorMode();
+let shiki: HighlighterCore;
 
 onBeforeMount(async () => {
   // if (typeof window === 'undefined') {
@@ -62,55 +62,58 @@ onBeforeMount(async () => {
     themes: [githubDark, githubLight],
     langs: [bash],
     engine: createJavaScriptRegexEngine(),
-  })
+  });
 
   const renderer: RendererObject = {
     link(originalLink) {
-      const link = marked.Renderer.prototype.link.call(this, originalLink)
-      return link.replace('<a', '<a target=\'_blank\' rel=\'noreferrer\' class=\'text-primary underline\'')
+      const link = marked.Renderer.prototype.link.call(this, originalLink);
+      return link.replace(
+        "<a",
+        "<a target='_blank' rel='noreferrer' class='text-primary underline'",
+      );
     },
     code({ text }) {
       return `<code class="language-bash">${shiki.codeToHtml(text, {
-        theme: colorMode.preference === 'dark' ? 'github-dark' : 'github-light',
-        lang: 'bash',
-      })}</code>`
+        theme: colorMode.preference === "dark" ? "github-dark" : "github-light",
+        lang: "bash",
+      })}</code>`;
     },
-  }
+  };
 
-  marked.use({ renderer })
-})
+  marked.use({ renderer });
+});
 
 onBeforeUnmount(() => {
-  shiki?.dispose()
-})
+  shiki?.dispose();
+});
 
 // Pagination
-const fetching = ref(false)
-const fetchMoreForceDisabled = ref(!commitsWithRelease.value.length)
+const fetching = ref(false);
+const fetchMoreForceDisabled = ref(!commitsWithRelease.value.length);
 
 async function fetchMore() {
   if (!branch.target.history.pageInfo.hasNextPage) {
-    return
+    return;
   }
 
   if (fetching.value) {
-    return
+    return;
   }
 
   try {
-    fetching.value = true
+    fetching.value = true;
 
-    const cursor = branch.target.history.pageInfo.endCursor
+    const cursor = branch.target.history.pageInfo.endCursor;
 
-    const result = await $fetch('/api/repo/commits', {
+    const result = await $fetch("/api/repo/commits", {
       query: {
         owner: props.owner,
         repo: props.repo,
         cursor,
       },
-    })
+    });
 
-    const count = commitsWithRelease.value.length
+    const count = commitsWithRelease.value.length;
 
     branch.target = {
       ...branch.target,
@@ -119,14 +122,13 @@ async function fetchMore() {
         nodes: [...branch.target.history.nodes, ...result.target.history.nodes],
         pageInfo: result.target.history.pageInfo,
       },
-    }
+    };
 
     if (count === commitsWithRelease.value.length) {
-      fetchMoreForceDisabled.value = true
+      fetchMoreForceDisabled.value = true;
     }
-  }
-  finally {
-    fetching.value = false
+  } finally {
+    fetching.value = false;
   }
 }
 </script>
@@ -196,16 +198,15 @@ async function fetchMore() {
       class="flex flex-col items-center gap-4 border border-gray-100 dark:border-gray-800 rounded-xl p-8"
     >
       <UIcon name="i-ph-crane-tower-light" class="text-6xl opacity-50" />
-      <p class="text-center text-lg">
-        No Continuous Releases found
-      </p>
+      <p class="text-center text-lg">No Continuous Releases found</p>
       <p class="text-center">
         Setup continuous releases with
         <a
           href="https://github.com/stackblitz-labs/pkg.pr.new"
           target="_blank"
           class="text-primary"
-        >pkg.pr.new</a>
+          >pkg.pr.new</a
+        >
         first!
       </p>
     </div>
