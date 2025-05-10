@@ -4,7 +4,7 @@ import bash from '@shikijs/langs/bash'
 import githubDark from '@shikijs/themes/github-dark'
 import githubLight from '@shikijs/themes/github-light'
 import { marked } from 'marked'
-import { createHighlighterCoreSync } from 'shiki/core'
+import { createHighlighterCoreSync, type HighlighterCore } from 'shiki/core'
 import { createJavaScriptRegexEngine } from 'shiki/engine/javascript'
 
 const props = defineProps<{
@@ -51,7 +51,13 @@ const selectedCommit = shallowRef<
 const colorMode = useColorMode()
 let shiki: HighlighterCore
 
-onBeforeMount(() => {
+onBeforeMount(async () => {
+  if (typeof window === 'undefined') {
+    const {loadWasm} = await import('shiki')
+    // @ts-ignore
+    await loadWasm(import('shiki/onig.wasm'))
+  }
+
   shiki = createHighlighterCoreSync({
     themes: [githubDark, githubLight],
     langs: [bash],
