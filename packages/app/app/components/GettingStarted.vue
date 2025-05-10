@@ -51,5 +51,28 @@
 
       <img src="/pr-screenshot.png" alt="PR Screenshot" class="rounded-lg" />
     </GettingStartedStep>
+
+    <GettingStartedStep step="4">
+      <div>
+        Promote pkg.pr.new by adding a badge to your repository README:
+      </div>
+
+      <CodeSnippet code="[![pkg.pr.new](https://pkg.pr.new/badge?owner=OWNER&repo=REPO)](https://pkg.pr.new/view/OWNER/REPO)" />
+
+      <div class="text-gray-500 text-sm">
+        Replace OWNER and REPO with your GitHub username/organization and repository name.
+      </div>
+
+      <template #actions>
+        <UButton
+          href="https://github.com/stackblitz-labs/pkg.pr.new?tab=readme-ov-file#badge"
+          target="_blank"
+          icon="ph-badge"
+          trailing-icon="ph-arrow-square-out"
+        >
+          Learn more about badge options
+        </UButton>
+      </template>
+    </GettingStartedStep>
   </div>
 </template>
