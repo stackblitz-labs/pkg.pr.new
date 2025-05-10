@@ -53,14 +53,15 @@
     </GettingStartedStep>
 
     <GettingStartedStep step="4">
-      <div>
-        Promote pkg.pr.new by adding a badge to your repository README:
-      </div>
+      <div>Promote pkg.pr.new by adding a badge to your repository README:</div>
 
-      <CodeSnippet code="[![pkg.pr.new](https://pkg.pr.new/badge?owner=OWNER&repo=REPO)](https://pkg.pr.new/view/OWNER/REPO)" />
+      <CodeSnippet
+        code="[![pkg.pr.new](https://pkg.pr.new/badge?owner=OWNER&repo=REPO)](https://pkg.pr.new/view/OWNER/REPO)"
+      />
 
       <div class="text-gray-500 text-sm">
-        Replace OWNER and REPO with your GitHub username/organization and repository name.
+        Replace OWNER and REPO with your GitHub username/organization and
+        repository name.
       </div>
 
       <template #actions>

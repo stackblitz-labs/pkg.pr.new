@@ -1,6 +1,5 @@
 [![pkg.pr.new](https://pkg.pr.new/badge?owner=stackblitz-labs&repo=pkg.pr.new)](https://pkg.pr.new/view/stackblitz-labs/pkg.pr.new)
 
-
 <p align="center"><img src="https://github.com/user-attachments/assets/314d5112-f67f-4758-82bf-7b0c19c01ba6" /></p>
 
 # pkg.pr.new <span><img src="https://emoji.slack-edge.com/TFHDVN56F/stackblitz/fd010078dcccebca.png" width="30" /></span>
