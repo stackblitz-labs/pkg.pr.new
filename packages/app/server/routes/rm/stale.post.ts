@@ -8,24 +8,25 @@ export default eventHandler(async (event) => {
   //     status: 403,
   //   });
   // }
-  return {
-    ok: true,
-    removed: [
-      ...(await Promise.all([
-        iterateAndDelete(event, {
-          prefix: usePackagesBucket.base,
-          limit: 100,
-        }),
-        iterateAndDelete(event, {
-          prefix: useTemplatesBucket.base,
-          limit: 100,
-        }),
-      ]).then((results) => results.flat())),
-    ],
-  };
+  const { readable, writable } = new TransformStream()
+
+  await iterateAndDelete(event, writable, {
+    prefix: usePackagesBucket.base,
+    limit: 100,
+  })
+
+  await iterateAndDelete(event, writable, {
+    prefix: useTemplatesBucket.base,
+    limit: 100,
+  })
+
+  writable.close()
+
+  return readable
 });
 
-async function iterateAndDelete(event: H3Event, opts: R2ListOptions) {
+async function iterateAndDelete(event: H3Event, writable: WritableStream, opts: R2ListOptions) {
+  const writer = writable.getWriter()
   const binding = useBinding(event);
 
   let truncated = true;
@@ -34,7 +35,6 @@ async function iterateAndDelete(event: H3Event, opts: R2ListOptions) {
   const downloadedAtBucket = useDownloadedAtBucket(event);
   const today = Date.parse(new Date().toString());
 
-  const removed: { key: string; uploaded: Date; downloadedAt: Date }[] = [];
   while (truncated) {
     // TODO: Avoid using context.cloudflare and migrate to unstorage, but it does not have truncated for now
     const next = await binding.list({
@@ -45,11 +45,11 @@ async function iterateAndDelete(event: H3Event, opts: R2ListOptions) {
       const uploaded = Date.parse(object.uploaded.toString());
       // remove the object anyway if it's 6 months old already
       if ((today - uploaded) / (1000 * 3600 * 24 * 30 * 6) >= 1) {
-        removed.push({
+        writer.write(JSON.stringify({
           key: object.key,
           uploaded: new Date(object.uploaded),
           downloadedAt: new Date((await downloadedAtBucket.getItem(object.key))!),
-        });
+        }) + "\n")
         // event.context.cloudflare.context.waitUntil(binding.delete(object.key));
         // event.context.cloudflare.context.waitUntil(
         //   downloadedAtBucket.removeItem(object.key),
@@ -61,11 +61,11 @@ async function iterateAndDelete(event: H3Event, opts: R2ListOptions) {
         !((today - downloadedAt) / (1000 * 3600 * 24 * 30) < 1) &&
         (today - uploaded) / (1000 * 3600 * 24 * 30) >= 1
       ) {
-        removed.push({
+        writer.write(JSON.stringify({
           key: object.key,
           uploaded: new Date(object.uploaded),
           downloadedAt: new Date(downloadedAt),
-        });
+        }) + "\n")
         // event.context.cloudflare.context.waitUntil(binding.delete(object.key));
         // event.context.cloudflare.context.waitUntil(
         //   downloadedAtBucket.removeItem(object.key),
@@ -78,5 +78,5 @@ async function iterateAndDelete(event: H3Event, opts: R2ListOptions) {
       cursor = next.cursor;
     }
   }
-  return removed;
+  writer.releaseLock()
 }
