@@ -2,6 +2,7 @@ import type { H3Event } from "h3";
 
 export default eventHandler(async (event) => {
   const rmStaleKeyHeader = getHeader(event, "sb-rm-stale-key");
+  const signal = toWebRequest(event).signal;
   const { rmStaleKey } = useRuntimeConfig(event);
   // if (rmStaleKeyHeader !== rmStaleKey) {
   //   throw createError({
@@ -10,12 +11,12 @@ export default eventHandler(async (event) => {
   // }
   const { readable, writable } = new TransformStream()
 
-  await iterateAndDelete(event, writable, {
+  await iterateAndDelete(event, writable, signal, {
     prefix: usePackagesBucket.base,
     limit: 100,
   })
 
-  await iterateAndDelete(event, writable, {
+  await iterateAndDelete(event, writable, signal, {
     prefix: useTemplatesBucket.base,
     limit: 100,
   })
@@ -25,7 +26,7 @@ export default eventHandler(async (event) => {
   return readable
 });
 
-async function iterateAndDelete(event: H3Event, writable: WritableStream, opts: R2ListOptions) {
+async function iterateAndDelete(event: H3Event, writable: WritableStream, signal: AbortSignal, opts: R2ListOptions) {
   const writer = writable.getWriter()
   const binding = useBinding(event);
 
@@ -35,13 +36,16 @@ async function iterateAndDelete(event: H3Event, writable: WritableStream, opts: 
   const downloadedAtBucket = useDownloadedAtBucket(event);
   const today = Date.parse(new Date().toString());
 
-  while (truncated) {
+  while (truncated && !signal.aborted) {
     // TODO: Avoid using context.cloudflare and migrate to unstorage, but it does not have truncated for now
     const next = await binding.list({
       ...opts,
       cursor,
     });
     for (const object of next.objects) {
+      if (signal.aborted) {
+        break;
+      }
       const uploaded = Date.parse(object.uploaded.toString());
       // remove the object anyway if it's 6 months old already
       if ((today - uploaded) / (1000 * 3600 * 24 * 30 * 6) >= 1) {
