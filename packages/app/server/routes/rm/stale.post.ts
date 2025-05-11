@@ -3,11 +3,11 @@ import type { H3Event } from "h3";
 export default eventHandler(async (event) => {
   const rmStaleKeyHeader = getHeader(event, "sb-rm-stale-key");
   const { rmStaleKey } = useRuntimeConfig(event);
-  if (rmStaleKeyHeader !== rmStaleKey) {
-    throw createError({
-      status: 403,
-    });
-  }
+  // if (rmStaleKeyHeader !== rmStaleKey) {
+  //   throw createError({
+  //     status: 403,
+  //   });
+  // }
   return {
     ok: true,
     removed: [
