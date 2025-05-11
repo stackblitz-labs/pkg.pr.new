@@ -21,20 +21,16 @@ function copyBadgeCode() {
 </script>
 
 <template>
-  <div
-    class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
-  >
-    <span class="text-xs font-medium">Add a badge to your README</span>
-
-    <img :src="badgeUrl" :alt="`${repo} badge`" height="16" class="h-4" />
+  <div class="inline-flex items-center gap-1">
+    <img :src="badgeUrl" :alt="`${repo} badge`" class="h-[20px]" />
 
     <UButton
       @click="copyBadgeCode"
       size="xs"
-      color="primary"
+      color="gray"
       :icon="copied ? 'i-ph-check-bold' : 'i-ph-copy'"
       variant="ghost"
-      class="ml-auto"
+      class="!p-1"
     />
   </div>
 </template>

@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
 
   const query = getQuery(event);
   const style = (query.style as string) || "flat";
-  const color = (query.color as string) || "0ea5e9";
+  const color = (query.color as string) || "000";
 
   if (!owner || !repo) {
     throw createError({
@@ -25,10 +25,10 @@ export default defineEventHandler(async (event) => {
   }
 
   const logoBase64 = getPkgPrNewLogoBase64();
-  const shieldsUrl = `https://img.shields.io/static/v1?label=&message=${encodeURIComponent(repo)}&color=${color}&style=${style}&logo=data:image/svg+xml;base64,${logoBase64}`;
+  const shieldsUrl = `https://img.shields.io/static/v1?label=&message=${encodeURIComponent(repo)}&color=${color}&style=${style}&logo=data:image/svg+xml;base64,${logoBase64}&logoWidth=16&logoPosition=start`;
 
   setHeader(event, "Content-Type", "image/svg+xml");
-  setHeader(event, "Cache-Control", "public, max-age=86400"); // Cache for 24 hours
+  setHeader(event, "Cache-Control", "public, max-age=86400");
 
   const response = await fetch(shieldsUrl);
   const svg = await response.text();

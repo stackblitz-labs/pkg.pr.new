@@ -78,10 +78,13 @@ useSeoMeta({
           variant="link"
         />
       </div>
-    </div>
 
-    <div class="max-w-xl mx-auto w-full">
-      <BadgeGenerator :owner="repository.owner.login" :repo="repository.name" />
+      <div class="flex justify-center mt-2">
+        <BadgeGenerator
+          :owner="repository.owner.login"
+          :repo="repository.name"
+        />
+      </div>
     </div>
 
     <Commits :owner="repository.owner.login" :repo="repository.name" />
