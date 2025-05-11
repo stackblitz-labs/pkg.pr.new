@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed } from "vue";
+
 definePageMeta({
   name: "repo:details",
 });
@@ -76,6 +78,10 @@ useSeoMeta({
           variant="link"
         />
       </div>
+    </div>
+
+    <div class="max-w-xl mx-auto w-full">
+      <BadgeGenerator :owner="repository.owner.login" :repo="repository.name" />
     </div>
 
     <Commits :owner="repository.owner.login" :repo="repository.name" />
