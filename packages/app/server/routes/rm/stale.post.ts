@@ -21,7 +21,7 @@ export default eventHandler(async (event) => {
         prefix: useTemplatesBucket.base,
         limit: 100,
       })
-      writable.close()
+      await writable.close()
     })()
   )
 
