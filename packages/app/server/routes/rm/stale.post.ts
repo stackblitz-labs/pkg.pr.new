@@ -11,19 +11,19 @@ export default eventHandler(async (event) => {
   // }
   const { readable, writable } = new TransformStream()
 
-  event.context.cloudflare.context.waitUntil(Promise.all([
-    iterateAndDelete(event, writable, signal, {
-      prefix: usePackagesBucket.base,
-      limit: 100,
-    }),
-
-    iterateAndDelete(event, writable, signal, {
-      prefix: useTemplatesBucket.base,
-      limit: 100,
-    })
-  ]).then(() => {
-    writable.close()
-  }))
+  event.context.cloudflare.context.waitUntil(
+    (async () => {
+      await iterateAndDelete(event, writable, signal, {
+        prefix: usePackagesBucket.base,
+        limit: 100,
+      })
+      await iterateAndDelete(event, writable, signal, {
+        prefix: useTemplatesBucket.base,
+        limit: 100,
+      })
+      writable.close()
+    })()
+  )
 
   return readable
 });
@@ -51,7 +51,7 @@ async function iterateAndDelete(event: H3Event, writable: WritableStream, signal
       const uploaded = Date.parse(object.uploaded.toString());
       // remove the object anyway if it's 6 months old already
       if ((today - uploaded) / (1000 * 3600 * 24 * 30 * 6) >= 1) {
-        writer.write(JSON.stringify({
+        await writer.write(JSON.stringify({
           key: object.key,
           uploaded: new Date(object.uploaded),
           downloadedAt: new Date((await downloadedAtBucket.getItem(object.key))!),
@@ -67,7 +67,7 @@ async function iterateAndDelete(event: H3Event, writable: WritableStream, signal
         !((today - downloadedAt) / (1000 * 3600 * 24 * 30) < 1) &&
         (today - uploaded) / (1000 * 3600 * 24 * 30) >= 1
       ) {
-        writer.write(JSON.stringify({
+        await writer.write(JSON.stringify({
           key: object.key,
           uploaded: new Date(object.uploaded),
           downloadedAt: new Date(downloadedAt),
