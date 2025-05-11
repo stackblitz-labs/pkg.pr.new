@@ -27,7 +27,7 @@ export default defineEventHandler(async (event) => {
   const svg = await response.text();
 
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <a xlink:href="${BASE_URL}/view/${owner}/${repo}">
+    <a xlink:href="${BASE_URL}/~/${owner}/${repo}">
       ${svg}
     </a>
   </svg>`;
