@@ -34,7 +34,7 @@ async function iterateAndDelete(event: H3Event, opts: R2ListOptions) {
   const downloadedAtBucket = useDownloadedAtBucket(event);
   const today = Date.parse(new Date().toString());
 
-  const removed: string[] = [];
+  const removed: { key: string; uploaded: Date; downloadedAt: Date }[] = [];
   while (truncated) {
     // TODO: Avoid using context.cloudflare and migrate to unstorage, but it does not have truncated for now
     const next = await binding.list({
@@ -45,11 +45,15 @@ async function iterateAndDelete(event: H3Event, opts: R2ListOptions) {
       const uploaded = Date.parse(object.uploaded.toString());
       // remove the object anyway if it's 6 months old already
       if ((today - uploaded) / (1000 * 3600 * 24 * 30 * 6) >= 1) {
-        removed.push(object.key);
-        event.context.cloudflare.context.waitUntil(binding.delete(object.key));
-        event.context.cloudflare.context.waitUntil(
-          downloadedAtBucket.removeItem(object.key),
-        );
+        removed.push({
+          key: object.key,
+          uploaded: new Date(object.uploaded),
+          downloadedAt: new Date((await downloadedAtBucket.getItem(object.key))!),
+        });
+        // event.context.cloudflare.context.waitUntil(binding.delete(object.key));
+        // event.context.cloudflare.context.waitUntil(
+        //   downloadedAtBucket.removeItem(object.key),
+        // );
       }
       const downloadedAt = (await downloadedAtBucket.getItem(object.key))!;
       // if it has not been downloaded in the last month and it's at least 1 month old
@@ -57,11 +61,15 @@ async function iterateAndDelete(event: H3Event, opts: R2ListOptions) {
         !((today - downloadedAt) / (1000 * 3600 * 24 * 30) < 1) &&
         (today - uploaded) / (1000 * 3600 * 24 * 30) >= 1
       ) {
-        removed.push(object.key);
-        event.context.cloudflare.context.waitUntil(binding.delete(object.key));
-        event.context.cloudflare.context.waitUntil(
-          downloadedAtBucket.removeItem(object.key),
-        );
+        removed.push({
+          key: object.key,
+          uploaded: new Date(object.uploaded),
+          downloadedAt: new Date(downloadedAt),
+        });
+        // event.context.cloudflare.context.waitUntil(binding.delete(object.key));
+        // event.context.cloudflare.context.waitUntil(
+        //   downloadedAtBucket.removeItem(object.key),
+        // );
       }
     }
 
