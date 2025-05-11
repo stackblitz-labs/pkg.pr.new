@@ -11,17 +11,19 @@ export default eventHandler(async (event) => {
   // }
   const { readable, writable } = new TransformStream()
 
-  await iterateAndDelete(event, writable, signal, {
-    prefix: usePackagesBucket.base,
-    limit: 100,
-  })
+  event.context.cloudflare.context.waitUntil(Promise.all([
+    iterateAndDelete(event, writable, signal, {
+      prefix: usePackagesBucket.base,
+      limit: 100,
+    }),
 
-  await iterateAndDelete(event, writable, signal, {
-    prefix: useTemplatesBucket.base,
-    limit: 100,
-  })
-
-  writable.close()
+    iterateAndDelete(event, writable, signal, {
+      prefix: useTemplatesBucket.base,
+      limit: 100,
+    })
+  ]).then(() => {
+    writable.close()
+  }))
 
   return readable
 });
