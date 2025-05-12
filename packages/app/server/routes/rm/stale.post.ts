@@ -60,11 +60,6 @@ async function iterateAndDelete(event: H3Event, writable: WritableStream, signal
         break;
       }
       const uploaded = Date.parse(object.uploaded.toString());
-      await writer.write(new TextEncoder().encode(JSON.stringify({
-        key: object.key,
-        uploaded: new Date(object.uploaded),
-        downloadedAt: new Date((await downloadedAtBucket.getItem(object.key))!),
-      }) + "\n"))
       // remove the object anyway if it's 6 months old already
       // Use calendar-accurate 6 months check
       const uploadedDate = new Date(uploaded);
