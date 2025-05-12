@@ -33,7 +33,7 @@ export default eventHandler(async (event) => {
     })()
   )
 
-  return sendStream(event, readable)
+  return readable
 });
 
 async function iterateAndDelete(event: H3Event, writable: WritableStream, signal: AbortSignal, opts: R2ListOptions) {
