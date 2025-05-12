@@ -66,10 +66,11 @@ async function iterateAndDelete(event: H3Event, writable: WritableStream, signal
       const sixMonthsAgo = new Date(today);
       sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
       if (uploadedDate <= sixMonthsAgo) {
+        const downloadedAt = (await downloadedAtBucket.getItem(object.key))!;
         await writer.write(new TextEncoder().encode(JSON.stringify({
           key: object.key,
           uploaded: new Date(object.uploaded),
-          downloadedAt: new Date((await downloadedAtBucket.getItem(object.key))!),
+          downloadedAt: downloadedAt ? new Date(downloadedAt) : null,
         }) + "\n"))
         // event.context.cloudflare.context.waitUntil(binding.delete(object.key));
         // event.context.cloudflare.context.waitUntil(
