@@ -17,21 +17,21 @@ export default eventHandler(async (event) => {
 
   event.waitUntil(
     (async () => {
-      // const writer = writable.getWriter()
-      // console.log('here')
-      // await writer.ready
-      // await writer.write("start\n")
-      // writer.releaseLock()
+      const writer = writable.getWriter()
+      console.log('here')
+      await writer.ready
+      await writer.write(new TextEncoder().encode("start\n"))
+      writer.releaseLock()
 
-      await iterateAndDelete(event, writable, signal, {
-        prefix: usePackagesBucket.base,
-        limit: 100,
-      })
-      await iterateAndDelete(event, writable, signal, {
-        prefix: useTemplatesBucket.base,
-        limit: 100,
-      })
-      await writable.close()
+      // await iterateAndDelete(event, writable, signal, {
+      //   prefix: usePackagesBucket.base,
+      //   limit: 100,
+      // })
+      // await iterateAndDelete(event, writable, signal, {
+      //   prefix: useTemplatesBucket.base,
+      //   limit: 100,
+      // })
+      // await writable.close()
     })()
   )
 
