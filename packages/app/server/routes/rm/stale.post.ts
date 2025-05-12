@@ -15,7 +15,7 @@ export default eventHandler(async (event) => {
     });
   }
 
-  const { readable, writable } = new TransformStream()
+  const { readable, writable } = new TransformStream();
 
   event.waitUntil(
     (async () => {
@@ -28,21 +28,26 @@ export default eventHandler(async (event) => {
       await iterateAndDelete(event, writable, signal, {
         prefix: usePackagesBucket.base,
         limit: 100,
-      })
+      });
       await iterateAndDelete(event, writable, signal, {
         prefix: useTemplatesBucket.base,
         limit: 100,
-      })
-      await writable.close()
-    })()
-  )
+      });
+      await writable.close();
+    })(),
+  );
 
-  return readable
+  return readable;
 });
 
-async function iterateAndDelete(event: H3Event, writable: WritableStream, signal: AbortSignal, opts: R2ListOptions) {
-  const writer = writable.getWriter()
-  await writer.ready
+async function iterateAndDelete(
+  event: H3Event,
+  writable: WritableStream,
+  signal: AbortSignal,
+  opts: R2ListOptions,
+) {
+  const writer = writable.getWriter();
+  await writer.ready;
   const binding = useBinding(event);
 
   let truncated = true;
@@ -69,17 +74,21 @@ async function iterateAndDelete(event: H3Event, writable: WritableStream, signal
       sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
       if (uploadedDate <= sixMonthsAgo) {
         const downloadedAt = (await downloadedAtBucket.getItem(object.key))!;
-        await writer.write(new TextEncoder().encode(JSON.stringify({
-          key: object.key,
-          uploaded: new Date(object.uploaded),
-          downloadedAt: downloadedAt ? new Date(downloadedAt) : null,
-        }) + "\n"))
+        await writer.write(
+          new TextEncoder().encode(
+            JSON.stringify({
+              key: object.key,
+              uploaded: new Date(object.uploaded),
+              downloadedAt: downloadedAt ? new Date(downloadedAt) : null,
+            }) + "\n",
+          ),
+        );
         // event.context.cloudflare.context.waitUntil(binding.delete(object.key));
         // event.context.cloudflare.context.waitUntil(
         //   downloadedAtBucket.removeItem(object.key),
         // );
       }
-      const downloadedAt = (await downloadedAtBucket.getItem(object.key));
+      const downloadedAt = await downloadedAtBucket.getItem(object.key);
 
       if (!downloadedAt) {
         continue;
@@ -90,15 +99,16 @@ async function iterateAndDelete(event: H3Event, writable: WritableStream, signal
       const oneMonthAgo = new Date(today);
       oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
       const uploadedDate2 = new Date(uploaded); // uploaded already parsed above
-      if (
-        downloadedAtDate <= oneMonthAgo &&
-        uploadedDate2 <= oneMonthAgo
-      ) {
-        await writer.write(new TextEncoder().encode(JSON.stringify({
-          key: object.key,
-          uploaded: new Date(object.uploaded),
-          downloadedAt: new Date(downloadedAt),
-        }) + "\n"))
+      if (downloadedAtDate <= oneMonthAgo && uploadedDate2 <= oneMonthAgo) {
+        await writer.write(
+          new TextEncoder().encode(
+            JSON.stringify({
+              key: object.key,
+              uploaded: new Date(object.uploaded),
+              downloadedAt: new Date(downloadedAt),
+            }) + "\n",
+          ),
+        );
         // event.context.cloudflare.context.waitUntil(binding.delete(object.key));
         // event.context.cloudflare.context.waitUntil(
         //   downloadedAtBucket.removeItem(object.key),
@@ -111,5 +121,5 @@ async function iterateAndDelete(event: H3Event, writable: WritableStream, signal
       cursor = next.cursor;
     }
   }
-  writer.releaseLock()
+  writer.releaseLock();
 }
