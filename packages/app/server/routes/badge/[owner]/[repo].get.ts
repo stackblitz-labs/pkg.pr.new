@@ -6,38 +6,37 @@ import {
   getQuery,
 } from "h3";
 
-const BASE_URL = "https://pkg.pr.new";
-
 export default defineEventHandler(async (event) => {
-  const params = getRouterParams(event);
-  const owner = params.owner as string;
-  const repo = params.repo as string;
-
-  const query = getQuery(event);
-  const style = (query.style as string) || "flat";
-  const color = (query.color as string) || "000";
-
+  const { owner, repo } = getRouterParams(event) as {
+    owner: string;
+    repo: string;
+  };
   if (!owner || !repo) {
     throw createError({
       statusCode: 400,
-      statusMessage: "Owner and repo parameters are required",
+      statusMessage: "Owner and repo are required",
     });
   }
 
+  const { style = "flat", color = "000" } = getQuery(event) as Record<
+    string,
+    string
+  >;
   const logoBase64 = getPkgPrNewLogoBase64();
-  const shieldsUrl = `https://img.shields.io/static/v1?label=&message=${encodeURIComponent(repo)}&color=${color}&style=${style}&logo=data:image/svg+xml;base64,${logoBase64}&logoWidth=16&logoPosition=start`;
+  const shieldsUrl =
+    `https://img.shields.io/static/v1?` +
+    `label=&message=${encodeURIComponent(repo)}` +
+    `&color=${color}` +
+    `&style=${style}` +
+    `&logo=data:image/svg+xml;base64,${logoBase64}` +
+    `&logoSize=auto`;
+
+  const res = await fetch(shieldsUrl);
+  const svg = await res.text();
 
   setHeader(event, "Content-Type", "image/svg+xml");
   setHeader(event, "Cache-Control", "public, max-age=86400");
-
-  const response = await fetch(shieldsUrl);
-  const svg = await response.text();
-
-  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <a xlink:href="${BASE_URL}/~/${owner}/${repo}">
-      ${svg}
-    </a>
-  </svg>`;
+  return svg;
 });
 
 function getPkgPrNewLogoBase64(): string {
