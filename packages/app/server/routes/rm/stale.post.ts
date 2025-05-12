@@ -49,8 +49,13 @@ async function iterateAndDelete(event: H3Event, writable: WritableStream, signal
         break;
       }
       const uploaded = Date.parse(object.uploaded.toString());
+      console.log('uploaded', today, uploaded, today - uploaded, (today - uploaded) / (1000 * 3600 * 24 * 30 * 6))
       // remove the object anyway if it's 6 months old already
-      if ((today - uploaded) / (1000 * 3600 * 24 * 30 * 6) >= 1) {
+      // Use calendar-accurate 6 months check
+      const uploadedDate = new Date(uploaded);
+      const sixMonthsAgo = new Date(today);
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+      if (uploadedDate <= sixMonthsAgo) {
         await writer.write(JSON.stringify({
           key: object.key,
           uploaded: new Date(object.uploaded),
@@ -63,9 +68,14 @@ async function iterateAndDelete(event: H3Event, writable: WritableStream, signal
       }
       const downloadedAt = (await downloadedAtBucket.getItem(object.key))!;
       // if it has not been downloaded in the last month and it's at least 1 month old
+      // Calendar-accurate 1 month checks
+      const downloadedAtDate = new Date(downloadedAt);
+      const oneMonthAgo = new Date(today);
+      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+      const uploadedDate2 = new Date(uploaded); // uploaded already parsed above
       if (
-        !((today - downloadedAt) / (1000 * 3600 * 24 * 30) < 1) &&
-        (today - uploaded) / (1000 * 3600 * 24 * 30) >= 1
+        downloadedAtDate <= oneMonthAgo &&
+        uploadedDate2 <= oneMonthAgo
       ) {
         await writer.write(JSON.stringify({
           key: object.key,
