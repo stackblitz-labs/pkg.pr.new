@@ -76,7 +76,11 @@ async function iterateAndDelete(event: H3Event, writable: WritableStream, signal
         //   downloadedAtBucket.removeItem(object.key),
         // );
       }
-      const downloadedAt = (await downloadedAtBucket.getItem(object.key))!;
+      const downloadedAt = (await downloadedAtBucket.getItem(object.key));
+
+      if (!downloadedAt) {
+        continue;
+      }
       // if it has not been downloaded in the last month and it's at least 1 month old
       // Calendar-accurate 1 month checks
       const downloadedAtDate = new Date(downloadedAt);
