@@ -11,6 +11,11 @@ export default eventHandler(async (event) => {
   // }
   const { readable, writable } = new TransformStream()
 
+  const writer = writable.getWriter()
+  await writer.ready
+  writer.write("start\n")
+  writer.releaseLock()
+
   event.waitUntil(
     (async () => {
       await iterateAndDelete(event, writable, signal, {
@@ -30,6 +35,7 @@ export default eventHandler(async (event) => {
 
 async function iterateAndDelete(event: H3Event, writable: WritableStream, signal: AbortSignal, opts: R2ListOptions) {
   const writer = writable.getWriter()
+  await writer.ready
   const binding = useBinding(event);
 
   let truncated = true;
