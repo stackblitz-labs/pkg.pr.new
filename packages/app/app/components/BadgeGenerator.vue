@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, onMounted, computed } from "vue";
+
 const props = defineProps<{
   owner: string;
   repo: string;
@@ -9,18 +10,26 @@ const props = defineProps<{
 const copied = ref(false);
 const style = "flat";
 const color = props.color || "000";
-const baseUrl = process.client ? window.location.origin : "https://pkg.pr.new";
 
-const badgeUrl =
-  `${baseUrl}/badge/${props.owner}/${props.repo}` +
-  `?style=${style}` +
-  `&color=${encodeURIComponent(color)}` +
-  `&logoSize=auto`;
+const baseUrl = ref("https://pkg.pr.new");
+onMounted(() => {
+  baseUrl.value = window.location.origin;
+});
 
-const redirectUrl = `${baseUrl}/~/${props.owner}/${props.repo}`;
+const badgeUrl = computed(
+  () =>
+    `${baseUrl.value}/badge/${props.owner}/${props.repo}` +
+    `?style=${style}` +
+    `&color=${encodeURIComponent(color)}` +
+    `&logoSize=auto`,
+);
+
+const redirectUrl = computed(
+  () => `${baseUrl.value}/~/${props.owner}/${props.repo}`,
+);
 
 function copyBadgeCode() {
-  const md = `[![${props.repo}](${badgeUrl})](${redirectUrl})`;
+  const md = `[![${props.repo}](${badgeUrl.value})](${redirectUrl.value})`;
   navigator.clipboard.writeText(md);
   copied.value = true;
   setTimeout(() => (copied.value = false), 2000);
