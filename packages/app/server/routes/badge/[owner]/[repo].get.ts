@@ -1,14 +1,18 @@
 import {
   defineEventHandler,
-  setHeader,
-  getRouterParams,
-  createError,
   getQuery,
+  getRouterParams,
+  setHeader,
+  createError,
+  getRequestURL,
 } from "h3";
 
-const BASE_URL = "https://pkg.pr.new";
-
 export default defineEventHandler(async (event) => {
+  const url = getRequestURL(event, {
+    xForwardedHost: true,
+    xForwardedProto: true,
+  });
+  const BASE_URL = url.origin;
   const params = getRouterParams(event);
   const owner = params.owner as string;
   const repo = params.repo as string;
