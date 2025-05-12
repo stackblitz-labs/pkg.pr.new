@@ -1,6 +1,8 @@
 import type { H3Event } from "h3";
 
 export default eventHandler(async (event) => {
+  setResponseHeader(event, "Transfer-Encoding", "chunked");
+
   const rmStaleKeyHeader = getHeader(event, "sb-rm-stale-key");
   const signal = toWebRequest(event).signal;
   // const { rmStaleKey } = useRuntimeConfig(event);
@@ -13,7 +15,7 @@ export default eventHandler(async (event) => {
 
   const writer = writable.getWriter()
   await writer.ready
-  writer.write("start\n")
+  await writer.write("start\n")
   writer.releaseLock()
 
   event.waitUntil(
@@ -30,7 +32,7 @@ export default eventHandler(async (event) => {
     })()
   )
 
-  return readable
+  return sendStream(event, readable)
 });
 
 async function iterateAndDelete(event: H3Event, writable: WritableStream, signal: AbortSignal, opts: R2ListOptions) {
