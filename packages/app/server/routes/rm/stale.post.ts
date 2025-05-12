@@ -2,6 +2,7 @@ import type { H3Event } from "h3";
 
 export default eventHandler(async (event) => {
   setResponseHeader(event, "Transfer-Encoding", "chunked");
+  setResponseHeader(event, "Content-Type", "text/plain");
 
   const rmStaleKeyHeader = getHeader(event, "sb-rm-stale-key");
   const signal = toWebRequest(event).signal;
