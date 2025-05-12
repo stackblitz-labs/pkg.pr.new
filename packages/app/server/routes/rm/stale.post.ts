@@ -7,12 +7,14 @@ export default eventHandler(async (event) => {
 
   const rmStaleKeyHeader = getHeader(event, "sb-rm-stale-key");
   const signal = toWebRequest(event).signal;
-  // const { rmStaleKey } = useRuntimeConfig(event);
-  // if (rmStaleKeyHeader !== rmStaleKey) {
-  //   throw createError({
-  //     status: 403,
-  //   });
-  // }
+  const { rmStaleKey } = useRuntimeConfig(event);
+
+  if (rmStaleKeyHeader !== rmStaleKey) {
+    throw createError({
+      status: 403,
+    });
+  }
+
   const { readable, writable } = new TransformStream()
 
   event.waitUntil(

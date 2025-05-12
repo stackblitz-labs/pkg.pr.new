@@ -5,8 +5,17 @@ jobs:
   rm_stale_packages:
     runs-on: ubuntu-latest
     steps:
-      - name: Send POST request
+      - name: Send POST request and capture output
         run: |
           curl -X POST \
+            -N \
             -H "sb-rm-stale-key: ${{ secrets.NITRO_RM_STALE_KEY }}" \
-            https://pkg.pr.new/rm/stale
+            https://pkg.pr.new/rm/stale \
+            | tee rm-stale.log
+
+      - name: Upload rm-stale.log as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rm-stale-log
+          path: rm-stale.log
+
