@@ -2,6 +2,7 @@ import type { H3Event } from "h3";
 
 export default eventHandler(async (event) => {
   setResponseHeader(event, "Transfer-Encoding", "chunked");
+  setResponseHeader(event, "Cache-Control", "no-cache");
   setResponseHeader(event, "Content-Type", "text/plain");
 
   const rmStaleKeyHeader = getHeader(event, "sb-rm-stale-key");
@@ -14,13 +15,14 @@ export default eventHandler(async (event) => {
   // }
   const { readable, writable } = new TransformStream()
 
-  const writer = writable.getWriter()
-  await writer.ready
-  await writer.write("start\n")
-  writer.releaseLock()
-
   event.waitUntil(
     (async () => {
+      // const writer = writable.getWriter()
+      // console.log('here')
+      // await writer.ready
+      // await writer.write("start\n")
+      // writer.releaseLock()
+
       await iterateAndDelete(event, writable, signal, {
         prefix: usePackagesBucket.base,
         limit: 100,
