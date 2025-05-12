@@ -95,6 +95,11 @@ const main = defineCommand({
             enum: ["npm", "bun", "pnpm", "yarn"],
             default: "npm",
           },
+          bin: {
+            type: "boolean",
+            description:
+              "Set to true if your package is a binary application and you would like to show an execute command instead of an install command.",
+          },
         },
         run: async ({ args }) => {
           const paths =
@@ -125,7 +130,7 @@ const main = defineCommand({
 
           const isPeerDepsEnabled = !!args.peerDeps;
           const isOnlyTemplates = !!args["only-templates"];
-
+          const isBinaryApplication = !!args.bin;
           const comment: Comment = args.comment as Comment;
           const selectedPackageManager = args.packageManager as
             | "npm"
@@ -216,8 +221,9 @@ const main = defineCommand({
               await verifyCompactMode(pJson.name);
             }
 
+            const formattedSha = isCompact ? abbreviateCommitHash(sha) : sha;
             const depUrl = new URL(
-              `/${owner}/${repo}/${pJson.name}@${sha}`,
+              `/${owner}/${repo}/${pJson.name}@${formattedSha}`,
               apiUrl,
             ).href;
             deps.set(pJson.name, depUrl);
@@ -226,7 +232,7 @@ const main = defineCommand({
             const resource = await fetch(depUrl);
             if (resource.ok) {
               console.warn(
-                `${pJson.name}@${abbreviateCommitHash(sha)} was already published on ${depUrl}`,
+                `${pJson.name}@${formattedSha} was already published on ${depUrl}`,
               );
             }
 
@@ -309,7 +315,7 @@ const main = defineCommand({
 
           const noDefaultTemplate = args.template === false;
 
-          if (!noDefaultTemplate) {
+          if (!noDefaultTemplate && templates.length === 0) {
             const project = createDefaultTemplate(
               Object.fromEntries(deps.entries()),
             );
@@ -485,6 +491,7 @@ const main = defineCommand({
               "sb-key": key,
               "sb-shasums": JSON.stringify(shasums),
               "sb-run-id": GITHUB_RUN_ID,
+              "sb-bin": `${isBinaryApplication}`,
               "sb-package-manager": selectedPackageManager,
               "sb-only-templates": `${isOnlyTemplates}`,
             },

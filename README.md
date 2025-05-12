@@ -26,6 +26,24 @@ It is aiming to reduce the number of these comments :)
 
 > This was fixed in #18. Can we release that fix?
 
+## Badge
+
+Show that your project uses pkg.pr.new by adding a badge to your README:
+
+[![pkg.pr.new](https://pkg.pr.new/badge/stackblitz-labs/pkg.pr.new)](https://pkg.pr.new/~/stackblitz-labs/pkg.pr.new)
+
+### How to Get a Badge for Your Repository
+
+1. **Automatically on Repository Page**:
+   Visit your repository page at `https://pkg.pr.new/~/OWNER/REPO` and you'll find a badge with a copy button that will copy the markdown code for you.
+
+2. **Direct Badge URL**:
+   Use this format to create a badge for your repository:
+   ```markdown
+   [![pkg.pr.new](https://pkg.pr.new/badge/OWNER/REPO)](https://pkg.pr.new/~/OWNER/REPO)
+   ```
+   Just replace `OWNER` and `REPO` with your GitHub username/organization and repository name.
+
 These are some of the projects and companies using pkg.pr.new:
 
 <p align="center">
@@ -84,6 +102,9 @@ These are some of the projects and companies using pkg.pr.new:
    <a href="https://kysely.dev"><img src="https://kysely.dev/img/logo.svg" height="40" /></a>
    <a href="https://tutorialkit.dev/"><img src="https://raw.githubusercontent.com/stackblitz/tutorialkit/refs/tags/1.3.0/extensions/vscode/resources/tutorialkit-icon.png" height="40" /></a>
    <a href="https://heyapi.dev"><img src="https://heyapi.dev/images/logo-300w.png" height="40" /></a>
+   <a href="https://github.com/ant-design"><img src="https://github.com/ant-design.png" height="40" /></a>
+   <a href="https://typeorm.io"><img src="https://github.com/typeorm/typeorm/blob/master/resources/typeorm-logo-colored-light.png" height="40" /></a>
+  <a href="https://preply.com"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/preply/design-system-visual-coverage/refs/heads/main/assets/logo-inverted.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/preply/design-system-visual-coverage/refs/heads/main/assets/logo.svg"><img height="40" alt="Preply" src="https://raw.githubusercontent.com/preply/design-system-visual-coverage/refs/heads/main/assets/logo.svg"></picture></a>
 </p>
 
 Feel free to add your project or company here to join the pkg.pr.new family :)
@@ -141,6 +162,24 @@ Without `--compact`:
 
 ```sh
 npm i https://pkg.pr.new/tinylibs/tinybench/tinybench@a832a55
+```
+
+For CLI applications you might want to show `npx` instead of `npm i` for the preview command. This can be accomplished with the `--bin` flag:
+
+```sh
+npx pkg-pr-new publish --bin
+```
+
+With `--bin`:
+
+```sh
+npx https://pkg.pr.new/pkg-pr-new@a832a55
+```
+
+Without `--bin`:
+
+```sh
+npm i https://pkg.pr.new/pkg-pr-new@a832a55
 ```
 
 You can control publishing comments with `--comment`:
