@@ -17,21 +17,21 @@ export default eventHandler(async (event) => {
 
   event.waitUntil(
     (async () => {
-      const writer = writable.getWriter()
-      console.log('here')
-      await writer.ready
-      await writer.write(new TextEncoder().encode("start\n"))
-      writer.releaseLock()
+      // const writer = writable.getWriter()
+      // console.log('here')
+      // await writer.ready
+      // await writer.write(new TextEncoder().encode("start\n"))
+      // writer.releaseLock()
 
-      // await iterateAndDelete(event, writable, signal, {
-      //   prefix: usePackagesBucket.base,
-      //   limit: 100,
-      // })
-      // await iterateAndDelete(event, writable, signal, {
-      //   prefix: useTemplatesBucket.base,
-      //   limit: 100,
-      // })
-      // await writable.close()
+      await iterateAndDelete(event, writable, signal, {
+        prefix: usePackagesBucket.base,
+        limit: 100,
+      })
+      await iterateAndDelete(event, writable, signal, {
+        prefix: useTemplatesBucket.base,
+        limit: 100,
+      })
+      await writable.close()
     })()
   )
 
@@ -60,22 +60,22 @@ async function iterateAndDelete(event: H3Event, writable: WritableStream, signal
         break;
       }
       const uploaded = Date.parse(object.uploaded.toString());
-      writer.write(JSON.stringify({
+      await writer.write(new TextEncoder().encode(JSON.stringify({
         key: object.key,
         uploaded: new Date(object.uploaded),
         downloadedAt: new Date((await downloadedAtBucket.getItem(object.key))!),
-      }) + "\n")
+      }) + "\n"))
       // remove the object anyway if it's 6 months old already
       // Use calendar-accurate 6 months check
       const uploadedDate = new Date(uploaded);
       const sixMonthsAgo = new Date(today);
       sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
       if (uploadedDate <= sixMonthsAgo) {
-        await writer.write(JSON.stringify({
+        await writer.write(new TextEncoder().encode(JSON.stringify({
           key: object.key,
           uploaded: new Date(object.uploaded),
           downloadedAt: new Date((await downloadedAtBucket.getItem(object.key))!),
-        }) + "\n")
+        }) + "\n"))
         // event.context.cloudflare.context.waitUntil(binding.delete(object.key));
         // event.context.cloudflare.context.waitUntil(
         //   downloadedAtBucket.removeItem(object.key),
@@ -92,11 +92,11 @@ async function iterateAndDelete(event: H3Event, writable: WritableStream, signal
         downloadedAtDate <= oneMonthAgo &&
         uploadedDate2 <= oneMonthAgo
       ) {
-        await writer.write(JSON.stringify({
+        await writer.write(new TextEncoder().encode(JSON.stringify({
           key: object.key,
           uploaded: new Date(object.uploaded),
           downloadedAt: new Date(downloadedAt),
-        }) + "\n")
+        }) + "\n"))
         // event.context.cloudflare.context.waitUntil(binding.delete(object.key));
         // event.context.cloudflare.context.waitUntil(
         //   downloadedAtBucket.removeItem(object.key),
