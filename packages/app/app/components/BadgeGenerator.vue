@@ -22,11 +22,10 @@ function copyBadgeCode() {
 
 <template>
   <div class="inline-flex items-center gap-1">
-    <img
-      :src="badgeUrl"
-      :alt="`${repo} badge`"
-      class="h-[20px] min-w-[100px] max-w-[300px]"
-    />
+    <div
+      class="h-[20px] min-w-[100px] max-w-[300px] bg-no-repeat bg-contain"
+      :style="{ backgroundImage: `url(${badgeUrl})` }"
+    ></div>
 
     <UButton
       @click="copyBadgeCode"
