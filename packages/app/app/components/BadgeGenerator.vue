@@ -43,7 +43,7 @@ function copyBadgeCode() {
       color="gray"
       :icon="copied ? 'i-ph-check-bold' : 'i-ph-copy'"
       variant="ghost"
-      class="!p-1"
+      class="!p-1 cursor-pointer"
     />
   </div>
 </template>
