@@ -1,5 +1,3 @@
-[![pkg.pr.new](https://d4a1abd4.stackblitz-cr.pages.dev/badge/stackblitz-labs/pkg.pr.new)](https://pkg.pr.new/~/stackblitz-labs/pkg.pr.new)
-
 <p align="center"><img src="https://github.com/user-attachments/assets/314d5112-f67f-4758-82bf-7b0c19c01ba6" /></p>
 
 # pkg.pr.new <span><img src="https://emoji.slack-edge.com/TFHDVN56F/stackblitz/fd010078dcccebca.png" width="30" /></span>
@@ -27,6 +25,24 @@ npm i https://pkg.pr.new/tinylibs/tinybench/tinybench@a832a55
 It is aiming to reduce the number of these comments :)
 
 > This was fixed in #18. Can we release that fix?
+
+## Badge
+
+Show that your project uses pkg.pr.new by adding a badge to your README:
+
+[![pkg.pr.new](https://pkg.pr.new/badge/stackblitz-labs/pkg.pr.new)](https://pkg.pr.new/~/stackblitz-labs/pkg.pr.new)
+
+### How to Get a Badge for Your Repository
+
+1. **Automatically on Repository Page**:
+   Visit your repository page at `https://pkg.pr.new/~/OWNER/REPO` and you'll find a badge with a copy button that will copy the markdown code for you.
+
+2. **Direct Badge URL**:
+   Use this format to create a badge for your repository:
+   ```markdown
+   [![pkg.pr.new](https://pkg.pr.new/badge/OWNER/REPO)](https://pkg.pr.new/~/OWNER/REPO)
+   ```
+   Just replace `OWNER` and `REPO` with your GitHub username/organization and repository name.
 
 These are some of the projects and companies using pkg.pr.new:
 
