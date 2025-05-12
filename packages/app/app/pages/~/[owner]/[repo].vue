@@ -79,7 +79,10 @@ useSeoMeta({
         />
       </div>
 
-      <div class="flex justify-center mt-2">
+      <div class="flex flex-col items-center justify-center mt-2">
+        <p class="text-sm mb-[10px]">
+          You can copy the badge and put in your README!
+        </p>
         <BadgeGenerator
           :owner="repository.owner.login"
           :repo="repository.name"
