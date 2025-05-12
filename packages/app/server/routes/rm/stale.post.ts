@@ -11,7 +11,7 @@ export default eventHandler(async (event) => {
   // }
   const { readable, writable } = new TransformStream()
 
-  event.context.cloudflare.context.waitUntil(
+  event.waitUntil(
     (async () => {
       await iterateAndDelete(event, writable, signal, {
         prefix: usePackagesBucket.base,
