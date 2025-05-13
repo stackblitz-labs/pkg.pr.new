@@ -1,21 +1,24 @@
 on:
   workflow_dispatch:
+    inputs:
+      remove:
+        description: 'Actually delete items (true/false)'
+        required: false
+        default: 'false'
 
 jobs:
   rm_stale_packages:
     runs-on: ubuntu-latest
     steps:
-      - name: Send POST request and capture output
-        run: |
-          curl -X POST \
-            -N \
-            -H "sb-rm-stale-key: ${{ secrets.NITRO_RM_STALE_KEY }}" \
-            https://pkg.pr.new/rm/stale \
-            | tee rm-stale.log
-
-      - name: Upload rm-stale.log as artifact
-        uses: actions/upload-artifact@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          name: rm-stale-log
-          path: rm-stale.log
+          node-version: 'lts/*'
 
+      - name: Run remove-stale.js
+        run: |
+          node .github/workflows/remove-stale.js
+        env:
+          STALE_ENDPOINT: "https://pkg.pr.new/rm/stale"
+          STALE_KEY: ${{ secrets.NITRO_RM_STALE_KEY }}
+          STALE_REMOVE: "${{ github.event.inputs.remove }}"
