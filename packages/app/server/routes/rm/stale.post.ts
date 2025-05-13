@@ -48,10 +48,10 @@ async function iterateAndDelete(event: H3Event, signal: AbortSignal, opts: R2Lis
         break;
       }
       const uploaded = Date.parse(object.uploaded.toString());
-      removedItems.push({
-        key: object.key,
-        uploaded: new Date(object.uploaded),
-      });
+      // removedItems.push({
+      //   key: object.key,
+      //   uploaded: new Date(object.uploaded),
+      // });
       const uploadedDate = new Date(uploaded);
       const sixMonthsAgo = new Date(today);
       sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
