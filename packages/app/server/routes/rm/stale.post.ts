@@ -67,6 +67,7 @@ async function iterateAndDelete(event: H3Event, signal: AbortSignal, opts: R2Lis
         continue;
       }
       const downloadedAt = await downloadedAtBucket.getItem(object.key);
+
       if (!downloadedAt) {
         continue;
       }
@@ -87,6 +88,7 @@ async function iterateAndDelete(event: H3Event, signal: AbortSignal, opts: R2Lis
           await binding.delete(object.key);
           await downloadedAtBucket.removeItem(object.key);
         }
+
       }
     }
     truncated = next.truncated;
