@@ -8,17 +8,17 @@ export default eventHandler(async (event) => {
   const signal = toWebRequest(event).signal;
   const { rmStaleKey } = useRuntimeConfig(event);
 
-  if (rmStaleKeyHeader !== rmStaleKey) {
-    throw createError({
-      status: 403,
-    });
-  }
+  // if (rmStaleKeyHeader !== rmStaleKey) {
+  //   throw createError({
+  //     status: 403,
+  //   });
+  // }
 
   const { bucket, cursor, remove } = await readBody<{ bucket: 'packages' | 'templates'; cursor: string | null; remove: boolean }>(event);
 
   const result = await iterateAndDelete(event, signal, {
     prefix: bucket === 'packages' ? usePackagesBucket.base : useTemplatesBucket.base,
-    limit: 100,
+    limit: 1000,
     cursor: cursor || undefined,
   }, remove);
 
@@ -36,7 +36,7 @@ async function iterateAndDelete(event: H3Event, signal: AbortSignal, opts: R2Lis
   const today = Date.parse(new Date().toString());
 
   while (truncated && !signal.aborted) {
-    if (removedItems.length >= 1000) {
+    if (removedItems.length >= 100) {
       break
     }
     const next = await binding.list({
