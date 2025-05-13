@@ -17,7 +17,7 @@ jobs:
 
       - name: Run remove-stale.js
         run: |
-          node .github/workflows/remove-stale.js
+          node script/remove-stale.js
         env:
           STALE_ENDPOINT: "https://pkg.pr.new/rm/stale"
           STALE_KEY: ${{ secrets.NITRO_RM_STALE_KEY }}
