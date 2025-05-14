@@ -29,7 +29,7 @@ export default eventHandler(async (event) => {
 async function iterateAndDelete(event: H3Event, signal: AbortSignal, opts: R2ListOptions, remove: boolean) {
   const binding = useBinding(event);
   let truncated = true;
-  let cursor: string | undefined;
+  let cursor: string | undefined = opts.cursor;
   let processed = 0 
   const removedItems: Array<{ key: string; uploaded: Date; downloadedAt?: Date }> = [];
   const downloadedAtBucket = useDownloadedAtBucket(event);
@@ -40,8 +40,8 @@ async function iterateAndDelete(event: H3Event, signal: AbortSignal, opts: R2Lis
       break
     }
     const next = await binding.list({
-      cursor,
       ...opts,
+      cursor,
     });
     processed += next.objects.length;
     for (const object of next.objects) {
