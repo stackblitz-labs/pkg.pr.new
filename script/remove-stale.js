@@ -28,7 +28,7 @@ async function processBucket(bucket) {
         body: JSON.stringify(body),
       });
       if (!res.ok) {
-        console.error(`[${bucket}] Batch ${batch} - Request failed:`, json);
+        console.error(`[${bucket}] Batch ${batch} - Request failed:`, await res.text());
         process.exit(1);
       }
 
