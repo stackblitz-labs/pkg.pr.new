@@ -561,6 +561,11 @@ const main = defineCommand({
             `urls=${outputMetadata.packages.map((pkg) => pkg.url).join(" ")}\n`,
             "utf8",
           );
+          await fs.appendFile(
+            GITHUB_OUTPUT,
+            `packages=${outputMetadata.packages.map((pkg) => `${pkg.name}@${pkg.url}`).join(" ")}\n`,
+            "utf8",
+          );
         },
       };
     },

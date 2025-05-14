@@ -309,6 +309,7 @@ After `pkg-pr-new publish` runs successfully, some outputs are available.
 
 - `sha`: The short SHA used. (E.g. `a832a55`)
 - `urls`: Space-separated URLs of published packages.
+- `packages`: Space-separated, Yarn-compatible package locators of published packages.
 
 This is useful for using published packages in other subsequent jobs immediately after publishing. (E.g. E2E tests)
 
