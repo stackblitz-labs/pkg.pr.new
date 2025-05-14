@@ -555,10 +555,10 @@ const main = defineCommand({
             console.warn(`metadata written to ${jsonFilePath}`);
           }
 
-          await fs.appendFile(GITHUB_OUTPUT, `tag=${formattedSha}\n`, "utf8");
+          await fs.appendFile(GITHUB_OUTPUT, `sha=${formattedSha}\n`, "utf8");
           await fs.appendFile(
             GITHUB_OUTPUT,
-            `packages=${outputMetadata.packages.map((pkg) => pkg.url).join(" ")}\n`,
+            `urls=${outputMetadata.packages.map((pkg) => pkg.url).join(" ")}\n`,
             "utf8",
           );
         },

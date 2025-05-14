@@ -307,8 +307,8 @@ As noted in [#140](https://github.com/stackblitz-labs/pkg.pr.new/issues/140), wo
 
 After `pkg-pr-new publish` runs successfully, some outputs are available.
 
-- `tag`: The short SHA used. (e.g. `a832a55`)
-- `packages`: Space-separated URLs of published packages.
+- `sha`: The short SHA used. (E.g. `a832a55`)
+- `urls`: Space-separated URLs of published packages.
 
 This is useful for using published packages in other subsequent jobs immediately after publishing. (E.g. E2E tests)
 
@@ -320,8 +320,8 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     outputs:
-      tag: ${{ steps.publish.outputs.tag }}
-      packages: ${{ steps.publish.outputs.packages }}
+      sha: ${{ steps.publish.outputs.sha }}
+      urls: ${{ steps.publish.outputs.urls }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -359,7 +359,7 @@ jobs:
         run: pnpm install
 
       - name: Install published package
-        run: pnpm add ${{ needs.publish.outputs.packages }}
+        run: pnpm add ${{ needs.publish.outputs.urls }}
 
       - name: Run e2e test cases
         run: # ...
