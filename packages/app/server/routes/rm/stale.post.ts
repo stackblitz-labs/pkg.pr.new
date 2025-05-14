@@ -1,9 +1,6 @@
 import type { H3Event } from "h3";
 
 export default eventHandler(async (event) => {
-  setResponseHeader(event, "Cache-Control", "no-cache");
-  setResponseHeader(event, "Content-Type", "application/json");
-
   const rmStaleKeyHeader = getHeader(event, "sb-rm-stale-key");
   const signal = toWebRequest(event).signal;
   const { rmStaleKey } = useRuntimeConfig(event);
@@ -21,6 +18,8 @@ export default eventHandler(async (event) => {
     limit: 1000,
     cursor: cursor || undefined,
   }, remove);
+
+  setResponseHeader(event, "Content-Type", "application/json");
 
   return {
     result,
@@ -41,8 +40,8 @@ async function iterateAndDelete(event: H3Event, signal: AbortSignal, opts: R2Lis
       break
     }
     const next = await binding.list({
-      ...opts,
       cursor,
+      ...opts,
     });
     processed += next.objects.length;
     for (const object of next.objects) {
