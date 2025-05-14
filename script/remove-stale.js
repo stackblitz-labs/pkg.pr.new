@@ -34,17 +34,9 @@ async function processBucket(bucket) {
 
       const json = await res.json();
 
-      console.log(`[${bucket}] Batch ${batch} - Removed items:`, json.result.removedItems.length);
-      if (json.result.removedItems.length > 0) {
-        for (const item of json.result.removedItems) {
-          console.log(`  -`, item);
-        }
-      }
-      console.log('just fetched', json.result.removedItems.length)
-      cursor = json.result.cursor;
-      truncated = json.result.truncated;
-      console.log('cursor', cursor)
-      console.log('truncated', truncated)
+      console.log(`[${bucket}] Batch ${batch} - Removed items:`, json.removedItems.length);
+      cursor = json.cursor;
+      truncated = json.truncated;
       batch++;
       if (!truncated) {
         console.log(`[${bucket}] Completed. Total batches: ${batch}`);
