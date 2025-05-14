@@ -31,18 +31,20 @@ async function iterateAndDelete(event: H3Event, signal: AbortSignal, opts: R2Lis
   const binding = useBinding(event);
   let truncated = true;
   let cursor: string | undefined;
+  let processed = 0 
   const removedItems: Array<{ key: string; uploaded: Date; downloadedAt?: Date }> = [];
   const downloadedAtBucket = useDownloadedAtBucket(event);
   const today = Date.parse(new Date().toString());
 
   while (truncated && !signal.aborted) {
-    if (removedItems.length >= 100) {
+    if (removedItems.length >= 100 || processed >= 10000) {
       break
     }
     const next = await binding.list({
       ...opts,
       cursor,
     });
+    processed += next.objects.length;
     for (const object of next.objects) {
       if (signal.aborted) {
         break;

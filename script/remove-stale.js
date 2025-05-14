@@ -44,8 +44,11 @@ async function processBucket(bucket) {
           console.log(`  -`, item);
         }
       }
+      console.log('just fetched', json.result.removedItems.length)
       cursor = json.result.cursor;
       truncated = json.result.truncated;
+      console.log('cursor', cursor)
+      console.log('truncated', truncated)
       batch++;
       if (!truncated) {
         console.log(`[${bucket}] Completed. Total batches: ${batch}`);
@@ -58,7 +61,8 @@ async function processBucket(bucket) {
 }
 
 (async () => {
-  for (const bucket of ['packages', 'templates']) {
+  // for (const bucket of ['packages', 'templates']) {
+  for (const bucket of ['packages']) {
     console.log(`Processing bucket: ${bucket}`);
     await processBucket(bucket);
   }
