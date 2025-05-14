@@ -5,11 +5,11 @@ export default eventHandler(async (event) => {
   const signal = toWebRequest(event).signal;
   const { rmStaleKey } = useRuntimeConfig(event);
 
-  if (rmStaleKeyHeader !== rmStaleKey) {
-    throw createError({
-      status: 403,
-    });
-  }
+  // if (rmStaleKeyHeader !== rmStaleKey) {
+  //   throw createError({
+  //     status: 403,
+  //   });
+  // }
 
   const { bucket, cursor, remove } = await readBody<{ bucket: 'packages' | 'templates'; cursor: string | null; remove: boolean }>(event);
 
