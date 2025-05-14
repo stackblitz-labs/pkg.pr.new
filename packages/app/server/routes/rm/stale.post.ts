@@ -59,7 +59,7 @@ async function iterateAndDelete(event: H3Event, signal: AbortSignal, opts: R2Lis
   const removedItems: Array<{ key: string; uploaded: Date; downloadedAt?: Date }> = [];
   const downloadedAtBucket = useDownloadedAtBucket(event);
   const today = Date.parse(new Date().toString());
-  const CONCURRENCY = 5;
+  const CONCURRENCY = 10;
 
   while (truncated && !signal.aborted) {
     if (removedItems.length >= 100 || processed >= 10000) {
