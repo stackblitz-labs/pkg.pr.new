@@ -1,87 +1,52 @@
 import type { H3Event } from "h3";
 
 export default eventHandler(async (event) => {
-  try {
-    const rmStaleKeyHeader = getHeader(event, "sb-rm-stale-key");
-    const signal = toWebRequest(event).signal;
-    const { rmStaleKey } = useRuntimeConfig(event);
+  const rmStaleKeyHeader = getHeader(event, "sb-rm-stale-key");
+  const signal = toWebRequest(event).signal;
+  const { rmStaleKey } = useRuntimeConfig(event);
 
-    if (rmStaleKeyHeader !== rmStaleKey) {
-      throw createError({
-        status: 403,
-      });
-    }
-
-    const { bucket, cursor, remove } = await readBody<{ bucket: 'packages' | 'templates'; cursor: string | null; remove: boolean }>(event);
-
-    try {
-      const result = await iterateAndDelete(event, signal, {
-        prefix: bucket === 'packages' ? usePackagesBucket.base : useTemplatesBucket.base,
-        limit: 1000,
-        cursor: cursor || undefined,
-      }, remove);
-
-      setResponseHeader(event, "Content-Type", "application/json");
-
-      return {
-        result,
-      };
-    } catch (err: any) {
-      // Log error with context
-      console.error('[rm/stale] Error in iterateAndDelete', {
-        bucket,
-        cursor,
-        remove,
-        error: err && err.stack ? err.stack : err,
-      });
-      throw createError({
-        status: 500,
-        statusMessage: 'Internal Server Error',
-        data: {
-          message: err && err.message ? err.message : String(err),
-          stack: err && err.stack ? err.stack : undefined,
-          bucket,
-          cursor,
-          remove,
-        },
-      });
-    }
-  } catch (outerErr: any) {
-    // Log any error at the outer handler level
-    console.error('[rm/stale] Handler error', outerErr && outerErr.stack ? outerErr.stack : outerErr);
+  if (rmStaleKeyHeader !== rmStaleKey) {
     throw createError({
-      status: 500,
-      statusMessage: 'Internal Server Error',
-      data: {
-        message: outerErr && outerErr.message ? outerErr.message : String(outerErr),
-        stack: outerErr && outerErr.stack ? outerErr.stack : undefined,
-      },
+      status: 403,
     });
   }
+
+  const { bucket, cursor, remove } = await readBody<{ bucket: 'packages' | 'templates'; cursor: string | null; remove: boolean }>(event);
+
+  const result = await iterateAndDelete(event, signal, {
+    prefix: bucket === 'packages' ? usePackagesBucket.base : useTemplatesBucket.base,
+    limit: 1000,
+    cursor: cursor || undefined,
+  }, remove);
+
+  setResponseHeader(event, "Content-Type", "application/json");
+
+  return {
+    result,
+  };
 });
 
 // Helper for concurrency limiting
-async function mapWithConcurrency<T, R>(items: T[], concurrency: number, fn: (item: T) => Promise<R>): Promise<R[]> {
-  const results: R[] = [];
-  let i = 0;
-  const executing: Promise<void>[] = [];
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  concurrency: number,
+  fn: (item: T, index: number) => Promise<R>
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let nextIndex = 0;
 
-  async function enqueue(item: T) {
-    const result = await fn(item);
-    results.push(result);
-  }
-
-  while (i < items.length) {
-    const item = items[i++];
-    const p = enqueue(item);
-    executing.push(p.then(() => {
-      executing.splice(executing.indexOf(p), 1);
-    }));
-    if (executing.length >= concurrency) {
-      await Promise.race(executing);
+  async function worker() {
+    while (nextIndex < items.length) {
+      const currentIndex = nextIndex++;
+      results[currentIndex] = await fn(items[currentIndex], currentIndex);
     }
   }
-  await Promise.all(executing);
+
+  const workers = Array(Math.min(concurrency, items.length))
+    .fill(0)
+    .map(() => worker());
+
+  await Promise.all(workers);
   return results;
 }
 
