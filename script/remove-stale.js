@@ -18,6 +18,7 @@ async function processBucket(bucket) {
       remove,
     };
     try {
+      console.log(`[${bucket}] Batch ${batch} - Fetching...`);
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: {
@@ -26,26 +27,24 @@ async function processBucket(bucket) {
         },
         body: JSON.stringify(body),
       });
-      const text = await res.text();
-      let json;
-      try {
-        json = JSON.parse(text);
-      } catch (e) {
-        console.error(`[${bucket}] Batch ${batch} - Failed to parse response:`, text);
-        process.exit(1);
-      }
       if (!res.ok) {
         console.error(`[${bucket}] Batch ${batch} - Request failed:`, json);
         process.exit(1);
       }
+
+      const json = await res.json();
+
       console.log(`[${bucket}] Batch ${batch} - Removed items:`, json.result.removedItems.length);
       if (json.result.removedItems.length > 0) {
         for (const item of json.result.removedItems) {
           console.log(`  -`, item);
         }
       }
+      console.log('just fetched', json.result.removedItems.length)
       cursor = json.result.cursor;
       truncated = json.result.truncated;
+      console.log('cursor', cursor)
+      console.log('truncated', truncated)
       batch++;
       if (!truncated) {
         console.log(`[${bucket}] Completed. Total batches: ${batch}`);
@@ -58,8 +57,10 @@ async function processBucket(bucket) {
 }
 
 (async () => {
-  for (const bucket of ['packages', 'templates']) {
+  // for (const bucket of ['packages', 'templates']) {
+  for (const bucket of ['packages']) {
     console.log(`Processing bucket: ${bucket}`);
     await processBucket(bucket);
   }
+  process.exit(0);
 })();
