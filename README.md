@@ -61,7 +61,7 @@ These are some of the projects and companies using pkg.pr.new:
   <a href="https://biomejs.dev/"><img src="https://github.com/biomejs.png" height="40"></a>
   <a href="https://github.com/tinylibs"><img src="https://github.com/tinylibs.png" height="40"></a>
   <a href="https://unjs.io/"><img src="https://avatars.githubusercontent.com/u/80154025?s=200&v=4" height="40"></a>
-  <a href="https://www.radix-vue.com/"><img src="https://www.radix-vue.com/logo.svg" height="40"></a>
+  <a href="https://reka-ui.com/"><img src="https://reka-ui.com/logo.svg" height="40"></a>
   <a href="https://www.gradio.app/"><img src="https://www.gradio.app/_app/immutable/assets/gradio.CHB5adID.svg" height="40"></a>
   <a href="https://clockworklabs.io/"><img src="https://github.com/user-attachments/assets/85d42291-6676-4592-b6a0-ee4b6350dc47" height="40"></a>
   <a href="https://valtio.pmnd.rs/"><img src="https://blog.stackblitz.com/posts/pkg-pr-new/valtio.svg" height="40"></a>
