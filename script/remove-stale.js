@@ -8,13 +8,13 @@ if (!endpoint || !staleKey) {
 }
 
 async function processBucket(bucket) {
-  let cursor = null;
+  let startAfter = null;
   let batch = 0;
   let truncated = true;
   while (truncated) {
     const body = {
       bucket,
-      cursor,
+      startAfter,
       remove,
     };
     try {
@@ -34,7 +34,7 @@ async function processBucket(bucket) {
 
       const json = await res.json();
       console.log(`[${bucket}] Batch ${batch} - Removed items:`, json.removedItems.length);
-      cursor = json.cursor;
+      startAfter = json.startAfter;
       truncated = json.truncated;
       batch++;
       if (!truncated) {

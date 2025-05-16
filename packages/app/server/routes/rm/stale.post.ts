@@ -11,13 +11,13 @@ export default eventHandler(async (event) => {
     });
   }
 
-  const { bucket, cursor, remove } = await readBody<{ bucket: 'packages' | 'templates'; cursor: string | null; remove: boolean }>(event);
+  const { bucket, startAfter, remove } = await readBody<{ bucket: 'packages' | 'templates'; startAfter: string | null; remove: boolean }>(event);
 
   setResponseHeader(event, "Content-Type", "application/json");
 
   const result = await iterateAndDelete(event, signal, {
     prefix: bucket === 'packages' ? usePackagesBucket.base : useTemplatesBucket.base,
-    cursor: cursor || undefined,
+    startAfter: startAfter || undefined,
   }, remove);
 
   return result;
@@ -47,10 +47,10 @@ async function mapWithConcurrency<T, R>(
   return results;
 }
 
-async function iterateAndDelete(event: H3Event, signal: AbortSignal, opts: R2ListOptions, remove: boolean) {
+async function iterateAndDelete(event: H3Event, signal: AbortSignal, opts: R2ListOptions & { startAfter?: string }, remove: boolean) {
   const binding = useBinding(event);
   let truncated = true;
-  let cursor: string | undefined = opts.cursor;
+  let startAfter: string | undefined = opts.startAfter;
   const removedItems: Array<{ key: string; uploaded: Date; downloadedAt?: Date }> = [];
   const downloadedAtBucket = useDownloadedAtBucket(event);
   const today = Date.parse(new Date().toString());
@@ -59,9 +59,10 @@ async function iterateAndDelete(event: H3Event, signal: AbortSignal, opts: R2Lis
   const next = await binding.list({
     ...opts,
     limit: 1000,
-    cursor,
+    startAfter,
   });
 
+  let lastNonRemovedKey: string | undefined = undefined;
   await mapWithConcurrency(next.objects, CONCURRENCY, async (object) => {
     if (signal.aborted) return;
     const uploaded = Date.parse(object.uploaded.toString());
@@ -81,6 +82,7 @@ async function iterateAndDelete(event: H3Event, signal: AbortSignal, opts: R2Lis
     }
     const downloadedAt = await downloadedAtBucket.getItem(object.key);
     if (!downloadedAt) {
+      lastNonRemovedKey = object.key;
       return;
     }
     const downloadedAtDate = new Date(downloadedAt);
@@ -100,16 +102,18 @@ async function iterateAndDelete(event: H3Event, signal: AbortSignal, opts: R2Lis
         await binding.delete(object.key);
         await downloadedAtBucket.removeItem(object.key);
       }
+    } else {
+      lastNonRemovedKey = object.key;
     }
   });
 
   truncated = next.truncated;
-  if (next.truncated) {
-    cursor = next.cursor;
+  if (next.truncated && lastNonRemovedKey) {
+    startAfter = lastNonRemovedKey;
   }
 
   return {
-    cursor,
+    startAfter,
     truncated,
     removedItems,
   };
