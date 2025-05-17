@@ -45,14 +45,9 @@
     "vue-eslint-parser": "^10.1.3",
     "wait-port": "^1.1.0"
   },
-  "pnpm": {
-    "patchedDependencies": {
-      "radix3@1.1.2": "patches/radix3@1.1.2.patch"
-    }
-  },
   "dependencies": {
     "@cloudflare/vitest-pool-workers": "^0.6.8",
     "wrangler": "^3.57.1"
   },
-  "packageManager": "pnpm@9.1.3+sha256.7f63001edc077f1cff96cacba901f350796287a2800dfa83fe898f94183e4f5f"
+  "packageManager": "pnpm@10.9.0"
 }
