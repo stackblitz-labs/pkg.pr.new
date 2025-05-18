@@ -1,10 +1,5 @@
 import { z } from "zod";
-import {
-  defineEventHandler,
-  getValidatedQuery,
-  setResponseHeader,
-  toWebRequest,
-} from "h3";
+import { defineEventHandler, getValidatedQuery, toWebRequest } from "h3";
 
 import { useBinding } from "../../../server/utils/bucket";
 import { usePackagesBucket } from "../../../server/utils/bucket";
@@ -29,27 +24,11 @@ export default defineEventHandler(async (event) => {
 
     const searchText = query.text.toLowerCase();
 
-    // Set up response headers for streaming
-    setResponseHeader(event, "Content-Type", "application/json");
-    setResponseHeader(event, "Cache-Control", "no-cache");
-    setResponseHeader(event, "Connection", "keep-alive");
-    setResponseHeader(event, "Transfer-Encoding", "chunked");
+    // Use a plain old approach that's compatible with Cloudflare and other environments
+    return new Promise(async (resolve) => {
+      // Set up an array to collect all search results
+      const allResults: any[] = [];
 
-    // Get direct access to the response object
-    const res = event.node.res;
-
-    // Write initial response to start the stream
-    res.write(JSON.stringify({ nodes: [], streaming: true }) + "\n");
-
-    // Process search in the background
-    processSearch().catch((error) => {
-      console.error("Unhandled search error:", error);
-    });
-
-    // Return nothing to keep the connection open
-    return;
-
-    async function processSearch() {
       try {
         let cursor: string | undefined;
         const seen = new Set<string>();
@@ -114,6 +93,7 @@ export default defineEventHandler(async (event) => {
                   },
                 };
                 batchResults.push(node);
+                allResults.push(node);
                 count++;
                 console.log(`Found match: ${key}`);
                 if (count >= maxNodes) break;
@@ -124,34 +104,22 @@ export default defineEventHandler(async (event) => {
             }
           }
 
-          if (batchResults.length > 0) {
-            console.log(`Streaming batch of ${batchResults.length} results`);
-            // Directly write to the response
-            res.write(
-              JSON.stringify({ nodes: batchResults, streaming: true }) + "\n",
-            );
-          }
-
           if (!truncated || count >= maxNodes) {
             keepGoing = false;
           }
         }
 
         console.log(`Search complete, found ${count} results`);
-        // Final message to indicate completion
-        res.write(JSON.stringify({ streaming: false, complete: true }) + "\n");
-        res.end();
+        resolve({ nodes: allResults });
       } catch (error) {
         console.error("Error processing search:", error);
-        res.write(
-          JSON.stringify({
-            error: true,
-            message: (error as Error).message,
-          }) + "\n",
-        );
-        res.end();
+        resolve({
+          nodes: [],
+          error: true,
+          message: (error as Error).message,
+        });
       }
-    }
+    });
   } catch (error) {
     console.error("Error in repository search:", error);
     return {

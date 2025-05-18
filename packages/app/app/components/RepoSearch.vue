@@ -9,6 +9,12 @@ interface RepoNode {
   owner: RepoOwner;
 }
 
+interface SearchResponse {
+  nodes: RepoNode[];
+  error?: boolean;
+  message?: string;
+}
+
 interface SearchStreamChunk {
   nodes?: RepoNode[];
   streaming?: boolean;
@@ -54,6 +60,41 @@ watchEffect(async () => {
       );
     }
 
+    // Check if we get a 204 No Content response
+    if (response.status === 204) {
+      console.log("Received 204 No Content response");
+      isLoading.value = false;
+      isComplete.value = true;
+      return;
+    }
+
+    // Check the content type to determine how to handle the response
+    const contentType = response.headers.get("content-type");
+    console.log("Content type:", contentType);
+
+    // If we get a regular JSON response instead of streaming
+    if (response.status === 200 && contentType?.includes("application/json")) {
+      try {
+        // Try to parse as regular JSON first
+        const jsonData = (await response.json()) as SearchResponse;
+        console.log("Received regular JSON response:", jsonData);
+
+        if (jsonData.error) {
+          error.value = jsonData.message || "Unknown error";
+        } else if (jsonData.nodes) {
+          searchResults.value = jsonData.nodes;
+        }
+
+        isLoading.value = false;
+        isComplete.value = true;
+        return;
+      } catch (e) {
+        console.log("Not a regular JSON response, trying streaming");
+        // If JSON parsing fails, continue with streaming approach
+      }
+    }
+
+    // Fall back to streaming approach
     const reader = response.body?.getReader();
     if (!reader) {
       throw new Error("Failed to get response stream reader");
@@ -81,6 +122,27 @@ watchEffect(async () => {
 
       const chunk = decoder.decode(value, { stream: true });
       console.log("Raw chunk received:", chunk);
+
+      // Try to parse the chunk as a single JSON object first
+      try {
+        const data = JSON.parse(chunk) as SearchResponse;
+        console.log("Successfully parsed entire chunk as JSON:", data);
+
+        if (data.error) {
+          error.value = data.message || "Unknown error";
+        } else if (data.nodes) {
+          searchResults.value = data.nodes;
+        }
+
+        isLoading.value = false;
+        isComplete.value = true;
+        break;
+      } catch (e) {
+        // If that fails, proceed with line-by-line processing
+        console.log(
+          "Chunk is not a single JSON object, processing line by line",
+        );
+      }
 
       buffer += chunk;
       const lines = buffer.split("\n");
