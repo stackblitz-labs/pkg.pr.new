@@ -35,7 +35,8 @@ export default defineEventHandler(async (event) => {
     setResponseHeader(event, "Connection", "keep-alive");
 
     const stream = new Readable({
-      objectMode: true,
+      objectMode: false,
+      encoding: "utf-8",
       read() {},
     });
 
@@ -123,9 +124,11 @@ export default defineEventHandler(async (event) => {
 
           if (batchResults.length > 0) {
             console.log(`Streaming batch of ${batchResults.length} results`);
-            stream.push(
-              JSON.stringify({ nodes: batchResults, streaming: true }) + "\n",
-            );
+            const jsonString = JSON.stringify({
+              nodes: batchResults,
+              streaming: true,
+            });
+            stream.push(jsonString + "\n");
           }
 
           if (!truncated || count >= maxNodes) {
@@ -134,16 +137,19 @@ export default defineEventHandler(async (event) => {
         }
 
         console.log(`Search complete, found ${count} results`);
-        stream.push(
-          JSON.stringify({ streaming: false, complete: true }) + "\n",
-        );
+        const completeJson = JSON.stringify({
+          streaming: false,
+          complete: true,
+        });
+        stream.push(completeJson + "\n");
         stream.push(null);
       } catch (error) {
         console.error("Error processing search:", error);
-        stream.push(
-          JSON.stringify({ error: true, message: (error as Error).message }) +
-            "\n",
-        );
+        const errorJson = JSON.stringify({
+          error: true,
+          message: (error as Error).message,
+        });
+        stream.push(errorJson + "\n");
       }
     }
   } catch (error) {

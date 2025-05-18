@@ -66,12 +66,24 @@ watchEffect(async () => {
       }
 
       const chunk = decoder.decode(value, { stream: true });
+      console.log("Raw chunk received:", chunk);
+
       const lines = chunk.split("\n").filter((line) => line.trim());
+      console.log("Processing", lines.length, "lines from chunk");
 
       for (const line of lines) {
         try {
+          console.log("Processing line:", line);
+
+          if (line === "[object Object]") {
+            console.warn(
+              "Received '[object Object]' instead of JSON string. Skipping.",
+            );
+            continue;
+          }
+
           const data = JSON.parse(line) as SearchStreamChunk;
-          console.log("Received data:", data);
+          console.log("Successfully parsed data:", data);
 
           if (data.error) {
             error.value = data.message || "Unknown error";
@@ -89,7 +101,7 @@ watchEffect(async () => {
           }
         } catch (e) {
           const err = e as Error;
-          console.error("Error parsing JSON chunk:", err, line);
+          console.error("Error parsing JSON chunk:", err, "Content:", line);
         }
       }
     }
