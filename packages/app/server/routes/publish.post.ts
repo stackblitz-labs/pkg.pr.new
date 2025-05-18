@@ -94,7 +94,7 @@ export default eventHandler(async (event) => {
 
   const currentCursor = await cursorBucket.getItem(cursorKey);
 
-  let lastPackageKey: string 
+  let lastPackageKey: string;
   await Promise.all(
     packages.map((packageNameWithPrefix, i) => {
       const packageName = packageNameWithPrefix.slice("package:".length);
@@ -102,7 +102,10 @@ export default eventHandler(async (event) => {
 
       const file = formData.get(packageNameWithPrefix)!;
       if (file instanceof File) {
-        lastPackageKey = i === packages.length - 1 ? joinKeys(usePackagesBucket.base, packageKey) : lastPackageKey;
+        lastPackageKey =
+          i === packages.length - 1
+            ? joinKeys(usePackagesBucket.base, packageKey)
+            : lastPackageKey;
 
         const stream = file.stream();
         return setItemStream(
@@ -121,7 +124,7 @@ export default eventHandler(async (event) => {
 
   const templatesMap = new Map<string, Record<string, string>>();
 
-  let lastTemplateKey: string
+  let lastTemplateKey: string;
   await Promise.all(
     templateAssets.map((templateAssetWithPrefix, i) => {
       const file = formData.get(templateAssetWithPrefix)!;
@@ -141,7 +144,10 @@ export default eventHandler(async (event) => {
       });
 
       if (isBinary) {
-        lastTemplateKey = i === templateAssets.length - 1 ? joinKeys(useTemplatesBucket.base, uuid) : lastTemplateKey;
+        lastTemplateKey =
+          i === templateAssets.length - 1
+            ? joinKeys(useTemplatesBucket.base, uuid)
+            : lastTemplateKey;
 
         const stream = file.stream();
         return setItemStream(event, useTemplatesBucket.base, uuid, stream);
@@ -303,8 +309,12 @@ export default eventHandler(async (event) => {
     }
   }
 
-  event.waitUntil(iterateAndDelete(event, usePackagesBucket.base, lastPackageKey!))
-  event.waitUntil(iterateAndDelete(event, useTemplatesBucket.base, lastTemplateKey!))
+  event.waitUntil(
+    iterateAndDelete(event, usePackagesBucket.base, lastPackageKey!),
+  );
+  event.waitUntil(
+    iterateAndDelete(event, useTemplatesBucket.base, lastTemplateKey!),
+  );
 
   return {
     ok: true,
@@ -312,9 +322,17 @@ export default eventHandler(async (event) => {
   };
 });
 
-async function iterateAndDelete(event: H3Event, base: string, startAfter: string) {
+async function iterateAndDelete(
+  event: H3Event,
+  base: string,
+  startAfter: string,
+) {
   const binding = useBinding(event);
-  const removedItems: Array<{ key: string; uploaded: Date; downloadedAt?: Date }> = [];
+  const removedItems: Array<{
+    key: string;
+    uploaded: Date;
+    downloadedAt?: Date;
+  }> = [];
   const downloadedAtBucket = useDownloadedAtBucket(event);
   const today = Date.parse(new Date().toString());
 
@@ -346,10 +364,7 @@ async function iterateAndDelete(event: H3Event, base: string, startAfter: string
     const oneMonthAgo = new Date(today);
     oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
     const uploadedDate2 = new Date(uploaded);
-    if (
-      downloadedAtDate <= oneMonthAgo &&
-      uploadedDate2 <= oneMonthAgo
-    ) {
+    if (downloadedAtDate <= oneMonthAgo && uploadedDate2 <= oneMonthAgo) {
       removedItems.push({
         key: object.key,
         uploaded: new Date(object.uploaded),
@@ -360,4 +375,3 @@ async function iterateAndDelete(event: H3Event, base: string, startAfter: string
     }
   }
 }
-
