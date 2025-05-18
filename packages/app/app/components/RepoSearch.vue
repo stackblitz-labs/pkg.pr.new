@@ -38,8 +38,14 @@ watchEffect(async () => {
   error.value = null;
 
   try {
-    const response = await fetch(
-      `/api/repo/search?text=${encodeURIComponent(throttledSearch.value)}`,
+    const url = `/api/repo/search?text=${encodeURIComponent(throttledSearch.value)}`;
+    console.log("Fetching results from:", url);
+
+    const response = await fetch(url);
+    console.log("Response status:", response.status, response.statusText);
+    console.log(
+      "Response headers:",
+      Object.fromEntries([...response.headers.entries()]),
     );
 
     if (!response.ok) {
@@ -54,11 +60,19 @@ watchEffect(async () => {
     }
 
     const decoder = new TextDecoder();
+    let buffer = "";
+
+    console.log("Starting to read response stream");
 
     while (true) {
       const { done, value } = await reader.read();
 
       if (done) {
+        if (buffer.trim()) {
+          console.log("Processing final buffer content:", buffer);
+          processLine(buffer);
+        }
+
         console.log("Stream complete");
         isLoading.value = false;
         isComplete.value = true;
@@ -68,40 +82,16 @@ watchEffect(async () => {
       const chunk = decoder.decode(value, { stream: true });
       console.log("Raw chunk received:", chunk);
 
-      const lines = chunk.split("\n").filter((line) => line.trim());
-      console.log("Processing", lines.length, "lines from chunk");
+      buffer += chunk;
+      const lines = buffer.split("\n");
+
+      buffer = lines.pop() || "";
+
+      console.log("Processing", lines.length, "complete lines from chunk");
 
       for (const line of lines) {
-        try {
-          console.log("Processing line:", line);
-
-          if (line === "[object Object]") {
-            console.warn(
-              "Received '[object Object]' instead of JSON string. Skipping.",
-            );
-            continue;
-          }
-
-          const data = JSON.parse(line) as SearchStreamChunk;
-          console.log("Successfully parsed data:", data);
-
-          if (data.error) {
-            error.value = data.message || "Unknown error";
-            isLoading.value = false;
-            break;
-          }
-
-          if (data.nodes && data.nodes.length > 0) {
-            searchResults.value = [...searchResults.value, ...data.nodes];
-          }
-
-          if (data.streaming === false && data.complete) {
-            isLoading.value = false;
-            isComplete.value = true;
-          }
-        } catch (e) {
-          const err = e as Error;
-          console.error("Error parsing JSON chunk:", err, "Content:", line);
+        if (line.trim()) {
+          processLine(line.trim());
         }
       }
     }
@@ -111,6 +101,42 @@ watchEffect(async () => {
     error.value = err.message;
     isLoading.value = false;
     isComplete.value = true;
+  }
+
+  function processLine(line: string) {
+    try {
+      console.log("Processing line:", line);
+
+      if (line === "[object Object]") {
+        console.warn(
+          "Received '[object Object]' instead of JSON string. Skipping.",
+        );
+        return;
+      }
+
+      const data = JSON.parse(line) as SearchStreamChunk;
+      console.log("Successfully parsed data:", data);
+
+      if (data.error) {
+        error.value = data.message || "Unknown error";
+        isLoading.value = false;
+        return;
+      }
+
+      if (data.nodes && data.nodes.length > 0) {
+        console.log(`Adding ${data.nodes.length} results to display`);
+        searchResults.value = [...searchResults.value, ...data.nodes];
+      }
+
+      if (data.streaming === false && data.complete) {
+        console.log("Search complete signal received");
+        isLoading.value = false;
+        isComplete.value = true;
+      }
+    } catch (e) {
+      const err = e as Error;
+      console.error("Error parsing JSON chunk:", err, "Content:", line);
+    }
   }
 });
 

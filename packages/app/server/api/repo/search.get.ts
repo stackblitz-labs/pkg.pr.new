@@ -5,7 +5,6 @@ import {
   setResponseHeader,
   toWebRequest,
 } from "h3";
-import { Readable } from "node:stream";
 
 import { useBinding } from "../../../server/utils/bucket";
 import { usePackagesBucket } from "../../../server/utils/bucket";
@@ -30,23 +29,27 @@ export default defineEventHandler(async (event) => {
 
     const searchText = query.text.toLowerCase();
 
+    // Set up response headers for streaming
     setResponseHeader(event, "Content-Type", "application/json");
     setResponseHeader(event, "Cache-Control", "no-cache");
     setResponseHeader(event, "Connection", "keep-alive");
+    setResponseHeader(event, "Transfer-Encoding", "chunked");
 
-    const stream = new Readable({
-      objectMode: false,
-      encoding: "utf-8",
-      read() {},
+    // Get direct access to the response object
+    const res = event.node.res;
+
+    // Write initial response to start the stream
+    res.write(JSON.stringify({ nodes: [], streaming: true }) + "\n");
+
+    // Process search in the background
+    processSearch().catch((error) => {
+      console.error("Unhandled search error:", error);
     });
 
-    stream.push(JSON.stringify({ nodes: [], streaming: true }) + "\n");
+    // Return nothing to keep the connection open
+    return;
 
-    processSearchAsync();
-
-    return stream;
-
-    async function processSearchAsync() {
+    async function processSearch() {
       try {
         let cursor: string | undefined;
         const seen = new Set<string>();
@@ -54,7 +57,6 @@ export default defineEventHandler(async (event) => {
         let count = 0;
         let keepGoing = true;
 
-        // Debug: Log the base prefix we're using to search
         console.log(`Searching with base prefix: ${usePackagesBucket.base}`);
 
         while (count < maxNodes && keepGoing && !signal.aborted) {
@@ -124,11 +126,10 @@ export default defineEventHandler(async (event) => {
 
           if (batchResults.length > 0) {
             console.log(`Streaming batch of ${batchResults.length} results`);
-            const jsonString = JSON.stringify({
-              nodes: batchResults,
-              streaming: true,
-            });
-            stream.push(jsonString + "\n");
+            // Directly write to the response
+            res.write(
+              JSON.stringify({ nodes: batchResults, streaming: true }) + "\n",
+            );
           }
 
           if (!truncated || count >= maxNodes) {
@@ -137,19 +138,18 @@ export default defineEventHandler(async (event) => {
         }
 
         console.log(`Search complete, found ${count} results`);
-        const completeJson = JSON.stringify({
-          streaming: false,
-          complete: true,
-        });
-        stream.push(completeJson + "\n");
-        stream.push(null);
+        // Final message to indicate completion
+        res.write(JSON.stringify({ streaming: false, complete: true }) + "\n");
+        res.end();
       } catch (error) {
         console.error("Error processing search:", error);
-        const errorJson = JSON.stringify({
-          error: true,
-          message: (error as Error).message,
-        });
-        stream.push(errorJson + "\n");
+        res.write(
+          JSON.stringify({
+            error: true,
+            message: (error as Error).message,
+          }) + "\n",
+        );
+        res.end();
       }
     }
   } catch (error) {
