@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createError, getQuery, H3Event } from "h3";
+import { H3Event } from "h3";
 
 const querySchema = z.object({
   text: z.string(),
@@ -14,13 +14,12 @@ async function streamResponse(
 ) {
   const res = event.node.res;
 
-  // Set headers for chunked transfer
   res.writeHead(200, {
     "Content-Type": "application/json; charset=utf-8",
     "Transfer-Encoding": "chunked",
     "Cache-Control": "no-cache",
     Connection: "keep-alive",
-    "X-Accel-Buffering": "no", // Disable buffering for nginx
+    "X-Accel-Buffering": "no",
   });
 
   const stream = {
@@ -51,8 +50,7 @@ export default defineEventHandler(async (event) => {
       return { nodes: [] };
     }
 
-    // Always use streaming now
-    console.log(`[SEARCH-STREAM] Starting search for "${query.text}"`);
+    // console.log(`[SEARCH-STREAM] Starting search for "${query.text}"`);
 
     return streamResponse(event, async (stream) => {
       const searchText = query.text.toLowerCase();
@@ -64,9 +62,9 @@ export default defineEventHandler(async (event) => {
       let batchCount = 0;
       let totalScanned = 0;
 
-      console.log(
-        `[SEARCH-STREAM] Streaming response initiated for "${query.text}"`,
-      );
+      // console.log(
+      //   `[SEARCH-STREAM] Streaming response initiated for "${query.text}"`,
+      // );
 
       while (sentCount < maxNodes && keepGoing && !signal.aborted) {
         batchCount++;
@@ -79,9 +77,9 @@ export default defineEventHandler(async (event) => {
         totalScanned += objects.length;
         cursor = truncated ? listResult.cursor : undefined;
 
-        console.log(
-          `[SEARCH-STREAM] Batch ${batchCount}: Scanned ${objects.length} objects, total ${totalScanned}`,
-        );
+        // console.log(
+        //   `[SEARCH-STREAM] Batch ${batchCount}: Scanned ${objects.length} objects, total ${totalScanned}`,
+        // );
 
         for (const obj of objects) {
           if (signal.aborted) break;
@@ -105,7 +103,7 @@ export default defineEventHandler(async (event) => {
                 login: parts.org,
                 avatarUrl: `https://github.com/${parts.org}.png`,
               },
-              // Include search stats with each result
+              // search stats with each result
               _stats: {
                 batchCount,
                 scannedSoFar: totalScanned,
@@ -113,8 +111,7 @@ export default defineEventHandler(async (event) => {
               },
             };
 
-            console.log(`[SEARCH-STREAM] Match found: ${key}`);
-            // Send each result directly
+            // console.log(`[SEARCH-STREAM] Match found: ${key}`);
             stream.write(JSON.stringify(node) + "\n");
             sentCount++;
 
@@ -127,11 +124,10 @@ export default defineEventHandler(async (event) => {
         }
       }
 
-      console.log(
-        `[SEARCH-STREAM] Search completed for "${query.text}". Found ${sentCount} results after scanning ${totalScanned} items in ${batchCount} batches.`,
-      );
+      // console.log(
+      //   `[SEARCH-STREAM] Search completed for "${query.text}". Found ${sentCount} results after scanning ${totalScanned} items in ${batchCount} batches.`,
+      // );
 
-      // No need to send a final message, the stream just ends
       stream.end();
     });
   } catch (error) {
