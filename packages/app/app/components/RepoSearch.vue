@@ -23,17 +23,31 @@ const searchStats = ref<{
   lastResultIndex: number;
 } | null>(null);
 
+// Track current search request to be able to cancel it
+let currentSearchController: AbortController | null = null;
+let currentSearchId = 0;
+
 const throttledSearch = useThrottle(search, 500, true, false);
 
 // Watch for search changes and use streaming search
 watch(
   throttledSearch,
   async (newValue) => {
+    // Cancel any in-progress search
+    if (currentSearchController) {
+      console.log(`[SEARCH-CLIENT] Canceling previous search request`);
+      currentSearchController.abort();
+      currentSearchController = null;
+    }
+
     if (!newValue) {
       searchResults.value = [];
       searchStats.value = null;
       return;
     }
+
+    // Create a unique ID for this search request
+    const thisSearchId = ++currentSearchId;
 
     try {
       searchResults.value = [];
@@ -41,14 +55,26 @@ watch(
       searchError.value = null;
       searchStats.value = null;
 
-      console.log(`[SEARCH-CLIENT] Starting search for "${newValue}"`);
-      const controller = new AbortController();
+      console.log(
+        `[SEARCH-CLIENT] Starting search #${thisSearchId} for "${newValue}"`,
+      );
+
+      // Create a new controller for this request
+      currentSearchController = new AbortController();
       const response = await fetch(
         `/api/repo/search?text=${encodeURIComponent(newValue)}`,
         {
-          signal: controller.signal,
+          signal: currentSearchController.signal,
         },
       );
+
+      // If this isn't the most recent search, ignore results
+      if (thisSearchId !== currentSearchId) {
+        console.log(
+          `[SEARCH-CLIENT] Ignoring outdated search #${thisSearchId} results`,
+        );
+        return;
+      }
 
       if (!response.ok) {
         throw new Error(`Search failed: ${response.statusText}`);
@@ -60,16 +86,29 @@ watch(
       }
 
       console.log(
-        `[SEARCH-CLIENT] Stream reader initialized for "${newValue}"`,
+        `[SEARCH-CLIENT] Stream reader initialized for "${newValue}" (search #${thisSearchId})`,
       );
       const decoder = new TextDecoder();
       let buffer = "";
 
+      // Track IDs we've seen to prevent duplicates
+      const seenIds = new Set<string>();
+
       while (true) {
+        // If this search has been superseded, stop processing
+        if (thisSearchId !== currentSearchId) {
+          console.log(
+            `[SEARCH-CLIENT] Abandoning outdated search #${thisSearchId} processing`,
+          );
+          break;
+        }
+
         const { done, value } = await reader.read();
 
         if (done) {
-          console.log(`[SEARCH-CLIENT] Stream completed for "${newValue}"`);
+          console.log(
+            `[SEARCH-CLIENT] Stream completed for "${newValue}" (search #${thisSearchId})`,
+          );
           break;
         }
 
@@ -84,6 +123,16 @@ watch(
           try {
             // Each line is now a direct result object
             const result = JSON.parse(line);
+
+            // Skip if we've already seen this ID (client-side deduplication)
+            if (seenIds.has(result.id)) {
+              console.log(
+                `[SEARCH-CLIENT] Skipping duplicate result: ${result.id}`,
+              );
+              continue;
+            }
+
+            seenIds.add(result.id);
             console.log(`[SEARCH-CLIENT] Found result:`, result.id);
             searchResults.value.push(result);
 
@@ -105,12 +154,25 @@ watch(
           }
         }
       }
-    } catch (error) {
-      searchError.value =
-        error instanceof Error ? error.message : "Unknown error occurred";
-      console.error("[SEARCH-CLIENT] Streaming search error:", error);
+    } catch (error: unknown) {
+      // Only update error if this is still the current search
+      if (thisSearchId === currentSearchId) {
+        if (error instanceof Error && error.name === "AbortError") {
+          console.log("[SEARCH-CLIENT] Search aborted");
+        } else {
+          searchError.value =
+            error instanceof Error ? error.message : "Unknown error occurred";
+          console.error("[SEARCH-CLIENT] Streaming search error:", error);
+        }
+      }
     } finally {
-      isLoading.value = false;
+      // Only update loading state if this is still the current search
+      if (thisSearchId === currentSearchId) {
+        isLoading.value = false;
+        if (currentSearchController?.signal.aborted) {
+          currentSearchController = null;
+        }
+      }
     }
   },
   { immediate: false },
