@@ -12,19 +12,21 @@ const searchResults = ref<
 >([]);
 const isLoading = ref(false);
 const searchError = ref<string | null>(null);
+const searchStats = ref<{
+  totalScanned: number;
+  batchCount: number;
+  query: string;
+} | null>(null);
 
 const throttledSearch = useThrottle(search, 500, true, false);
 
-const { data, status } = useFetch("/api/repo/search", {
-  query: computed(() => ({ text: throttledSearch.value })),
-  immediate: !!throttledSearch.value && throttledSearch.value.length < 3,
-});
-
+// Watch for search changes and use streaming search
 watch(
   throttledSearch,
   async (newValue) => {
-    if (!newValue || newValue.length < 3) {
+    if (!newValue) {
       searchResults.value = [];
+      searchStats.value = null;
       return;
     }
 
@@ -32,10 +34,12 @@ watch(
       searchResults.value = [];
       isLoading.value = true;
       searchError.value = null;
+      searchStats.value = null;
 
+      console.log(`[SEARCH-CLIENT] Starting search for "${newValue}"`);
       const controller = new AbortController();
       const response = await fetch(
-        `/api/repo/search?text=${encodeURIComponent(newValue)}&stream=true`,
+        `/api/repo/search?text=${encodeURIComponent(newValue)}`,
         {
           signal: controller.signal,
         },
@@ -50,6 +54,9 @@ watch(
         throw new Error("Stream reader not available");
       }
 
+      console.log(
+        `[SEARCH-CLIENT] Stream reader initialized for "${newValue}"`,
+      );
       const decoder = new TextDecoder();
       let buffer = "";
 
@@ -57,6 +64,7 @@ watch(
         const { done, value } = await reader.read();
 
         if (done) {
+          console.log(`[SEARCH-CLIENT] Stream completed for "${newValue}"`);
           break;
         }
 
@@ -70,21 +78,30 @@ watch(
 
           try {
             const data = JSON.parse(line);
+            console.log(`[SEARCH-CLIENT] Received event:`, data.type);
 
             if (data.type === "result" && data.node) {
+              console.log(`[SEARCH-CLIENT] Found result:`, data.node.id);
               searchResults.value.push(data.node);
             } else if (data.type === "error") {
               searchError.value = data.message;
+            } else if (data.type === "end" && data.stats) {
+              searchStats.value = data.stats;
+              console.log(`[SEARCH-CLIENT] Search stats:`, data.stats);
             }
           } catch (e) {
-            console.error("Failed to parse stream data:", line, e);
+            console.error(
+              "[SEARCH-CLIENT] Failed to parse stream data:",
+              line,
+              e,
+            );
           }
         }
       }
     } catch (error) {
       searchError.value =
         error instanceof Error ? error.message : "Unknown error occurred";
-      console.error("Streaming search error:", error);
+      console.error("[SEARCH-CLIENT] Streaming search error:", error);
     } finally {
       isLoading.value = false;
     }
@@ -134,20 +151,6 @@ function openFirstResult() {
         },
       });
     }
-    return;
-  }
-
-  if (data.value?.nodes?.[0]) {
-    const result = data.value.nodes[0];
-    if (result && result.owner && result.name) {
-      router.push({
-        name: "repo:details",
-        params: {
-          owner: result.owner.login || "",
-          repo: result.name || "",
-        },
-      });
-    }
   }
 }
 </script>
@@ -164,7 +167,7 @@ function openFirstResult() {
       @keydown.enter="openFirstResult()"
     />
 
-    <div v-if="isLoading || status === 'pending'" class="-mb-2 relative">
+    <div v-if="isLoading" class="-mb-2 relative">
       <UProgress size="xs" class="absolute inset-x-0 top-0" />
     </div>
 
@@ -180,19 +183,16 @@ function openFirstResult() {
         :name="repo.name"
         :avatar="repo.owner.avatarUrl"
       />
-    </div>
-    <div v-else-if="data?.nodes.length">
-      <RepoButton
-        v-for="repo in data.nodes"
-        :key="repo.id || `${repo.owner.login}/${repo.name}`"
-        :owner="repo.owner.login || ''"
-        :name="repo.name || ''"
-        :avatar="repo.owner.avatarUrl"
-      />
+
+      <div v-if="searchStats" class="text-xs text-gray-500 mt-2 text-right">
+        Found {{ searchResults.length }} results in
+        {{ searchStats.batchCount }} batches (scanned
+        {{ searchStats.totalScanned.toLocaleString() }} items)
+      </div>
     </div>
 
     <div
-      v-else-if="search && !isLoading && status !== 'pending'"
+      v-else-if="search && !isLoading"
       class="text-gray-500 p-12 text-center"
     >
       No repositories found
