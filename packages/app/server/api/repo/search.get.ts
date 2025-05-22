@@ -1,12 +1,37 @@
 import { z } from "zod";
-import { defineEventHandler, getValidatedQuery, toWebRequest } from "h3";
-
-import { useBinding } from "../../../server/utils/bucket";
-import { usePackagesBucket } from "../../../server/utils/bucket";
+import { createError, getQuery, H3Event } from "h3";
 
 const querySchema = z.object({
   text: z.string(),
 });
+
+async function streamResponse(
+  event: H3Event,
+  cb: (stream: {
+    write: (data: string) => void;
+    end: () => void;
+  }) => Promise<void>,
+) {
+  const res = event.node.res;
+
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
+  res.setHeader("Transfer-Encoding", "chunked");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+
+  const stream = {
+    write: (data: string) => {
+      res.write(data);
+    },
+    end: () => {
+      res.end();
+    },
+  };
+
+  await cb(stream);
+
+  return undefined;
+}
 
 export default defineEventHandler(async (event) => {
   const r2Binding = useBinding(event);
@@ -22,104 +47,118 @@ export default defineEventHandler(async (event) => {
       return { nodes: [] };
     }
 
-    const searchText = query.text.toLowerCase();
+    const wantsStream = getQuery(event).stream === "true";
 
-    // Use a plain old approach that's compatible with Cloudflare and other environments
-    return new Promise(async (resolve) => {
-      // Set up an array to collect all search results
-      const allResults: any[] = [];
-
-      try {
+    if (wantsStream) {
+      return streamResponse(event, async (stream) => {
+        const searchText = query.text.toLowerCase();
         let cursor: string | undefined;
         const seen = new Set<string>();
         const maxNodes = 10;
-        let count = 0;
+        let sentCount = 0;
         let keepGoing = true;
 
-        console.log(`Searching with base prefix: ${usePackagesBucket.base}`);
+        stream.write(JSON.stringify({ type: "start" }) + "\n");
 
-        while (count < maxNodes && keepGoing && !signal.aborted) {
-          const prefix = usePackagesBucket.base;
-
-          console.log(
-            `Fetching batch with prefix: ${prefix}, cursor: ${cursor || "initial"}`,
-          );
-
+        while (sentCount < maxNodes && keepGoing && !signal.aborted) {
           const listResult = await r2Binding.list({
-            prefix: prefix,
+            prefix: usePackagesBucket.base,
             limit: 1000,
             cursor,
           });
-
-          console.log(
-            `Fetched ${listResult.objects.length} objects, truncated: ${listResult.truncated}`,
-          );
-
           const { objects, truncated } = listResult;
           cursor = truncated ? listResult.cursor : undefined;
 
-          const batchResults = [];
-
           for (const obj of objects) {
-            console.log(`Examining key: ${obj.key}`);
+            if (signal.aborted) break;
 
-            try {
-              const parts = parseKey(obj.key);
+            const parts = parseKey(obj.key);
+            const orgRepo = `${parts.org}/${parts.repo}`.toLowerCase();
+            const applies =
+              parts.org.toLowerCase().includes(searchText) ||
+              parts.repo.toLowerCase().includes(searchText) ||
+              orgRepo.includes(searchText);
 
-              if (!parts.org || !parts.repo) {
-                console.log(`Skipping malformed key: ${obj.key}`);
-                continue;
-              }
+            if (!applies) continue;
 
-              const orgRepo = `${parts.org}/${parts.repo}`.toLowerCase();
+            const key = `${parts.org}/${parts.repo}`;
+            if (!seen.has(key)) {
+              seen.add(key);
+              const node = {
+                id: key,
+                name: parts.repo,
+                owner: {
+                  login: parts.org,
+                  avatarUrl: `https://github.com/${parts.org}.png`,
+                },
+              };
 
-              console.log(`Matching ${orgRepo} against search: ${searchText}`);
+              // Send each result as it's found
+              stream.write(JSON.stringify({ type: "result", node }) + "\n");
+              sentCount++;
 
-              const applies =
-                parts.org.toLowerCase().includes(searchText) ||
-                parts.repo.toLowerCase().includes(searchText) ||
-                orgRepo.includes(searchText);
-
-              if (!applies) continue;
-
-              const key = `${parts.org}/${parts.repo}`;
-              if (!seen.has(key)) {
-                seen.add(key);
-                const node = {
-                  name: parts.repo,
-                  owner: {
-                    login: parts.org,
-                    avatarUrl: `https://github.com/${parts.org}.png`,
-                  },
-                };
-                batchResults.push(node);
-                allResults.push(node);
-                count++;
-                console.log(`Found match: ${key}`);
-                if (count >= maxNodes) break;
-              }
-            } catch (err) {
-              console.error(`Error parsing key ${obj.key}:`, err);
-              continue;
+              if (sentCount >= maxNodes) break;
             }
           }
 
-          if (!truncated || count >= maxNodes) {
+          if (!truncated || sentCount >= maxNodes) {
             keepGoing = false;
           }
         }
 
-        console.log(`Search complete, found ${count} results`);
-        resolve({ nodes: allResults });
-      } catch (error) {
-        console.error("Error processing search:", error);
-        resolve({
-          nodes: [],
-          error: true,
-          message: (error as Error).message,
+        stream.write(JSON.stringify({ type: "end", total: sentCount }) + "\n");
+        stream.end();
+      });
+    } else {
+      const searchText = query.text.toLowerCase();
+      let cursor: string | undefined;
+      const seen = new Set<string>();
+      const uniqueNodes = [];
+      const maxNodes = 10;
+      let keepGoing = true;
+
+      while (uniqueNodes.length < maxNodes && keepGoing && !signal.aborted) {
+        const listResult = await r2Binding.list({
+          prefix: usePackagesBucket.base,
+          limit: 1000,
+          cursor,
         });
+        const { objects, truncated } = listResult;
+        cursor = truncated ? listResult.cursor : undefined;
+
+        for (const obj of objects) {
+          const parts = parseKey(obj.key);
+          const orgRepo = `${parts.org}/${parts.repo}`.toLowerCase();
+          const applies =
+            parts.org.toLowerCase().includes(searchText) ||
+            parts.repo.toLowerCase().includes(searchText) ||
+            orgRepo.includes(searchText);
+          if (!applies) continue;
+
+          const key = `${parts.org}/${parts.repo}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            uniqueNodes.push({
+              id: key,
+              name: parts.repo,
+              owner: {
+                login: parts.org,
+                avatarUrl: `https://github.com/${parts.org}.png`,
+              },
+            });
+            if (uniqueNodes.length >= maxNodes) break;
+          }
+        }
+
+        if (!truncated || uniqueNodes.length >= maxNodes) {
+          keepGoing = false;
+        }
       }
-    });
+
+      return {
+        nodes: uniqueNodes,
+      };
+    }
   } catch (error) {
     console.error("Error in repository search:", error);
     return {
@@ -131,18 +170,9 @@ export default defineEventHandler(async (event) => {
 });
 
 function parseKey(key: string) {
-  try {
-    const parts = key.split(":");
-    if (parts.length < 4) {
-      console.warn(`Key format unexpected: ${key}, parts: ${parts.length}`);
-      return { org: "", repo: "" };
-    }
-    return {
-      org: parts[2] || "",
-      repo: parts[3] || "",
-    };
-  } catch (err) {
-    console.error(`Failed to parse key: ${key}`, err);
-    return { org: "", repo: "" };
-  }
+  const parts = key.split(":");
+  return {
+    org: parts[2],
+    repo: parts[3],
+  };
 }

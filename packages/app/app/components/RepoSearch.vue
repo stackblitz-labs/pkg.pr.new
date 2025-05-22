@@ -1,206 +1,96 @@
 <script lang="ts" setup>
-interface RepoOwner {
-  login: string;
-  avatarUrl: string;
-}
-
-interface RepoNode {
-  name: string;
-  owner: RepoOwner;
-}
-
-interface SearchResponse {
-  nodes: RepoNode[];
-  error?: boolean;
-  message?: string;
-}
-
-interface SearchStreamChunk {
-  nodes?: RepoNode[];
-  streaming?: boolean;
-  complete?: boolean;
-  error?: boolean;
-  message?: string;
-}
-
 const search = useSessionStorage("search", "");
-const throttledSearch = useThrottle(search, 500, true, false);
-const searchResults = ref<RepoNode[]>([]);
+const searchResults = ref<
+  Array<{
+    id: string;
+    name: string;
+    owner: {
+      login: string;
+      avatarUrl: string;
+    };
+  }>
+>([]);
 const isLoading = ref(false);
-const isComplete = ref(true);
-const error = ref<string | null>(null);
+const searchError = ref<string | null>(null);
 
-watchEffect(async () => {
-  if (!throttledSearch.value) {
-    searchResults.value = [];
-    isLoading.value = false;
-    isComplete.value = true;
-    return;
-  }
+const throttledSearch = useThrottle(search, 500, true, false);
 
-  isLoading.value = true;
-  isComplete.value = false;
-  searchResults.value = [];
-  error.value = null;
+const { data, status } = useFetch("/api/repo/search", {
+  query: computed(() => ({ text: throttledSearch.value })),
+  immediate: !!throttledSearch.value && throttledSearch.value.length < 3,
+});
 
-  try {
-    const url = `/api/repo/search?text=${encodeURIComponent(throttledSearch.value)}`;
-    console.log("Fetching results from:", url);
-
-    const response = await fetch(url);
-    console.log("Response status:", response.status, response.statusText);
-    console.log(
-      "Response headers:",
-      Object.fromEntries([...response.headers.entries()]),
-    );
-
-    if (!response.ok) {
-      throw new Error(
-        `Search failed: ${response.status} ${response.statusText}`,
-      );
-    }
-
-    // Check if we get a 204 No Content response
-    if (response.status === 204) {
-      console.log("Received 204 No Content response");
-      isLoading.value = false;
-      isComplete.value = true;
+watch(
+  throttledSearch,
+  async (newValue) => {
+    if (!newValue || newValue.length < 3) {
+      searchResults.value = [];
       return;
     }
 
-    // Check the content type to determine how to handle the response
-    const contentType = response.headers.get("content-type");
-    console.log("Content type:", contentType);
-
-    // If we get a regular JSON response instead of streaming
-    if (response.status === 200 && contentType?.includes("application/json")) {
-      try {
-        // Try to parse as regular JSON first
-        const jsonData = (await response.json()) as SearchResponse;
-        console.log("Received regular JSON response:", jsonData);
-
-        if (jsonData.error) {
-          error.value = jsonData.message || "Unknown error";
-        } else if (jsonData.nodes) {
-          searchResults.value = jsonData.nodes;
-        }
-
-        isLoading.value = false;
-        isComplete.value = true;
-        return;
-      } catch (e) {
-        console.log("Not a regular JSON response, trying streaming");
-        // If JSON parsing fails, continue with streaming approach
-      }
-    }
-
-    // Fall back to streaming approach
-    const reader = response.body?.getReader();
-    if (!reader) {
-      throw new Error("Failed to get response stream reader");
-    }
-
-    const decoder = new TextDecoder();
-    let buffer = "";
-
-    console.log("Starting to read response stream");
-
-    while (true) {
-      const { done, value } = await reader.read();
-
-      if (done) {
-        if (buffer.trim()) {
-          console.log("Processing final buffer content:", buffer);
-          processLine(buffer);
-        }
-
-        console.log("Stream complete");
-        isLoading.value = false;
-        isComplete.value = true;
-        break;
-      }
-
-      const chunk = decoder.decode(value, { stream: true });
-      console.log("Raw chunk received:", chunk);
-
-      // Try to parse the chunk as a single JSON object first
-      try {
-        const data = JSON.parse(chunk) as SearchResponse;
-        console.log("Successfully parsed entire chunk as JSON:", data);
-
-        if (data.error) {
-          error.value = data.message || "Unknown error";
-        } else if (data.nodes) {
-          searchResults.value = data.nodes;
-        }
-
-        isLoading.value = false;
-        isComplete.value = true;
-        break;
-      } catch (e) {
-        // If that fails, proceed with line-by-line processing
-        console.log(
-          "Chunk is not a single JSON object, processing line by line",
-        );
-      }
-
-      buffer += chunk;
-      const lines = buffer.split("\n");
-
-      buffer = lines.pop() || "";
-
-      console.log("Processing", lines.length, "complete lines from chunk");
-
-      for (const line of lines) {
-        if (line.trim()) {
-          processLine(line.trim());
-        }
-      }
-    }
-  } catch (e) {
-    const err = e as Error;
-    console.error("Error with search request:", err);
-    error.value = err.message;
-    isLoading.value = false;
-    isComplete.value = true;
-  }
-
-  function processLine(line: string) {
     try {
-      console.log("Processing line:", line);
+      searchResults.value = [];
+      isLoading.value = true;
+      searchError.value = null;
 
-      if (line === "[object Object]") {
-        console.warn(
-          "Received '[object Object]' instead of JSON string. Skipping.",
-        );
-        return;
+      const controller = new AbortController();
+      const response = await fetch(
+        `/api/repo/search?text=${encodeURIComponent(newValue)}&stream=true`,
+        {
+          signal: controller.signal,
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`Search failed: ${response.statusText}`);
       }
 
-      const data = JSON.parse(line) as SearchStreamChunk;
-      console.log("Successfully parsed data:", data);
-
-      if (data.error) {
-        error.value = data.message || "Unknown error";
-        isLoading.value = false;
-        return;
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error("Stream reader not available");
       }
 
-      if (data.nodes && data.nodes.length > 0) {
-        console.log(`Adding ${data.nodes.length} results to display`);
-        searchResults.value = [...searchResults.value, ...data.nodes];
-      }
+      const decoder = new TextDecoder();
+      let buffer = "";
 
-      if (data.streaming === false && data.complete) {
-        console.log("Search complete signal received");
-        isLoading.value = false;
-        isComplete.value = true;
+      while (true) {
+        const { done, value } = await reader.read();
+
+        if (done) {
+          break;
+        }
+
+        buffer += decoder.decode(value, { stream: true });
+
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+
+          try {
+            const data = JSON.parse(line);
+
+            if (data.type === "result" && data.node) {
+              searchResults.value.push(data.node);
+            } else if (data.type === "error") {
+              searchError.value = data.message;
+            }
+          } catch (e) {
+            console.error("Failed to parse stream data:", line, e);
+          }
+        }
       }
-    } catch (e) {
-      const err = e as Error;
-      console.error("Error parsing JSON chunk:", err, "Content:", line);
+    } catch (error) {
+      searchError.value =
+        error instanceof Error ? error.message : "Unknown error occurred";
+      console.error("Streaming search error:", error);
+    } finally {
+      isLoading.value = false;
     }
-  }
-});
+  },
+  { immediate: false },
+);
 
 const examples = [
   {
@@ -233,15 +123,31 @@ const examples = [
 const router = useRouter();
 
 function openFirstResult() {
-  const firstResult = searchResults.value[0];
-  if (firstResult) {
-    router.push({
-      name: "repo:details",
-      params: {
-        owner: firstResult.owner.login,
-        repo: firstResult.name,
-      },
-    });
+  if (searchResults.value.length > 0) {
+    const result = searchResults.value[0];
+    if (result && result.owner && result.name) {
+      router.push({
+        name: "repo:details",
+        params: {
+          owner: result.owner.login,
+          repo: result.name,
+        },
+      });
+    }
+    return;
+  }
+
+  if (data.value?.nodes?.[0]) {
+    const result = data.value.nodes[0];
+    if (result && result.owner && result.name) {
+      router.push({
+        name: "repo:details",
+        params: {
+          owner: result.owner.login || "",
+          repo: result.name || "",
+        },
+      });
+    }
   }
 }
 </script>
@@ -258,26 +164,35 @@ function openFirstResult() {
       @keydown.enter="openFirstResult()"
     />
 
-    <div v-if="isLoading" class="-mb-2 relative">
+    <div v-if="isLoading || status === 'pending'" class="-mb-2 relative">
       <UProgress size="xs" class="absolute inset-x-0 top-0" />
     </div>
 
-    <div v-if="error" class="text-red-500 p-4 text-center">
-      {{ error }}
+    <div v-if="searchError" class="text-red-500 p-2">
+      {{ searchError }}
     </div>
 
-    <div v-else-if="searchResults.length">
+    <div v-if="searchResults.length">
       <RepoButton
         v-for="repo in searchResults"
-        :key="`${repo.owner.login}-${repo.name}`"
+        :key="repo.id"
         :owner="repo.owner.login"
         :name="repo.name"
         :avatar="repo.owner.avatarUrl"
       />
     </div>
+    <div v-else-if="data?.nodes.length">
+      <RepoButton
+        v-for="repo in data.nodes"
+        :key="repo.id || `${repo.owner.login}/${repo.name}`"
+        :owner="repo.owner.login || ''"
+        :name="repo.name || ''"
+        :avatar="repo.owner.avatarUrl"
+      />
+    </div>
 
     <div
-      v-else-if="search && isComplete && !isLoading"
+      v-else-if="search && !isLoading && status !== 'pending'"
       class="text-gray-500 p-12 text-center"
     >
       No repositories found
