@@ -50,86 +50,87 @@ export default defineEventHandler(async (event) => {
       return { nodes: [] };
     }
 
-    // console.log(`[SEARCH-STREAM] Starting search for "${query.text}"`);
+    const { readable, writable } = new TransformStream();
+    const writer = writable.getWriter();
 
-    return streamResponse(event, async (stream) => {
-      const searchText = query.text.toLowerCase();
-      let cursor: string | undefined;
-      const seen = new Set<string>();
-      const maxNodes = 10;
-      let sentCount = 0;
-      let keepGoing = true;
-      let batchCount = 0;
-      let totalScanned = 0;
+    (async () => {
+      try {
+        const searchText = query.text.toLowerCase();
+        let cursor: string | undefined;
+        const seen = new Set<string>();
+        const maxNodes = 10;
+        let sentCount = 0;
+        let totalScanned = 0;
 
-      // console.log(
-      //   `[SEARCH-STREAM] Streaming response initiated for "${query.text}"`,
-      // );
+        console.log(
+          `[SEARCH-STREAM] Streaming response initiated for "${query.text}"`,
+        );
 
-      while (sentCount < maxNodes && keepGoing && !signal.aborted) {
-        batchCount++;
-        const listResult = await r2Binding.list({
-          prefix: usePackagesBucket.base,
-          limit: 1000,
-          cursor,
-        });
-        const { objects, truncated } = listResult;
-        totalScanned += objects.length;
-        cursor = truncated ? listResult.cursor : undefined;
+        while (sentCount < maxNodes && !signal.aborted) {
+          const listResult = await r2Binding.list({
+            prefix: usePackagesBucket.base,
+            limit: 1000,
+            cursor,
+          });
 
-        // console.log(
-        //   `[SEARCH-STREAM] Batch ${batchCount}: Scanned ${objects.length} objects, total ${totalScanned}`,
-        // );
+          const { objects, truncated } = listResult;
+          totalScanned += objects.length;
+          cursor = truncated ? listResult.cursor : undefined;
 
-        for (const obj of objects) {
-          if (signal.aborted) break;
+          console.log(
+            `[SEARCH-STREAM] Scanned ${objects.length} objects, total ${totalScanned}`,
+          );
 
-          const parts = parseKey(obj.key);
-          const orgRepo = `${parts.org}/${parts.repo}`.toLowerCase();
-          const applies =
-            parts.org.toLowerCase().includes(searchText) ||
-            parts.repo.toLowerCase().includes(searchText) ||
-            orgRepo.includes(searchText);
+          for (const obj of objects) {
+            if (signal.aborted) break;
 
-          if (!applies) continue;
+            const parts = parseKey(obj.key);
+            const orgRepo = `${parts.org}/${parts.repo}`.toLowerCase();
+            const applies =
+              parts.org.toLowerCase().includes(searchText) ||
+              parts.repo.toLowerCase().includes(searchText) ||
+              orgRepo.includes(searchText);
 
-          const key = `${parts.org}/${parts.repo}`;
-          if (!seen.has(key)) {
-            seen.add(key);
-            const node = {
-              id: key,
-              name: parts.repo,
-              owner: {
-                login: parts.org,
-                avatarUrl: `https://github.com/${parts.org}.png`,
-              },
-              // search stats with each result
-              _stats: {
-                batchCount,
-                scannedSoFar: totalScanned,
-                matchNumber: sentCount + 1,
-              },
-            };
+            if (!applies) continue;
 
-            // console.log(`[SEARCH-STREAM] Match found: ${key}`);
-            stream.write(JSON.stringify(node) + "\n");
-            sentCount++;
+            const key = `${parts.org}/${parts.repo}`;
+            if (!seen.has(key)) {
+              seen.add(key);
+              const node = {
+                id: key,
+                name: parts.repo,
+                owner: {
+                  login: parts.org,
+                  avatarUrl: `https://github.com/${parts.org}.png`,
+                },
+              };
 
-            if (sentCount >= maxNodes) break;
+              console.log(`[SEARCH-STREAM] Match found: ${key}`);
+              await writer.write(
+                new TextEncoder().encode(JSON.stringify(node) + "\n"),
+              );
+              sentCount++;
+
+              if (sentCount >= maxNodes) break;
+            }
+          }
+
+          if (!truncated || sentCount >= maxNodes) {
+            break;
           }
         }
 
-        if (!truncated || sentCount >= maxNodes) {
-          keepGoing = false;
-        }
+        console.log(
+          `[SEARCH-STREAM] Search completed for "${query.text}". Found ${sentCount} results after scanning ${totalScanned} items.`,
+        );
+      } catch (error) {
+        console.error("[SEARCH-STREAM] Error during search:", error);
+      } finally {
+        await writer.close();
       }
+    })();
 
-      // console.log(
-      //   `[SEARCH-STREAM] Search completed for "${query.text}". Found ${sentCount} results after scanning ${totalScanned} items in ${batchCount} batches.`,
-      // );
-
-      stream.end();
-    });
+    return readable;
   } catch (error) {
     console.error("Error in repository search:", error);
     return {

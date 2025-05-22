@@ -8,67 +8,37 @@ const searchResults = ref<
       login: string;
       avatarUrl: string;
     };
-    _stats?: {
-      batchCount: number;
-      scannedSoFar: number;
-      matchNumber: number;
-    };
   }>
 >([]);
 const isLoading = ref(false);
 const searchError = ref<string | null>(null);
-const searchStats = ref<{
-  totalScanned: number;
-  batchCount: number;
-  lastResultIndex: number;
-} | null>(null);
 
-let currentSearchController: AbortController | null = null;
-let currentSearchId = 0;
+let activeController: AbortController | null = null;
 
 const throttledSearch = useThrottle(search, 500, true, false);
 
 watch(
   throttledSearch,
   async (newValue) => {
-    if (currentSearchController) {
-      // console.log(`[SEARCH-CLIENT] Canceling previous search request`);
-      currentSearchController.abort();
-      currentSearchController = null;
-    }
+    activeController?.abort();
+
+    searchResults.value = [];
 
     if (!newValue) {
-      searchResults.value = [];
-      searchStats.value = null;
+      isLoading.value = false;
       return;
     }
 
-    const thisSearchId = ++currentSearchId;
-
     try {
-      searchResults.value = [];
       isLoading.value = true;
       searchError.value = null;
-      searchStats.value = null;
 
-      // console.log(
-      //   `[SEARCH-CLIENT] Starting search #${thisSearchId} for "${newValue}"`,
-      // );
+      activeController = new AbortController();
 
-      currentSearchController = new AbortController();
       const response = await fetch(
         `/api/repo/search?text=${encodeURIComponent(newValue)}`,
-        {
-          signal: currentSearchController.signal,
-        },
+        { signal: activeController.signal },
       );
-
-      if (thisSearchId !== currentSearchId) {
-        // console.log(
-        //   `[SEARCH-CLIENT] Ignoring outdated search #${thisSearchId} results`,
-        // );
-        return;
-      }
 
       if (!response.ok) {
         throw new Error(`Search failed: ${response.statusText}`);
@@ -79,87 +49,50 @@ watch(
         throw new Error("Stream reader not available");
       }
 
-      // console.log(
-      //   `[SEARCH-CLIENT] Stream reader initialized for "${newValue}" (search #${thisSearchId})`,
-      // );
-      const decoder = new TextDecoder();
+      const seenIds = new Set<string>();
+      const textDecoder = new TextDecoder();
       let buffer = "";
 
-      const seenIds = new Set<string>();
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
 
-      while (true) {
-        if (thisSearchId !== currentSearchId) {
-          // console.log(
-          //   `[SEARCH-CLIENT] Abandoning outdated search #${thisSearchId} processing`,
-          // );
-          break;
-        }
+          if (done) break;
 
-        const { done, value } = await reader.read();
+          buffer += textDecoder.decode(value, { stream: true });
 
-        if (done) {
-          // console.log(
-          //   `[SEARCH-CLIENT] Stream completed for "${newValue}" (search #${thisSearchId})`,
-          // );
-          break;
-        }
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
 
-        buffer += decoder.decode(value, { stream: true });
+          for (const line of lines) {
+            if (!line.trim()) continue;
 
-        const lines = buffer.split("\n");
-        buffer = lines.pop() || "";
+            try {
+              const result = JSON.parse(line);
 
-        for (const line of lines) {
-          if (!line.trim()) continue;
+              if (seenIds.has(result.id)) continue;
 
-          try {
-            const result = JSON.parse(line);
-
-            if (seenIds.has(result.id)) {
-              // console.log(
-              //   `[SEARCH-CLIENT] Skipping duplicate result: ${result.id}`,
-              // );
-              continue;
+              seenIds.add(result.id);
+              searchResults.value.push(result);
+            } catch (e) {
+              console.error("Failed to parse search result:", line);
             }
-
-            seenIds.add(result.id);
-            // console.log(`[SEARCH-CLIENT] Found result:`, result.id);
-            searchResults.value.push(result);
-
-            if (result._stats) {
-              searchStats.value = {
-                batchCount: result._stats.batchCount,
-                totalScanned: result._stats.scannedSoFar,
-                lastResultIndex: result._stats.matchNumber,
-              };
-            }
-          } catch (e) {
-            console.error(
-              "[SEARCH-CLIENT] Failed to parse stream data:",
-              line,
-              e,
-            );
-            searchError.value = "Failed to parse search result";
           }
+        }
+      } catch (readerError) {
+        if (
+          !(readerError instanceof Error && readerError.name === "AbortError")
+        ) {
+          throw readerError;
         }
       }
     } catch (error: unknown) {
-      if (thisSearchId === currentSearchId) {
-        if (error instanceof Error && error.name === "AbortError") {
-          // console.log("[SEARCH-CLIENT] Search aborted");
-        } else {
-          searchError.value =
-            error instanceof Error ? error.message : "Unknown error occurred";
-          // console.error("[SEARCH-CLIENT] Streaming search error:", error);
-        }
+      if (!(error instanceof Error && error.name === "AbortError")) {
+        searchError.value =
+          error instanceof Error ? error.message : "Unknown error occurred";
       }
     } finally {
-      if (thisSearchId === currentSearchId) {
-        isLoading.value = false;
-        if (currentSearchController?.signal.aborted) {
-          currentSearchController = null;
-        }
-      }
+      isLoading.value = false;
     }
   },
   { immediate: false },
@@ -239,12 +172,6 @@ function openFirstResult() {
         :name="repo.name"
         :avatar="repo.owner.avatarUrl"
       />
-
-      <div v-if="searchStats" class="text-xs text-gray-500 mt-2 text-right">
-        Found {{ searchStats.lastResultIndex }} results in
-        {{ searchStats.batchCount }} batches (scanned
-        {{ searchStats.totalScanned.toLocaleString() }} items)
-      </div>
     </div>
 
     <div
