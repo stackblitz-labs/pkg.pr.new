@@ -74,7 +74,8 @@ watch(
             try {
               const result = JSON.parse(line);
               if (result.error) {
-                searchError.value = result.message || "Error searching repositories";
+                searchError.value =
+                  result.message || "Error searching repositories";
                 continue;
               }
 

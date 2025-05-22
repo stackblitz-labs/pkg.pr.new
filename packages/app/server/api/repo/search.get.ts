@@ -53,8 +53,8 @@ export default defineEventHandler(async (event) => {
         webhookSecret,
         // Set request timeout to handle slow connections better
         request: {
-          timeout: 30000 // 30 seconds
-        }
+          timeout: 30000, // 30 seconds
+        },
       });
     };
 
@@ -65,7 +65,9 @@ export default defineEventHandler(async (event) => {
     // Process in background
     (async () => {
       try {
-        console.log(`[SEARCH-STREAM] Searching GitHub App installations for "${query.text}"`);
+        console.log(
+          `[SEARCH-STREAM] Searching GitHub App installations for "${query.text}"`,
+        );
         const searchText = query.text.toLowerCase();
 
         // Initialize GitHub App
@@ -83,12 +85,20 @@ export default defineEventHandler(async (event) => {
             console.log("[SEARCH-STREAM] Search timed out after 45 seconds");
             const message = {
               error: true,
-              message: "Search timed out. GitHub API may be experiencing issues."
+              message:
+                "Search timed out. GitHub API may be experiencing issues.",
             };
-            writer.write(new TextEncoder().encode(JSON.stringify(message) + "\n"))
-              .catch(e => console.error("Failed to write timeout message", e));
+            writer
+              .write(new TextEncoder().encode(JSON.stringify(message) + "\n"))
+              .catch((e) =>
+                console.error("Failed to write timeout message", e),
+              );
           }
-          writer.close().catch(e => console.error("Failed to close writer on timeout", e));
+          writer
+            .close()
+            .catch((e) =>
+              console.error("Failed to close writer on timeout", e),
+            );
         }, 45000); // 45 second timeout
 
         // Iterate through each installation
@@ -96,22 +106,30 @@ export default defineEventHandler(async (event) => {
           await app.eachInstallation(async ({ octokit, installation }) => {
             if (signal.aborted || resultsFound >= maxResults) return;
 
-            console.log(`[SEARCH-STREAM] Checking installation: ${installation.id} (${installation.account?.login || 'unknown'})`);
+            console.log(
+              `[SEARCH-STREAM] Checking installation: ${installation.id} (${installation.account?.login || "unknown"})`,
+            );
             installationsChecked++;
 
             try {
               // Get repos for this installation with a timeout
-              const { data: repos } = await Promise.race([
-                octokit.request('GET /installation/repositories', {
+              const { data: repos } = (await Promise.race([
+                octokit.request("GET /installation/repositories", {
                   per_page: 100,
                   headers: {
-                    'X-GitHub-Api-Version': '2022-11-28'
-                  }
+                    "X-GitHub-Api-Version": "2022-11-28",
+                  },
                 }),
                 new Promise((_, reject) =>
-                  setTimeout(() => reject(new Error("Installation repository request timed out")), 15000)
-                )
-              ]) as any;
+                  setTimeout(
+                    () =>
+                      reject(
+                        new Error("Installation repository request timed out"),
+                      ),
+                    15000,
+                  ),
+                ),
+              ])) as any;
 
               // Process repositories
               for (const repo of repos.repositories) {
@@ -122,10 +140,11 @@ export default defineEventHandler(async (event) => {
                 const ownerLogin = repository.owner.login.toLowerCase();
                 const fullName = `${ownerLogin}/${repoName}`;
 
-                if (repoName.includes(searchText) ||
+                if (
+                  repoName.includes(searchText) ||
                   ownerLogin.includes(searchText) ||
-                  fullName.includes(searchText)) {
-
+                  fullName.includes(searchText)
+                ) {
                   // Skip duplicates
                   if (seenIds.has(repository.id)) continue;
                   seenIds.add(repository.id);
@@ -140,18 +159,26 @@ export default defineEventHandler(async (event) => {
                   };
 
                   console.log(`[SEARCH-STREAM] Match found: ${fullName}`);
-                  await writer.write(new TextEncoder().encode(JSON.stringify(node) + "\n"));
+                  await writer.write(
+                    new TextEncoder().encode(JSON.stringify(node) + "\n"),
+                  );
                   resultsFound++;
                 }
               }
             } catch (error) {
               installationsFailed++;
-              console.error(`[SEARCH-STREAM] Error with installation ${installation.id}:`, error);
+              console.error(
+                `[SEARCH-STREAM] Error with installation ${installation.id}:`,
+                error,
+              );
               // Continue with next installation
             }
           });
         } catch (appError) {
-          console.error("[SEARCH-STREAM] Error during installation iteration:", appError);
+          console.error(
+            "[SEARCH-STREAM] Error during installation iteration:",
+            appError,
+          );
           // Continue to report any results we did find
         }
 
@@ -161,22 +188,29 @@ export default defineEventHandler(async (event) => {
         if (resultsFound === 0) {
           const message = {
             error: true,
-            message: `No matching repositories found. Checked ${installationsChecked} installations (${installationsFailed} failed).`
+            message: `No matching repositories found. Checked ${installationsChecked} installations (${installationsFailed} failed).`,
           };
-          await writer.write(new TextEncoder().encode(JSON.stringify(message) + "\n"));
+          await writer.write(
+            new TextEncoder().encode(JSON.stringify(message) + "\n"),
+          );
         }
 
-        console.log(`[SEARCH-STREAM] Search completed for "${query.text}". Found ${resultsFound} results from ${installationsChecked - installationsFailed} successful installations.`);
+        console.log(
+          `[SEARCH-STREAM] Search completed for "${query.text}". Found ${resultsFound} results from ${installationsChecked - installationsFailed} successful installations.`,
+        );
       } catch (error) {
         console.error("[SEARCH-STREAM] Error during GitHub App search:", error);
 
         const errorObj = {
           error: true,
-          message: error instanceof Error
-            ? error.message
-            : "Error searching repositories. Make sure your GitHub App is configured correctly."
+          message:
+            error instanceof Error
+              ? error.message
+              : "Error searching repositories. Make sure your GitHub App is configured correctly.",
         };
-        await writer.write(new TextEncoder().encode(JSON.stringify(errorObj) + "\n"));
+        await writer.write(
+          new TextEncoder().encode(JSON.stringify(errorObj) + "\n"),
+        );
       } finally {
         await writer.close();
       }
