@@ -8,6 +8,10 @@ const searchResults = ref<
       login: string;
       avatarUrl: string;
     };
+    description?: string | null;
+    stars?: number;
+    language?: string | null;
+    isPrivate?: boolean;
   }>
 >([]);
 const isLoading = ref(false);
@@ -69,6 +73,10 @@ watch(
 
             try {
               const result = JSON.parse(line);
+              if (result.error) {
+                searchError.value = result.message || "Error searching repositories";
+                continue;
+              }
 
               if (seenIds.has(result.id)) continue;
 
