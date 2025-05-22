@@ -8,6 +8,11 @@ const searchResults = ref<
       login: string;
       avatarUrl: string;
     };
+    _stats?: {
+      batchCount: number;
+      scannedSoFar: number;
+      matchNumber: number;
+    };
   }>
 >([]);
 const isLoading = ref(false);
@@ -15,7 +20,7 @@ const searchError = ref<string | null>(null);
 const searchStats = ref<{
   totalScanned: number;
   batchCount: number;
-  query: string;
+  lastResultIndex: number;
 } | null>(null);
 
 const throttledSearch = useThrottle(search, 500, true, false);
@@ -77,17 +82,18 @@ watch(
           if (!line.trim()) continue;
 
           try {
-            const data = JSON.parse(line);
-            console.log(`[SEARCH-CLIENT] Received event:`, data.type);
+            // Each line is now a direct result object
+            const result = JSON.parse(line);
+            console.log(`[SEARCH-CLIENT] Found result:`, result.id);
+            searchResults.value.push(result);
 
-            if (data.type === "result" && data.node) {
-              console.log(`[SEARCH-CLIENT] Found result:`, data.node.id);
-              searchResults.value.push(data.node);
-            } else if (data.type === "error") {
-              searchError.value = data.message;
-            } else if (data.type === "end" && data.stats) {
-              searchStats.value = data.stats;
-              console.log(`[SEARCH-CLIENT] Search stats:`, data.stats);
+            // Update stats from the latest result
+            if (result._stats) {
+              searchStats.value = {
+                batchCount: result._stats.batchCount,
+                totalScanned: result._stats.scannedSoFar,
+                lastResultIndex: result._stats.matchNumber,
+              };
             }
           } catch (e) {
             console.error(
@@ -95,6 +101,7 @@ watch(
               line,
               e,
             );
+            searchError.value = "Failed to parse search result";
           }
         }
       }
@@ -185,7 +192,7 @@ function openFirstResult() {
       />
 
       <div v-if="searchStats" class="text-xs text-gray-500 mt-2 text-right">
-        Found {{ searchResults.length }} results in
+        Found {{ searchStats.lastResultIndex }} results in
         {{ searchStats.batchCount }} batches (scanned
         {{ searchStats.totalScanned.toLocaleString() }} items)
       </div>

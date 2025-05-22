@@ -14,10 +14,14 @@ async function streamResponse(
 ) {
   const res = event.node.res;
 
-  res.setHeader("Content-Type", "application/json; charset=utf-8");
-  res.setHeader("Transfer-Encoding", "chunked");
-  res.setHeader("Cache-Control", "no-cache");
-  res.setHeader("Connection", "keep-alive");
+  // Set headers for chunked transfer
+  res.writeHead(200, {
+    "Content-Type": "application/json; charset=utf-8",
+    "Transfer-Encoding": "chunked",
+    "Cache-Control": "no-cache",
+    Connection: "keep-alive",
+    "X-Accel-Buffering": "no", // Disable buffering for nginx
+  });
 
   const stream = {
     write: (data: string) => {
@@ -63,7 +67,6 @@ export default defineEventHandler(async (event) => {
       console.log(
         `[SEARCH-STREAM] Streaming response initiated for "${query.text}"`,
       );
-      stream.write(JSON.stringify({ type: "start" }) + "\n");
 
       while (sentCount < maxNodes && keepGoing && !signal.aborted) {
         batchCount++;
@@ -102,11 +105,17 @@ export default defineEventHandler(async (event) => {
                 login: parts.org,
                 avatarUrl: `https://github.com/${parts.org}.png`,
               },
+              // Include search stats with each result
+              _stats: {
+                batchCount,
+                scannedSoFar: totalScanned,
+                matchNumber: sentCount + 1,
+              },
             };
 
             console.log(`[SEARCH-STREAM] Match found: ${key}`);
-            // Send each result as it's found
-            stream.write(JSON.stringify({ type: "result", node }) + "\n");
+            // Send each result directly
+            stream.write(JSON.stringify(node) + "\n");
             sentCount++;
 
             if (sentCount >= maxNodes) break;
@@ -121,17 +130,8 @@ export default defineEventHandler(async (event) => {
       console.log(
         `[SEARCH-STREAM] Search completed for "${query.text}". Found ${sentCount} results after scanning ${totalScanned} items in ${batchCount} batches.`,
       );
-      stream.write(
-        JSON.stringify({
-          type: "end",
-          total: sentCount,
-          stats: {
-            totalScanned,
-            batchCount,
-            query: query.text,
-          },
-        }) + "\n",
-      );
+
+      // No need to send a final message, the stream just ends
       stream.end();
     });
   } catch (error) {
