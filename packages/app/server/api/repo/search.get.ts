@@ -60,23 +60,12 @@ export default defineEventHandler(async (event) => {
         const matches: any[] = [];
 
         const searchTimeout = setTimeout(() => {
-          if (matches.length === 0) {
-            writer
-              .write(
-                new TextEncoder().encode(
-                  JSON.stringify({
-                    error: true,
-                    message: "Search timed out. Please try again later.",
-                  }) + "\n",
-                ),
-              )
-              .catch(() => {});
-          }
           writer.close().catch(() => {});
         }, 30000);
 
         await app.eachRepository(async ({ repository }) => {
           if (signal.aborted) return;
+          if (repository.private) return;
           const repoName = repository.name.toLowerCase();
           const ownerLogin = repository.owner.login.toLowerCase();
 
@@ -149,7 +138,6 @@ export default defineEventHandler(async (event) => {
 
     return readable;
   } catch (error) {
-    console.error("Error in search:", error);
     return {
       nodes: [],
       error: true,
