@@ -74,12 +74,6 @@ export default defineEventHandler(async (event) => {
 
       const duration = Date.now() - start;
       console.log(`[repo-search] Iterated ${repoCount} repos in ${duration}ms`);
-      if (event.node?.res?.setHeader) {
-        event.node.res.setHeader(
-          "X-Repo-Search-Timing",
-          `${repoCount} repos in ${duration}ms`,
-        );
-      }
 
       clearTimeout(searchTimeout);
       matches.sort((a, b) =>
@@ -112,9 +106,15 @@ export default defineEventHandler(async (event) => {
       }
 
       await writer.close();
-    })();
 
-    return readable;
+      return new Response(readable, {
+        headers: {
+          "Content-Type": "application/json",
+          "X-Repo-Search-Timing": `${repoCount} repos in ${duration}ms`,
+        },
+        encodeBody: "manual",
+      });
+    })();
   } catch (error) {
     return { nodes: [], error: true, message: (error as Error).message };
   }
