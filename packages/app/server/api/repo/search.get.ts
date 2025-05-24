@@ -28,8 +28,6 @@ export default defineEventHandler(async (event) => {
     const { readable, writable } = new TransformStream();
     const writer = writable.getWriter();
 
-    setResponseHeader(event, "Transfer-Encoding", "chunked");
-
     (async () => {
       const app = useOctokitApp(event, { ignoreBaseUrl: true });
 
@@ -40,17 +38,12 @@ export default defineEventHandler(async (event) => {
         15000,
       );
 
-      // Measure repo iteration time
-      const start = Date.now();
-      let repoCount = 0;
-
       await app.eachRepository(async ({ repository }) => {
         if (signal.aborted) return;
         if (repository.private) return;
         const idStr = String(repository.id);
         if (seenIds.has(idStr)) return;
         seenIds.add(idStr);
-        repoCount++;
 
         const repoName = repository.name.toLowerCase();
         const ownerLogin = repository.owner.login.toLowerCase();
@@ -73,9 +66,6 @@ export default defineEventHandler(async (event) => {
           });
         }
       });
-
-      const elapsed = Date.now() - start;
-      console.log(`[repo-search] Iterated ${repoCount} repos in ${elapsed}ms`);
 
       clearTimeout(searchTimeout);
       matches.sort((a, b) =>
@@ -106,17 +96,6 @@ export default defineEventHandler(async (event) => {
           ),
         );
       }
-
-      // Send meta info to client as the last message
-      await writer.write(
-        new TextEncoder().encode(
-          JSON.stringify({
-            meta: true,
-            repoCount,
-            elapsed,
-          }) + "\n",
-        ),
-      );
 
       await writer.close();
     })();
