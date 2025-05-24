@@ -4,19 +4,14 @@ const searchResults = ref<
   Array<{
     id: string;
     name: string;
-    owner: {
-      login: string;
-      avatarUrl: string;
-    };
+    owner: { login: string; avatarUrl: string };
     stars?: number;
   }>
 >([]);
 const isLoading = ref(false);
-const searchError = ref<string | null>(null);
 
 let activeController: AbortController | null = null;
 let searchToken = 0;
-
 const throttledSearch = useThrottle(search, 500, true, false);
 
 watch(
@@ -28,62 +23,36 @@ watch(
       isLoading.value = false;
       return;
     }
+
     searchToken++;
     const currentToken = searchToken;
-    try {
-      isLoading.value = true;
-      searchError.value = null;
-      activeController = new AbortController();
-      const response = await fetch(
-        `/api/repo/search?text=${encodeURIComponent(newValue)}`,
-        { signal: activeController.signal },
-      );
-      if (!response.ok)
-        throw new Error(`Search failed: ${response.statusText}`);
-      const reader = response.body?.getReader();
-      if (!reader) throw new Error("Stream reader not available");
-      const seenIds = new Set<string>();
-      const textDecoder = new TextDecoder();
-      let buffer = "";
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += textDecoder.decode(value, { stream: true });
-          const lines = buffer.split("\n");
-          buffer = lines.pop() || "";
-          for (const line of lines) {
-            if (!line.trim()) continue;
-            try {
-              const result = JSON.parse(line);
-              if (result.error) {
-                if (currentToken === searchToken)
-                  searchError.value =
-                    result.message || "Error searching repositories";
-                continue;
-              }
-              if (seenIds.has(result.id)) continue;
-              seenIds.add(result.id);
-              if (currentToken === searchToken)
-                searchResults.value.push(result);
-            } catch {}
-          }
+    isLoading.value = true;
+
+    activeController = new AbortController();
+    const response = await fetch(
+      `/api/repo/search?text=${encodeURIComponent(newValue)}`,
+      { signal: activeController.signal },
+    );
+    const reader = response.body!.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || "";
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        const result = JSON.parse(line);
+        if (currentToken === searchToken) {
+          searchResults.value.push(result);
         }
-      } catch (readerError) {
-        if (
-          !(readerError instanceof Error && readerError.name === "AbortError")
-        )
-          throw readerError;
       }
-    } catch (error: unknown) {
-      if (!(error instanceof Error && error.name === "AbortError")) {
-        if (searchToken === currentToken)
-          searchError.value =
-            error instanceof Error ? error.message : "Unknown error occurred";
-      }
-    } finally {
-      if (searchToken === currentToken) isLoading.value = false;
     }
+
+    isLoading.value = false;
   },
   { immediate: false },
 );
@@ -118,17 +87,12 @@ const examples = [
 
 const router = useRouter();
 function openFirstResult() {
-  if (searchResults.value.length > 0) {
-    const result = searchResults.value[0];
-    if (result && result.owner && result.name) {
-      router.push({
-        name: "repo:details",
-        params: {
-          owner: result.owner.login,
-          repo: result.name,
-        },
-      });
-    }
+  const [first] = searchResults.value;
+  if (first) {
+    router.push({
+      name: "repo:details",
+      params: { owner: first.owner.login, repo: first.name },
+    });
   }
 }
 </script>
@@ -144,9 +108,11 @@ function openFirstResult() {
       autofocus
       @keydown.enter="openFirstResult()"
     />
+
     <div v-if="isLoading" class="-mb-2 relative">
       <UProgress size="xs" class="absolute inset-x-0 top-0" />
     </div>
+
     <div v-if="searchResults.length">
       <RepoButton
         v-for="repo in searchResults"
@@ -156,12 +122,14 @@ function openFirstResult() {
         :avatar="repo.owner.avatarUrl"
       />
     </div>
+
     <div
       v-else-if="search && !isLoading"
       class="text-gray-500 p-12 text-center"
     >
       No repositories found
     </div>
+
     <div v-else-if="!search" class="flex flex-col gap-2 mt-4">
       <div class="text-center">Or try it on:</div>
       <RepoButton
