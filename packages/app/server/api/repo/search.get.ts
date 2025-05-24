@@ -38,7 +38,12 @@ export default defineEventHandler(async (event) => {
         15000,
       );
 
+      const start = Date.now();
+      let repoCount = 0;
+      console.log("[repo-search] Iteration started");
+
       await app.eachRepository(async ({ repository }) => {
+        repoCount++;
         if (signal.aborted) return;
         if (repository.private) return;
         const idStr = String(repository.id);
@@ -66,6 +71,15 @@ export default defineEventHandler(async (event) => {
           });
         }
       });
+
+      const duration = Date.now() - start;
+      console.log(`[repo-search] Iterated ${repoCount} repos in ${duration}ms`);
+      if (event.node?.res?.setHeader) {
+        event.node.res.setHeader(
+          "X-Repo-Search-Timing",
+          `${repoCount} repos in ${duration}ms`,
+        );
+      }
 
       clearTimeout(searchTimeout);
       matches.sort((a, b) =>
