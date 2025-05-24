@@ -1,5 +1,7 @@
 name: Benchmark Repo Iteration
 
+on:
+  pull_request:
 
 jobs:
   benchmark:
