@@ -41,6 +41,20 @@ jobs:
           DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
         run: echo $DEPLOYMENT_URL
 
+  benchmark:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for server to be up
+        run: |
+          echo "Sleeping 30s to allow server to start (adjust as needed)"
+          sleep 30
+      - name: Benchmark repo iteration
+        run: |
+          RESPONSE=$(curl -s ${{ needs.deploy.outputs.deployment-url }}/api/repo/benchmark)
+          echo "Benchmark response: $RESPONSE"
+          echo "$RESPONSE" | jq '.'
+
   release:
     environment: Production
     runs-on: ubuntu-latest
