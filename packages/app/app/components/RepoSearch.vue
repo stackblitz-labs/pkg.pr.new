@@ -44,6 +44,12 @@ watch(
         for (const line of lines) {
           if (!line.trim()) continue;
           const result = JSON.parse(line);
+          if (result.meta) {
+            console.log(
+              `[repo-search] Iterated ${result.repoCount} repos in ${result.elapsed}ms`,
+            );
+            continue;
+          }
           if (currentToken === searchToken) {
             searchResults.value.push(result);
           }

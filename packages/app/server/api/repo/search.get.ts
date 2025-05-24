@@ -28,6 +28,8 @@ export default defineEventHandler(async (event) => {
     const { readable, writable } = new TransformStream();
     const writer = writable.getWriter();
 
+    setResponseHeader(event, "Transfer-Encoding", "chunked");
+
     (async () => {
       const app = useOctokitApp(event, { ignoreBaseUrl: true });
 
@@ -38,17 +40,17 @@ export default defineEventHandler(async (event) => {
         15000,
       );
 
+      // Measure repo iteration time
       const start = Date.now();
       let repoCount = 0;
-      console.log("[repo-search] Iteration started");
 
       await app.eachRepository(async ({ repository }) => {
-        repoCount++;
         if (signal.aborted) return;
         if (repository.private) return;
         const idStr = String(repository.id);
         if (seenIds.has(idStr)) return;
         seenIds.add(idStr);
+        repoCount++;
 
         const repoName = repository.name.toLowerCase();
         const ownerLogin = repository.owner.login.toLowerCase();
@@ -72,8 +74,19 @@ export default defineEventHandler(async (event) => {
         }
       });
 
-      const duration = Date.now() - start;
-      console.log(`[repo-search] Iterated ${repoCount} repos in ${duration}ms`);
+      const elapsed = Date.now() - start;
+      console.log(`[repo-search] Iterated ${repoCount} repos in ${elapsed}ms`);
+
+      // Send meta info to client
+      await writer.write(
+        new TextEncoder().encode(
+          JSON.stringify({
+            meta: true,
+            repoCount,
+            elapsed,
+          }) + "\n",
+        ),
+      );
 
       clearTimeout(searchTimeout);
       matches.sort((a, b) =>
@@ -105,21 +118,10 @@ export default defineEventHandler(async (event) => {
         );
       }
 
-      // Always write debug info as the last line
-      await writer.write(
-        new TextEncoder().encode(
-          JSON.stringify({ debug: { repoCount, duration } }) + "\n",
-        ),
-      );
-
       await writer.close();
-
-      return new Response(readable, {
-        headers: {
-          "Transfer-Encoding": "chunked",
-        },
-      });
     })();
+
+    return readable;
   } catch (error) {
     return { nodes: [], error: true, message: (error as Error).message };
   }
