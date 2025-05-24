@@ -29,30 +29,35 @@ watch(
     isLoading.value = true;
 
     activeController = new AbortController();
-    const response = await fetch(
-      `/api/repo/search?text=${encodeURIComponent(newValue)}`,
-      { signal: activeController.signal },
-    );
-    const reader = response.body!.getReader();
-    const decoder = new TextDecoder();
-    let buffer = "";
+    try {
+      const response = await fetch(
+        `/api/repo/search?text=${encodeURIComponent(newValue)}`,
+        { signal: activeController.signal },
+      );
+      const decoder = new TextDecoder();
+      let buffer = "";
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split("\n");
-      buffer = lines.pop() || "";
-      for (const line of lines) {
-        if (!line.trim()) continue;
-        const result = JSON.parse(line);
-        if (currentToken === searchToken) {
-          searchResults.value.push(result);
+      for await (const chunk of response.body as any) {
+        buffer += decoder.decode(chunk, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          const result = JSON.parse(line);
+          if (currentToken === searchToken) {
+            searchResults.value.push(result);
+          }
         }
       }
+    } catch (err: any) {
+      if (err.name !== "AbortError") {
+        console.error(err);
+      }
+    } finally {
+      if (currentToken === searchToken) {
+        isLoading.value = false;
+      }
     }
-
-    isLoading.value = false;
   },
   { immediate: false },
 );
