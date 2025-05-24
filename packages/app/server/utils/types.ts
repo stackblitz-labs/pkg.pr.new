@@ -14,3 +14,10 @@ export interface Cursor {
   timestamp: number;
   sha: string;
 }
+
+export type RepoNode = {
+  id: string;
+  name: string;
+  owner: { login: string; avatarUrl: string };
+  stars?: number;
+};
