@@ -1,0 +1,18 @@
+name: Benchmark Repo Iteration
+
+on:
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for server to be up (if needed)
+        run: |
+          echo "Sleeping 30s to allow server to start (adjust as needed)"
+          sleep 30
+      - name: Benchmark repo iteration
+        run: |
+          RESPONSE=$(curl -s ${{ secrets.BENCHMARK_URL }}/api/repo/benchmark)
+          echo "Benchmark response: $RESPONSE"
+          echo "$RESPONSE" | jq '.'
