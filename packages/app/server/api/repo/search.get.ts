@@ -77,17 +77,6 @@ export default defineEventHandler(async (event) => {
       const elapsed = Date.now() - start;
       console.log(`[repo-search] Iterated ${repoCount} repos in ${elapsed}ms`);
 
-      // Send meta info to client
-      await writer.write(
-        new TextEncoder().encode(
-          JSON.stringify({
-            meta: true,
-            repoCount,
-            elapsed,
-          }) + "\n",
-        ),
-      );
-
       clearTimeout(searchTimeout);
       matches.sort((a, b) =>
         b.score !== a.score ? b.score - a.score : b.stars - a.stars,
@@ -117,6 +106,17 @@ export default defineEventHandler(async (event) => {
           ),
         );
       }
+
+      // Send meta info to client as the last message
+      await writer.write(
+        new TextEncoder().encode(
+          JSON.stringify({
+            meta: true,
+            repoCount,
+            elapsed,
+          }) + "\n",
+        ),
+      );
 
       await writer.close();
     })();
