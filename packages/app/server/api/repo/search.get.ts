@@ -1,33 +1,17 @@
 import { z } from "zod";
-import { App } from "@octokit/app";
+import { useOctokitApp } from "../../utils/octokit";
 
 const querySchema = z.object({
   text: z.string(),
 });
 
-function levenshtein(a: string, b: string): number {
-  const matrix = Array.from({ length: a.length + 1 }, (_, i) => [i]);
-  for (let j = 1; j <= b.length; j++) matrix[0][j] = j;
-  for (let i = 1; i <= a.length; i++) {
-    for (let j = 1; j <= b.length; j++) {
-      if (a[i - 1] === b[j - 1]) {
-        matrix[i][j] = matrix[i - 1][j - 1];
-      } else {
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j] + 1,
-          matrix[i][j - 1] + 1,
-          matrix[i - 1][j - 1] + 1,
-        );
-      }
-    }
-  }
-  return matrix[a.length][b.length];
-}
-
-function similarity(a: string, b: string): number {
+function repoRelevanceScore(a: string, b: string): number {
   if (!a || !b) return 0;
-  const dist = levenshtein(a, b);
-  return 1 - dist / Math.max(a.length, b.length);
+  if (a === b) return 1;
+  const setA = new Set(a.toLowerCase());
+  const setB = new Set(b.toLowerCase());
+  const intersection = new Set([...setA].filter((x) => setB.has(x)));
+  return intersection.size / Math.max(setA.size, setB.size);
 }
 
 export default defineEventHandler(async (event) => {
@@ -45,13 +29,7 @@ export default defineEventHandler(async (event) => {
     const writer = writable.getWriter();
 
     (async () => {
-      const app = new App({
-        appId: process.env.NITRO_APP_ID as string,
-        privateKey: (process.env.NITRO_PRIVATE_KEY || "").replace(/\n/g, "\n"),
-        clientId: process.env.NITRO_CLIENT_ID,
-        clientSecret: process.env.NITRO_CLIENT_SECRET,
-        webhookSecret: process.env.NITRO_WEBHOOK_SECRET,
-      });
+      const app = useOctokitApp(event, { ignoreBaseUrl: true });
 
       const searchText = query.text.toLowerCase();
       const matches: any[] = [];
@@ -70,8 +48,8 @@ export default defineEventHandler(async (event) => {
         const repoName = repository.name.toLowerCase();
         const ownerLogin = repository.owner.login.toLowerCase();
 
-        const nameScore = similarity(repoName, searchText);
-        const ownerScore = similarity(ownerLogin, searchText);
+        const nameScore = repoRelevanceScore(repoName, searchText);
+        const ownerScore = repoRelevanceScore(ownerLogin, searchText);
         const includes =
           repoName.includes(searchText) || ownerLogin.includes(searchText);
 
