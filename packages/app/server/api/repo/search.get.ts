@@ -105,14 +105,19 @@ export default defineEventHandler(async (event) => {
         );
       }
 
+      // Always write debug info as the last line
+      await writer.write(
+        new TextEncoder().encode(
+          JSON.stringify({ debug: { repoCount, duration } }) + "\n",
+        ),
+      );
+
       await writer.close();
 
       return new Response(readable, {
         headers: {
-          "Content-Type": "application/json",
-          "X-Repo-Search-Timing": `${repoCount} repos in ${duration}ms`,
+          "Transfer-Encoding": "chunked",
         },
-        encodeBody: "manual",
       });
     })();
   } catch (error) {
