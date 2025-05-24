@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import type { RepoNode } from "../../server/utils/types";
 const search = useSessionStorage("search", "");
 const searchResults = ref<
   Array<{
@@ -27,27 +28,15 @@ watch(
     searchToken++;
     const currentToken = searchToken;
     isLoading.value = true;
-
     activeController = new AbortController();
     try {
       const response = await fetch(
         `/api/repo/search?text=${encodeURIComponent(newValue)}`,
         { signal: activeController.signal },
       );
-      const decoder = new TextDecoder();
-      let buffer = "";
-
-      for await (const chunk of response.body as any) {
-        buffer += decoder.decode(chunk, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() || "";
-        for (const line of lines) {
-          if (!line.trim()) continue;
-          const result = JSON.parse(line);
-          if (currentToken === searchToken) {
-            searchResults.value.push(result);
-          }
-        }
+      const data = (await response.json()) as { nodes?: RepoNode[] };
+      if (currentToken === searchToken) {
+        searchResults.value = data.nodes ? data.nodes : [];
       }
     } catch (err: any) {
       if (err.name !== "AbortError") {

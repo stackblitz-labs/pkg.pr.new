@@ -25,82 +25,51 @@ export default defineEventHandler(async (event) => {
     if (!query.text) return { nodes: [] };
 
     const seenIds = new Set<string>();
-    const { readable, writable } = new TransformStream();
-    const writer = writable.getWriter();
+    const app = useOctokitApp(event, { ignoreBaseUrl: true });
+    const searchText = query.text.toLowerCase();
+    const matches: any[] = [];
 
-    (async () => {
-      const app = useOctokitApp(event, { ignoreBaseUrl: true });
+    await app.eachRepository(async ({ repository }) => {
+      if (signal.aborted) return;
+      if (repository.private) return;
+      const idStr = String(repository.id);
+      if (seenIds.has(idStr)) return;
+      seenIds.add(idStr);
 
-      const searchText = query.text.toLowerCase();
-      const matches: any[] = [];
-      const searchTimeout = setTimeout(
-        () => writer.close().catch(() => {}),
-        15000,
-      );
+      const repoName = repository.name.toLowerCase();
+      const ownerLogin = repository.owner.login.toLowerCase();
 
-      await app.eachRepository(async ({ repository }) => {
-        if (signal.aborted) return;
-        if (repository.private) return;
-        const idStr = String(repository.id);
-        if (seenIds.has(idStr)) return;
-        seenIds.add(idStr);
+      const nameScore = repoRelevanceScore(repoName, searchText);
+      const ownerScore = repoRelevanceScore(ownerLogin, searchText);
+      const includes =
+        repoName.includes(searchText) || ownerLogin.includes(searchText);
 
-        const repoName = repository.name.toLowerCase();
-        const ownerLogin = repository.owner.login.toLowerCase();
-
-        const nameScore = repoRelevanceScore(repoName, searchText);
-        const ownerScore = repoRelevanceScore(ownerLogin, searchText);
-        const includes =
-          repoName.includes(searchText) || ownerLogin.includes(searchText);
-
-        if (includes || nameScore > 0.5 || ownerScore > 0.5) {
-          matches.push({
-            id: idStr,
-            name: repository.name,
-            owner: {
-              login: repository.owner.login,
-              avatarUrl: repository.owner.avatar_url,
-            },
-            stars: repository.stargazers_count || 0,
-            score: Math.max(nameScore, ownerScore, includes ? 1 : 0),
-          });
-        }
-      });
-
-      clearTimeout(searchTimeout);
-      matches.sort((a, b) =>
-        b.score !== a.score ? b.score - a.score : b.stars - a.stars,
-      );
-
-      const top = matches.slice(0, 10);
-      for (const node of top) {
-        await writer.write(
-          new TextEncoder().encode(
-            JSON.stringify({
-              id: node.id,
-              name: node.name,
-              owner: node.owner,
-              stars: node.stars,
-            }) + "\n",
-          ),
-        );
+      if (includes || nameScore > 0.5 || ownerScore > 0.5) {
+        matches.push({
+          id: idStr,
+          name: repository.name,
+          owner: {
+            login: repository.owner.login,
+            avatarUrl: repository.owner.avatar_url,
+          },
+          stars: repository.stargazers_count || 0,
+          score: Math.max(nameScore, ownerScore, includes ? 1 : 0),
+        });
       }
+    });
 
-      if (top.length === 0) {
-        await writer.write(
-          new TextEncoder().encode(
-            JSON.stringify({
-              error: true,
-              message: "No matching repositories found.",
-            }) + "\n",
-          ),
-        );
-      }
+    matches.sort((a, b) =>
+      b.score !== a.score ? b.score - a.score : b.stars - a.stars,
+    );
 
-      await writer.close();
-    })();
+    const top = matches.slice(0, 10).map((node) => ({
+      id: node.id,
+      name: node.name,
+      owner: node.owner,
+      stars: node.stars,
+    }));
 
-    return readable;
+    return { nodes: top };
   } catch (error) {
     return { nodes: [], error: true, message: (error as Error).message };
   }
