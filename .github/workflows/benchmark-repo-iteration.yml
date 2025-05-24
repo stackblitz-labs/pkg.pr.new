@@ -1,7 +1,5 @@
 name: Benchmark Repo Iteration
 
-on:
-  workflow_dispatch:
 
 jobs:
   benchmark:
