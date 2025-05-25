@@ -1,18 +1,10 @@
 import { z } from "zod";
 import { useOctokitApp } from "../../utils/octokit";
+import stringSimilarity from "string-similarity";
 
 const querySchema = z.object({
   text: z.string(),
 });
-
-function repoRelevanceScore(a: string, b: string): number {
-  if (!a || !b) return 0;
-  if (a === b) return 1;
-  const setA = new Set(a.toLowerCase());
-  const setB = new Set(b.toLowerCase());
-  const intersection = new Set([...setA].filter((x) => setB.has(x)));
-  return intersection.size / Math.max(setA.size, setB.size);
-}
 
 export default defineEventHandler(async (event) => {
   const request = toWebRequest(event);
@@ -39,8 +31,14 @@ export default defineEventHandler(async (event) => {
       const repoName = repository.name.toLowerCase();
       const ownerLogin = repository.owner.login.toLowerCase();
 
-      const nameScore = repoRelevanceScore(repoName, searchText);
-      const ownerScore = repoRelevanceScore(ownerLogin, searchText);
+      const nameScore = stringSimilarity.compareTwoStrings(
+        repoName,
+        searchText,
+      );
+      const ownerScore = stringSimilarity.compareTwoStrings(
+        ownerLogin,
+        searchText,
+      );
       const includes =
         repoName.includes(searchText) || ownerLogin.includes(searchText);
 
