@@ -4,13 +4,13 @@ const search = useSessionStorage("search", "");
 const searchResults = ref<RepoNode[]>([]);
 const isLoading = ref(false);
 
-const activeController = ref<AbortController | null>(null);
+let activeController: AbortController | null = null;
 const throttledSearch = useThrottle(search, 500, true, false);
 
 watch(
   throttledSearch,
   async (newValue) => {
-    activeController.value?.abort();
+    activeController?.abort();
     searchResults.value = [];
     if (!newValue) {
       isLoading.value = false;
@@ -18,16 +18,16 @@ watch(
     }
 
     const controller = new AbortController();
-    activeController.value = controller;
+    activeController = controller;
 
     isLoading.value = true;
     try {
       const response = await fetch(
         `/api/repo/search?text=${encodeURIComponent(newValue)}`,
-        { signal: controller.signal },
+        { signal: activeController.signal },
       );
-      const data = (await response.json()) as { nodes?: RepoNode[] };
-      if (activeController.value === controller) {
+      const data = (await response.json()) as { nodes: RepoNode[] };
+      if (activeController === controller) {
         searchResults.value = data.nodes ?? [];
       }
     } catch (err: any) {
@@ -35,7 +35,7 @@ watch(
         console.error(err);
       }
     } finally {
-      if (activeController.value === controller) {
+      if (activeController === controller) {
         isLoading.value = false;
       }
     }

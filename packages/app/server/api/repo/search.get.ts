@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
 
     const app = useOctokitApp(event);
     const searchText = query.text.toLowerCase();
-    const matches: any[] = [];
+    const matches: RepoNode[] = [];
 
     await app.eachRepository(async ({ repository }) => {
       if (signal.aborted) return;

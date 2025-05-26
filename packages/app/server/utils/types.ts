@@ -16,8 +16,9 @@ export interface Cursor {
 }
 
 export type RepoNode = {
-  id: string;
+  id: number;
   name: string;
   owner: { login: string; avatarUrl: string };
-  stars?: number;
+  stars: number;
+  score: number;
 };
