@@ -3,10 +3,7 @@ import type { App as AppType } from "octokit";
 import { paginateRest } from "@octokit/plugin-paginate-rest";
 import { App, Octokit } from "octokit";
 
-export function useOctokitApp(
-  event: H3Event,
-  opts?: { ignoreBaseUrl?: boolean },
-): AppType {
+export function useOctokitApp(event: H3Event): AppType {
   try {
     const config = useRuntimeConfig(event);
     const { appId, privateKey, webhookSecret, ghBaseUrl } = config;
