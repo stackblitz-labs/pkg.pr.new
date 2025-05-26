@@ -17,21 +17,27 @@ watch(
       return;
     }
 
+    const controller = new AbortController();
+    activeController.value = controller;
+
     isLoading.value = true;
-    activeController.value = new AbortController();
     try {
       const response = await fetch(
         `/api/repo/search?text=${encodeURIComponent(newValue)}`,
-        { signal: activeController.value.signal },
+        { signal: controller.signal },
       );
       const data = (await response.json()) as { nodes?: RepoNode[] };
-      searchResults.value = data.nodes ? data.nodes : [];
+      if (activeController.value === controller) {
+        searchResults.value = data.nodes ?? [];
+      }
     } catch (err: any) {
       if (err.name !== "AbortError") {
         console.error(err);
       }
     } finally {
-      isLoading.value = false;
+      if (activeController.value === controller) {
+        isLoading.value = false;
+      }
     }
   },
   { immediate: false },
