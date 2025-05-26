@@ -16,17 +16,13 @@ export default defineEventHandler(async (event) => {
     );
     if (!query.text) return { nodes: [] };
 
-    const seenIds = new Set<string>();
-    const app = useOctokitApp(event, { ignoreBaseUrl: true });
+    const app = useOctokitApp(event);
     const searchText = query.text.toLowerCase();
     const matches: any[] = [];
 
     await app.eachRepository(async ({ repository }) => {
       if (signal.aborted) return;
       if (repository.private) return;
-      const idStr = String(repository.id);
-      if (seenIds.has(idStr)) return;
-      seenIds.add(idStr);
 
       const repoName = repository.name.toLowerCase();
       const ownerLogin = repository.owner.login.toLowerCase();
@@ -44,7 +40,7 @@ export default defineEventHandler(async (event) => {
 
       if (includes || nameScore > 0.5 || ownerScore > 0.5) {
         matches.push({
-          id: idStr,
+          id: repository.id,
           name: repository.name,
           owner: {
             login: repository.owner.login,

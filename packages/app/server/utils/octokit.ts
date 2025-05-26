@@ -24,7 +24,7 @@ export function useOctokitApp(
       privateKey,
       webhooks: { secret: webhookSecret },
       Octokit: Octokit.defaults({
-        ...(opts?.ignoreBaseUrl ? {} : { baseUrl: ghBaseUrl }),
+        baseUrl: ghBaseUrl,
         paginateRest,
       }),
     }) as unknown as AppType;
