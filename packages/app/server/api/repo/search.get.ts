@@ -35,21 +35,17 @@ export default defineEventHandler(async (event) => {
         ownerLogin,
         searchText,
       );
-      const includes =
-        repoName.includes(searchText) || ownerLogin.includes(searchText);
 
-      if (includes || nameScore > 0.5 || ownerScore > 0.5) {
-        matches.push({
-          id: repository.id,
-          name: repository.name,
-          owner: {
-            login: repository.owner.login,
-            avatarUrl: repository.owner.avatar_url,
-          },
-          stars: repository.stargazers_count || 0,
-          score: Math.max(nameScore, ownerScore, includes ? 1 : 0),
-        });
-      }
+      matches.push({
+        id: repository.id,
+        name: repository.name,
+        owner: {
+          login: repository.owner.login,
+          avatarUrl: repository.owner.avatar_url,
+        },
+        stars: repository.stargazers_count || 0,
+        score: Math.max(nameScore, ownerScore),
+      });
     });
 
     matches.sort((a, b) =>
