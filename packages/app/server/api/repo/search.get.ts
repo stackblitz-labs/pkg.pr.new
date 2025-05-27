@@ -1,11 +1,12 @@
 import { z } from "zod";
+import { useOctokitApp } from "../../utils/octokit";
+import stringSimilarity from "string-similarity";
 
 const querySchema = z.object({
   text: z.string(),
 });
 
 export default defineEventHandler(async (event) => {
-  const r2Binding = useBinding(event);
   const request = toWebRequest(event);
   const signal = request.signal;
 
@@ -13,74 +14,53 @@ export default defineEventHandler(async (event) => {
     const query = await getValidatedQuery(event, (data) =>
       querySchema.parse(data),
     );
+    if (!query.text) return { nodes: [] };
 
-    if (!query.text) {
-      return { nodes: [] };
-    }
-
+    const app = useOctokitApp(event);
     const searchText = query.text.toLowerCase();
+    const matches: RepoNode[] = [];
 
-    // Internal pagination: iterate until uniqueNodes is filled or no more objects
-    let cursor: string | undefined;
-    const seen = new Set<string>();
-    const uniqueNodes = [];
-    const maxNodes = 10;
-    let keepGoing = true;
+    await app.eachRepository(async ({ repository }) => {
+      if (signal.aborted) return;
+      if (repository.private) return;
 
-    while (uniqueNodes.length < maxNodes && keepGoing && !signal.aborted) {
-      const listResult = await r2Binding.list({
-        prefix: usePackagesBucket.base,
-        limit: 1000,
-        cursor,
+      const repoName = repository.name.toLowerCase();
+      const ownerLogin = repository.owner.login.toLowerCase();
+
+      const nameScore = stringSimilarity.compareTwoStrings(
+        repoName,
+        searchText,
+      );
+      const ownerScore = stringSimilarity.compareTwoStrings(
+        ownerLogin,
+        searchText,
+      );
+
+      matches.push({
+        id: repository.id,
+        name: repository.name,
+        owner: {
+          login: repository.owner.login,
+          avatarUrl: repository.owner.avatar_url,
+        },
+        stars: repository.stargazers_count || 0,
+        score: Math.max(nameScore, ownerScore),
       });
-      const { objects, truncated } = listResult;
-      cursor = truncated ? listResult.cursor : undefined;
+    });
 
-      for (const obj of objects) {
-        const parts = parseKey(obj.key);
-        const orgRepo = `${parts.org}/${parts.repo}`.toLowerCase();
-        const applies =
-          parts.org.toLowerCase().includes(searchText) ||
-          parts.repo.toLowerCase().includes(searchText) ||
-          orgRepo.includes(searchText);
-        if (!applies) continue;
+    matches.sort((a, b) =>
+      b.score !== a.score ? b.score - a.score : b.stars - a.stars,
+    );
 
-        const key = `${parts.org}/${parts.repo}`;
-        if (!seen.has(key)) {
-          seen.add(key);
-          uniqueNodes.push({
-            name: parts.repo,
-            owner: {
-              login: parts.org,
-              avatarUrl: `https://github.com/${parts.org}.png`,
-            },
-          });
-          if (uniqueNodes.length >= maxNodes) break;
-        }
-      }
+    const top = matches.slice(0, 10).map((node) => ({
+      id: node.id,
+      name: node.name,
+      owner: node.owner,
+      stars: node.stars,
+    }));
 
-      if (!truncated || uniqueNodes.length >= maxNodes) {
-        keepGoing = false;
-      }
-    }
-
-    return {
-      nodes: uniqueNodes,
-    };
+    return { nodes: top };
   } catch (error) {
-    console.error("Error in repository search:", error);
-    return {
-      nodes: [],
-      error: true,
-      message: (error as Error).message,
-    };
+    return { nodes: [], error: true, message: (error as Error).message };
   }
 });
-
-function parseKey(key: string) {
-  const parts = key.split(":");
-  return {
-    org: parts[2],
-    repo: parts[3],
-  };
-}

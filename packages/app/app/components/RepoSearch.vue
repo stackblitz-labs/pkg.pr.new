@@ -1,12 +1,47 @@
 <script lang="ts" setup>
+import type { RepoNode } from "../../server/utils/types";
 const search = useSessionStorage("search", "");
+const searchResults = ref<RepoNode[]>([]);
+const isLoading = ref(false);
 
+let activeController: AbortController | null = null;
 const throttledSearch = useThrottle(search, 500, true, false);
 
-const { data, status } = useFetch("/api/repo/search", {
-  query: computed(() => ({ text: throttledSearch.value })),
-  immediate: !!throttledSearch.value,
-});
+watch(
+  throttledSearch,
+  async (newValue) => {
+    activeController?.abort();
+    searchResults.value = [];
+    if (!newValue) {
+      isLoading.value = false;
+      return;
+    }
+
+    const controller = new AbortController();
+    activeController = controller;
+
+    isLoading.value = true;
+    try {
+      const response = await fetch(
+        `/api/repo/search?text=${encodeURIComponent(newValue)}`,
+        { signal: activeController.signal },
+      );
+      const data = (await response.json()) as { nodes: RepoNode[] };
+      if (activeController === controller) {
+        searchResults.value = data.nodes ?? [];
+      }
+    } catch (err: any) {
+      if (err.name !== "AbortError") {
+        console.error(err);
+      }
+    } finally {
+      if (activeController === controller) {
+        isLoading.value = false;
+      }
+    }
+  },
+  { immediate: false },
+);
 
 const examples = [
   {
@@ -37,16 +72,12 @@ const examples = [
 ];
 
 const router = useRouter();
-
 function openFirstResult() {
-  if (data.value?.nodes[0]) {
-    const { owner, name } = data.value.nodes[0];
+  const [first] = searchResults.value;
+  if (first) {
     router.push({
       name: "repo:details",
-      params: {
-        owner: owner.login,
-        repo: name,
-      },
+      params: { owner: first.owner.login, repo: first.name },
     });
   }
 }
@@ -64,13 +95,13 @@ function openFirstResult() {
       @keydown.enter="openFirstResult()"
     />
 
-    <div v-if="status === 'pending'" class="-mb-2 relative">
+    <div v-if="isLoading" class="-mb-2 relative">
       <UProgress size="xs" class="absolute inset-x-0 top-0" />
     </div>
 
-    <div v-if="data?.nodes.length">
+    <div v-if="searchResults.length">
       <RepoButton
-        v-for="repo in data.nodes"
+        v-for="repo in searchResults"
         :key="repo.id"
         :owner="repo.owner.login"
         :name="repo.name"
@@ -79,7 +110,7 @@ function openFirstResult() {
     </div>
 
     <div
-      v-else-if="search && status !== 'pending'"
+      v-else-if="search && !isLoading"
       class="text-gray-500 p-12 text-center"
     >
       No repositories found
