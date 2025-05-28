@@ -18,7 +18,7 @@ import { glob } from "tinyglobby";
 import ignore from "ignore";
 import "./environments";
 import { isBinaryFile } from "isbinaryfile";
-import { writePackageJSON, type PackageJson } from "pkg-types";
+import { type PackageJson } from "pkg-types";
 import pkg from "./package.json" with { type: "json" };
 import { createDefaultTemplate } from "./template";
 
@@ -105,10 +105,10 @@ const main = defineCommand({
           const paths =
             args._.length > 0
               ? await glob(args._, {
-                  expandDirectories: false,
-                  onlyDirectories: true,
-                  absolute: true,
-                })
+                expandDirectories: false,
+                onlyDirectories: true,
+                absolute: true,
+              })
               : [process.cwd()];
 
           const templates = await glob(args.template || [], {
@@ -593,7 +593,7 @@ async function writeDeps(
     hijackDeps(realDeps, pJson.peerDependencies);
   }
 
-  await writePackageJSON(pJsonPath, pJson);
+  await fs.writeFile(pJsonPath, JSON.stringify(pJson, null, 2));
 
   return () => fs.writeFile(pJsonPath, pJsonContents);
 }
