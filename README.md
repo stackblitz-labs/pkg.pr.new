@@ -60,6 +60,7 @@ These are some of the projects and companies using pkg.pr.new:
   <a href="https://tanstack.com/"><img src="https://avatars.githubusercontent.com/u/72518640?s=200&v=4" height="40"></a>
   <a href="https://biomejs.dev/"><img src="https://github.com/biomejs.png" height="40"></a>
   <a href="https://github.com/tinylibs"><img src="https://github.com/tinylibs.png" height="40"></a>
+  <a href="https://github.com/sanity-io/sanity"><picture><source media="(prefers-color-scheme: dark)" srcset="https://www.sanity.io/static/images/logo_white.svg"><source media="(prefers-color-scheme: light)" srcset="https://www.sanity.io/static/images/logo_black.svg"><img height="40" alt="Sanity" src="https://www.sanity.io/static/images/logo.svg"></picture></a>
   <a href="https://unjs.io/"><img src="https://avatars.githubusercontent.com/u/80154025?s=200&v=4" height="40"></a>
   <a href="https://reka-ui.com/"><img src="https://reka-ui.com/logo.svg" height="40"></a>
   <a href="https://www.gradio.app/"><img src="https://www.gradio.app/_app/immutable/assets/gradio.CHB5adID.svg" height="40"></a>
