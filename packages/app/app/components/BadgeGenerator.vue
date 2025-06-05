@@ -29,7 +29,7 @@ const redirectUrl = computed(
 );
 
 function copyBadgeCode() {
-  const md = `[![${props.repo}](${badgeUrl.value})](${redirectUrl.value})`;
+  const md = `[![pkg.pr.new](${badgeUrl.value})](${redirectUrl.value})`;
   navigator.clipboard.writeText(md);
   copied.value = true;
   setTimeout(() => (copied.value = false), 2000);
@@ -41,7 +41,7 @@ function copyBadgeCode() {
     <a :href="redirectUrl" target="_blank" rel="noopener">
       <img
         :src="badgeUrl"
-        :alt="`${props.repo} badge`"
+        :alt="`pkg.pr.new badge`"
         class="h-5 w-auto block max-w-none"
       />
     </a>
