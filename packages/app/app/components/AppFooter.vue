@@ -1,6 +1,6 @@
 <template>
   <footer
-    class="text-center p-12 opacity-50 hover:opacity-100 focus-within:opacity-100 flex flex-col items-center gap-3 text-xs"
+    class="text-center p-12 opacity-100 dark:opacity-50 dark:hover:opacity-100 dark:focus-within:opacity-100 flex flex-col items-center gap-3 text-xs transition-opacity duration-200"
   >
     <div class="flex gap-6 items-center justify-center">
       <div class="flex items-center">
