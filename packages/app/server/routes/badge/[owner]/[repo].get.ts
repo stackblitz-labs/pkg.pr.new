@@ -25,7 +25,7 @@ export default defineEventHandler(async (event) => {
   const logoBase64 = getPkgPrNewLogoBase64();
   const shieldsUrl =
     `https://img.shields.io/static/v1?` +
-    `label=&message=${encodeURIComponent(repo)}` +
+    `label=&message=${encodeURIComponent("pkg.pr.new")}` +
     `&color=${color}` +
     `&style=${style}` +
     `&logo=data:image/svg+xml;base64,${logoBase64}` +
