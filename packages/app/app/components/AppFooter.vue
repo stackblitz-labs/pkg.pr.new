@@ -1,10 +1,14 @@
 <template>
   <footer
-    class="text-center p-12 opacity-100 dark:opacity-50 dark:hover:opacity-100 dark:focus-within:opacity-100 flex flex-col items-center gap-3 text-xs transition-opacity duration-200"
+    class="text-center p-12 opacity-100 flex flex-col items-center gap-3 text-xs"
   >
     <div class="flex gap-6 items-center justify-center">
       <div class="flex items-center">
-        <a href="https://stackblitz.com/" target="_blank" class="block">
+        <a
+          href="https://blog.stackblitz.com/posts/pkg-pr-new/"
+          target="_blank"
+          class="block"
+        >
           <img
             src="/stackblitz.svg"
             alt="StackBlitz"
@@ -23,7 +27,11 @@
       </div>
       <div class="text-xs opacity-70 flex items-center">+</div>
       <div class="flex items-center">
-        <a href="https://cloudflare.com/" target="_blank" class="block">
+        <a
+          href="https://blog.stackblitz.com/posts/cloudflare-backing-pkg-pr-new-data-infrastructure/"
+          target="_blank"
+          class="block"
+        >
           <img
             src="/cloudflare.svg"
             alt="Cloudflare"

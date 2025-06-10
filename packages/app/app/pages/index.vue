@@ -19,7 +19,7 @@ function scrollToGettingStarted() {
       <a
         href="https://blog.stackblitz.com/posts/cloudflare-backing-pkg-pr-new-data-infrastructure/"
         target="_blank"
-        class="bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-white rounded-full px-5 py-2.5 transition-all duration-300 hover:scale-105 block border border-gray-200 dark:border-gray-700"
+        class="bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-white rounded-full px-5 py-2.5 block border border-gray-200 dark:border-gray-700"
       >
         <div class="flex items-center gap-2 text-sm">
           <span><strong>pkg.pr.new</strong> is now backed by</span>
