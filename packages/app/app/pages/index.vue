@@ -15,6 +15,28 @@ function scrollToGettingStarted() {
 
 <template>
   <div>
+    <div class="flex justify-center pt-4 pb-2">
+      <a
+        href="https://blog.stackblitz.com/posts/cloudflare-backing-pkg-pr-new-data-infrastructure/"
+        target="_blank"
+        class="bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-white rounded-full px-5 py-2.5 block border border-gray-200 dark:border-gray-700"
+      >
+        <div class="flex items-center gap-2 text-sm">
+          <span><strong>pkg.pr.new</strong> is now backed by</span>
+          <img
+            src="/cloudflare-icon.svg"
+            alt="Cloudflare"
+            width="18"
+            height="18"
+            class="inline-block"
+          />
+          <span class="font-semibold text-orange-500 dark:text-orange-400"
+            >Cloudflare</span
+          >
+        </div>
+      </a>
+    </div>
+
     <div
       class="my-container flex flex-col items-center gap-4 md:gap-12 min-h-[calc(100vh-80px)]"
     >

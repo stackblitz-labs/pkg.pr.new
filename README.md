@@ -1,5 +1,7 @@
 <p align="center"><img src="https://github.com/user-attachments/assets/314d5112-f67f-4758-82bf-7b0c19c01ba6" /></p>
 
+**[Cloudflare is now backing pkg.pr.new's data infrastructure!](https://blog.stackblitz.com/posts/cloudflare-backing-pkg-pr-new-data-infrastructure/)**
+
 # pkg.pr.new <span><img src="https://emoji.slack-edge.com/TFHDVN56F/stackblitz/fd010078dcccebca.png" width="30" /></span>
 
 > We call it "Continuous Releases" too.
