@@ -69,6 +69,10 @@ const main = defineCommand({
             type: "boolean",
             description: "use `pnpm pack` instead of `npm pack --json`",
           },
+          yarn: {
+            type: "boolean",
+            description: "use `yarn pack` instead of `npm pack --json`",
+          },
           template: {
             type: "string",
             description:
