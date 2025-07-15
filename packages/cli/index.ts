@@ -226,24 +226,32 @@ const main = defineCommand({
             }
 
             const formattedSha = isCompact ? abbreviateCommitHash(sha) : sha;
-            const depUrl = new URL(
+            const longDepUrl = new URL(
               `/${owner}/${repo}/${pJson.name}@${formattedSha}`,
               apiUrl,
             ).href;
-            deps.set(pJson.name, depUrl);
-            realDeps?.set(pJson.name, pJson.version ?? depUrl);
+            deps.set(pJson.name, longDepUrl);
+            realDeps?.set(pJson.name, pJson.version ?? longDepUrl);
 
-            const resource = await fetch(depUrl);
+            const controller = new AbortController();
+            const resource = await fetch(longDepUrl, {
+              signal: controller.signal,
+            });
             if (resource.ok) {
               console.warn(
-                `${pJson.name}@${formattedSha} was already published on ${depUrl}`,
+                `${pJson.name}@${formattedSha} was already published on ${longDepUrl}`,
               );
             }
+            controller.abort();
+
+            const jsonUrl = isCompact
+              ? new URL(`/${pJson.name}@${formattedSha}`, apiUrl).href
+              : longDepUrl;
 
             // Collect package metadata
             outputMetadata.packages.push({
               name: pJson.name,
-              url: depUrl,
+              url: jsonUrl,
               shasum: "", // will be filled later
             });
           }
