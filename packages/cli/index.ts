@@ -226,10 +226,15 @@ const main = defineCommand({
             }
 
             const formattedSha = isCompact ? abbreviateCommitHash(sha) : sha;
-            const depUrl = new URL(
-              `/${owner}/${repo}/${pJson.name}@${formattedSha}`,
-              apiUrl,
-            ).href;
+            let depUrl;
+            if (isCompact) {
+              depUrl = new URL(`/${pJson.name}@${formattedSha}`, apiUrl).href;
+            } else {
+              depUrl = new URL(
+                `/${owner}/${repo}/${pJson.name}@${formattedSha}`,
+                apiUrl,
+              ).href;
+            }
             deps.set(pJson.name, depUrl);
             realDeps?.set(pJson.name, pJson.version ?? depUrl);
 
