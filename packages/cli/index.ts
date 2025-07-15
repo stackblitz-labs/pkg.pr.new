@@ -226,29 +226,31 @@ const main = defineCommand({
             }
 
             const formattedSha = isCompact ? abbreviateCommitHash(sha) : sha;
-            let depUrl;
-            if (isCompact) {
-              depUrl = new URL(`/${pJson.name}@${formattedSha}`, apiUrl).href;
-            } else {
-              depUrl = new URL(
-                `/${owner}/${repo}/${pJson.name}@${formattedSha}`,
-                apiUrl,
-              ).href;
-            }
-            deps.set(pJson.name, depUrl);
-            realDeps?.set(pJson.name, pJson.version ?? depUrl);
+            const longDepUrl = new URL(
+              `/${owner}/${repo}/${pJson.name}@${formattedSha}`,
+              apiUrl,
+            ).href;
+            deps.set(pJson.name, longDepUrl);
+            realDeps?.set(pJson.name, pJson.version ?? longDepUrl);
 
-            const resource = await fetch(depUrl);
+            const resource = await fetch(longDepUrl);
             if (resource.ok) {
               console.warn(
-                `${pJson.name}@${formattedSha} was already published on ${depUrl}`,
+                `${pJson.name}@${formattedSha} was already published on ${longDepUrl}`,
               );
+            }
+
+            let jsonUrl;
+            if (isCompact) {
+              jsonUrl = new URL(`/${pJson.name}@${formattedSha}`, apiUrl).href;
+            } else {
+              jsonUrl = longDepUrl;
             }
 
             // Collect package metadata
             outputMetadata.packages.push({
               name: pJson.name,
-              url: depUrl,
+              url: jsonUrl,
               shasum: "", // will be filled later
             });
           }
