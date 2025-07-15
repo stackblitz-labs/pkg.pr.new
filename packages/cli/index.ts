@@ -233,19 +233,20 @@ const main = defineCommand({
             deps.set(pJson.name, longDepUrl);
             realDeps?.set(pJson.name, pJson.version ?? longDepUrl);
 
-            const resource = await fetch(longDepUrl);
+            const controller = new AbortController();
+            const resource = await fetch(longDepUrl, {
+              signal: controller.signal,
+            });
             if (resource.ok) {
               console.warn(
                 `${pJson.name}@${formattedSha} was already published on ${longDepUrl}`,
               );
+              controller.abort();
             }
 
-            let jsonUrl;
-            if (isCompact) {
-              jsonUrl = new URL(`/${pJson.name}@${formattedSha}`, apiUrl).href;
-            } else {
-              jsonUrl = longDepUrl;
-            }
+            const jsonUrl = isCompact
+              ? new URL(`/${pJson.name}@${formattedSha}`, apiUrl).href
+              : longDepUrl;
 
             // Collect package metadata
             outputMetadata.packages.push({
