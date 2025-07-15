@@ -241,8 +241,8 @@ const main = defineCommand({
               console.warn(
                 `${pJson.name}@${formattedSha} was already published on ${longDepUrl}`,
               );
-              controller.abort();
             }
+            controller.abort();
 
             const jsonUrl = isCompact
               ? new URL(`/${pJson.name}@${formattedSha}`, apiUrl).href
