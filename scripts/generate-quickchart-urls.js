@@ -46,7 +46,10 @@ async function main() {
           type: 'category',
           title: { display: true, text: 'Month' }
         },
-        y: { beginAtZero: true, title: { display: true, text: 'Count' } }
+        y: {
+          type: 'logarithmic',
+          title: { display: true, text: 'Count' }
+        }
       }
     }
   };
@@ -72,7 +75,10 @@ async function main() {
           type: 'category',
           title: { display: true, text: 'Month' }
         },
-        y: { beginAtZero: true, title: { display: true, text: 'Count' } }
+        y: {
+          type: 'logarithmic',
+          title: { display: true, text: 'Count' }
+        }
       }
     }
   };
@@ -98,7 +104,10 @@ async function main() {
           type: 'category',
           title: { display: true, text: 'Month' }
         },
-        y: { beginAtZero: true, title: { display: true, text: 'Count' } }
+        y: {
+          type: 'logarithmic',
+          title: { display: true, text: 'Count' }
+        }
       }
     }
   };

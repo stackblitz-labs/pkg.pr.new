@@ -22,7 +22,8 @@ import {
   Title,
   Tooltip,
   Legend,
-  TimeScale
+  TimeScale,
+  LogarithmicScale
 } from 'chart.js'
 import 'chartjs-adapter-date-fns'
 
@@ -35,7 +36,8 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  TimeScale
+  TimeScale,
+  LogarithmicScale
 )
 
 const orgsReposRef = ref<HTMLCanvasElement|null>(null)
@@ -85,7 +87,7 @@ onMounted(async () => {
             title: { display: true, text: 'Date' }
           },
           y: {
-            beginAtZero: true,
+            type: 'logarithmic',
             title: { display: true, text: 'Count' }
           }
         }
@@ -117,7 +119,7 @@ onMounted(async () => {
             title: { display: true, text: 'Date' }
           },
           y: {
-            beginAtZero: true,
+            type: 'logarithmic',
             title: { display: true, text: 'Count' }
           }
         }
@@ -149,7 +151,7 @@ onMounted(async () => {
             title: { display: true, text: 'Date' }
           },
           y: {
-            beginAtZero: true,
+            type: 'logarithmic',
             title: { display: true, text: 'Count' }
           }
         }
