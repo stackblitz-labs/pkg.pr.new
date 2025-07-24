@@ -1,10 +1,10 @@
 import { defineEventHandler } from "h3";
 import { $fetch } from "ofetch";
-import chartData from "./chart.get";
+import chartData from "../api/chart.get";
 
 interface Run {
   created_at: string;
-  stats: { commits: number };
+  stats: { orgs: number; repos: number };
 }
 
 export default defineEventHandler(async (event) => {
@@ -16,23 +16,31 @@ export default defineEventHandler(async (event) => {
     const date = new Date(r.created_at);
     return date.toLocaleString("en-US", { month: "short", year: "numeric" });
   });
-  const commits = runs.map((r: Run) => r.stats.commits);
+  const orgs = runs.map((r: Run) => r.stats.orgs);
+  const repos = runs.map((r: Run) => r.stats.repos);
   function getMinMax(arr: number[]) {
     const filtered = arr.filter((v) => typeof v === "number" && !isNaN(v));
     const min = Math.min(...filtered);
     const max = Math.max(...filtered);
     return { min: min - 10, max: max + 10 };
   }
-  const minMax = getMinMax(commits);
+  const orgsMinMax = getMinMax(orgs);
+  const reposMinMax = getMinMax(repos);
   const config = {
     type: "line",
     data: {
       labels,
       datasets: [
         {
-          label: "Commits",
-          data: commits,
-          borderColor: "rgb(153, 102, 255)",
+          label: "Organizations",
+          data: orgs,
+          borderColor: "rgb(54, 162, 235)",
+          fill: false,
+        },
+        {
+          label: "Repositories",
+          data: repos,
+          borderColor: "rgb(255, 99, 132)",
           fill: false,
         },
       ],
@@ -47,8 +55,8 @@ export default defineEventHandler(async (event) => {
         y: {
           type: "linear",
           title: { display: true, text: "Count" },
-          min: minMax.min,
-          max: minMax.max,
+          min: Math.min(orgsMinMax.min, reposMinMax.min),
+          max: Math.max(orgsMinMax.max, reposMinMax.max),
           ticks: {
             stepSize: 10,
           },
