@@ -1,6 +1,6 @@
 import { defineEventHandler } from "h3";
 import { $fetch } from "ofetch";
-import chartData from "../api/chart.get";
+import chartData from "./chart.get";
 
 interface Run {
   created_at: string;
