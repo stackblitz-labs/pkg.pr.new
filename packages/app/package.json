@@ -5,6 +5,7 @@
   "scripts": {
     "build": "nuxi build",
     "dev": "nuxi dev",
+    "preview": "nuxi preview",
     "generate": "nuxi generate",
     "vendor:octokit": "tsx script/octokit.ts",
     "prepare": "nuxi prepare",
@@ -28,6 +29,7 @@
     "@vueuse/core": "^12.2.0",
     "@vueuse/nuxt": "^12.2.0",
     "chart.js": "^4.5.0",
+    "fflate": "^0.8.2",
     "marked": "^15.0.4",
     "nuxt": "^3.15.0",
     "nuxt-shiki": "0.3.0",
