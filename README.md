@@ -36,9 +36,9 @@ Show that your project uses pkg.pr.new by adding a badge to your README:
 
 <p align="center">
   <b>Growth Statistics</b><br>
-  <img src="/api/chart-image-orgs-repos" alt="Orgs & Repos" width="350"/>
-  <img src="/api/chart-image-prs-branches" alt="PRs & Branches" width="350"/>
-  <img src="/api/chart-image-commits" alt="Commits" width="350"/>
+  <img src="https://17a58c40.stackblitz-cr.pages.dev/chart-image-orgs-repos" alt="Orgs & Repos" width="350"/>
+  <img src="/chart-image-prs-branches" alt="PRs & Branches" width="350"/>
+  <img src="/chart-image-commits" alt="Commits" width="350"/>
 </p>
 
 ### How to Get a Badge for Your Repository
