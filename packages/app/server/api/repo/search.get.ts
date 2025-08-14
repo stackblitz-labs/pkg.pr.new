@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { useOctokitApp } from "../../utils/octokit";
 import stringSimilarity from "string-similarity";
+import type { RepoNode } from "../../utils/types";
 
 const querySchema = z.object({
   text: z.string(),
@@ -20,32 +21,47 @@ export default defineEventHandler(async (event) => {
     const searchText = query.text.toLowerCase();
     const matches: RepoNode[] = [];
 
-    await app.eachRepository(async ({ repository }) => {
+    await app.eachInstallation(async ({ octokit, installation }) => {
       if (signal.aborted) return;
-      if (repository.private) return;
+      
+      if (installation.suspended_at) {
+        console.warn(`Skipping suspended installation ${installation.id}`);
+        return;
+      }
 
-      const repoName = repository.name.toLowerCase();
-      const ownerLogin = repository.owner.login.toLowerCase();
+      try {
+        const repos = await octokit.paginate("GET /installation/repositories");
 
-      const nameScore = stringSimilarity.compareTwoStrings(
-        repoName,
-        searchText,
-      );
-      const ownerScore = stringSimilarity.compareTwoStrings(
-        ownerLogin,
-        searchText,
-      );
+        for (const repository of repos) {
+          if (signal.aborted) return;
+          if (repository.private) continue;
 
-      matches.push({
-        id: repository.id,
-        name: repository.name,
-        owner: {
-          login: repository.owner.login,
-          avatarUrl: repository.owner.avatar_url,
-        },
-        stars: repository.stargazers_count || 0,
-        score: Math.max(nameScore, ownerScore),
-      });
+          const repoName = repository.name.toLowerCase();
+          const ownerLogin = repository.owner.login.toLowerCase();
+
+          const nameScore = stringSimilarity.compareTwoStrings(
+            repoName,
+            searchText,
+          );
+          const ownerScore = stringSimilarity.compareTwoStrings(
+            ownerLogin,
+            searchText,
+          );
+
+          matches.push({
+            id: repository.id,
+            name: repository.name,
+            owner: {
+              login: repository.owner.login,
+              avatarUrl: repository.owner.avatar_url,
+            },
+            stars: repository.stargazers_count || 0,
+            score: Math.max(nameScore, ownerScore),
+          });
+        }
+      } catch (error) {
+        console.warn(`Error fetching repositories for installation ${installation.id}:`, error);
+      }
     });
 
     matches.sort((a, b) =>
