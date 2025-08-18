@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
 
     await app.eachInstallation(async ({ octokit, installation }) => {
       if (signal.aborted) return;
-      
+
       if (installation.suspended_at) {
         console.warn(`Skipping suspended installation ${installation.id}`);
         return;
@@ -60,7 +60,10 @@ export default defineEventHandler(async (event) => {
           });
         }
       } catch (error) {
-        console.warn(`Error fetching repositories for installation ${installation.id}:`, error);
+        console.warn(
+          `Error fetching repositories for installation ${installation.id}:`,
+          error,
+        );
       }
     });
 
