@@ -1,29 +1,5 @@
 <script lang="ts" setup>
 import type { RepoNode } from "../../server/utils/types";
-
-interface SearchDebugInfo {
-  startTime: string;
-  endTime: string;
-  totalElapsedMs: number;
-  processedRepositories: number;
-  matchesFound: number;
-  averageProcessingTimePerRepo: number;
-  repositoriesPerSecond: number;
-  searchQuery: string;
-  status: "completed" | "aborted" | "error";
-  flowErrors: Array<{
-    stage: string;
-    error: string;
-    timestamp: string;
-    repositoryContext?: string;
-  }>;
-  flowStages: Array<{
-    stage: string;
-    timestamp: string;
-    details?: string;
-  }>;
-}
-
 const search = useSessionStorage("search", "");
 const searchResults = ref<RepoNode[]>([]);
 const isLoading = ref(false);
@@ -45,21 +21,14 @@ watch(
     activeController = controller;
 
     isLoading.value = true;
-
     try {
       const response = await fetch(
         `/api/repo/search?text=${encodeURIComponent(newValue)}`,
         { signal: activeController.signal },
       );
-      const data = (await response.json()) as {
-        nodes: RepoNode[];
-        debug?: SearchDebugInfo;
-      };
+      const data = (await response.json()) as { nodes: RepoNode[] };
       if (activeController === controller) {
         searchResults.value = data.nodes ?? [];
-        if (data.debug) {
-          console.log("Search debug info:", data.debug);
-        }
       }
     } catch (err: any) {
       if (err.name !== "AbortError") {
