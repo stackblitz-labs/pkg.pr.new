@@ -135,6 +135,8 @@ const main = defineCommand({
             packMethod = "pnpm";
           } else if (args.yarn) {
             packMethod = "yarn";
+          } else if (args.bun) {
+            packMethod = "bun";
           }
 
           const isPeerDepsEnabled = !!args.peerDeps;
@@ -586,13 +588,15 @@ runMain(main)
   .then(() => process.exit(0))
   .catch(() => process.exit(1));
 
-type PackMethod = "npm" | "pnpm" | "yarn";
+type PackMethod = "npm" | "pnpm" | "yarn" | "bun";
 
 async function resolveTarball(pm: PackMethod, p: string, pJson: PackageJson) {
   let cmd = `${pm} pack`;
   let filename = `${pJson.name!.replace("/", "-")}-${pJson.version}.tgz`;
   if (pm === "yarn") {
     cmd += ` --filename ${filename}`;
+  } else if (pm === "bun") {
+    cmd = "bun pm pack";
   }
   const { stdout } = await ezSpawn.async(cmd, {
     stdio: "overlapped",
