@@ -596,7 +596,7 @@ async function resolveTarball(pm: PackMethod, p: string, pJson: PackageJson) {
   if (pm === "yarn") {
     cmd += ` --filename ${filename}`;
   } else if (pm === "bun") {
-    cmd = "bun pm pack";
+    cmd = "bun pm pack --quiet";
   }
   const { stdout } = await ezSpawn.async(cmd, {
     stdio: "overlapped",
