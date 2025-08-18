@@ -74,6 +74,10 @@ const main = defineCommand({
             type: "boolean",
             description: "use `yarn pack` instead of `npm pack --json`",
           },
+          bun: {
+            "type": "boolean",
+            description: "use `bun pm pack` instead of `npm pack --json`",
+          },
           template: {
             type: "string",
             description:
