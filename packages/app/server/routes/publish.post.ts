@@ -230,6 +230,24 @@ export default eventHandler(async (event) => {
   }
 
   if (isPullRequest(workflowData.ref)) {
+    try {
+      const { data: pr } = await installation.request("GET /repos/{owner}/{repo}/pulls/{pull_number}", {
+        owner: workflowData.owner,
+        repo: workflowData.repo,
+        pull_number: Number(workflowData.ref),
+      });
+
+      if (pr.state !== 'open') {
+        console.log(`skipping comment on ${pr.state} PR #${pr.number}`);
+        return {
+          ok: true,
+          urls,
+        };
+      }
+    } catch (error) {
+      console.error("failed to check PR state", error);
+    }
+
     let prevComment: OctokitComponents["schemas"]["issue-comment"];
 
     await installation.paginate(
