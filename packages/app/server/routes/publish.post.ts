@@ -232,7 +232,7 @@ export default eventHandler(async (event) => {
 
   if (
     isPullRequest(workflowData.ref) &&
-    (await getPullRequestStatus(installation, workflowData)) === "open"
+    (await getPullRequestState(installation, workflowData)) === "open"
   ) {
     let prevComment: OctokitComponents["schemas"]["issue-comment"];
 
@@ -326,7 +326,7 @@ export default eventHandler(async (event) => {
   };
 });
 
-async function getPullRequestStatus(
+async function getPullRequestState(
   installation: Awaited<ReturnType<typeof useOctokitInstallation>>,
   workflowData: WorkflowData,
 ) {
