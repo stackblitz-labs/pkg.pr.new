@@ -229,25 +229,10 @@ export default eventHandler(async (event) => {
     checkRunUrl = html_url!;
   }
 
-  if (isPullRequest(workflowData.ref)) {
-    try {
-      const { data: pr } = await installation.request("GET /repos/{owner}/{repo}/pulls/{pull_number}", {
-        owner: workflowData.owner,
-        repo: workflowData.repo,
-        pull_number: Number(workflowData.ref),
-      });
-
-      if (pr.state !== 'open') {
-        console.log(`skipping comment on ${pr.state} PR #${pr.number}`);
-        return {
-          ok: true,
-          urls,
-        };
-      }
-    } catch (error) {
-      console.error("failed to check PR state", error);
-    }
-
+  if (
+    isPullRequest(workflowData.ref) &&
+    (await getPullRequestStatus(installation, workflowData)) === "open"
+  ) {
     let prevComment: OctokitComponents["schemas"]["issue-comment"];
 
     await installation.paginate(
@@ -339,6 +324,23 @@ export default eventHandler(async (event) => {
     urls,
   };
 });
+
+async function getPullRequestStatus(installation: any, workflowData: any) {
+  try {
+    const { data: pr } = await installation.request(
+      "GET /repos/{owner}/{repo}/pulls/{pull_number}",
+      {
+        owner: workflowData.owner,
+        repo: workflowData.repo,
+        pull_number: Number(workflowData.ref),
+      },
+    );
+    return pr.state;
+  } catch (error) {
+    console.error("failed to check PR state", error);
+    return null;
+  }
+}
 
 async function iterateAndDelete(
   event: H3Event,
