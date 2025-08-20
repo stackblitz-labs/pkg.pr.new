@@ -1,6 +1,7 @@
 import type { H3Event } from "h3";
 import type { components as OctokitComponents } from "@octokit/openapi-types";
 import type { Comment, PackageManager } from "@pkg-pr-new/utils";
+import type { WorkflowData } from "../types";
 import { isPullRequest, isWhitelisted } from "@pkg-pr-new/utils";
 import { randomUUID } from "uncrypto";
 import { setItemStream, useTemplatesBucket } from "../utils/bucket";
@@ -325,7 +326,10 @@ export default eventHandler(async (event) => {
   };
 });
 
-async function getPullRequestStatus(installation: any, workflowData: any) {
+async function getPullRequestStatus(
+  installation: Awaited<ReturnType<typeof useOctokitInstallation>>,
+  workflowData: WorkflowData,
+) {
   try {
     const { data: pr } = await installation.request(
       "GET /repos/{owner}/{repo}/pulls/{pull_number}",
