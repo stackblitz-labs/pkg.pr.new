@@ -1,5 +1,6 @@
 import type { H3EventContext } from "h3";
 import type { Cursor, WorkflowData, WebhookDebugData } from "../types";
+import type { Storage } from "unstorage";
 import { createStorage, joinKeys, prefixStorage } from "unstorage";
 import cloudflareR2BindingDriver from "unstorage/drivers/cloudflare-r2-binding";
 import { getR2Binding } from "unstorage/drivers/utils/cloudflare";
@@ -48,7 +49,7 @@ export async function getItemStream(
 export function useBucket(event: Event) {
   const binding = useBinding(event);
 
-  return createStorage<Binary>({
+  return createStorage({
     driver: cloudflareR2BindingDriver({
       base: useBucket.key,
       binding,
@@ -61,7 +62,10 @@ useBucket.base = useBucket.key;
 
 export function useWorkflowsBucket(event: Event) {
   const storage = useBucket(event);
-  return prefixStorage<WorkflowData>(storage, useWorkflowsBucket.key);
+  return prefixStorage<WorkflowData>(
+    storage as Storage<WorkflowData>,
+    useWorkflowsBucket.key,
+  );
 }
 
 useWorkflowsBucket.key = "workflow";
@@ -69,7 +73,10 @@ useWorkflowsBucket.base = joinKeys(useBucket.base, useWorkflowsBucket.key);
 
 export function usePackagesBucket(event: Event) {
   const storage = useBucket(event);
-  return prefixStorage<Uint8Array>(storage, usePackagesBucket.key);
+  return prefixStorage<Uint8Array>(
+    storage as Storage<Uint8Array>,
+    usePackagesBucket.key,
+  );
 }
 
 usePackagesBucket.key = "package";
@@ -77,7 +84,10 @@ usePackagesBucket.base = joinKeys(useBucket.base, usePackagesBucket.key);
 
 export function useTemplatesBucket(event: Event) {
   const storage = useBucket(event);
-  return prefixStorage<Uint8Array>(storage, useTemplatesBucket.key);
+  return prefixStorage<Uint8Array>(
+    storage as Storage<Uint8Array>,
+    useTemplatesBucket.key,
+  );
 }
 
 useTemplatesBucket.key = "template";
@@ -85,7 +95,10 @@ useTemplatesBucket.base = joinKeys(useBucket.base, useTemplatesBucket.key);
 
 export function useCursorsBucket(event: Event) {
   const storage = useBucket(event);
-  return prefixStorage<Cursor>(storage, useCursorsBucket.key);
+  return prefixStorage<Cursor>(
+    storage as Storage<Cursor>,
+    useCursorsBucket.key,
+  );
 }
 
 useCursorsBucket.key = "cursor";
@@ -93,7 +106,10 @@ useCursorsBucket.base = joinKeys(useBucket.base, useCursorsBucket.key);
 
 export function useDownloadedAtBucket(event: Event) {
   const storage = useBucket(event);
-  return prefixStorage<number>(storage, useDownloadedAtBucket.key);
+  return prefixStorage<number>(
+    storage as Storage<number>,
+    useDownloadedAtBucket.key,
+  );
 }
 
 useDownloadedAtBucket.key = "downloaded-at";
@@ -104,8 +120,11 @@ useDownloadedAtBucket.base = joinKeys(
 
 export function usePullRequestNumbersBucket(event: Event) {
   const storage = useBucket(event);
-  // TODO: this is a huge mistake, we should use usePullRequestNumbersBucket.key instead of useDownloadedAtBucket.key
-  return prefixStorage<number>(storage, useDownloadedAtBucket.key);
+
+  return prefixStorage<number>(
+    storage as Storage<number>,
+    usePullRequestNumbersBucket.key,
+  );
 }
 usePullRequestNumbersBucket.key = "pr-number";
 usePullRequestNumbersBucket.base = joinKeys(
@@ -115,7 +134,7 @@ usePullRequestNumbersBucket.base = joinKeys(
 
 export function useDebugBucket(event: Event) {
   const storage = useBucket(event);
-  return prefixStorage<WebhookDebugData>(storage, useDebugBucket.key);
+  return prefixStorage<WebhookDebugData>(storage as Storage<WebhookDebugData>, useDebugBucket.key);
 }
 
 useDebugBucket.key = "debug";
