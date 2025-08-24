@@ -323,7 +323,6 @@ export default eventHandler(async (event) => {
       workflowData,
       key,
       runId,
-      isPullRequest: isPullRequest(workflowData.ref),
     },
   };
 });

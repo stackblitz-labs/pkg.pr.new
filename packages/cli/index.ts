@@ -518,11 +518,8 @@ const main = defineCommand({
           );
 
           const debug = laterRes.debug;
-          core.startGroup("Backend response");
-          core.debug(`workflowData: ${JSON.stringify(debug.workflowData, null, 2)}`);
-          core.debug(`key: ${debug.key}`);
-          core.debug(`runId: ${debug.runId}`);
-          core.debug(`isPullRequest: ${debug.isPullRequest}`);
+          core.startGroup("[INFO]");
+          core.info(`Debug Data: ${JSON.stringify(debug, null, 2)}`);
           core.endGroup();
 
           console.warn("\n");
