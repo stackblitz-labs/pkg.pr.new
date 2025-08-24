@@ -38,19 +38,6 @@ export default eventHandler(async (event) => {
   const workflowsBucket = useWorkflowsBucket(event);
   const workflowData = await workflowsBucket.getItem(key);
 
-  console.log("[PUBLISH] Publish request received:", {
-    key,
-    runId,
-    headers: {
-      "sb-key": key,
-      "sb-run-id": runIdHeader,
-      "sb-comment": commentHeader,
-      "sb-compact": compactHeader,
-    },
-    workflowData,
-    workflowDataExists: !!workflowData,
-  });
-
   if (!workflowData) {
     throw createError({
       statusCode: 404,
@@ -242,20 +229,8 @@ export default eventHandler(async (event) => {
     checkRunUrl = html_url!;
   }
 
-  const isPRRef = isPullRequest(workflowData.ref);
-  const prNumber = Number(workflowData.ref);
-  console.log("[PUBLISH] PR commenting analysis:", {
-    workflowDataRef: workflowData.ref,
-    isPRRef,
-    prNumber,
-    willCommentOnPR: isPRRef,
-    prNumberToCommentOn: isPRRef ? prNumber : null,
-  });
-
   if (isPullRequest(workflowData.ref)) {
     let prevComment: OctokitComponents["schemas"]["issue-comment"];
-
-    console.log("[PUBLISH] Fetching comments for PR #" + prNumber);
 
     await installation.paginate(
       "GET /repos/{owner}/{repo}/issues/{issue_number}/comments",
@@ -286,7 +261,6 @@ export default eventHandler(async (event) => {
 
       try {
         if (comment === "update" && prevComment!) {
-          console.log("[PUBLISH] Updating existing comment on PR #" + prNumber);
           await installation.request(
             "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}",
             {
@@ -308,7 +282,6 @@ export default eventHandler(async (event) => {
             },
           );
         } else {
-          console.log("[PUBLISH] Creating new comment on PR #" + prNumber);
           await installation.request(
             "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
             {
@@ -330,7 +303,6 @@ export default eventHandler(async (event) => {
             },
           );
         }
-        console.log("[PUBLISH] Comment posted successfully to PR #" + prNumber);
       } catch (error) {
         console.error("failed to create/update comment", error, permissions);
       }
@@ -347,6 +319,26 @@ export default eventHandler(async (event) => {
   return {
     ok: true,
     urls,
+    debug: {
+      workflowData: {
+        owner: workflowData.owner,
+        repo: workflowData.repo,
+        sha: workflowData.sha,
+        ref: workflowData.ref,
+      },
+      prAnalysis: {
+        isPullRequest: isPullRequest(workflowData.ref),
+        refValue: workflowData.ref,
+        computedPRNumber: Number(workflowData.ref),
+        willCommentOnPR: isPullRequest(workflowData.ref),
+      },
+      bucketInfo: {
+        usedKey: key,
+        runId: runId,
+        bucketPrefixBug:
+          "usePullRequestNumbersBucket uses 'downloaded-at' prefix instead of 'pr-number'",
+      },
+    },
   };
 });
 
