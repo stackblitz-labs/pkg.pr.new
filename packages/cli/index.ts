@@ -518,12 +518,24 @@ const main = defineCommand({
           );
 
           const debug = laterRes.debug;
-          await core.summary
-            .addDetails(
-              "[INFO]",
-              `\`\`\`json\n${JSON.stringify(debug, null, 2)}\n\`\`\``
-            )
-            .write();
+
+          // Test if debug data exists
+          console.log("DEBUG DATA EXISTS:", !!debug);
+          console.log("DEBUG DATA:", debug);
+
+          if (debug) {
+            await core.summary
+              .addDetails(
+                "[INFO]",
+                `\`\`\`json\n${JSON.stringify(debug, null, 2)}\n\`\`\``
+              )
+              .write();
+          } else {
+            await core.summary
+              .addHeading("⚠️ No Debug Data")
+              .addRaw("Backend did not return debug data")
+              .write();
+          }
 
           console.warn("\n");
           console.warn("⚡️ Your npm packages are published.\n");
