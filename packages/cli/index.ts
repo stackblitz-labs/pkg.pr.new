@@ -520,7 +520,7 @@ const main = defineCommand({
           const debug = laterRes.debug;
 
           core.startGroup("[INFO]");
-          core.notice(JSON.stringify(debug, null, 2));
+          core.warning(`Debug Data:\n${JSON.stringify(debug, null, 2)}`);
           core.endGroup();
 
           console.warn("\n");
