@@ -516,34 +516,6 @@ const main = defineCommand({
             `publishing failed: ${await res.text()}`,
           );
 
-          if (laterRes.debug) {
-            const debug = laterRes.debug;
-            console.log("::group::🔍 Backend Debug Information");
-            console.log("::notice title=WorkflowData Retrieved::ref=%s sha=%s owner=%s repo=%s",
-              debug.workflowData.ref,
-              debug.workflowData.sha,
-              debug.workflowData.owner,
-              debug.workflowData.repo
-            );
-            console.log("::notice title=PR Analysis::isPR=%s refValue=%s prNumber=%d willComment=%s",
-              debug.prAnalysis.isPullRequest,
-              debug.prAnalysis.refValue,
-              debug.prAnalysis.computedPRNumber,
-              debug.prAnalysis.willCommentOnPR
-            );
-            console.log("::warning title=Bucket Bug Detected::%s", debug.bucketInfo.bucketPrefixBug);
-            console.log("::notice title=Request Info::key=%s runId=%s", debug.bucketInfo.usedKey, debug.bucketInfo.runId);
-            console.log("::endgroup::");
-            console.log("");
-            if (debug.prAnalysis.willCommentOnPR) {
-              console.log("::error title=Sequential PR Bug::Will comment on PR #%d instead of current branch '%s'. This is the bucket prefix bug!",
-                debug.prAnalysis.computedPRNumber,
-                process.env.GITHUB_REF_NAME || 'unknown'
-              );
-            }
-            console.log("");
-          }
-
           console.warn("\n");
           console.warn("⚡️ Your npm packages are published.\n");
 
