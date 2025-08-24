@@ -518,7 +518,7 @@ const main = defineCommand({
           );
 
           const debug = laterRes.debug;
-          core.startGroup("🔍 Backend Debug Information");
+          core.startGroup("Backend response");
           core.debug(`workflowData: ${JSON.stringify(debug.workflowData, null, 2)}`);
           core.debug(`key: ${debug.key}`);
           core.debug(`runId: ${debug.runId}`);
