@@ -308,11 +308,7 @@ export default eventHandler(async (event) => {
             },
           );
         } else {
-          console.log(
-            "[PUBLISH] Creating NEW comment on PR #" +
-              prNumber +
-              " (SHOULD BE CURRENT PR, NOT OLD!)",
-          );
+          console.log("[PUBLISH] Creating new comment on PR #" + prNumber);
           await installation.request(
             "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
             {
