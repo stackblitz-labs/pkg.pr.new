@@ -242,10 +242,9 @@ export default eventHandler(async (event) => {
     checkRunUrl = html_url!;
   }
 
-  // 🔍 DEBUG: Log PR commenting decision
   const isPRRef = isPullRequest(workflowData.ref);
   const prNumber = Number(workflowData.ref);
-  console.log("🔍 [PUBLISH DEBUG] PR commenting analysis:", {
+  console.log("[PUBLISH] PR commenting analysis:", {
     workflowDataRef: workflowData.ref,
     isPRRef,
     prNumber,
@@ -256,7 +255,7 @@ export default eventHandler(async (event) => {
   if (isPullRequest(workflowData.ref)) {
     let prevComment: OctokitComponents["schemas"]["issue-comment"];
 
-    console.log("🔍 [PUBLISH DEBUG] Fetching comments for PR #" + prNumber);
+    console.log("[PUBLISH] Fetching comments for PR #" + prNumber);
 
     await installation.paginate(
       "GET /repos/{owner}/{repo}/issues/{issue_number}/comments",
@@ -287,9 +286,7 @@ export default eventHandler(async (event) => {
 
       try {
         if (comment === "update" && prevComment!) {
-          console.log(
-            "🔍 [PUBLISH DEBUG] Updating existing comment on PR #" + prNumber,
-          );
+          console.log("[PUBLISH] Updating existing comment on PR #" + prNumber);
           await installation.request(
             "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}",
             {
@@ -312,9 +309,9 @@ export default eventHandler(async (event) => {
           );
         } else {
           console.log(
-            "🔍 [PUBLISH DEBUG] Creating NEW comment on PR #" +
-            prNumber +
-            " (SHOULD BE CURRENT PR, NOT OLD!)",
+            "[PUBLISH] Creating NEW comment on PR #" +
+              prNumber +
+              " (SHOULD BE CURRENT PR, NOT OLD!)",
           );
           await installation.request(
             "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
@@ -337,9 +334,7 @@ export default eventHandler(async (event) => {
             },
           );
         }
-        console.log(
-          "🔍 [PUBLISH DEBUG] Comment posted successfully to PR #" + prNumber,
-        );
+        console.log("[PUBLISH] Comment posted successfully to PR #" + prNumber);
       } catch (error) {
         console.error("failed to create/update comment", error, permissions);
       }
