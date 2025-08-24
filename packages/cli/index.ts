@@ -21,6 +21,7 @@ import { isBinaryFile } from "isbinaryfile";
 import { writePackageJSON, type PackageJson } from "pkg-types";
 import pkg from "./package.json" with { type: "json" };
 import { createDefaultTemplate } from "./template";
+import * as core from "@actions/core";
 
 declare global {
   const API_URL: string;
@@ -109,10 +110,10 @@ const main = defineCommand({
           const paths =
             args._.length > 0
               ? await glob(args._, {
-                  expandDirectories: false,
-                  onlyDirectories: true,
-                  absolute: true,
-                })
+                expandDirectories: false,
+                onlyDirectories: true,
+                absolute: true,
+              })
               : [process.cwd()];
 
           const templates = await glob(args.template || [], {
@@ -518,9 +519,9 @@ const main = defineCommand({
 
           const debug = laterRes.debug;
 
-          console.log("::group::[INFO]");
-          console.log(JSON.stringify(debug, null, 2));
-          console.log("::endgroup::");
+          core.startGroup("🔍 Backend Debug Data");
+          core.info(JSON.stringify(debug, null, 2));
+          core.endGroup();
 
           console.warn("\n");
           console.warn("⚡️ Your npm packages are published.\n");
