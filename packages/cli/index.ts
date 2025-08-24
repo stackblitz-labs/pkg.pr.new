@@ -21,6 +21,7 @@ import { isBinaryFile } from "isbinaryfile";
 import { writePackageJSON, type PackageJson } from "pkg-types";
 import pkg from "./package.json" with { type: "json" };
 import { createDefaultTemplate } from "./template";
+import * as core from "@actions/core";
 
 declare global {
   const API_URL: string;
@@ -515,6 +516,14 @@ const main = defineCommand({
             200,
             `publishing failed: ${await res.text()}`,
           );
+
+          const debug = laterRes.debug;
+          core.startGroup("🔍 Backend Debug Information");
+          core.debug(`workflowData: ${JSON.stringify(debug.workflowData, null, 2)}`);
+          core.debug(`key: ${debug.key}`);
+          core.debug(`runId: ${debug.runId}`);
+          core.debug(`isPullRequest: ${debug.isPullRequest}`);
+          core.endGroup();
 
           console.warn("\n");
           console.warn("⚡️ Your npm packages are published.\n");
