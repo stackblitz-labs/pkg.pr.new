@@ -109,10 +109,10 @@ const main = defineCommand({
           const paths =
             args._.length > 0
               ? await glob(args._, {
-                  expandDirectories: false,
-                  onlyDirectories: true,
-                  absolute: true,
-                })
+                expandDirectories: false,
+                onlyDirectories: true,
+                absolute: true,
+              })
               : [process.cwd()];
 
           const templates = await glob(args.template || [], {
@@ -176,6 +176,25 @@ const main = defineCommand({
           };
 
           const key = hash(metadata);
+
+          console.log("Publishing with metadata:", {
+            owner,
+            repo,
+            run: Number(GITHUB_RUN_ID),
+            attempt: Number(GITHUB_RUN_ATTEMPT),
+            actor: Number(GITHUB_ACTOR_ID),
+            key,
+            apiUrl,
+            env: {
+              GITHUB_REPOSITORY,
+              GITHUB_RUN_ID,
+              GITHUB_RUN_ATTEMPT,
+              GITHUB_ACTOR_ID,
+              GITHUB_SHA: process.env.GITHUB_SHA,
+              GITHUB_REF: process.env.GITHUB_REF,
+              GITHUB_REF_NAME: process.env.GITHUB_REF_NAME,
+            }
+          });
 
           const checkResponse = await fetch(new URL("/check", apiUrl), {
             method: "POST",
