@@ -320,24 +320,10 @@ export default eventHandler(async (event) => {
     ok: true,
     urls,
     debug: {
-      workflowData: {
-        owner: workflowData.owner,
-        repo: workflowData.repo,
-        sha: workflowData.sha,
-        ref: workflowData.ref,
-      },
-      prAnalysis: {
-        isPullRequest: isPullRequest(workflowData.ref),
-        refValue: workflowData.ref,
-        computedPRNumber: Number(workflowData.ref),
-        willCommentOnPR: isPullRequest(workflowData.ref),
-      },
-      bucketInfo: {
-        usedKey: key,
-        runId: runId,
-        bucketPrefixBug:
-          "usePullRequestNumbersBucket uses 'downloaded-at' prefix instead of 'pr-number'",
-      },
+      workflowData,
+      key,
+      runId,
+      isPullRequest: isPullRequest(workflowData.ref),
     },
   };
 });
