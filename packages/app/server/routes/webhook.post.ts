@@ -55,12 +55,30 @@ export default eventHandler(async (event) => {
         isNewPullRequest ? prKey : oldPrDataHash,
       );
 
+      console.log("[WEBHOOK] PR number lookup:", {
+        prData,
+        prKey,
+        oldPrDataHash,
+        isNewPullRequest,
+        isOldPullRequest,
+        isPullRequest,
+        prNumber,
+      });
+
       const data: WorkflowData = {
         owner,
         repo,
         sha: payload.workflow_run.head_sha,
         ref: isPullRequest ? `${prNumber}` : payload.workflow_run.head_branch!, // it's a pull request workflow
       };
+
+      console.log("[WEBHOOK] Final WorkflowData stored:", {
+        workflowData: data,
+        originalHeadBranch: payload.workflow_run.head_branch,
+        isPullRequestDetected: isPullRequest,
+        computedRef: data.ref,
+        hashKey,
+      });
 
       // Publishing is only available throughout the lifetime of a workflow_job
       await workflowsBucket.setItem(hashKey, data);

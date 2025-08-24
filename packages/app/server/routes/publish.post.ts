@@ -38,6 +38,19 @@ export default eventHandler(async (event) => {
   const workflowsBucket = useWorkflowsBucket(event);
   const workflowData = await workflowsBucket.getItem(key);
 
+  console.log("[PUBLISH] Publish request received:", {
+    key,
+    runId,
+    headers: {
+      "sb-key": key,
+      "sb-run-id": runIdHeader,
+      "sb-comment": commentHeader,
+      "sb-compact": compactHeader,
+    },
+    workflowData,
+    workflowDataExists: !!workflowData,
+  });
+
   if (!workflowData) {
     throw createError({
       statusCode: 404,
@@ -229,8 +242,21 @@ export default eventHandler(async (event) => {
     checkRunUrl = html_url!;
   }
 
+  // 🔍 DEBUG: Log PR commenting decision
+  const isPRRef = isPullRequest(workflowData.ref);
+  const prNumber = Number(workflowData.ref);
+  console.log("🔍 [PUBLISH DEBUG] PR commenting analysis:", {
+    workflowDataRef: workflowData.ref,
+    isPRRef,
+    prNumber,
+    willCommentOnPR: isPRRef,
+    prNumberToCommentOn: isPRRef ? prNumber : null,
+  });
+
   if (isPullRequest(workflowData.ref)) {
     let prevComment: OctokitComponents["schemas"]["issue-comment"];
+
+    console.log("🔍 [PUBLISH DEBUG] Fetching comments for PR #" + prNumber);
 
     await installation.paginate(
       "GET /repos/{owner}/{repo}/issues/{issue_number}/comments",
@@ -261,6 +287,9 @@ export default eventHandler(async (event) => {
 
       try {
         if (comment === "update" && prevComment!) {
+          console.log(
+            "🔍 [PUBLISH DEBUG] Updating existing comment on PR #" + prNumber,
+          );
           await installation.request(
             "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}",
             {
@@ -282,6 +311,11 @@ export default eventHandler(async (event) => {
             },
           );
         } else {
+          console.log(
+            "🔍 [PUBLISH DEBUG] Creating NEW comment on PR #" +
+              prNumber +
+              " (SHOULD BE CURRENT PR, NOT OLD!)",
+          );
           await installation.request(
             "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
             {
@@ -303,6 +337,9 @@ export default eventHandler(async (event) => {
             },
           );
         }
+        console.log(
+          "🔍 [PUBLISH DEBUG] Comment posted successfully to PR #" + prNumber,
+        );
       } catch (error) {
         console.error("failed to create/update comment", error, permissions);
       }
