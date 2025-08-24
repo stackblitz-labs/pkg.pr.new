@@ -519,7 +519,7 @@ const main = defineCommand({
 
           const debug = laterRes.debug;
 
-          core.startGroup("INFO");
+          core.startGroup("🔍 Info");
           core.info(JSON.stringify(debug, null, 2));
           core.endGroup();
 
