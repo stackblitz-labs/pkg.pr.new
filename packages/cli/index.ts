@@ -519,11 +519,20 @@ const main = defineCommand({
 
           const debug = laterRes.debug;
 
+          // Visible warning in logs
+          core.warning(`🔍 Debug Data:\n${JSON.stringify(debug, null, 2)}`);
+
+          // Try Job Summary with manual HTML
           await core.summary
-            .addDetails(
-              "Debug Data",
-              `\`\`\`json\n${JSON.stringify(debug, null, 2)}\n\`\`\``
-            )
+            .addRaw(`
+<details>
+<summary>🔍 Backend Debug Data</summary>
+
+\`\`\`json
+${JSON.stringify(debug, null, 2)}
+\`\`\`
+
+</details>`)
             .write();
 
           console.warn("\n");
