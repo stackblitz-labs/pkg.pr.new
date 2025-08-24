@@ -518,7 +518,9 @@ const main = defineCommand({
           );
 
           const debug = laterRes.debug;
-          core.notice(`Debug:\n${JSON.stringify(debug, null, 2)}`);
+          core.startGroup("[INFO]");
+          core.info(JSON.stringify(debug, null, 2));
+          core.endGroup();
 
           console.warn("\n");
           console.warn("⚡️ Your npm packages are published.\n");
