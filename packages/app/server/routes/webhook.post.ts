@@ -62,8 +62,26 @@ export default eventHandler(async (event) => {
         ref: isPullRequest ? `${prNumber}` : payload.workflow_run.head_branch!, // it's a pull request workflow
       };
 
+      const webhookDebugData = {
+        originalHeadBranch: payload.workflow_run.head_branch,
+        isPullRequest,
+        prNumber,
+        isNewPullRequest,
+        isOldPullRequest,
+        prKey,
+        oldPrDataHash,
+        lookupKey: isNewPullRequest ? prKey : oldPrDataHash,
+        finalRef: data.ref,
+      };
+
       // Publishing is only available throughout the lifetime of a workflow_job
       await workflowsBucket.setItem(hashKey, data);
+
+      // TODO: Amir: debug data for tracing ref (this is temporary)
+      await workflowsBucket.setItem(
+        `${hashKey}-debug`,
+        webhookDebugData as any,
+      );
     }
   };
 
