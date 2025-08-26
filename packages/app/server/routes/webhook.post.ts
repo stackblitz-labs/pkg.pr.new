@@ -51,9 +51,8 @@ export default eventHandler(async (event) => {
         await pullRequestNumbersBucket.hasItem(oldPrDataHash);
 
       const isPullRequest = isNewPullRequest || isOldPullRequest;
-      const prNumber = await pullRequestNumbersBucket.getItem(
-        isNewPullRequest ? prKey : oldPrDataHash,
-      );
+      const lookupKey = isNewPullRequest ? prKey : oldPrDataHash;
+      const prNumber = await pullRequestNumbersBucket.getItem(lookupKey);
 
       const data: WorkflowData = {
         owner,
@@ -98,6 +97,9 @@ export default eventHandler(async (event) => {
       originalHeadBranch: payload.workflow_run.head_branch,
       isPullRequest,
       prNumber,
+      prNumberType: typeof prNumber,
+      prNumberIsNull: prNumber === null,
+      prNumberIsUndefined: prNumber === undefined,
       isNewPullRequest,
       isOldPullRequest,
       prKey,
