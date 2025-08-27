@@ -1,6 +1,6 @@
 import type { PullRequestEvent } from "@octokit/webhooks-types";
 import type { HandlerFunction } from "@octokit/webhooks/dist-types/types";
-import type { PullRequestData, WorkflowData } from "../types";
+import type { PullRequestData, WorkflowData, WebhookDebugData } from "../types";
 import { hash } from "ohash";
 
 // mark a PR as a PR :)
@@ -16,6 +16,7 @@ export default eventHandler(async (event) => {
   const { test } = useRuntimeConfig(event);
   const workflowsBucket = useWorkflowsBucket(event);
   const pullRequestNumbersBucket = usePullRequestNumbersBucket(event);
+  const debugBucket = useDebugBucket(event);
 
   const workflowHandler: HandlerFunction<"workflow_run", unknown> = async ({
     payload,
@@ -92,9 +93,13 @@ export default eventHandler(async (event) => {
       isNewPullRequest ? prKey : oldPrDataHash,
     );
 
-    const debugData = {
+    const debugData: WebhookDebugData = {
       webhookAction: payload.action,
       originalHeadBranch: payload.workflow_run.head_branch,
+      originalHeadRepository:
+        payload.workflow_run.head_repository?.full_name || null,
+      originalRepositoryFullName: payload.repository.full_name,
+
       isPullRequest,
       prNumber,
       prNumberType: typeof prNumber,
@@ -102,12 +107,15 @@ export default eventHandler(async (event) => {
       prNumberIsUndefined: prNumber === undefined,
       isNewPullRequest,
       isOldPullRequest,
+
       prKey,
       oldPrDataHash,
       lookupKey: isNewPullRequest ? prKey : oldPrDataHash,
+      bucketHasNewKey: isNewPullRequest,
+      bucketHasOldKey: isOldPullRequest,
     };
 
-    await workflowsBucket.setItem(`${hashKey}-debug`, debugData as any);
+    await debugBucket.setItem(hashKey, debugData);
   };
 
   const pullRequestHandler: HandlerFunction<"pull_request", unknown> = async ({

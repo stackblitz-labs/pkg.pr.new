@@ -1,5 +1,5 @@
 import type { H3EventContext } from "h3";
-import type { Cursor, WorkflowData } from "../types";
+import type { Cursor, WorkflowData, WebhookDebugData } from "../types";
 import { createStorage, joinKeys, prefixStorage } from "unstorage";
 import cloudflareR2BindingDriver from "unstorage/drivers/cloudflare-r2-binding";
 import { getR2Binding } from "unstorage/drivers/utils/cloudflare";
@@ -112,3 +112,11 @@ usePullRequestNumbersBucket.base = joinKeys(
   useBucket.base,
   usePullRequestNumbersBucket.key,
 );
+
+export function useDebugBucket(event: Event) {
+  const storage = useBucket(event);
+  return prefixStorage<WebhookDebugData>(storage, useDebugBucket.key);
+}
+
+useDebugBucket.key = "debug";
+useDebugBucket.base = joinKeys(useBucket.base, useDebugBucket.key);
