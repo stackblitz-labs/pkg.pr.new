@@ -62,58 +62,30 @@ export default eventHandler(async (event) => {
         ref: isPullRequest ? `${prNumber}` : payload.workflow_run.head_branch!, // it's a pull request workflow
       };
 
-      const webhookDebugData = {
-        originalHeadBranch: payload.workflow_run.head_branch,
-        isPullRequest,
-        prNumber,
-        isNewPullRequest,
-        isOldPullRequest,
-        prKey,
-        oldPrDataHash,
-        lookupKey: isNewPullRequest ? prKey : oldPrDataHash,
-        finalRef: data.ref,
-      };
-
       // Publishing is only available throughout the lifetime of a workflow_job
       await workflowsBucket.setItem(hashKey, data);
+
+      const debugData: WebhookDebugData = {
+        webhookAction: payload.action,
+        originalHeadBranch: payload.workflow_run.head_branch,
+        originalHeadRepository:
+          payload.workflow_run.head_repository?.full_name || null,
+        originalRepositoryFullName: payload.repository.full_name,
+
+        isPullRequest,
+        prNumber,
+        prNumberType: typeof prNumber,
+        isNewPullRequest,
+        isOldPullRequest,
+
+        prKey,
+        oldPrDataHash,
+        lookupKey,
+        finalWorkflowData: data,
+      };
+
+      await debugBucket.setItem(hashKey, debugData);
     }
-
-    // TODO: Amir: debug data for tracing ref (this is temporary)
-    const prData: PullRequestData = {
-      full_name: payload.workflow_run.head_repository.full_name,
-      ref: payload.workflow_run.head_branch,
-    };
-    const prKey = `${prData.full_name}:${prData.ref}`;
-    const isNewPullRequest = await pullRequestNumbersBucket.hasItem(prKey);
-    const oldPrDataHash = hash(prData);
-    const isOldPullRequest =
-      await pullRequestNumbersBucket.hasItem(oldPrDataHash);
-    const isPullRequest = isNewPullRequest || isOldPullRequest;
-    const prNumber = await pullRequestNumbersBucket.getItem(
-      isNewPullRequest ? prKey : oldPrDataHash,
-    );
-
-    const debugData: WebhookDebugData = {
-      webhookAction: payload.action,
-      originalHeadBranch: payload.workflow_run.head_branch,
-      originalHeadRepository:
-        payload.workflow_run.head_repository?.full_name || null,
-      originalRepositoryFullName: payload.repository.full_name,
-
-      isPullRequest,
-      prNumber,
-      prNumberType: typeof prNumber,
-      isNewPullRequest,
-      isOldPullRequest,
-
-      prKey,
-      oldPrDataHash,
-      lookupKey: isNewPullRequest ? prKey : oldPrDataHash,
-      bucketHasNewKey: isNewPullRequest,
-      bucketHasOldKey: isOldPullRequest,
-    };
-
-    await debugBucket.setItem(hashKey, debugData);
   };
 
   const pullRequestHandler: HandlerFunction<"pull_request", unknown> = async ({

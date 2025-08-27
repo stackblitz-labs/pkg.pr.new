@@ -30,6 +30,6 @@ export interface WebhookDebugData {
   prKey: string;
   oldPrDataHash: string;
   lookupKey: string;
-  bucketHasNewKey: boolean;
-  bucketHasOldKey: boolean;
+
+  finalWorkflowData: WorkflowData;
 }
