@@ -66,11 +66,11 @@ export default eventHandler(async (event) => {
       await workflowsBucket.setItem(hashKey, data);
 
       const debugData: WebhookDebugData = {
-        webhookAction: payload.action,
-        originalHeadBranch: payload.workflow_run.head_branch,
-        originalHeadRepository:
+        action: payload.action,
+        head_branch: payload.workflow_run.head_branch,
+        head_repository_full_name:
           payload.workflow_run.head_repository?.full_name || null,
-        originalRepositoryFullName: payload.repository.full_name,
+        full_name: payload.repository.full_name,
 
         isPullRequest,
         prNumber,
@@ -81,7 +81,7 @@ export default eventHandler(async (event) => {
         prKey,
         oldPrDataHash,
         lookupKey,
-        finalWorkflowData: data,
+        data,
       };
 
       await debugBucket.setItem(hashKey, debugData);
