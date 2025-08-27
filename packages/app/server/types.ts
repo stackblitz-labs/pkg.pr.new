@@ -24,8 +24,6 @@ export interface WebhookDebugData {
   isPullRequest: boolean;
   prNumber: number | null;
   prNumberType: string;
-  prNumberIsNull: boolean;
-  prNumberIsUndefined: boolean;
   isNewPullRequest: boolean;
   isOldPullRequest: boolean;
 

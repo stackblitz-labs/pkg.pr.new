@@ -103,8 +103,6 @@ export default eventHandler(async (event) => {
       isPullRequest,
       prNumber,
       prNumberType: typeof prNumber,
-      prNumberIsNull: prNumber === null,
-      prNumberIsUndefined: prNumber === undefined,
       isNewPullRequest,
       isOldPullRequest,
 
