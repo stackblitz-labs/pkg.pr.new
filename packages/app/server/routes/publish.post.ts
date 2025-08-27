@@ -36,7 +36,9 @@ export default eventHandler(async (event) => {
   }
   const runId = Number(runIdHeader);
   const workflowsBucket = useWorkflowsBucket(event);
+  const debugBucket = useDebugBucket(event);
   const workflowData = await workflowsBucket.getItem(key);
+  const webhookDebugData = await debugBucket.getItem(key);
 
   if (!workflowData) {
     throw createError({
@@ -323,6 +325,7 @@ export default eventHandler(async (event) => {
       workflowData,
       key,
       runId,
+      webhookDebug: webhookDebugData,
     },
   };
 });
