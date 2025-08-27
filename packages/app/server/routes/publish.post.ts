@@ -326,14 +326,6 @@ export default eventHandler(async (event) => {
       key,
       runId,
       webhookDebug: webhookDebugData,
-      publishDebug: {
-        // adding these to see how this behaves when its not a PR
-        isPullRequestDetected: isPullRequest(workflowData.ref),
-        willCommentOnPR: isPullRequest(workflowData.ref),
-        commentTargetPR: isPullRequest(workflowData.ref)
-          ? Number(workflowData.ref)
-          : null,
-      },
     },
   };
 });
