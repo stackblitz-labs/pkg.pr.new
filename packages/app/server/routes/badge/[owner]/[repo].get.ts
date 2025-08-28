@@ -57,15 +57,13 @@ export default defineEventHandler(async (event) => {
   const releaseCount = await getRepoReleaseCount(event, owner, repo);
   console.log(`Repository ${owner}/${repo} has ${releaseCount} releases`);
 
-  const {
-    style = "flat",
-    color = "000",
-    showCount,
-  } = getQuery(event) as Record<string, string>;
+  const { style = "flat", color = "000" } = getQuery(event) as Record<
+    string,
+    string
+  >;
   const logoBase64 = getPkgPrNewLogoBase64();
 
-  const message =
-    showCount === "true" ? `pkg.pr.new (${releaseCount})` : "pkg.pr.new";
+  const message = `pkg.pr.new releases: ${releaseCount}`;
 
   const shieldsUrl =
     `https://img.shields.io/static/v1?` +
