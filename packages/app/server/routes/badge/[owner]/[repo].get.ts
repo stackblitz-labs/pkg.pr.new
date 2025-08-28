@@ -55,7 +55,6 @@ export default defineEventHandler(async (event) => {
   }
 
   const releaseCount = await getRepoReleaseCount(event, owner, repo);
-  console.log(`Repository ${owner}/${repo} has ${releaseCount} releases`);
 
   const { style = "flat", color = "000" } = getQuery(event) as Record<
     string,
@@ -63,11 +62,9 @@ export default defineEventHandler(async (event) => {
   >;
   const logoBase64 = getPkgPrNewLogoBase64();
 
-  const message = `pkg.pr.new releases: ${releaseCount}`;
-
   const shieldsUrl =
     `https://img.shields.io/static/v1?` +
-    `label=&message=${encodeURIComponent(message)}` +
+    `label=&message=${encodeURIComponent(`pkg.pr.new: ${releaseCount}`)}` +
     `&color=${color}` +
     `&style=${style}` +
     `&logo=data:image/svg+xml;base64,${logoBase64}` +
@@ -78,8 +75,6 @@ export default defineEventHandler(async (event) => {
 
   setHeader(event, "Content-Type", "image/svg+xml");
   setHeader(event, "Cache-Control", "public, max-age=86400");
-  setHeader(event, "X-Release-Count", releaseCount.toString());
-  setHeader(event, "X-Repository", `${owner}/${repo}`);
   return svg;
 });
 
