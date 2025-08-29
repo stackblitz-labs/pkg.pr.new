@@ -17,7 +17,6 @@ onMounted(() => {
   baseUrl.value = window.location.origin;
 });
 
-// Generate badge URL with shields.io directly using known release count
 const badgeUrl = computed(() => {
   const logoBase64 = getPkgPrNewLogoBase64();
   return (
