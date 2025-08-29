@@ -73,17 +73,81 @@ onBeforeMount(async () => {
       );
     },
     code({ text }) {
-      return `<code class="language-bash">${shiki.codeToHtml(text, {
+      const highlightedCode = shiki.codeToHtml(text, {
         theme: colorMode.preference === "dark" ? "github-dark" : "github-light",
         lang: "bash",
-      })}</code>`;
+      });
+
+      const codeId = `code-${Math.random().toString(36).substr(2, 9)}`;
+
+      return `
+        <div class="relative group my-4 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm">
+          <div class="flex items-center justify-end px-4 py-1 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+            <button 
+              onclick="copyToClipboard('${codeId}', this)" 
+              class="flex items-center gap-1 px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors opacity-0 group-hover:opacity-100"
+              title="Copy to clipboard"
+            >
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+              </svg>
+              Copy
+            </button>
+          </div>
+          <div class="overflow-x-auto">
+            <div id="${codeId}" class="[&>pre]:!my-0 [&>pre]:!bg-transparent [&>pre]:!border-0 [&>pre]:!rounded-none [&>pre]:!p-4">${highlightedCode}</div>
+          </div>
+        </div>
+      `;
     },
   };
 
   marked.use({ renderer });
+  if (typeof window !== "undefined") {
+    (window as any).copyToClipboard = (
+      elementId: string,
+      buttonEl: HTMLElement,
+    ) => {
+      const element = document.getElementById(elementId);
+      if (element) {
+        const text = element.textContent || "";
+        navigator.clipboard
+          .writeText(text.trim())
+          .then(() => {
+            const originalHTML = buttonEl.innerHTML;
+            buttonEl.innerHTML = `
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            Copied!
+          `;
+            buttonEl.classList.add("!text-green-600", "dark:!text-green-400");
+
+            setTimeout(() => {
+              buttonEl.innerHTML = originalHTML;
+              buttonEl.classList.remove(
+                "!text-green-600",
+                "dark:!text-green-400",
+              );
+            }, 2000);
+          })
+          .catch(() => {
+            const textArea = document.createElement("textarea");
+            textArea.value = text.trim();
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand("copy");
+            document.body.removeChild(textArea);
+          });
+      }
+    };
+  }
 });
 
 onBeforeUnmount(() => {
+  if (typeof window !== "undefined") {
+    delete (window as any).copyToClipboard;
+  }
   shiki?.dispose();
 });
 
