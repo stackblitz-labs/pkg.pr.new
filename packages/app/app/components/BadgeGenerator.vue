@@ -21,7 +21,7 @@ const badgeUrl = computed(() => {
   const logoBase64 = getPkgPrNewLogoBase64();
   return (
     `https://img.shields.io/static/v1?` +
-    `label=&message=${encodeURIComponent(`pkg.pr.new | ${props.releaseCount}`)}` +
+    `label=&message=${encodeURIComponent(`${props.releaseCount} | pkg.pr.new`)}` +
     `&color=${color}` +
     `&style=${style}` +
     `&logo=data:image/svg+xml;base64,${logoBase64}` +
