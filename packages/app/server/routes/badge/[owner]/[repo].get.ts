@@ -64,7 +64,7 @@ export default defineEventHandler(async (event) => {
 
   const shieldsUrl =
     `https://img.shields.io/static/v1?` +
-    `label=&message=${encodeURIComponent(`pkg.pr.new: ${releaseCount}`)}` +
+    `label=&message=${encodeURIComponent(`pkg.pr.new | ${releaseCount}`)}` +
     `&color=${color}` +
     `&style=${style}` +
     `&logo=data:image/svg+xml;base64,${logoBase64}` +
