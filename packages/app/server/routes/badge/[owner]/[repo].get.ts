@@ -5,42 +5,7 @@ import {
   createError,
   getQuery,
 } from "h3";
-
-async function getRepoReleaseCount(
-  event: any,
-  owner: string,
-  repo: string,
-): Promise<number> {
-  try {
-    const binding = useBinding(event);
-    const packagesPrefix = `${usePackagesBucket.base}:`;
-
-    let releaseCount = 0;
-    let cursor: string | undefined;
-
-    do {
-      const response = await binding.list({ cursor, limit: 1000 });
-
-      for (const { key } of response.objects) {
-        if (key.startsWith(packagesPrefix)) {
-          const trimmedKey = key.slice(packagesPrefix.length);
-          const [keyOrg, keyRepo] = trimmedKey.split(":");
-
-          if (keyOrg === owner && keyRepo === repo) {
-            releaseCount++;
-          }
-        }
-      }
-
-      cursor = response.truncated ? response.cursor : undefined;
-    } while (cursor);
-
-    return releaseCount;
-  } catch (error) {
-    console.error(`Error counting releases for ${owner}/${repo}:`, error);
-    return 0;
-  }
-}
+import { getRepoReleaseCount } from "../../../utils/bucket";
 
 export default defineEventHandler(async (event) => {
   const { owner, repo } = getRouterParams(event) as {

@@ -86,6 +86,7 @@ useSeoMeta({
         <BadgeGenerator
           :owner="repository.owner.login"
           :repo="repository.name"
+          :release-count="repository.releaseCount"
         />
       </div>
     </div>
