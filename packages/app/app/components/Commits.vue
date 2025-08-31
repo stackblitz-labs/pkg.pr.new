@@ -44,20 +44,9 @@ const selectedCommit = shallowRef<
   (typeof commitsWithRelease.value)[number] | null
 >(null);
 
-// Markdown
-
-// Add target to links
-
-const colorMode = useColorMode();
 let shiki: HighlighterCore;
 
 onBeforeMount(async () => {
-  // if (typeof window === 'undefined') {
-  //   const { loadWasm } = await import('shiki')
-  //   // @ts-expect-error ignore error
-  //   await loadWasm(import(/* @vite-ignore */ 'shiki/onig.wasm'))
-  // }
-
   shiki = createHighlighterCoreSync({
     themes: [githubDark, githubLight],
     langs: [bash],
@@ -73,10 +62,45 @@ onBeforeMount(async () => {
       );
     },
     code({ text }) {
-      return `<code class="language-bash">${shiki.codeToHtml(text, {
-        theme: colorMode.preference === "dark" ? "github-dark" : "github-light",
+      const currentTheme = document.documentElement.classList.contains("dark")
+        ? "github-dark"
+        : "github-light";
+      const highlightedCode = shiki.codeToHtml(text, {
+        theme: currentTheme,
         lang: "bash",
-      })}</code>`;
+      });
+
+      function copyCodeHandler(this: HTMLButtonElement, codeText: string) {
+        navigator.clipboard?.writeText(codeText);
+        if (this.dataset.timeoutId) {
+          clearTimeout(parseInt(this.dataset.timeoutId));
+        }
+        this.textContent = "Copied!";
+        this.classList.add("!text-green-600", "dark:!text-green-400");
+        const timeoutId = setTimeout(() => {
+          this.textContent = "Copy";
+          this.classList.remove("!text-green-600", "dark:!text-green-400");
+          delete this.dataset.timeoutId;
+        }, 2000);
+        this.dataset.timeoutId = timeoutId.toString();
+      }
+
+      return `
+        <div class="relative group my-4 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm">
+          <div class="flex items-center justify-end px-4 py-1 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+            <button 
+              onclick='(${copyCodeHandler.toString()}).call(this, ${JSON.stringify(text)})'
+              class="px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors opacity-0 group-hover:opacity-100"
+              title="Copy to clipboard"
+            >
+              Copy
+            </button>
+          </div>
+          <div class="overflow-x-auto">
+            <div class="[&>pre]:!my-0 [&>pre]:!bg-transparent [&>pre]:!border-0 [&>pre]:!rounded-none [&>pre]:!p-4">${highlightedCode}</div>
+          </div>
+        </div>
+      `;
     },
   };
 
