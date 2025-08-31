@@ -52,12 +52,6 @@ const colorMode = useColorMode();
 let shiki: HighlighterCore;
 
 onBeforeMount(async () => {
-  // if (typeof window === 'undefined') {
-  //   const { loadWasm } = await import('shiki')
-  //   // @ts-expect-error ignore error
-  //   await loadWasm(import(/* @vite-ignore */ 'shiki/onig.wasm'))
-  // }
-
   shiki = createHighlighterCoreSync({
     themes: [githubDark, githubLight],
     langs: [bash],
@@ -78,13 +72,11 @@ onBeforeMount(async () => {
         lang: "bash",
       });
 
-      const codeId = `code-${Math.random().toString(36).substr(2, 9)}`;
-
       return `
         <div class="relative group my-4 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm">
           <div class="flex items-center justify-end px-4 py-1 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
             <button 
-              onclick="copyToClipboard('${codeId}', this)" 
+              onclick="navigator.clipboard?.writeText('${text.replace(/'/g, "\\'")}'); this.textContent='Copied!'; this.classList.add('!text-green-600', 'dark:!text-green-400'); setTimeout(() => { this.textContent='Copy'; this.classList.remove('!text-green-600', 'dark:!text-green-400'); }, 2000)"
               class="px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors opacity-0 group-hover:opacity-100"
               title="Copy to clipboard"
             >
@@ -92,7 +84,7 @@ onBeforeMount(async () => {
             </button>
           </div>
           <div class="overflow-x-auto">
-            <div id="${codeId}" class="[&>pre]:!my-0 [&>pre]:!bg-transparent [&>pre]:!border-0 [&>pre]:!rounded-none [&>pre]:!p-4">${highlightedCode}</div>
+            <div class="[&>pre]:!my-0 [&>pre]:!bg-transparent [&>pre]:!border-0 [&>pre]:!rounded-none [&>pre]:!p-4">${highlightedCode}</div>
           </div>
         </div>
       `;
@@ -100,46 +92,9 @@ onBeforeMount(async () => {
   };
 
   marked.use({ renderer });
-  if (typeof window !== "undefined") {
-    (window as any).copyToClipboard = (
-      elementId: string,
-      buttonEl: HTMLElement,
-    ) => {
-      const element = document.getElementById(elementId);
-      if (element) {
-        const text = element.textContent || "";
-        navigator.clipboard
-          .writeText(text.trim())
-          .then(() => {
-            const originalHTML = buttonEl.innerHTML;
-            buttonEl.innerHTML = `Copied!`;
-            buttonEl.classList.add("!text-green-600", "dark:!text-green-400");
-
-            setTimeout(() => {
-              buttonEl.innerHTML = originalHTML;
-              buttonEl.classList.remove(
-                "!text-green-600",
-                "dark:!text-green-400",
-              );
-            }, 2000);
-          })
-          .catch(() => {
-            const textArea = document.createElement("textarea");
-            textArea.value = text.trim();
-            document.body.appendChild(textArea);
-            textArea.select();
-            document.execCommand("copy");
-            document.body.removeChild(textArea);
-          });
-      }
-    };
-  }
 });
 
 onBeforeUnmount(() => {
-  if (typeof window !== "undefined") {
-    delete (window as any).copyToClipboard;
-  }
   shiki?.dispose();
 });
 
