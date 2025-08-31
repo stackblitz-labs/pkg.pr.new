@@ -44,7 +44,6 @@ const selectedCommit = shallowRef<
   (typeof commitsWithRelease.value)[number] | null
 >(null);
 
-const colorMode = useColorMode();
 let shiki: HighlighterCore;
 
 onBeforeMount(async () => {
