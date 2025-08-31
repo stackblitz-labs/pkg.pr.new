@@ -72,11 +72,21 @@ onBeforeMount(async () => {
         lang: "bash",
       });
 
+      function copyCodeHandler(this: HTMLButtonElement, codeText: string) {
+        navigator.clipboard?.writeText(codeText);
+        this.textContent = "Copied!";
+        this.classList.add("!text-green-600", "dark:!text-green-400");
+        setTimeout(() => {
+          this.textContent = "Copy";
+          this.classList.remove("!text-green-600", "dark:!text-green-400");
+        }, 2000);
+      }
+
       return `
         <div class="relative group my-4 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm">
           <div class="flex items-center justify-end px-4 py-1 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
             <button 
-              onclick="navigator.clipboard?.writeText('${text.replace(/'/g, "\\'")}'); this.textContent='Copied!'; this.classList.add('!text-green-600', 'dark:!text-green-400'); setTimeout(() => { this.textContent='Copy'; this.classList.remove('!text-green-600', 'dark:!text-green-400'); }, 2000)"
+              onclick="(${copyCodeHandler.toString()})(${JSON.stringify(text)})"
               class="px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors opacity-0 group-hover:opacity-100"
               title="Copy to clipboard"
             >
