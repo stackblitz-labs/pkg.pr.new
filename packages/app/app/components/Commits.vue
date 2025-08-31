@@ -44,10 +44,6 @@ const selectedCommit = shallowRef<
   (typeof commitsWithRelease.value)[number] | null
 >(null);
 
-// Markdown
-
-// Add target to links
-
 const colorMode = useColorMode();
 let shiki: HighlighterCore;
 
@@ -67,19 +63,27 @@ onBeforeMount(async () => {
       );
     },
     code({ text }) {
+      const currentTheme = document.documentElement.classList.contains("dark")
+        ? "github-dark"
+        : "github-light";
       const highlightedCode = shiki.codeToHtml(text, {
-        theme: colorMode.preference === "dark" ? "github-dark" : "github-light",
+        theme: currentTheme,
         lang: "bash",
       });
 
       function copyCodeHandler(this: HTMLButtonElement, codeText: string) {
         navigator.clipboard?.writeText(codeText);
+        if (this.dataset.timeoutId) {
+          clearTimeout(parseInt(this.dataset.timeoutId));
+        }
         this.textContent = "Copied!";
         this.classList.add("!text-green-600", "dark:!text-green-400");
-        setTimeout(() => {
+        const timeoutId = setTimeout(() => {
           this.textContent = "Copy";
           this.classList.remove("!text-green-600", "dark:!text-green-400");
+          delete this.dataset.timeoutId;
         }, 2000);
+        this.dataset.timeoutId = timeoutId.toString();
       }
 
       return `
