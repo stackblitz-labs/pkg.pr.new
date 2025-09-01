@@ -110,10 +110,10 @@ const main = defineCommand({
           const paths =
             args._.length > 0
               ? await glob(args._, {
-                expandDirectories: false,
-                onlyDirectories: true,
-                absolute: true,
-              })
+                  expandDirectories: false,
+                  onlyDirectories: true,
+                  absolute: true,
+                })
               : [process.cwd()];
 
           const templates = await glob(args.template || [], {
