@@ -303,6 +303,69 @@ on:
 
 As noted in [#140](https://github.com/stackblitz-labs/pkg.pr.new/issues/140), workflows run on tags too, that's not an issue at all, but in case users would like to avoid duplicate publishes.
 
+#### Run E2E test using outputs
+
+After `pkg-pr-new publish` runs successfully, some outputs are available.
+
+- `sha`: The short SHA used. (E.g. `a832a55`)
+- `urls`: Space-separated URLs of published packages.
+- `packages`: Space-separated, Yarn-compatible package locators of published packages.
+
+This is useful for using published packages in other subsequent jobs immediately after publishing. (E.g. E2E tests)
+
+```yml
+name: Publish and Test Packages
+on: [push, pull_request]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.publish.outputs.sha }}
+      urls: ${{ steps.publish.outputs.urls }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build
+        run: pnpm build
+
+      - id: publish
+        run: pnpm dlx pkg-pr-new publish
+
+  e2e-test:
+    runs-on: ubuntu-latest
+    needs: publish
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          repository: user/my-package-e2e
+
+      - run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Install published package
+        run: pnpm add ${{ needs.publish.outputs.urls }}
+
+      - name: Run e2e test cases
+        run: # ...
+```
+
 ## Custom GitHub Messages and Comments
 
 For advanced use cases where you want more control over the messages posted by pkg.pr.new, you can use the `--json` option in combination with `--comment=off`. This allows you to generate metadata about the publish operation without creating a default comment, which you can then use to create custom comments via the GitHub Actions API.
