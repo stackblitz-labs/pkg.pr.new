@@ -227,8 +227,6 @@ const main = defineCommand({
             if (isCompact) {
               await verifyCompactMode(pJson.name);
             }
-
-            const formattedSha = isCompact ? abbreviateCommitHash(sha) : sha;
             const longDepUrl = new URL(
               `/${owner}/${repo}/${pJson.name}@${formattedSha}`,
               apiUrl,
