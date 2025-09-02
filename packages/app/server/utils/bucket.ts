@@ -120,11 +120,31 @@ useDownloadedAtBucket.base = joinKeys(
 
 export function usePullRequestNumbersBucket(event: Event) {
   const storage = useBucket(event);
-
-  return prefixStorage<number>(
+  const newStorage = prefixStorage<number>(
     storage as Storage<number>,
     usePullRequestNumbersBucket.key,
   );
+  const oldStorage = prefixStorage<number>(
+    storage as Storage<number>,
+    useDownloadedAtBucket.key,
+  );
+
+  return {
+    async hasItem(key: string) {
+      return (await newStorage.hasItem(key)) || (await oldStorage.hasItem(key));
+    },
+    async getItem(key: string) {
+      const newValue = await newStorage.getItem(key);
+      return newValue !== null ? newValue : await oldStorage.getItem(key);
+    },
+    async setItem(key: string, value: number) {
+      await newStorage.setItem(key, value);
+    },
+    async removeItem(key: string) {
+      await newStorage.removeItem(key);
+      await oldStorage.removeItem(key);
+    },
+  };
 }
 usePullRequestNumbersBucket.key = "pr-number";
 usePullRequestNumbersBucket.base = joinKeys(
@@ -134,7 +154,10 @@ usePullRequestNumbersBucket.base = joinKeys(
 
 export function useDebugBucket(event: Event) {
   const storage = useBucket(event);
-  return prefixStorage<WebhookDebugData>(storage as Storage<WebhookDebugData>, useDebugBucket.key);
+  return prefixStorage<WebhookDebugData>(
+    storage as Storage<WebhookDebugData>,
+    useDebugBucket.key,
+  );
 }
 
 useDebugBucket.key = "debug";
