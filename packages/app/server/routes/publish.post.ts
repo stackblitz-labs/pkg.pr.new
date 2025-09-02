@@ -341,7 +341,6 @@ async function getPullRequestState(
     );
     return pr.state;
   } catch (error) {
-    console.error("failed to check PR state", error);
     return null;
   }
 }
