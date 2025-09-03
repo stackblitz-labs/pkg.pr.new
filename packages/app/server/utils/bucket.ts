@@ -1,5 +1,6 @@
 import type { H3EventContext } from "h3";
 import type { Cursor, WorkflowData, WebhookDebugData } from "../types";
+import type { Storage } from "unstorage";
 import { createStorage, joinKeys, prefixStorage } from "unstorage";
 import cloudflareR2BindingDriver from "unstorage/drivers/cloudflare-r2-binding";
 import { getR2Binding } from "unstorage/drivers/utils/cloudflare";
@@ -48,7 +49,7 @@ export async function getItemStream(
 export function useBucket(event: Event) {
   const binding = useBinding(event);
 
-  return createStorage<Binary>({
+  return createStorage({
     driver: cloudflareR2BindingDriver({
       base: useBucket.key,
       binding,
@@ -102,10 +103,30 @@ useDownloadedAtBucket.base = joinKeys(
   useDownloadedAtBucket.key,
 );
 
-export function usePullRequestNumbersBucket(event: Event) {
+export function usePullRequestNumbersBucket(event: Event): Storage<number> {
   const storage = useBucket(event);
-  // TODO: this is a huge mistake, we should use usePullRequestNumbersBucket.key instead of useDownloadedAtBucket.key
-  return prefixStorage<number>(storage, useDownloadedAtBucket.key);
+  const newStorage = prefixStorage<number>(
+    storage,
+    usePullRequestNumbersBucket.key,
+  );
+  const oldStorage = prefixStorage<number>(storage, useDownloadedAtBucket.key);
+
+  return {
+    async hasItem(key: string) {
+      return (await newStorage.hasItem(key)) || (await oldStorage.hasItem(key));
+    },
+    async getItem(key: string) {
+      const newValue = await newStorage.getItem(key);
+      return newValue !== null ? newValue : await oldStorage.getItem(key);
+    },
+    async setItem(key: string, value: number) {
+      await newStorage.setItem(key, value);
+    },
+    async removeItem(key: string) {
+      await newStorage.removeItem(key);
+      await oldStorage.removeItem(key);
+    },
+  };
 }
 usePullRequestNumbersBucket.key = "pr-number";
 usePullRequestNumbersBucket.base = joinKeys(
