@@ -62,10 +62,7 @@ useBucket.base = useBucket.key;
 
 export function useWorkflowsBucket(event: Event) {
   const storage = useBucket(event);
-  return prefixStorage<WorkflowData>(
-    storage as Storage<WorkflowData>,
-    useWorkflowsBucket.key,
-  );
+  return prefixStorage<WorkflowData>(storage, useWorkflowsBucket.key);
 }
 
 useWorkflowsBucket.key = "workflow";
@@ -73,10 +70,7 @@ useWorkflowsBucket.base = joinKeys(useBucket.base, useWorkflowsBucket.key);
 
 export function usePackagesBucket(event: Event) {
   const storage = useBucket(event);
-  return prefixStorage<Uint8Array>(
-    storage as Storage<Uint8Array>,
-    usePackagesBucket.key,
-  );
+  return prefixStorage<Uint8Array>(storage, usePackagesBucket.key);
 }
 
 usePackagesBucket.key = "package";
@@ -84,10 +78,7 @@ usePackagesBucket.base = joinKeys(useBucket.base, usePackagesBucket.key);
 
 export function useTemplatesBucket(event: Event) {
   const storage = useBucket(event);
-  return prefixStorage<Uint8Array>(
-    storage as Storage<Uint8Array>,
-    useTemplatesBucket.key,
-  );
+  return prefixStorage<Uint8Array>(storage, useTemplatesBucket.key);
 }
 
 useTemplatesBucket.key = "template";
@@ -95,10 +86,7 @@ useTemplatesBucket.base = joinKeys(useBucket.base, useTemplatesBucket.key);
 
 export function useCursorsBucket(event: Event) {
   const storage = useBucket(event);
-  return prefixStorage<Cursor>(
-    storage as Storage<Cursor>,
-    useCursorsBucket.key,
-  );
+  return prefixStorage<Cursor>(storage, useCursorsBucket.key);
 }
 
 useCursorsBucket.key = "cursor";
@@ -106,10 +94,7 @@ useCursorsBucket.base = joinKeys(useBucket.base, useCursorsBucket.key);
 
 export function useDownloadedAtBucket(event: Event) {
   const storage = useBucket(event);
-  return prefixStorage<number>(
-    storage as Storage<number>,
-    useDownloadedAtBucket.key,
-  );
+  return prefixStorage<number>(storage, useDownloadedAtBucket.key);
 }
 
 useDownloadedAtBucket.key = "downloaded-at";
@@ -118,16 +103,13 @@ useDownloadedAtBucket.base = joinKeys(
   useDownloadedAtBucket.key,
 );
 
-export function usePullRequestNumbersBucket(event: Event) {
+export function usePullRequestNumbersBucket(event: Event): Storage<number> {
   const storage = useBucket(event);
   const newStorage = prefixStorage<number>(
-    storage as Storage<number>,
+    storage,
     usePullRequestNumbersBucket.key,
   );
-  const oldStorage = prefixStorage<number>(
-    storage as Storage<number>,
-    useDownloadedAtBucket.key,
-  );
+  const oldStorage = prefixStorage<number>(storage, useDownloadedAtBucket.key);
 
   return {
     async hasItem(key: string) {
@@ -154,10 +136,7 @@ usePullRequestNumbersBucket.base = joinKeys(
 
 export function useDebugBucket(event: Event) {
   const storage = useBucket(event);
-  return prefixStorage<WebhookDebugData>(
-    storage as Storage<WebhookDebugData>,
-    useDebugBucket.key,
-  );
+  return prefixStorage<WebhookDebugData>(storage, useDebugBucket.key);
 }
 
 useDebugBucket.key = "debug";
