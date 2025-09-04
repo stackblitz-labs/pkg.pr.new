@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from "vue";
-import { getPkgPrNewLogoBase64 } from "~/utils/logo";
 
 const props = defineProps<{
   owner: string;
@@ -14,18 +13,21 @@ const style = "flat";
 const color = props.color || "000";
 
 const baseUrl = ref("https://pkg.pr.new");
+
 onMounted(() => {
   baseUrl.value = window.location.origin;
 });
 
 const badgeUrl = computed(() => {
-  const logoBase64 = getPkgPrNewLogoBase64();
+  // Reference the SVG logo directly by URL
+  const logoUrl = `${baseUrl.value}/pkg-pr-new-logo.svg`;
+
   return (
     `https://img.shields.io/static/v1?` +
     `label=&message=${encodeURIComponent(`${props.releaseCount} | pkg.pr.new`)}` +
     `&color=${color}` +
     `&style=${style}` +
-    `&logo=data:image/svg+xml;base64,${logoBase64}` +
+    `&logo=${encodeURIComponent(logoUrl)}` +
     `&logoSize=auto`
   );
 });

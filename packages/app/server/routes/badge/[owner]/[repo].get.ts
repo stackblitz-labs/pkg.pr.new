@@ -6,7 +6,6 @@ import {
   getQuery,
 } from "h3";
 import { getRepoReleaseCount } from "../../../utils/bucket";
-import { getPkgPrNewLogoBase64 } from "../../../utils/logo";
 
 export default defineEventHandler(async (event) => {
   const { owner, repo } = getRouterParams(event) as {
@@ -26,14 +25,15 @@ export default defineEventHandler(async (event) => {
     string,
     string
   >;
-  const logoBase64 = getPkgPrNewLogoBase64();
+  const origin = getRequestURL(event).origin;
+  const logoUrl = `${origin}/pkg-pr-new-logo.svg`;
 
   const shieldsUrl =
     `https://img.shields.io/static/v1?` +
     `label=&message=${encodeURIComponent(`${releaseCount} | pkg.pr.new`)}` +
     `&color=${color}` +
     `&style=${style}` +
-    `&logo=data:image/svg+xml;base64,${logoBase64}` +
+    `&logo=${encodeURIComponent(logoUrl)}` +
     `&logoSize=auto`;
 
   const res = await fetch(shieldsUrl);
