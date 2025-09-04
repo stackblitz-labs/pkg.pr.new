@@ -11,23 +11,35 @@ const props = defineProps<{
 const copied = ref(false);
 const style = "flat";
 const color = props.color || "000";
+const logoBase64 = ref<string>("");
 
 const baseUrl = ref("https://pkg.pr.new");
 
-onMounted(() => {
+onMounted(async () => {
   baseUrl.value = window.location.origin;
+
+  try {
+    const response = await fetch("/pkg-pr-new-logo.svg");
+    if (!response.ok) throw new Error("Failed to fetch logo");
+    const logoSvg = await response.text();
+    logoBase64.value = btoa(logoSvg);
+  } catch (error) {
+    console.error("Failed to load logo:", error);
+    logoBase64.value = btoa(
+      '<svg width="71" height="73"><rect width="71" height="73" fill="#999"/></svg>',
+    );
+  }
 });
 
 const badgeUrl = computed(() => {
-  // Reference the SVG logo directly by URL
-  const logoUrl = `${baseUrl.value}/pkg-pr-new-logo.svg`;
+  if (!logoBase64.value) return "";
 
   return (
     `https://img.shields.io/static/v1?` +
     `label=&message=${encodeURIComponent(`${props.releaseCount} | pkg.pr.new`)}` +
     `&color=${color}` +
     `&style=${style}` +
-    `&logo=${encodeURIComponent(logoUrl)}` +
+    `&logo=data:image/svg+xml;base64,${logoBase64.value}` +
     `&logoSize=auto`
   );
 });
@@ -48,10 +60,15 @@ function copyBadgeCode() {
   <div class="inline-flex items-center gap-[2px]">
     <a :href="redirectUrl" target="_blank" rel="noopener">
       <img
+        v-if="badgeUrl"
         :src="badgeUrl"
         :alt="`pkg.pr.new badge`"
         class="h-5 w-auto block max-w-none"
       />
+      <div
+        v-else
+        class="h-5 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"
+      ></div>
     </a>
 
     <UButton
@@ -61,6 +78,7 @@ function copyBadgeCode() {
       :icon="copied ? 'i-ph-check-bold' : 'i-ph-copy'"
       variant="ghost"
       class="!p-1 cursor-pointer"
+      :disabled="!badgeUrl"
     />
   </div>
 </template>
