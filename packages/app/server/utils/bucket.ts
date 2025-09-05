@@ -117,21 +117,12 @@ export function usePullRequestNumbersBucket(event: Event): Storage<number> {
         return true;
       }
 
-      if (await oldStorage.hasItem(key)) {
-        await oldStorage.removeItem(key);
-      }
-
       return false;
     },
     async getItem(key: string) {
       const newValue = await newStorage.getItem(key);
       if (newValue !== null) {
         return newValue;
-      }
-
-      const oldValue = await oldStorage.getItem(key);
-      if (oldValue !== null) {
-        await oldStorage.removeItem(key);
       }
 
       return null;
