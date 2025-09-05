@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from "vue";
-import { LOGO_BASE64 } from "../../shared/constants";
 
 const props = defineProps<{
   owner: string;
@@ -20,14 +19,7 @@ onMounted(() => {
 });
 
 const badgeUrl = computed(() => {
-  return (
-    `https://img.shields.io/static/v1?` +
-    `label=&message=${encodeURIComponent(`${props.releaseCount} | pkg.pr.new`)}` +
-    `&color=${color}` +
-    `&style=${style}` +
-    `&logo=data:image/svg+xml;base64,${LOGO_BASE64}` +
-    `&logoSize=auto`
-  );
+  return `${baseUrl.value}/badge/${props.owner}/${props.repo}?color=${color}&style=${style}`;
 });
 
 const redirectUrl = computed(
