@@ -5,6 +5,7 @@ const props = defineProps<{
   owner: string;
   repo: string;
   color?: string;
+  releaseCount: number;
 }>();
 
 const copied = ref(false);
@@ -12,17 +13,14 @@ const style = "flat";
 const color = props.color || "000";
 
 const baseUrl = ref("https://pkg.pr.new");
+
 onMounted(() => {
   baseUrl.value = window.location.origin;
 });
 
-const badgeUrl = computed(
-  () =>
-    `${baseUrl.value}/badge/${props.owner}/${props.repo}` +
-    `?style=${style}` +
-    `&color=${encodeURIComponent(color)}` +
-    `&logoSize=auto`,
-);
+const badgeUrl = computed(() => {
+  return `${baseUrl.value}/badge/${props.owner}/${props.repo}?color=${color}&style=${style}`;
+});
 
 const redirectUrl = computed(
   () => `${baseUrl.value}/~/${props.owner}/${props.repo}`,
@@ -49,7 +47,7 @@ function copyBadgeCode() {
     <UButton
       @click="copyBadgeCode"
       size="xs"
-      color="gray"
+      color="neutral"
       :icon="copied ? 'i-ph-check-bold' : 'i-ph-copy'"
       variant="ghost"
       class="!p-1 cursor-pointer"
