@@ -121,6 +121,7 @@ export function usePullRequestNumbersBucket(event: Event): Storage<number> {
     },
     async setItem(key: string, value: number) {
       await newStorage.setItem(key, value);
+      await oldStorage.removeItem(key);
     },
     async removeItem(key: string) {
       await newStorage.removeItem(key);
