@@ -113,19 +113,11 @@ export function usePullRequestNumbersBucket(event: Event): Storage<number> {
 
   return {
     async hasItem(key: string) {
-      if (await newStorage.hasItem(key)) {
-        return true;
-      }
-
-      return false;
+      return (await newStorage.hasItem(key)) || (await oldStorage.hasItem(key));
     },
     async getItem(key: string) {
       const newValue = await newStorage.getItem(key);
-      if (newValue !== null) {
-        return newValue;
-      }
-
-      return null;
+      return newValue !== null ? newValue : await oldStorage.getItem(key);
     },
     async setItem(key: string, value: number) {
       await newStorage.setItem(key, value);
