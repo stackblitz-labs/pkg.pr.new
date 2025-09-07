@@ -216,6 +216,8 @@ pkg.pr.new is not available in your local environment and it only works in workf
 name: Publish Any Commit
 on: [push, pull_request]
 
+permissions: {}
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -246,6 +248,8 @@ name: Publish Approved Pull Requests
 on:
   pull_request_review:
     types: [submitted]
+
+permissions: {}
 
 jobs:
   check:
@@ -316,6 +320,8 @@ This is useful for using published packages in other subsequent jobs immediately
 ```yml
 name: Publish and Test Packages
 on: [push, pull_request]
+
+permissions: {}
 
 jobs:
   publish:
