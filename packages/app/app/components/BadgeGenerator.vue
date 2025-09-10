@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick, watch } from "vue";
+import { ref, computed, onMounted } from "vue";
 
 const props = defineProps<{
   owner: string;
@@ -26,22 +26,11 @@ onMounted(() => {
     isLoading.value = false;
   }
 });
-
-watch(
-  () => badgeUrl.value,
-  async () => {
-    isLoading.value = true;
-    await nextTick();
-    if (imgEl.value && imgEl.value.complete && imgEl.value.naturalWidth > 0) {
-      isLoading.value = false;
-    }
-  },
-);
 </script>
 
 <template>
   <div class="inline-flex items-center gap-[2px]">
-    <a :href="redirectUrl" target="_blank" rel="noopener">
+    <a :href="redirectUrl" class="flex" target="_blank" rel="noopener">
       <div class="relative inline-block">
         <div
           v-if="isLoading"
@@ -49,7 +38,6 @@ watch(
         />
         <img
           ref="imgEl"
-          :key="badgeUrl"
           :src="badgeUrl"
           :alt="`pkg.pr.new badge`"
           @load="isLoading = false"
