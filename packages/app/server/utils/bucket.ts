@@ -142,3 +142,40 @@ export function useDebugBucket(event: Event) {
 
 useDebugBucket.key = "debug";
 useDebugBucket.base = joinKeys(useBucket.base, useDebugBucket.key);
+
+export async function getRepoReleaseCount(
+  event: Event,
+  owner: string,
+  repo: string,
+): Promise<number> {
+  try {
+    const binding = useBinding(event);
+    const prefix = `${usePackagesBucket.base}:${owner}:${repo}:`;
+
+    const uniqueCommitShas = new Set<string>();
+    let cursor: string | undefined;
+
+    do {
+      const response = await binding.list({
+        cursor,
+        limit: 1000,
+        prefix,
+      } as any);
+
+      for (const { key } of response.objects) {
+        if (!key.startsWith(prefix)) continue;
+
+        const trimmedKey = key.slice(prefix.length);
+        const [sha] = trimmedKey.split(":");
+        if (sha) uniqueCommitShas.add(sha);
+      }
+
+      cursor = response.truncated ? response.cursor : undefined;
+    } while (cursor);
+
+    return uniqueCommitShas.size;
+  } catch (error) {
+    console.error(`Error counting releases for ${owner}/${repo}:`, error);
+    return 0;
+  }
+}

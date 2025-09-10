@@ -1,5 +1,6 @@
 import type { H3Event } from "h3";
 import { z } from "zod";
+import { getRepoReleaseCount } from "../../utils/bucket";
 
 const querySchema = z.object({
   owner: z.string(),
@@ -16,6 +17,8 @@ const getRepoInfo = defineCachedFunction(
         repo,
       });
 
+      const releaseCount = 0;
+
       return {
         id: data.id.toString(),
         name: data.name,
@@ -27,6 +30,7 @@ const getRepoInfo = defineCachedFunction(
         url: data.html_url,
         homepageUrl: data.homepage || "",
         description: data.description || "",
+        releaseCount,
       };
     } catch (error) {
       console.error(
@@ -65,6 +69,7 @@ export default defineEventHandler(async (event) => {
       url: "",
       homepageUrl: "",
       description: "Error fetching repository data",
+      releaseCount: 0,
     };
   }
 });
