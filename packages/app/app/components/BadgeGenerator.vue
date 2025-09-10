@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, onMounted, nextTick, watch } from "vue";
 
 const props = defineProps<{
   owner: string;
@@ -8,6 +8,7 @@ const props = defineProps<{
 
 const copied = ref(false);
 const isLoading = ref(true);
+const imgEl = ref<HTMLImageElement | null>(null);
 
 const badgeUrl = computed(() => `/badge/${props.owner}/${props.repo}`);
 
@@ -19,22 +20,44 @@ function copyBadgeCode() {
   copied.value = true;
   setTimeout(() => (copied.value = false), 2000);
 }
+
+onMounted(() => {
+  if (imgEl.value && imgEl.value.complete && imgEl.value.naturalWidth > 0) {
+    isLoading.value = false;
+  }
+});
+
+watch(
+  () => badgeUrl.value,
+  async () => {
+    isLoading.value = true;
+    await nextTick();
+    if (imgEl.value && imgEl.value.complete && imgEl.value.naturalWidth > 0) {
+      isLoading.value = false;
+    }
+  },
+);
 </script>
 
 <template>
   <div class="inline-flex items-center gap-[2px]">
     <a :href="redirectUrl" target="_blank" rel="noopener">
-      <div class="relative">
+      <div class="relative inline-block">
         <div
           v-if="isLoading"
           class="h-5 w-[120px] rounded bg-gray-200 dark:bg-gray-700 animate-pulse"
         />
         <img
+          ref="imgEl"
+          :key="badgeUrl"
           :src="badgeUrl"
           :alt="`pkg.pr.new badge`"
           @load="isLoading = false"
           @error="isLoading = false"
-          :class="['h-5 w-auto block max-w-none', isLoading ? 'hidden' : '']"
+          :class="[
+            'h-5 w-auto block max-w-none transition-opacity',
+            isLoading ? 'opacity-0' : 'opacity-100',
+          ]"
         />
       </div>
     </a>
