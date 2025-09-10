@@ -44,7 +44,7 @@ onMounted(() => {
           @error="isLoading = false"
           :class="[
             'h-5 w-auto block max-w-none transition-opacity',
-            isLoading ? 'opacity-0' : 'opacity-100',
+            isLoading ? 'hidden' : 'block',
           ]"
         />
       </div>
