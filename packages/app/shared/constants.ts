@@ -28,6 +28,9 @@ const LOGO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="71" height="73"
 </svg>`;
 
 function svgToBase64(svgString: string): string {
-  return btoa(svgString);
+  if (typeof Buffer !== "undefined") {
+    return Buffer.from(svgString, "utf-8").toString("base64");
+  }
+  return btoa(unescape(encodeURIComponent(svgString)));
 }
 export const LOGO_BASE64 = svgToBase64(LOGO_SVG);

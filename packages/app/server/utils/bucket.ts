@@ -128,29 +128,30 @@ export async function getRepoReleaseCount(
 ): Promise<number> {
   try {
     const binding = useBinding(event);
-    const packagesPrefix = `${usePackagesBucket.base}:`;
+    const prefix = `${usePackagesBucket.base}:${owner}:${repo}:`;
 
-    let releaseCount = 0;
+    const uniqueCommitShas = new Set<string>();
     let cursor: string | undefined;
 
     do {
-      const response = await binding.list({ cursor, limit: 1000 });
+      const response = await binding.list({
+        cursor,
+        limit: 1000,
+        prefix,
+      } as any);
 
       for (const { key } of response.objects) {
-        if (key.startsWith(packagesPrefix)) {
-          const trimmedKey = key.slice(packagesPrefix.length);
-          const [keyOrg, keyRepo] = trimmedKey.split(":");
+        if (!key.startsWith(prefix)) continue;
 
-          if (keyOrg === owner && keyRepo === repo) {
-            releaseCount++;
-          }
-        }
+        const trimmedKey = key.slice(prefix.length);
+        const [sha] = trimmedKey.split(":");
+        if (sha) uniqueCommitShas.add(sha);
       }
 
       cursor = response.truncated ? response.cursor : undefined;
     } while (cursor);
 
-    return releaseCount;
+    return uniqueCommitShas.size;
   } catch (error) {
     console.error(`Error counting releases for ${owner}/${repo}:`, error);
     return 0;

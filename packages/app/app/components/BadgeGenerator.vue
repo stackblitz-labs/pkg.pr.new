@@ -4,27 +4,13 @@ import { ref, onMounted, computed } from "vue";
 const props = defineProps<{
   owner: string;
   repo: string;
-  color?: string;
-  releaseCount: number;
 }>();
 
 const copied = ref(false);
-const style = "flat";
-const color = props.color || "000";
 
-const baseUrl = ref("https://pkg.pr.new");
+const badgeUrl = computed(() => `/badge/${props.owner}/${props.repo}`);
 
-onMounted(() => {
-  baseUrl.value = window.location.origin;
-});
-
-const badgeUrl = computed(() => {
-  return `${baseUrl.value}/badge/${props.owner}/${props.repo}?color=${color}&style=${style}`;
-});
-
-const redirectUrl = computed(
-  () => `${baseUrl.value}/~/${props.owner}/${props.repo}`,
-);
+const redirectUrl = computed(() => `/~/${props.owner}/${props.repo}`);
 
 function copyBadgeCode() {
   const md = `[![pkg.pr.new](${badgeUrl.value})](${redirectUrl.value})`;

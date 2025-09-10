@@ -17,7 +17,7 @@ const getRepoInfo = defineCachedFunction(
         repo,
       });
 
-      const releaseCount = await getRepoReleaseCount(event, owner, repo);
+      const releaseCount = 0;
 
       return {
         id: data.id.toString(),

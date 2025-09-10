@@ -22,10 +22,8 @@ export default defineEventHandler(async (event) => {
 
   const releaseCount = await getRepoReleaseCount(event, owner, repo);
 
-  const { style = "flat", color = "000" } = getQuery(event) as Record<
-    string,
-    string
-  >;
+  const style = "flat";
+  const color = "000";
 
   const shieldsUrl =
     `https://img.shields.io/static/v1?` +
@@ -39,6 +37,6 @@ export default defineEventHandler(async (event) => {
   const svg = await res.text();
 
   setHeader(event, "Content-Type", "image/svg+xml");
-  setHeader(event, "Cache-Control", "public, max-age=86400");
+  setHeader(event, "Cache-Control", "public, max-age=86400, immutable");
   return svg;
 });
