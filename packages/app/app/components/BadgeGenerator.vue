@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue";
+import { ref, computed } from "vue";
 
 const props = defineProps<{
   owner: string;
@@ -7,6 +7,7 @@ const props = defineProps<{
 }>();
 
 const copied = ref(false);
+const isLoading = ref(true);
 
 const badgeUrl = computed(() => `/badge/${props.owner}/${props.repo}`);
 
@@ -23,11 +24,19 @@ function copyBadgeCode() {
 <template>
   <div class="inline-flex items-center gap-[2px]">
     <a :href="redirectUrl" target="_blank" rel="noopener">
-      <img
-        :src="badgeUrl"
-        :alt="`pkg.pr.new badge`"
-        class="h-5 w-auto block max-w-none"
-      />
+      <div class="relative">
+        <div
+          v-if="isLoading"
+          class="h-5 w-[120px] rounded bg-gray-200 dark:bg-gray-700 animate-pulse"
+        />
+        <img
+          :src="badgeUrl"
+          :alt="`pkg.pr.new badge`"
+          @load="isLoading = false"
+          @error="isLoading = false"
+          :class="['h-5 w-auto block max-w-none', isLoading ? 'hidden' : '']"
+        />
+      </div>
     </a>
 
     <UButton
