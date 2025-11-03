@@ -143,19 +143,24 @@ const main = defineCommand({
           const isOnlyTemplates = !!args["only-templates"];
           const isBinaryApplication = !!args.bin;
           const comment: Comment = args.comment as Comment;
-          const selectedPackageManager = args.packageManager as
-            | "npm"
-            | "bun"
-            | "pnpm"
-            | "yarn";
+          const selectedPackageManager = (args.packageManager as string)
+            .split(",")
+            .filter((s) => s.trim()) as Array<"npm" | "bun" | "pnpm" | "yarn">;
+          const packageManagers = ["npm", "bun", "pnpm", "yarn"];
 
-          if (
-            !["npm", "bun", "pnpm", "yarn"].includes(selectedPackageManager)
-          ) {
+          if (!selectedPackageManager.length) {
             console.error(
-              `Unsupported package manager: ${selectedPackageManager}. Supported managers are npm, bun, pnpm, yarn.`,
+              `Unsupported package manager: ${args.packageManager}. Supported managers are npm, bun, pnpm, yarn.`,
             );
             process.exit(1);
+          }
+          for (let i = 0; i < packageManagers.length; i++) {
+            if (!packageManagers.includes(packageManagers[i])) {
+              console.error(
+                `Unsupported package manager: ${packageManagers[i]}. Supported managers are npm, bun, pnpm, yarn.`,
+              );
+              process.exit(1);
+            }
           }
 
           if (!process.env.TEST && process.env.GITHUB_ACTIONS !== "true") {
@@ -511,7 +516,7 @@ const main = defineCommand({
               "sb-shasums": JSON.stringify(shasums),
               "sb-run-id": GITHUB_RUN_ID,
               "sb-bin": `${isBinaryApplication}`,
-              "sb-package-manager": selectedPackageManager,
+              "sb-package-manager": selectedPackageManager[0],
               "sb-only-templates": `${isOnlyTemplates}`,
             },
             body: formData,
