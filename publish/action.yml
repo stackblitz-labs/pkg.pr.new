@@ -1,0 +1,18 @@
+name: Publish to pkg.pr.new
+description: "Creates an preview release using pkg.pr.new. Note: the GitHub App must be installed on the repo."
+inputs:
+  args:
+    description: args passed to `pkg-pr-new publish`
+    required: false
+    default: ""
+  pkg-pr-new-version:
+    description: version of pkg-pr-new to use
+    required: false
+    default: latest
+runs:
+  using: composite
+  steps:
+    - name: Run pkg-pr-new publish
+      shell: bash
+      run: |
+        npx -y pkg-pr-new@${{ inputs.pkg-pr-new-version }} publish ${{ inputs.args }}
