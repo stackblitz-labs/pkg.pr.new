@@ -13,6 +13,7 @@ import {
   abbreviateCommitHash,
   extractOwnerAndRepo,
   extractRepository,
+  installCommands,
 } from "@pkg-pr-new/utils";
 import { glob } from "tinyglobby";
 import ignore from "ignore";
@@ -544,7 +545,7 @@ const main = defineCommand({
               return `${packageName}:
 - sha: ${shasums[packageName]}
 - publint: ${publintUrl}
-- npm: npm i ${url}`;
+- ${packMethod}: ${installCommands[packMethod]} ${url}`;
             })
             .join("\n\n");
 
