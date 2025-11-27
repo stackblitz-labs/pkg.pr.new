@@ -131,9 +131,9 @@ function generateTemplatesStr(templates: Record<string, string>) {
       : "";
 
   if (entries.length > 0 && entries.length <= 2) {
-    str = [str, ...entries.map(([k, v]) => `[${k}](${v})`)]
+    str = [str, ...entries.map(([k, v]) => `- [${k}](${v})`)]
       .filter(Boolean)
-      .join(" • ");
+      .join("\n");
   } else if (entries.length > 2) {
     str += createCollapsibleBlock(
       "<b>More templates</b>",
