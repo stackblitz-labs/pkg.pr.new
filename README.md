@@ -198,7 +198,7 @@ With `--comment=create`, each commit would generate a comment for itself, useful
 
 And `--comment=off` would turn off comments for maintainers who prefer minimal pull requests.
 
-To customize which package manager is reflected in the comments, use the `--packageManager=XYZ` flag. XYZ can be one of the following: npm (default), pnpm, yarn, or bun.
+To customize which package manager is reflected in the comments, use the `--packageManager=XYZ` flag. XYZ can be one of the following: npm (default), pnpm, yarn, or bun. Multiple valid values ​​can also be configured at the same time, such as `--packageManager=ABC,XYZ`.
 
 For repositories with many packages, comments might get too long. In that case, you can use `--only-templates` to only show templates.
 
