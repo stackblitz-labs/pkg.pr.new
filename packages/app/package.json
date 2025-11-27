@@ -18,6 +18,7 @@
   "dependencies": {
     "@iconify-json/ph": "^1.1.14",
     "@nuxt/ui": "^3.0.0-alpha.10",
+    "@nuxtjs/mdc": "0.17.0",
     "@octokit/app": "^15.1.1",
     "@octokit/graphql": "^8.1.1",
     "@octokit/plugin-paginate-rest": "^11.3.6",
@@ -26,8 +27,11 @@
     "@vueuse/nuxt": "^12.2.0",
     "marked": "^15.0.4",
     "nuxt": "^3.15.0",
+    "nuxt-shiki": "0.3.0",
     "octokit": "^4.0.2",
     "query-registry": "^3.0.1",
+    "string-similarity": "^4.0.4",
+    "unstorage": "^1.16.0",
     "vue": "^3.5.13",
     "vue-router": "^4.4.3",
     "zod": "^3.23.8"
@@ -40,6 +44,7 @@
     "@octokit/auth-unauthenticated": "^5.0.1",
     "@pkg-pr-new/utils": "workspace:^",
     "@simulacrum/github-api-simulator": "^0.5.4",
+    "@types/string-similarity": "^4.0.2",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.62.0",
     "cross-env": "^7.0.3",

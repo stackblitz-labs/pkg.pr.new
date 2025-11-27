@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed } from "vue";
+
 definePageMeta({
   name: "repo:details",
 });
@@ -74,6 +76,16 @@ useSeoMeta({
           icon="i-ph-globe-simple"
           color="neutral"
           variant="link"
+        />
+      </div>
+
+      <div class="flex flex-col items-center justify-center mt-2">
+        <p class="text-sm mb-[10px]">
+          You can copy the badge and add it to your README!
+        </p>
+        <BadgeGenerator
+          :owner="repository.owner.login"
+          :repo="repository.name"
         />
       </div>
     </div>

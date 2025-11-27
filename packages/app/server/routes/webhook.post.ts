@@ -1,6 +1,6 @@
 import type { PullRequestEvent } from "@octokit/webhooks-types";
 import type { HandlerFunction } from "@octokit/webhooks/dist-types/types";
-import type { PullRequestData, WorkflowData } from "../types";
+import type { PullRequestData, WorkflowData, WebhookDebugData } from "../types";
 import { hash } from "ohash";
 
 // mark a PR as a PR :)
@@ -16,6 +16,7 @@ export default eventHandler(async (event) => {
   const { test } = useRuntimeConfig(event);
   const workflowsBucket = useWorkflowsBucket(event);
   const pullRequestNumbersBucket = usePullRequestNumbersBucket(event);
+  const debugBucket = useDebugBucket(event);
 
   const workflowHandler: HandlerFunction<"workflow_run", unknown> = async ({
     payload,
@@ -51,9 +52,8 @@ export default eventHandler(async (event) => {
         await pullRequestNumbersBucket.hasItem(oldPrDataHash);
 
       const isPullRequest = isNewPullRequest || isOldPullRequest;
-      const prNumber = await pullRequestNumbersBucket.getItem(
-        isNewPullRequest ? prKey : oldPrDataHash,
-      );
+      const lookupKey = isNewPullRequest ? prKey : oldPrDataHash;
+      const prNumber = await pullRequestNumbersBucket.getItem(lookupKey);
 
       const data: WorkflowData = {
         owner,
@@ -64,6 +64,27 @@ export default eventHandler(async (event) => {
 
       // Publishing is only available throughout the lifetime of a workflow_job
       await workflowsBucket.setItem(hashKey, data);
+
+      const debugData: WebhookDebugData = {
+        action: payload.action,
+        head_branch: payload.workflow_run.head_branch,
+        head_repository_full_name:
+          payload.workflow_run.head_repository?.full_name || null,
+        full_name: payload.repository.full_name,
+
+        isPullRequest,
+        prNumber,
+        prNumberType: typeof prNumber,
+        isNewPullRequest,
+        isOldPullRequest,
+
+        prKey,
+        oldPrDataHash,
+        lookupKey,
+        data,
+      };
+
+      await debugBucket.setItem(hashKey, debugData);
     }
   };
 

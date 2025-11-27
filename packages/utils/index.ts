@@ -37,6 +37,13 @@ export function isPullRequest(ref: string) {
 export type Comment = "off" | "create" | "update";
 export type PackageManager = "npm" | "pnpm" | "yarn" | "bun";
 
+export const installCommands: Record<PackageManager, string> = {
+  npm: "npm i",
+  pnpm: "pnpm add",
+  yarn: "yarn add",
+  bun: "bun add",
+};
+
 const whitelist =
   "https://raw.githubusercontent.com/stackblitz-labs/pkg.pr.new/main/.whitelist";
 

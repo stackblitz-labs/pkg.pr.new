@@ -1,11 +1,14 @@
-import { prefixStorage, createStorage, joinKeys } from "unstorage";
+import type { H3EventContext } from "h3";
+import type { Cursor, WorkflowData, WebhookDebugData } from "../types";
+import type { Storage } from "unstorage";
+import { createStorage, joinKeys, prefixStorage } from "unstorage";
 import cloudflareR2BindingDriver from "unstorage/drivers/cloudflare-r2-binding";
 import { getR2Binding } from "unstorage/drivers/utils/cloudflare";
-import type { H3EventContext } from "h3";
-import { WorkflowData, Cursor } from "../types";
 
 type Binary = Parameters<R2Bucket["put"]>[1];
-type Event = { context: { cloudflare: H3EventContext["cloudflare"] } };
+interface Event {
+  context: { cloudflare: H3EventContext["cloudflare"] };
+}
 
 export const baseKey = "bucket";
 
@@ -46,10 +49,9 @@ export async function getItemStream(
 export function useBucket(event: Event) {
   const binding = useBinding(event);
 
-  return createStorage<Binary>({
+  return createStorage({
     driver: cloudflareR2BindingDriver({
       base: useBucket.key,
-      // @ts-ignore TODO(upstream): fix type mismatch
       binding,
     }),
   });
@@ -101,13 +103,79 @@ useDownloadedAtBucket.base = joinKeys(
   useDownloadedAtBucket.key,
 );
 
-export function usePullRequestNumbersBucket(event: Event) {
+export function usePullRequestNumbersBucket(event: Event): Storage<number> {
   const storage = useBucket(event);
-  // TODO: this is a huge mistake, we should use usePullRequestNumbersBucket.key instead of useDownloadedAtBucket.key
-  return prefixStorage<number>(storage, useDownloadedAtBucket.key);
+  const newStorage = prefixStorage<number>(
+    storage,
+    usePullRequestNumbersBucket.key,
+  );
+  const oldStorage = prefixStorage<number>(storage, useDownloadedAtBucket.key);
+
+  return {
+    async hasItem(key: string) {
+      return (await newStorage.hasItem(key)) || (await oldStorage.hasItem(key));
+    },
+    async getItem(key: string) {
+      const newValue = await newStorage.getItem(key);
+      return newValue !== null ? newValue : await oldStorage.getItem(key);
+    },
+    async setItem(key: string, value: number) {
+      await newStorage.setItem(key, value);
+      await oldStorage.removeItem(key);
+    },
+    async removeItem(key: string) {
+      await newStorage.removeItem(key);
+      await oldStorage.removeItem(key);
+    },
+  };
 }
 usePullRequestNumbersBucket.key = "pr-number";
 usePullRequestNumbersBucket.base = joinKeys(
   useBucket.base,
   usePullRequestNumbersBucket.key,
 );
+
+export function useDebugBucket(event: Event) {
+  const storage = useBucket(event);
+  return prefixStorage<WebhookDebugData>(storage, useDebugBucket.key);
+}
+
+useDebugBucket.key = "debug";
+useDebugBucket.base = joinKeys(useBucket.base, useDebugBucket.key);
+
+export async function getRepoReleaseCount(
+  event: Event,
+  owner: string,
+  repo: string,
+): Promise<number> {
+  try {
+    const binding = useBinding(event);
+    const prefix = `${usePackagesBucket.base}:${owner}:${repo}:`;
+
+    const uniqueCommitShas = new Set<string>();
+    let cursor: string | undefined;
+
+    do {
+      const response = await binding.list({
+        cursor,
+        limit: 1000,
+        prefix,
+      } as any);
+
+      for (const { key } of response.objects) {
+        if (!key.startsWith(prefix)) continue;
+
+        const trimmedKey = key.slice(prefix.length);
+        const [sha] = trimmedKey.split(":");
+        if (sha) uniqueCommitShas.add(sha);
+      }
+
+      cursor = response.truncated ? response.cursor : undefined;
+    } while (cursor);
+
+    return uniqueCommitShas.size;
+  } catch (error) {
+    console.error(`Error counting releases for ${owner}/${repo}:`, error);
+    return 0;
+  }
+}

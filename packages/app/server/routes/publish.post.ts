@@ -1,10 +1,13 @@
+import type { H3Event } from "h3";
 import type { components as OctokitComponents } from "@octokit/openapi-types";
 import type { Comment, PackageManager } from "@pkg-pr-new/utils";
+import type { WorkflowData } from "../types";
 import { isPullRequest, isWhitelisted } from "@pkg-pr-new/utils";
 import { randomUUID } from "uncrypto";
 import { setItemStream, useTemplatesBucket } from "../utils/bucket";
 import { useOctokitInstallation } from "../utils/octokit";
 import { generateTemplateHtml } from "../utils/template";
+import { joinKeys } from "unstorage";
 
 export default eventHandler(async (event) => {
   const origin = getRequestURL(event).origin;
@@ -34,7 +37,9 @@ export default eventHandler(async (event) => {
   }
   const runId = Number(runIdHeader);
   const workflowsBucket = useWorkflowsBucket(event);
+  const debugBucket = useDebugBucket(event);
   const workflowData = await workflowsBucket.getItem(key);
+  const webhookDebugData = await debugBucket.getItem(key);
 
   if (!workflowData) {
     throw createError({
@@ -92,13 +97,19 @@ export default eventHandler(async (event) => {
 
   const currentCursor = await cursorBucket.getItem(cursorKey);
 
+  let lastPackageKey: string;
   await Promise.all(
-    packages.map((packageNameWithPrefix) => {
+    packages.map((packageNameWithPrefix, i) => {
       const packageName = packageNameWithPrefix.slice("package:".length);
       const packageKey = `${baseKey}:${workflowData.sha}:${packageName}`;
 
       const file = formData.get(packageNameWithPrefix)!;
       if (file instanceof File) {
+        lastPackageKey =
+          i === packages.length - 1
+            ? joinKeys(usePackagesBucket.base, packageKey)
+            : lastPackageKey;
+
         const stream = file.stream();
         return setItemStream(
           event,
@@ -116,8 +127,9 @@ export default eventHandler(async (event) => {
 
   const templatesMap = new Map<string, Record<string, string>>();
 
+  let lastTemplateKey: string;
   await Promise.all(
-    templateAssets.map((templateAssetWithPrefix) => {
+    templateAssets.map((templateAssetWithPrefix, i) => {
       const file = formData.get(templateAssetWithPrefix)!;
       const [template, encodedTemplateAsset] = templateAssetWithPrefix
         .slice("template:".length)
@@ -135,6 +147,11 @@ export default eventHandler(async (event) => {
       });
 
       if (isBinary) {
+        lastTemplateKey =
+          i === templateAssets.length - 1
+            ? joinKeys(useTemplatesBucket.base, uuid)
+            : lastTemplateKey;
+
         const stream = file.stream();
         return setItemStream(event, useTemplatesBucket.base, uuid, stream);
       }
@@ -215,7 +232,10 @@ export default eventHandler(async (event) => {
     checkRunUrl = html_url!;
   }
 
-  if (isPullRequest(workflowData.ref)) {
+  if (
+    isPullRequest(workflowData.ref) &&
+    (await getPullRequestState(installation, workflowData)) === "open"
+  ) {
     let prevComment: OctokitComponents["schemas"]["issue-comment"];
 
     await installation.paginate(
@@ -295,8 +315,94 @@ export default eventHandler(async (event) => {
     }
   }
 
+  event.waitUntil(
+    iterateAndDelete(event, usePackagesBucket.base, lastPackageKey!),
+  );
+  event.waitUntil(
+    iterateAndDelete(event, useTemplatesBucket.base, lastTemplateKey!),
+  );
+
   return {
     ok: true,
     urls,
+    debug: {
+      workflowData,
+      key,
+      runId,
+      webhookDebug: webhookDebugData,
+    },
   };
 });
+
+async function getPullRequestState(
+  installation: Awaited<ReturnType<typeof useOctokitInstallation>>,
+  workflowData: WorkflowData,
+) {
+  try {
+    const { data: pr } = await installation.request(
+      "GET /repos/{owner}/{repo}/pulls/{pull_number}",
+      {
+        owner: workflowData.owner,
+        repo: workflowData.repo,
+        pull_number: Number(workflowData.ref),
+      },
+    );
+    return pr.state;
+  } catch (error) {
+    return null;
+  }
+}
+
+async function iterateAndDelete(
+  event: H3Event,
+  base: string,
+  startAfter: string,
+) {
+  const binding = useBinding(event);
+  const removedItems: Array<{
+    key: string;
+    uploaded: Date;
+    downloadedAt?: Date;
+  }> = [];
+  const downloadedAtBucket = useDownloadedAtBucket(event);
+  const today = Date.parse(new Date().toString());
+
+  const next = await binding.list({
+    prefix: base,
+    limit: 1000,
+    startAfter,
+  });
+
+  for (const object of next.objects) {
+    const uploaded = Date.parse(object.uploaded.toString());
+    const uploadedDate = new Date(uploaded);
+    const sixMonthsAgo = new Date(today);
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    if (uploadedDate <= sixMonthsAgo) {
+      removedItems.push({
+        key: object.key,
+        uploaded: new Date(object.uploaded),
+      });
+      await binding.delete(object.key);
+      await downloadedAtBucket.removeItem(object.key);
+      return;
+    }
+    const downloadedAt = await downloadedAtBucket.getItem(object.key);
+    if (!downloadedAt) {
+      return;
+    }
+    const downloadedAtDate = new Date(downloadedAt);
+    const oneMonthAgo = new Date(today);
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+    const uploadedDate2 = new Date(uploaded);
+    if (downloadedAtDate <= oneMonthAgo && uploadedDate2 <= oneMonthAgo) {
+      removedItems.push({
+        key: object.key,
+        uploaded: new Date(object.uploaded),
+        downloadedAt: new Date(downloadedAt),
+      });
+      await binding.delete(object.key);
+      await downloadedAtBucket.removeItem(object.key);
+    }
+  }
+}

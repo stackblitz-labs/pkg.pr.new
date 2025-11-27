@@ -1,6 +1,6 @@
 import type { H3Event } from "h3";
 import { z } from "zod";
-import { useGithubREST } from "../../../server/utils/octokit";
+import { getRepoReleaseCount } from "../../utils/bucket";
 
 const querySchema = z.object({
   owner: z.string(),
@@ -8,14 +8,16 @@ const querySchema = z.object({
 });
 
 const getRepoInfo = defineCachedFunction(
-  async (owner: string, repo: string, event?: H3Event) => {
+  async (owner: string, repo: string, event: H3Event) => {
     try {
-      const octokit = useGithubREST(event);
+      const installation = await useOctokitInstallation(event, owner, repo);
 
-      const { data } = await octokit.request("GET /repos/{owner}/{repo}", {
+      const { data } = await installation.request("GET /repos/{owner}/{repo}", {
         owner,
         repo,
       });
+
+      const releaseCount = 0;
 
       return {
         id: data.id.toString(),
@@ -28,6 +30,7 @@ const getRepoInfo = defineCachedFunction(
         url: data.html_url,
         homepageUrl: data.homepage || "",
         description: data.description || "",
+        releaseCount,
       };
     } catch (error) {
       console.error(
@@ -66,6 +69,7 @@ export default defineEventHandler(async (event) => {
       url: "",
       homepageUrl: "",
       description: "Error fetching repository data",
+      releaseCount: 0,
     };
   }
 });

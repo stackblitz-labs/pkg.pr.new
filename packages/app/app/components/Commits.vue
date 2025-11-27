@@ -1,6 +1,11 @@
 <script lang="ts" setup>
 import type { RendererObject } from "marked";
+import bash from "@shikijs/langs/bash";
+import githubDark from "@shikijs/themes/github-dark";
+import githubLight from "@shikijs/themes/github-light";
 import { marked } from "marked";
+import { createHighlighterCoreSync, type HighlighterCore } from "shiki/core";
+import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
 
 const props = defineProps<{
   owner: string;
@@ -39,19 +44,74 @@ const selectedCommit = shallowRef<
   (typeof commitsWithRelease.value)[number] | null
 >(null);
 
-// Markdown
+let shiki: HighlighterCore;
 
-// Add target to links
-const renderer: RendererObject = {
-  link(originalLink) {
-    const link = marked.Renderer.prototype.link.call(this, originalLink);
-    return link.replace("<a", "<a target='_blank' rel='noreferrer' ");
-  },
-};
-marked.use({ renderer });
+onBeforeMount(async () => {
+  shiki = createHighlighterCoreSync({
+    themes: [githubDark, githubLight],
+    langs: [bash],
+    engine: createJavaScriptRegexEngine(),
+  });
+
+  const renderer: RendererObject = {
+    link(originalLink) {
+      const link = marked.Renderer.prototype.link.call(this, originalLink);
+      return link.replace(
+        "<a",
+        "<a target='_blank' rel='noreferrer' class='text-primary underline'",
+      );
+    },
+    code({ text }) {
+      const currentTheme = document.documentElement.classList.contains("dark")
+        ? "github-dark"
+        : "github-light";
+      const highlightedCode = shiki.codeToHtml(text, {
+        theme: currentTheme,
+        lang: "bash",
+      });
+
+      function copyCodeHandler(this: HTMLButtonElement, codeText: string) {
+        navigator.clipboard?.writeText(codeText);
+        if (this.dataset.timeoutId) {
+          clearTimeout(parseInt(this.dataset.timeoutId));
+        }
+        this.textContent = "Copied!";
+        this.classList.add("!text-green-600", "dark:!text-green-400");
+        const timeoutId = setTimeout(() => {
+          this.textContent = "Copy";
+          this.classList.remove("!text-green-600", "dark:!text-green-400");
+          delete this.dataset.timeoutId;
+        }, 2000);
+        this.dataset.timeoutId = timeoutId.toString();
+      }
+
+      return `
+        <div class="relative group my-4 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm">
+          <div class="flex items-center justify-end px-4 py-1 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+            <button 
+              onclick='(${copyCodeHandler.toString()}).call(this, ${JSON.stringify(text)})'
+              class="px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors opacity-0 group-hover:opacity-100"
+              title="Copy to clipboard"
+            >
+              Copy
+            </button>
+          </div>
+          <div class="overflow-x-auto">
+            <div class="[&>pre]:!my-0 [&>pre]:!bg-transparent [&>pre]:!border-0 [&>pre]:!rounded-none [&>pre]:!p-4">${highlightedCode}</div>
+          </div>
+        </div>
+      `;
+    },
+  };
+
+  marked.use({ renderer });
+});
+
+onBeforeUnmount(() => {
+  shiki?.dispose();
+});
 
 // Pagination
-
 const fetching = ref(false);
 const fetchMoreForceDisabled = ref(!commitsWithRelease.value.length);
 
@@ -218,7 +278,7 @@ async function fetchMore() {
           </div>
 
           <div
-            class="max-w-full p-4 border border-gray-100 dark:border-gray-800 rounded-lg prose dark:prose-invert"
+            class="max-w-full p-4 overflow-x-scroll border border-gray-100 dark:border-gray-800 rounded-lg prose dark:prose-invert flex flex-col gap-2"
             v-html="marked(selectedCommit.release.text)"
           />
         </div>

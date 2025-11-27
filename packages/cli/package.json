@@ -1,6 +1,6 @@
 {
   "name": "pkg-pr-new",
-  "version": "0.0.43",
+  "version": "0.0.60",
   "description": "",
   "main": "index.js",
   "type": "module",
@@ -21,6 +21,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@actions/core": "^1.11.1",
     "@jsdevtools/ez-spawn": "^3.0.4",
     "@octokit/action": "^6.1.0",
     "ignore": "^5.3.1",
