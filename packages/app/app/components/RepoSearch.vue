@@ -5,12 +5,14 @@ const searchResults = ref<RepoNode[]>([]);
 const isLoading = ref(false);
 
 let activeController: AbortController | null = null;
+let activeReader: ReadableStreamDefaultReader<Uint8Array> | null = null;
 const throttledSearch = useThrottle(search, 500, true, false);
 
 watch(
   throttledSearch,
   async (newValue) => {
     activeController?.abort();
+    activeReader?.cancel();
     searchResults.value = [];
     if (!newValue) {
       isLoading.value = false;
@@ -29,6 +31,7 @@ watch(
 
       const reader = response.body?.getReader();
       if (!reader) return;
+      activeReader = reader;
 
       const decoder = new TextDecoder();
       let buffer = "";

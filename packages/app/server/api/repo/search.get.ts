@@ -8,6 +8,9 @@ const querySchema = z.object({
 });
 
 export default defineEventHandler(async (event) => {
+  const request = toWebRequest(event);
+  const signal = request.signal;
+
   const query = await getValidatedQuery(event, (data) =>
     querySchema.parse(data),
   );
@@ -44,6 +47,11 @@ export default defineEventHandler(async (event) => {
 
       try {
         for await (const { installation } of app.eachInstallation.iterator()) {
+          if (signal.aborted) {
+            controller.close();
+            return;
+          }
+
           try {
             const octokit = await app.getInstallationOctokit(installation.id);
 
