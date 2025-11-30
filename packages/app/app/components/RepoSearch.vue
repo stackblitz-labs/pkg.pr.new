@@ -24,11 +24,53 @@ watch(
     try {
       const response = await fetch(
         `/api/repo/search?text=${encodeURIComponent(newValue)}`,
-        { signal: activeController.signal },
+        { signal: controller.signal },
       );
-      const data = (await response.json()) as { nodes: RepoNode[] };
-      if (activeController === controller) {
-        searchResults.value = data.nodes ?? [];
+
+      const reader = response.body?.getReader();
+      if (!reader) return;
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const data = line.slice(6);
+
+          if (data === "[DONE]") {
+            isLoading.value = false;
+            return;
+          }
+
+          try {
+            const repo = JSON.parse(data) as RepoNode & { error?: string };
+            if (!repo.error) {
+              // Insert sorted by stars (higher first)
+              const idx = searchResults.value.findIndex(
+                (r) => r.stars < repo.stars,
+              );
+              if (idx === -1) {
+                searchResults.value.push(repo);
+              } else {
+                searchResults.value.splice(idx, 0, repo);
+              }
+              // Keep only top 10
+              if (searchResults.value.length > 10) {
+                searchResults.value.pop();
+              }
+            }
+          } catch {
+            // Skip malformed JSON
+          }
+        }
       }
     } catch (err: any) {
       if (err.name !== "AbortError") {
