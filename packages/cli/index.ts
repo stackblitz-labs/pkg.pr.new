@@ -155,10 +155,10 @@ const main = defineCommand({
             );
             process.exit(1);
           }
-          for (let i = 0; i < packageManagers.length; i++) {
-            if (!packageManagers.includes(packageManagers[i])) {
+          for (let i = 0; i < selectedPackageManager.length; i++) {
+            if (!packageManagers.includes(selectedPackageManager[i])) {
               console.error(
-                `Unsupported package manager: ${packageManagers[i]}. Supported managers are npm, bun, pnpm, yarn.`,
+                `Unsupported package manager: ${selectedPackageManager[i]}. Supported managers are npm, bun, pnpm, yarn.`,
               );
               process.exit(1);
             }
@@ -517,7 +517,7 @@ const main = defineCommand({
               "sb-shasums": JSON.stringify(shasums),
               "sb-run-id": GITHUB_RUN_ID,
               "sb-bin": `${isBinaryApplication}`,
-              "sb-package-manager": selectedPackageManager[0],
+              "sb-package-manager": selectedPackageManager.join(","),
               "sb-only-templates": `${isOnlyTemplates}`,
             },
             body: formData,
