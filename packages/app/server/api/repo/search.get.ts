@@ -7,6 +7,8 @@ const querySchema = z.object({
   text: z.string(),
 });
 
+console.log("querySchema", querySchema);
+
 interface SearchDebugInfo {
   startTime: string;
   endTime: string;
