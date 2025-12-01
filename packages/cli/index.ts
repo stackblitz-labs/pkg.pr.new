@@ -191,17 +191,24 @@ const main = defineCommand({
 
           const key = hash(metadata);
 
-          const checkResponse = await fetch(new URL("/check", apiUrl), {
-            method: "POST",
-            body: JSON.stringify({
-              owner,
-              repo,
-              key,
-            }),
-          });
+          let checkResponse;
+          try {
+            checkResponse = await fetch(new URL("/check", apiUrl), {
+              method: "POST",
+              body: JSON.stringify({
+                owner,
+                repo,
+                key,
+              }),
+            });
+          } catch (error) {
+            console.error(`Failed to connect to server: ${error}`);
+            process.exit(1);
+          }
 
           if (!checkResponse.ok) {
-            console.error(await checkResponse.text());
+            const errorText = await checkResponse.text();
+            console.error(`Check failed (${checkResponse.status}): ${errorText}`);
             process.exit(1);
           }
 
@@ -247,13 +254,22 @@ const main = defineCommand({
             realDeps?.set(pJson.name, pJson.version ?? longDepUrl);
 
             const controller = new AbortController();
-            const resource = await fetch(longDepUrl, {
-              signal: controller.signal,
-            });
-            if (resource.ok) {
-              console.warn(
-                `${pJson.name}@${formattedSha} was already published on ${longDepUrl}`,
-              );
+            try {
+              const resource = await fetch(longDepUrl, {
+                signal: controller.signal,
+              });
+              if (resource.ok) {
+                console.warn(
+                  `${pJson.name}@${formattedSha} was already published on ${longDepUrl}`,
+                );
+              } else if (resource.status >= 500) {
+                console.warn(`Server error checking ${longDepUrl} (${resource.status}), proceeding with publish`);
+              } else {
+                console.warn(`Unexpected response checking ${longDepUrl} (${resource.status})`);
+              }
+            } catch (error) {
+              console.warn(`Failed to check if package exists at ${longDepUrl}: ${error}`);
+              // Continue with publish anyway
             }
             controller.abort();
 
@@ -522,12 +538,21 @@ const main = defineCommand({
             },
             body: formData,
           });
-          const laterRes = await res.clone().json();
-          assert.equal(
-            res.status,
-            200,
-            `publishing failed: ${await res.text()}`,
-          );
+
+          if (!res.ok) {
+            const errorText = await res.text();
+            console.error(`Publishing failed (${res.status}): ${errorText}`);
+            process.exit(1);
+          }
+
+          let laterRes;
+          try {
+            laterRes = await res.json();
+          } catch (error) {
+            console.error(`Failed to parse server response as JSON: ${error}`);
+            console.error(`Raw response: ${await res.text()}`);
+            process.exit(1);
+          }
 
           const debug = laterRes.debug;
 
