@@ -9,11 +9,6 @@ import { useOctokitInstallation } from "../utils/octokit";
 import { generateTemplateHtml } from "../utils/template";
 import { joinKeys } from "unstorage";
 
-// Helper to check if error is a known error from createError
-function isKnownError(error: unknown): error is { statusCode: number } {
-  return error != null && typeof error === "object" && "statusCode" in error;
-}
-
 export default eventHandler(async (event) => {
   try {
     const origin = getRequestURL(event).origin;
@@ -73,8 +68,12 @@ export default eventHandler(async (event) => {
 
     const shasums: Record<string, string> = JSON.parse(shasumsHeader);
     const formData = await readFormData(event);
-    const packages = [...formData.keys()].filter((k) => k.startsWith("package:"));
-    const packagesWithoutPrefix = packages.map((p) => p.slice("package:".length));
+    const packages = [...formData.keys()].filter((k) =>
+      k.startsWith("package:"),
+    );
+    const packagesWithoutPrefix = packages.map((p) =>
+      p.slice("package:".length),
+    );
     const templateAssets = [...formData.keys()].filter((k) =>
       k.startsWith("template:"),
     );
@@ -266,10 +265,13 @@ export default eventHandler(async (event) => {
       if (comment !== "off") {
         const {
           data: { permissions },
-        } = await installation.request("GET /repos/{owner}/{repo}/installation", {
-          owner: workflowData.owner,
-          repo: workflowData.repo,
-        });
+        } = await installation.request(
+          "GET /repos/{owner}/{repo}/installation",
+          {
+            owner: workflowData.owner,
+            repo: workflowData.repo,
+          },
+        );
 
         try {
           if (comment === "update" && prevComment!) {
@@ -341,13 +343,14 @@ export default eventHandler(async (event) => {
   } catch (error: unknown) {
     console.error("Publish route error:", error);
 
-    // Re-throw known errors (from createError) as-is
-    if (isKnownError(error)) {
+    if (error && typeof error === "object" && "statusCode" in error) {
       throw error;
     }
 
-    // Return a JSON error response for unexpected errors
-    const message = error instanceof Error ? error.message : "An unexpected error occurred during publishing";
+    const message =
+      error instanceof Error
+        ? error.message
+        : "An unexpected error occurred during publishing";
     throw createError({
       statusCode: 500,
       statusMessage: "Internal Server Error",
