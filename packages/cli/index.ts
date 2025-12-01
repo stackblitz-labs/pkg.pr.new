@@ -268,10 +268,6 @@ const main = defineCommand({
                 console.warn(
                   `Server error checking ${longDepUrl} (${resource.status}), proceeding with publish`,
                 );
-              } else {
-                console.warn(
-                  `Unexpected response checking ${longDepUrl} (${resource.status})`,
-                );
               }
             } catch (error) {
               console.warn(
