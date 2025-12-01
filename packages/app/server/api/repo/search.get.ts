@@ -53,14 +53,21 @@ export default defineEventHandler(async (event) => {
                 stringSimilarity.compareTwoStrings(owner, searchText),
               );
 
-              if (score > 0.3 || name.includes(searchText) || owner.includes(searchText)) {
+              if (
+                score > 0.3 ||
+                name.includes(searchText) ||
+                owner.includes(searchText)
+              ) {
                 seen.add(repo.id);
                 controller.enqueue(
                   send(
                     JSON.stringify({
                       id: repo.id,
                       name: repo.name,
-                      owner: { login: repo.owner.login, avatarUrl: repo.owner.avatar_url },
+                      owner: {
+                        login: repo.owner.login,
+                        avatarUrl: repo.owner.avatar_url,
+                      },
                       stars: repo.stargazers_count || 0,
                     }),
                   ),
@@ -74,7 +81,9 @@ export default defineEventHandler(async (event) => {
 
         controller.enqueue(send("[DONE]"));
       } catch (err) {
-        controller.enqueue(send(JSON.stringify({ error: (err as Error).message })));
+        controller.enqueue(
+          send(JSON.stringify({ error: (err as Error).message })),
+        );
       } finally {
         controller.close();
       }

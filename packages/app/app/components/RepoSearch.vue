@@ -53,8 +53,14 @@ watch(
             if (repo.error) continue;
 
             // Insert sorted by stars, keep top 10
-            const idx = searchResults.value.findIndex((r) => r.stars < repo.stars);
-            searchResults.value.splice(idx === -1 ? searchResults.value.length : idx, 0, repo);
+            const idx = searchResults.value.findIndex(
+              (r) => r.stars < repo.stars,
+            );
+            searchResults.value.splice(
+              idx === -1 ? searchResults.value.length : idx,
+              0,
+              repo,
+            );
             if (searchResults.value.length > 10) searchResults.value.pop();
           } catch {
             // Skip malformed JSON
@@ -71,18 +77,41 @@ watch(
 );
 
 const examples = [
-  { owner: "vitejs", name: "vite", avatar: "https://avatars.githubusercontent.com/u/65625612?v=4" },
-  { owner: "rolldown", name: "rolldown", avatar: "https://avatars.githubusercontent.com/u/94954945?s=200&v=4" },
-  { owner: "vuejs", name: "core", avatar: "https://avatars.githubusercontent.com/u/6128107?v=4" },
-  { owner: "sveltejs", name: "svelte", avatar: "https://avatars.githubusercontent.com/u/23617963?s=200&v=4" },
-  { owner: "Tresjs", name: "tres", avatar: "https://avatars.githubusercontent.com/u/119253150?v=4" },
+  {
+    owner: "vitejs",
+    name: "vite",
+    avatar: "https://avatars.githubusercontent.com/u/65625612?v=4",
+  },
+  {
+    owner: "rolldown",
+    name: "rolldown",
+    avatar: "https://avatars.githubusercontent.com/u/94954945?s=200&v=4",
+  },
+  {
+    owner: "vuejs",
+    name: "core",
+    avatar: "https://avatars.githubusercontent.com/u/6128107?v=4",
+  },
+  {
+    owner: "sveltejs",
+    name: "svelte",
+    avatar: "https://avatars.githubusercontent.com/u/23617963?s=200&v=4",
+  },
+  {
+    owner: "Tresjs",
+    name: "tres",
+    avatar: "https://avatars.githubusercontent.com/u/119253150?v=4",
+  },
 ];
 
 const router = useRouter();
 function openFirstResult() {
   const [first] = searchResults.value;
   if (first) {
-    router.push({ name: "repo:details", params: { owner: first.owner.login, repo: first.name } });
+    router.push({
+      name: "repo:details",
+      params: { owner: first.owner.login, repo: first.name },
+    });
   }
 }
 </script>
@@ -113,7 +142,10 @@ function openFirstResult() {
       />
     </div>
 
-    <div v-else-if="search && !isLoading" class="text-gray-500 p-12 text-center">
+    <div
+      v-else-if="search && !isLoading"
+      class="text-gray-500 p-12 text-center"
+    >
       No repositories found
     </div>
 
