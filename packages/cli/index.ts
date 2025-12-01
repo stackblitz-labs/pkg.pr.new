@@ -269,7 +269,6 @@ const main = defineCommand({
               }
             } catch (error) {
               console.warn(`Failed to check if package exists at ${longDepUrl}: ${error}`);
-              // Continue with publish anyway
             }
             controller.abort();
 
