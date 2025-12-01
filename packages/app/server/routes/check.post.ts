@@ -53,12 +53,16 @@ export default eventHandler(async (event) => {
       error instanceof Error
         ? error.message
         : "An unexpected error occurred during check";
+    const stack = error instanceof Error ? error.stack : undefined;
+
     throw createError({
       statusCode: 500,
       statusMessage: "Internal Server Error",
       data: {
         error: true,
         message,
+        stack,
+        originalError: error,
         type: "check_error",
       },
     });
