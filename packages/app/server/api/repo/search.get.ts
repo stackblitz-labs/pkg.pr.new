@@ -26,12 +26,13 @@ export default defineEventHandler(async (event) => {
   const app = useOctokitApp(event);
   const searchText = query.text.toLowerCase();
   const seen = new Set<number>();
-  const encoder = new TextEncoder();
 
-  const send = (data: string) => encoder.encode(`data: ${data}\n\n`);
-
-  return new ReadableStream({
+  const stream = new ReadableStream({
     async start(controller) {
+      const encoder = new TextEncoder();
+      const send = (data: string) =>
+        controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+
       try {
         for await (const { installation } of app.eachInstallation.iterator()) {
           if (signal.aborted) break;
@@ -59,18 +60,16 @@ export default defineEventHandler(async (event) => {
                 owner.includes(searchText)
               ) {
                 seen.add(repo.id);
-                controller.enqueue(
-                  send(
-                    JSON.stringify({
-                      id: repo.id,
-                      name: repo.name,
-                      owner: {
-                        login: repo.owner.login,
-                        avatarUrl: repo.owner.avatar_url,
-                      },
-                      stars: repo.stargazers_count || 0,
-                    }),
-                  ),
+                send(
+                  JSON.stringify({
+                    id: repo.id,
+                    name: repo.name,
+                    owner: {
+                      login: repo.owner.login,
+                      avatarUrl: repo.owner.avatar_url,
+                    },
+                    stars: repo.stargazers_count || 0,
+                  }),
                 );
               }
             }
@@ -79,14 +78,14 @@ export default defineEventHandler(async (event) => {
           }
         }
 
-        controller.enqueue(send("[DONE]"));
+        send("[DONE]");
       } catch (err) {
-        controller.enqueue(
-          send(JSON.stringify({ error: (err as Error).message })),
-        );
+        send(JSON.stringify({ error: (err as Error).message }));
       } finally {
         controller.close();
       }
     },
   });
+
+  return stream;
 });
