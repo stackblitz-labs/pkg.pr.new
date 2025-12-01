@@ -208,7 +208,9 @@ const main = defineCommand({
 
           if (!checkResponse.ok) {
             const errorText = await checkResponse.text();
-            console.error(`Check failed (${checkResponse.status}): ${errorText}`);
+            console.error(
+              `Check failed (${checkResponse.status}): ${errorText}`,
+            );
             process.exit(1);
           }
 
@@ -263,12 +265,18 @@ const main = defineCommand({
                   `${pJson.name}@${formattedSha} was already published on ${longDepUrl}`,
                 );
               } else if (resource.status >= 500) {
-                console.warn(`Server error checking ${longDepUrl} (${resource.status}), proceeding with publish`);
+                console.warn(
+                  `Server error checking ${longDepUrl} (${resource.status}), proceeding with publish`,
+                );
               } else {
-                console.warn(`Unexpected response checking ${longDepUrl} (${resource.status})`);
+                console.warn(
+                  `Unexpected response checking ${longDepUrl} (${resource.status})`,
+                );
               }
             } catch (error) {
-              console.warn(`Failed to check if package exists at ${longDepUrl}: ${error}`);
+              console.warn(
+                `Failed to check if package exists at ${longDepUrl}: ${error}`,
+              );
             }
             controller.abort();
 
