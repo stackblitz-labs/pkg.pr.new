@@ -1,37 +1,36 @@
 <script lang="ts" setup>
 import type { RepoNode } from "../../server/utils/types";
+
 const search = useSessionStorage("search", "");
 const searchResults = ref<RepoNode[]>([]);
 const isLoading = ref(false);
 
-let activeController: AbortController | null = null;
-let activeReader: ReadableStreamDefaultReader<Uint8Array> | null = null;
+let abortController: AbortController | null = null;
 const throttledSearch = useThrottle(search, 500, true, false);
 
 watch(
   throttledSearch,
-  async (newValue) => {
-    activeController?.abort();
-    activeReader?.cancel();
+  async (query) => {
+    abortController?.abort();
     searchResults.value = [];
-    if (!newValue) {
+
+    if (!query) {
       isLoading.value = false;
       return;
     }
 
     const controller = new AbortController();
-    activeController = controller;
-
+    abortController = controller;
     isLoading.value = true;
+
     try {
       const response = await fetch(
-        `/api/repo/search?text=${encodeURIComponent(newValue)}`,
+        `/api/repo/search?text=${encodeURIComponent(query)}`,
         { signal: controller.signal },
       );
 
       const reader = response.body?.getReader();
       if (!reader) return;
-      activeReader = reader;
 
       const decoder = new TextDecoder();
       let buffer = "";
@@ -47,83 +46,43 @@ watch(
         for (const line of lines) {
           if (!line.startsWith("data: ")) continue;
           const data = line.slice(6);
-
-          if (data === "[DONE]") {
-            isLoading.value = false;
-            return;
-          }
+          if (data === "[DONE]") return;
 
           try {
             const repo = JSON.parse(data) as RepoNode & { error?: string };
-            if (!repo.error) {
-              // Insert sorted by stars (higher first)
-              const idx = searchResults.value.findIndex(
-                (r) => r.stars < repo.stars,
-              );
-              if (idx === -1) {
-                searchResults.value.push(repo);
-              } else {
-                searchResults.value.splice(idx, 0, repo);
-              }
-              // Keep only top 10
-              if (searchResults.value.length > 10) {
-                searchResults.value.pop();
-              }
-            }
+            if (repo.error) continue;
+
+            // Insert sorted by stars, keep top 10
+            const idx = searchResults.value.findIndex((r) => r.stars < repo.stars);
+            searchResults.value.splice(idx === -1 ? searchResults.value.length : idx, 0, repo);
+            if (searchResults.value.length > 10) searchResults.value.pop();
           } catch {
             // Skip malformed JSON
           }
         }
       }
     } catch (err: any) {
-      if (err.name !== "AbortError") {
-        console.error(err);
-      }
+      if (err.name !== "AbortError") console.error(err);
     } finally {
-      if (activeController === controller) {
-        isLoading.value = false;
-      }
+      if (abortController === controller) isLoading.value = false;
     }
   },
   { immediate: false },
 );
 
 const examples = [
-  {
-    owner: "vitejs",
-    name: "vite",
-    avatar: "https://avatars.githubusercontent.com/u/65625612?v=4",
-  },
-  {
-    owner: "rolldown",
-    name: "rolldown",
-    avatar: "https://avatars.githubusercontent.com/u/94954945?s=200&v=4",
-  },
-  {
-    owner: "vuejs",
-    name: "core",
-    avatar: "https://avatars.githubusercontent.com/u/6128107?v=4",
-  },
-  {
-    owner: "sveltejs",
-    name: "svelte",
-    avatar: "https://avatars.githubusercontent.com/u/23617963?s=200&v=4",
-  },
-  {
-    owner: "Tresjs",
-    name: "tres",
-    avatar: "https://avatars.githubusercontent.com/u/119253150?v=4",
-  },
+  { owner: "vitejs", name: "vite", avatar: "https://avatars.githubusercontent.com/u/65625612?v=4" },
+  { owner: "rolldown", name: "rolldown", avatar: "https://avatars.githubusercontent.com/u/94954945?s=200&v=4" },
+  { owner: "vuejs", name: "core", avatar: "https://avatars.githubusercontent.com/u/6128107?v=4" },
+  { owner: "sveltejs", name: "svelte", avatar: "https://avatars.githubusercontent.com/u/23617963?s=200&v=4" },
+  { owner: "Tresjs", name: "tres", avatar: "https://avatars.githubusercontent.com/u/119253150?v=4" },
 ];
 
 const router = useRouter();
 function openFirstResult() {
   const [first] = searchResults.value;
   if (first) {
-    router.push({
-      name: "repo:details",
-      params: { owner: first.owner.login, repo: first.name },
-    });
+    router.push({ name: "repo:details", params: { owner: first.owner.login, repo: first.name } });
   }
 }
 </script>
@@ -154,10 +113,7 @@ function openFirstResult() {
       />
     </div>
 
-    <div
-      v-else-if="search && !isLoading"
-      class="text-gray-500 p-12 text-center"
-    >
+    <div v-else-if="search && !isLoading" class="text-gray-500 p-12 text-center">
       No repositories found
     </div>
 
