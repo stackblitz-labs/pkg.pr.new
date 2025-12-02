@@ -1,5 +1,4 @@
 /* eslint-disable unicorn/no-process-exit */
-import assert from "node:assert";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import fsSync from "node:fs";
