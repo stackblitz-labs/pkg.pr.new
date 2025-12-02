@@ -101,7 +101,7 @@ const main = defineCommand({
           packageManager: {
             type: "string",
             description:
-              "Specify the package manager to use (npm, bun, pnpm, yarn)",
+              "Specify the package manager to use (npm, bun, pnpm, yarn). Comma-separated values are supported.",
             enum: ["npm", "bun", "pnpm", "yarn"],
             default: "npm",
           },
