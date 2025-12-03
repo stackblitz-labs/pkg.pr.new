@@ -21,7 +21,7 @@ export default eventHandler(async (event) => {
       "sb-bin": binHeader,
       "sb-package-manager": packageManagerHeader,
       "sb-only-templates": onlyTemplatesHeader,
-      "sb-pnpm-message-type": pnpmMessageTypeHeader,
+      "sb-comment-with-sha": commentWithShaHeader,
     } = getHeaders(event);
     const compact = compactHeader === "true";
     const onlyTemplates = onlyTemplatesHeader === "true";
@@ -29,10 +29,7 @@ export default eventHandler(async (event) => {
     const bin = binHeader === "true";
     const packageManager: PackageManager =
       (packageManagerHeader as PackageManager) || "npm";
-    const pnpmMessageType: "sha" | "ref" =
-      pnpmMessageTypeHeader === "sha" || pnpmMessageTypeHeader === "ref"
-        ? pnpmMessageTypeHeader
-        : "ref";
+    const commentWithSha = commentWithShaHeader === "true";
 
     if (!key || !runIdHeader || !shasumsHeader) {
       throw createError({
@@ -295,7 +292,7 @@ export default eventHandler(async (event) => {
                   onlyTemplates,
                   checkRunUrl,
                   packageManager,
-                  pnpmMessageType,
+                  commentWithSha ? "sha" : "ref",
                   bin,
                 ),
               },
