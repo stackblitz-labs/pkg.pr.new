@@ -1,5 +1,4 @@
 /* eslint-disable unicorn/no-process-exit */
-import assert from "node:assert";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import fsSync from "node:fs";
@@ -89,6 +88,12 @@ const main = defineCommand({
             description: `"off" for no comments (silent mode). "create" for comment on each publish. "update" for one comment across the pull request with edits on each publish (default)`,
             default: "update",
           },
+          commentWithSha: {
+            type: "boolean",
+            description:
+              "use commit sha instead of the pr number in the comment links",
+            default: false,
+          },
           "only-templates": {
             type: "boolean",
             description: `generate only stackblitz templates`,
@@ -143,6 +148,7 @@ const main = defineCommand({
           const isPeerDepsEnabled = !!args.peerDeps;
           const isOnlyTemplates = !!args["only-templates"];
           const isBinaryApplication = !!args.bin;
+          const isCommentWithSha = !!args.commentWithSha;
           const comment: Comment = args.comment as Comment;
           const selectedPackageManager = (args.packageManager as string)
             .split(",")
@@ -538,6 +544,7 @@ const main = defineCommand({
               "sb-bin": `${isBinaryApplication}`,
               "sb-package-manager": selectedPackageManager.join(","),
               "sb-only-templates": `${isOnlyTemplates}`,
+              "sb-comment-with-sha": `${isCommentWithSha}`,
             },
             body: formData,
           });

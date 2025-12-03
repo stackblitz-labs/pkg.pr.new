@@ -21,6 +21,7 @@ export default eventHandler(async (event) => {
       "sb-bin": binHeader,
       "sb-package-manager": packageManagerHeader,
       "sb-only-templates": onlyTemplatesHeader,
+      "sb-comment-with-sha": commentWithShaHeader,
     } = getHeaders(event);
     const compact = compactHeader === "true";
     const onlyTemplates = onlyTemplatesHeader === "true";
@@ -28,6 +29,7 @@ export default eventHandler(async (event) => {
     const bin = binHeader === "true";
     const packageManager: PackageManager =
       (packageManagerHeader as PackageManager) || "npm";
+    const commentWithSha = commentWithShaHeader === "true";
 
     if (!key || !runIdHeader || !shasumsHeader) {
       throw createError({
@@ -290,7 +292,7 @@ export default eventHandler(async (event) => {
                   onlyTemplates,
                   checkRunUrl,
                   packageManager,
-                  "ref",
+                  commentWithSha ? "sha" : "ref",
                   bin,
                 ),
               },
