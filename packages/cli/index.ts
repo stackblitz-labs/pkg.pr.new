@@ -148,6 +148,7 @@ const main = defineCommand({
           const isPeerDepsEnabled = !!args.peerDeps;
           const isOnlyTemplates = !!args["only-templates"];
           const isBinaryApplication = !!args.bin;
+          const isCommentWithSha = !!args.commentWithSha;
           const comment: Comment = args.comment as Comment;
           const selectedPackageManager = (args.packageManager as string)
             .split(",")
@@ -547,7 +548,7 @@ const main = defineCommand({
               "sb-bin": `${isBinaryApplication}`,
               "sb-package-manager": selectedPackageManager.join(","),
               "sb-only-templates": `${isOnlyTemplates}`,
-              "sb-comment-with-sha": `${args.commentWithSha}`,
+              "sb-comment-with-sha": `${isCommentWithSha}`,
             },
             body: formData,
           });
