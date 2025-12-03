@@ -198,6 +198,20 @@ With `--comment=create`, each commit would generate a comment for itself, useful
 
 And `--comment=off` would turn off comments for maintainers who prefer minimal pull requests.
 
+> `--commentWithSha` specify whether to replace the pr number with sha commit in the generated comments.
+
+With `--commentWithSha`:
+
+```sh
+npm i https://pkg.pr.new/tinybench@a832a55
+```
+
+Without `--commentWithSha`:
+
+```sh
+npm i https://pkg.pr.new/tinybench@123
+```
+
 To customize which package manager is reflected in the comments, use the `--packageManager=XYZ` flag. XYZ can be one of the following: npm (default), pnpm, yarn, or bun. Multiple valid values ​​can also be configured at the same time, such as `--packageManager=ABC,XYZ`.
 
 For repositories with many packages, comments might get too long. In that case, you can use `--only-templates` to only show templates.
