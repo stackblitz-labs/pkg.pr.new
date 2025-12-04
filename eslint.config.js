@@ -37,9 +37,12 @@ export default [
     },
     rules: {
       // Basic rules
-      "no-console": "warn",
+      "no-console": "off",
       "no-debugger": "warn",
-      "no-unused-vars": "warn",
+      "no-unused-vars": [
+        "warn",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      ],
       "prefer-const": "error",
       "no-useless-constructor": "error",
 
@@ -107,7 +110,7 @@ export default [
       "vue/no-v-html": "off",
 
       // Basic rules
-      "no-console": "warn",
+      "no-console": "off",
       "no-debugger": "warn",
       "prefer-const": "error",
 

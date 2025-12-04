@@ -453,7 +453,7 @@ const main = defineCommand({
           }
 
           const formDataPackagesSize = [...formData.entries()].reduce(
-            (prev, [_, entry]) => prev + getFormEntrySize(entry),
+            (prev, [, entry]) => prev + getFormEntrySize(entry),
             0,
           );
 

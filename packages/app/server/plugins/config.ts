@@ -4,7 +4,6 @@ export default defineNitroPlugin((nitro) => {
     try {
       // Pre-load the configuration to ensure it's initialized
       const config = useRuntimeConfig(event);
-      // eslint-disable-next-line no-console
       console.log(
         "Runtime config initialized successfully:",
         Object.keys(config),
