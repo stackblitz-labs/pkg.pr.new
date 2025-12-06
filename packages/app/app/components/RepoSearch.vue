@@ -1,43 +1,76 @@
 <script lang="ts" setup>
 import type { RepoNode } from "../../server/utils/types";
+
 const search = useSessionStorage("search", "");
 const searchResults = ref<RepoNode[]>([]);
 const isLoading = ref(false);
 
-let activeController: AbortController | null = null;
+let abortController: AbortController | null = null;
 const throttledSearch = useThrottle(search, 500, true, false);
 
 watch(
   throttledSearch,
-  async (newValue) => {
-    activeController?.abort();
+  async (query) => {
+    abortController?.abort();
     searchResults.value = [];
-    if (!newValue) {
+
+    if (!query) {
       isLoading.value = false;
       return;
     }
 
     const controller = new AbortController();
-    activeController = controller;
-
+    abortController = controller;
     isLoading.value = true;
+
     try {
       const response = await fetch(
-        `/api/repo/search?text=${encodeURIComponent(newValue)}`,
-        { signal: activeController.signal },
+        `/api/repo/search?text=${encodeURIComponent(query)}`,
+        { signal: controller.signal },
       );
-      const data = (await response.json()) as { nodes: RepoNode[] };
-      if (activeController === controller) {
-        searchResults.value = data.nodes ?? [];
+
+      const reader = response.body?.getReader();
+      if (!reader) return;
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const data = line.slice(6);
+          if (data === "[DONE]") return;
+
+          try {
+            const repo = JSON.parse(data) as RepoNode & { error?: string };
+            if (repo.error) continue;
+
+            // Insert sorted by stars, keep top 10
+            const idx = searchResults.value.findIndex(
+              (r) => r.stars < repo.stars,
+            );
+            searchResults.value.splice(
+              idx === -1 ? searchResults.value.length : idx,
+              0,
+              repo,
+            );
+            if (searchResults.value.length > 10) searchResults.value.pop();
+          } catch {
+            // Skip malformed JSON
+          }
+        }
       }
     } catch (err: any) {
-      if (err.name !== "AbortError") {
-        console.error(err);
-      }
+      if (err.name !== "AbortError") console.error(err);
     } finally {
-      if (activeController === controller) {
-        isLoading.value = false;
-      }
+      if (abortController === controller) isLoading.value = false;
     }
   },
   { immediate: false },
