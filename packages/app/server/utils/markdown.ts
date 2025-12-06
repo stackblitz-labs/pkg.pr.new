@@ -15,6 +15,7 @@ const binCommands: Record<PackageManager, string> = {
   yarn: "npx",
   bun: "bunx",
 };
+const isMoreThanFourPackages = (packages: string[], packageManager: PackageManager) => packages.length * packageManager.split(',').length > 4;
 
 export function generateCommitPublishMessage(
   origin: string,
@@ -67,8 +68,6 @@ ${templatesStr}
 ${shaMessages}
 `;
 }
-
-const isMoreThanFourPackages = (packages: string[], packageManager: PackageManager) => packages.length * packageManager.split(',').length > 4;
 
 export function generatePullRequestPublishMessage(
   origin: string,
@@ -170,6 +169,6 @@ function createCollapsibleBlock(title: string, body: string) {
 <details><summary>${title}</summary><p>
 ${body}
 </p></details>
-
+      
     `;
 }
