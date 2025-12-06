@@ -122,10 +122,8 @@ describe.sequential.each([
           shell: true,
         },
       );
-      // eslint-disable-next-line no-console
       console.log(process.stdout);
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.log(error);
     }
   }, 10_000);

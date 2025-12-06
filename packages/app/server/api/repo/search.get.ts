@@ -87,8 +87,8 @@ export default defineEventHandler(async (event) => {
     const startTime = Date.now();
     let processedRepositories = 0;
     let status: SearchDebugInfo["status"] = "completed";
-    let skippedRepositories = 0;
-    let suspendedErrors = 0;
+    let _skippedRepositories = 0;
+    let _suspendedErrors = 0;
 
     addFlowStage(
       "repository_iteration_start",
@@ -108,7 +108,7 @@ export default defineEventHandler(async (event) => {
           }
 
           if (repository.private) {
-            skippedRepositories++;
+            _skippedRepositories++;
             return;
           }
 
@@ -166,7 +166,7 @@ export default defineEventHandler(async (event) => {
             err.message?.includes("suspended") ||
             err.message?.includes("Installation")
           ) {
-            suspendedErrors++;
+            _suspendedErrors++;
             addFlowError(
               "repository_suspended",
               err.message,

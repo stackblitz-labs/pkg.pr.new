@@ -1,6 +1,5 @@
 import type { H3Event } from "h3";
 import { z } from "zod";
-import { getRepoReleaseCount } from "../../utils/bucket";
 
 const querySchema = z.object({
   owner: z.string(),
@@ -41,8 +40,7 @@ const getRepoInfo = defineCachedFunction(
     }
   },
   {
-    getKey: (owner: string, repo: string, _event?: H3Event) =>
-      `${owner}/${repo}`,
+    getKey: (owner: string, repo: string) => `${owner}/${repo}`,
     maxAge: 60 * 30, // 30 minutes
     swr: true,
   },
