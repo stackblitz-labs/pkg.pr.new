@@ -25,7 +25,7 @@ export function generateCommitPublishMessage(
   packageManager: PackageManager,
   bin: boolean,
 ) {
-  const isMoreThanFour = packages.length > 4;
+  const isMoreThanFour = isMoreThanFourPackages(packages, packageManager);
   const shaMessages = packages
     .map((packageName) => {
       let shaUrl = generatePublishUrl(
@@ -68,6 +68,8 @@ ${shaMessages}
 `;
 }
 
+const isMoreThanFourPackages = (packages: string[], packageManager: PackageManager) => packages.length * packageManager.split(',').length > 4;
+
 export function generatePullRequestPublishMessage(
   origin: string,
   templates: Record<string, string>,
@@ -80,7 +82,7 @@ export function generatePullRequestPublishMessage(
   base: "sha" | "ref",
   bin: boolean,
 ) {
-  const isMoreThanFour = packages.length > 4;
+  const isMoreThanFour = isMoreThanFourPackages(packages, packageManager);
   const refMessages = packages
     .map((packageName) => {
       let refUrl = generatePublishUrl(
@@ -168,6 +170,6 @@ function createCollapsibleBlock(title: string, body: string) {
 <details><summary>${title}</summary><p>
 ${body}
 </p></details>
-      
+
     `;
 }
