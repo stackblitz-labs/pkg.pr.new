@@ -15,7 +15,10 @@ const binCommands: Record<PackageManager, string> = {
   yarn: "npx",
   bun: "bunx",
 };
-const isMoreThanFourPackages = (packages: string[], packageManager: PackageManager) => packages.length * packageManager.split(',').length > 4;
+const isMoreThanFourPackages = (
+  packages: string[],
+  packageManager: PackageManager,
+) => packages.length * packageManager.split(",").length > 4;
 
 export function generateCommitPublishMessage(
   origin: string,
