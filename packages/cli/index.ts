@@ -94,6 +94,12 @@ const main = defineCommand({
               "use commit sha instead of the pr number in the comment links",
             default: false,
           },
+          commentWithDev: {
+            type: "boolean",
+            description:
+              "should install the packages with the 'dev' tag in the comment links",
+            default: false,
+          },
           "only-templates": {
             type: "boolean",
             description: `generate only stackblitz templates`,
@@ -149,6 +155,7 @@ const main = defineCommand({
           const isOnlyTemplates = !!args["only-templates"];
           const isBinaryApplication = !!args.bin;
           const isCommentWithSha = !!args.commentWithSha;
+          const isCommentWithDev = !!args.commentWithDev;
           const comment: Comment = args.comment as Comment;
           const selectedPackageManager = (args.packageManager as string)
             .split(",")
@@ -545,6 +552,7 @@ const main = defineCommand({
               "sb-package-manager": selectedPackageManager.join(","),
               "sb-only-templates": `${isOnlyTemplates}`,
               "sb-comment-with-sha": `${isCommentWithSha}`,
+              "sb-comment-with-dev": `${isCommentWithDev}`,
             },
             body: formData,
           });
