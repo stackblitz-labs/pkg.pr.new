@@ -170,6 +170,6 @@ function createCollapsibleBlock(title: string, body: string) {
 <details><summary>${title}</summary><p>
 ${body}
 </p></details>
-
+      
     `;
 }
