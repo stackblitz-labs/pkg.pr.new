@@ -150,9 +150,15 @@ const main = defineCommand({
           const isBinaryApplication = !!args.bin;
           const isCommentWithSha = !!args.commentWithSha;
           const comment: Comment = args.comment as Comment;
-          const selectedPackageManager = (args.packageManager as string)
-            .split(",")
-            .filter((s) => s.trim()) as Array<"npm" | "bun" | "pnpm" | "yarn">;
+          const selectedPackageManager = [
+            ...new Set(
+              (args.packageManager as string)
+                .split(",")
+                .filter((s) => s.trim()) as Array<
+                "npm" | "bun" | "pnpm" | "yarn"
+              >,
+            ),
+          ];
           const packageManagers = ["npm", "bun", "pnpm", "yarn"];
 
           if (!selectedPackageManager.length) {
