@@ -213,6 +213,20 @@ Without `--commentWithSha`:
 npm i https://pkg.pr.new/tinybench@123
 ```
 
+> `--commentWithDev` specify whether the generated link includes the `-D` parameter.
+
+With `--commentWithDev`:
+
+```sh
+npm i https://pkg.pr.new/tinybench@123 -D
+```
+
+Without `--commentWithDev`:
+
+```sh
+npm i https://pkg.pr.new/tinybench@123
+```
+
 To customize which package manager is reflected in the comments, use the `--packageManager=XYZ` flag. XYZ can be one of the following: npm (default), pnpm, yarn, or bun. Multiple valid values ​​can also be configured at the same time, such as `--packageManager=ABC,XYZ`.
 
 For repositories with many packages, comments might get too long. In that case, you can use `--only-templates` to only show templates.
