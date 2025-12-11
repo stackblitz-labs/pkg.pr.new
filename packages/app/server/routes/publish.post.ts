@@ -23,6 +23,7 @@ export default eventHandler(async (event) => {
       "sb-only-templates": onlyTemplatesHeader,
       "sb-comment-with-sha": commentWithShaHeader,
       "sb-comment-with-dev": commentWithDevHeader,
+      "sb-sync-comment-with-issue": syncCommentWithIssueHeader,
     } = getHeaders(event);
     const compact = compactHeader === "true";
     const onlyTemplates = onlyTemplatesHeader === "true";
@@ -32,6 +33,7 @@ export default eventHandler(async (event) => {
       (packageManagerHeader as PackageManager) || "npm";
     const commentWithSha = commentWithShaHeader === "true";
     const commentWithDev = commentWithDevHeader === "true";
+    const syncCommentWithIssue = syncCommentWithIssueHeader === "true";
 
     if (!key || !runIdHeader || !shasumsHeader) {
       throw createError({
@@ -246,7 +248,14 @@ export default eventHandler(async (event) => {
       isPullRequest(workflowData.ref) &&
       (await getPullRequestState(installation, workflowData)) === "open"
     ) {
-      let prevComment: OctokitComponents["schemas"]["issue-comment"];
+      let prevComment:
+        | OctokitComponents["schemas"]["issue-comment"]
+        | undefined;
+      let prevIssueComment:
+        | OctokitComponents["schemas"]["issue-comment"]
+        | undefined;
+      let relatedIssueNumber: number | undefined;
+      const matchIssueNumber = /(fix|close|resolve)\s*(\d+)/gi;
 
       await installation.paginate(
         "GET /repos/{owner}/{repo}/issues/{issue_number}/comments",
@@ -261,11 +270,51 @@ export default eventHandler(async (event) => {
               prevComment = c;
               done();
               break;
+            } else {
+              const body = c.body || "";
+              let match;
+              while ((match = matchIssueNumber.exec(body)) !== null) {
+                const issueNumber = Number(match[2]);
+                if (!isNaN(issueNumber)) {
+                  relatedIssueNumber = issueNumber;
+                  break;
+                }
+              }
+            }
+            if (prevComment) {
+              if (!syncCommentWithIssue) {
+                done();
+                break;
+              } else if (relatedIssueNumber) {
+                done();
+                break;
+              }
             }
           }
           return [];
         },
       );
+
+      if (syncCommentWithIssue && relatedIssueNumber) {
+        await installation.paginate(
+          "GET /repos/{owner}/{repo}/issues/{issue_number}/comments",
+          {
+            owner: workflowData.owner,
+            repo: workflowData.repo,
+            issue_number: relatedIssueNumber,
+          },
+          ({ data }, done) => {
+            for (const c of data) {
+              if (c.performed_via_github_app?.id === Number(appId)) {
+                prevIssueComment = c;
+                done();
+                break;
+              }
+            }
+            return [];
+          },
+        );
+      }
 
       if (comment !== "off") {
         const {
@@ -280,49 +329,78 @@ export default eventHandler(async (event) => {
 
         try {
           if (comment === "update" && prevComment!) {
+            const commentBody = generatePullRequestPublishMessage(
+              origin,
+              templatesHtmlMap,
+              packagesWithoutPrefix,
+              workflowData,
+              compact,
+              onlyTemplates,
+              checkRunUrl,
+              packageManager,
+              commentWithSha ? "sha" : "ref",
+              bin,
+              commentWithDev,
+            );
+
             await installation.request(
               "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}",
               {
                 owner: workflowData.owner,
                 repo: workflowData.repo,
                 comment_id: prevComment.id,
-                body: generatePullRequestPublishMessage(
-                  origin,
-                  templatesHtmlMap,
-                  packagesWithoutPrefix,
-                  workflowData,
-                  compact,
-                  onlyTemplates,
-                  checkRunUrl,
-                  packageManager,
-                  commentWithSha ? "sha" : "ref",
-                  bin,
-                  commentWithDev,
-                ),
+                body: commentBody,
               },
             );
+            if (
+              syncCommentWithIssue &&
+              relatedIssueNumber &&
+              prevIssueComment
+            ) {
+              await installation.request(
+                "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}",
+                {
+                  owner: workflowData.owner,
+                  repo: workflowData.repo,
+                  comment_id: prevIssueComment.id,
+                  body: commentBody,
+                },
+              );
+            }
           } else {
+            const commentBody = generatePullRequestPublishMessage(
+              origin,
+              templatesHtmlMap,
+              packagesWithoutPrefix,
+              workflowData,
+              compact,
+              onlyTemplates,
+              checkRunUrl,
+              packageManager,
+              comment === "update" ? "ref" : "sha",
+              bin,
+              commentWithDev,
+            );
             await installation.request(
               "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
               {
                 owner: workflowData.owner,
                 repo: workflowData.repo,
                 issue_number: Number(workflowData.ref),
-                body: generatePullRequestPublishMessage(
-                  origin,
-                  templatesHtmlMap,
-                  packagesWithoutPrefix,
-                  workflowData,
-                  compact,
-                  onlyTemplates,
-                  checkRunUrl,
-                  packageManager,
-                  comment === "update" ? "ref" : "sha",
-                  bin,
-                  commentWithDev,
-                ),
+                body: commentBody,
               },
             );
+            if (syncCommentWithIssue && relatedIssueNumber) {
+              await installation.request(
+                "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
+                {
+                  owner: workflowData.owner,
+                  repo: workflowData.repo,
+                  issue_number: relatedIssueNumber,
+                  body: commentBody,
+                },
+              );
+            }
           }
         } catch (error) {
           console.error("failed to create/update comment", error, permissions);
