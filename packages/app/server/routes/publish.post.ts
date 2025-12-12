@@ -256,6 +256,10 @@ export default eventHandler(async (event) => {
         | undefined;
       let relatedIssueNumber: number | undefined;
       const matchIssueNumber = /(fix|close|resolve)\s*(\d+)/gi;
+      const fullAddressMatchIssueNumber = new RegExp(
+        `(fix|close|resolve)\\s*https://github.com/${workflowData.owner}/${workflowData.repo}/issues/(\\d+)`,
+        "gi",
+      );
 
       await installation.paginate(
         "GET /repos/{owner}/{repo}/issues/{issue_number}/comments",
@@ -273,11 +277,24 @@ export default eventHandler(async (event) => {
             } else {
               const body = c.body || "";
               let match;
+              matchIssueNumber.lastIndex = 0;
               while ((match = matchIssueNumber.exec(body)) !== null) {
                 const issueNumber = Number(match[2]);
                 if (!isNaN(issueNumber)) {
                   relatedIssueNumber = issueNumber;
                   break;
+                }
+              }
+              if (!relatedIssueNumber) {
+                fullAddressMatchIssueNumber.lastIndex = 0;
+                while (
+                  (match = fullAddressMatchIssueNumber.exec(body)) !== null
+                ) {
+                  const issueNumber = Number(match[2]);
+                  if (!isNaN(issueNumber)) {
+                    relatedIssueNumber = issueNumber;
+                    break;
+                  }
                 }
               }
             }
