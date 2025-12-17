@@ -110,6 +110,7 @@ These are some of the projects and companies using pkg.pr.new:
   <a href="https://preply.com"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/preply/design-system-visual-coverage/refs/heads/main/assets/logo-inverted.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/preply/design-system-visual-coverage/refs/heads/main/assets/logo.svg"><img height="40" alt="Preply" src="https://raw.githubusercontent.com/preply/design-system-visual-coverage/refs/heads/main/assets/logo.svg"></picture></a>
   <a href="https://github.com/playcanvas/react"><img alt="playcanvas-react" src="https://avatars.githubusercontent.com/u/1030579?v=4" height="40" /></a>
   <a href="https://babel.dev/"><img src="https://avatars.githubusercontent.com/u/9637642?s=200&v=4" height="40" /></a>
+  <a href="https://wasp.sh/"><img src="https://avatars.githubusercontent.com/wasp-lang" height="40" /></a>
 </p>
 
 Feel free to add your project or company here to join the pkg.pr.new family :)
