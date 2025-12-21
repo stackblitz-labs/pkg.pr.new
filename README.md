@@ -233,6 +233,8 @@ For repositories with many packages, comments might get too long. In that case, 
 
 pkg.pr.new uses `npm pack --json` under the hood, in case you face issues, you can also use the `--pnpm`, `--yarn`, or `--bun` flag so it starts using `pnpm pack`, `yarn pack`, or `bun pm pack`. This is not necessary in most cases.
 
+If you want to add comments to the associated issue simultaneously, you can set `--syncCommentWithIssue`.
+
 <img width="100%" src="https://github.com/stackblitz-labs/pkg.pr.new/assets/37929992/2fc03b94-ebae-4c47-a271-03a4ad5d2449" />
 
 pkg.pr.new is not available in your local environment and it only works in workflows.

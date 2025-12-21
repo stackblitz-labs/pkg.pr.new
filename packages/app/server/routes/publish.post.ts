@@ -251,9 +251,9 @@ export default eventHandler(async (event) => {
       let prevComment:
         | OctokitComponents["schemas"]["issue-comment"]
         | undefined;
-      let prevIssueComments: OctokitComponents["schemas"]["issue-comment"][] =
+      const prevIssueComments: OctokitComponents["schemas"]["issue-comment"][] =
         [];
-      let relatedIssueNumbers: number[] = [];
+      const relatedIssueNumbers: number[] = [];
       const matchIssueNumber = /(fix(es)?|closes?|resolves?)\s*(\d+)/gi;
       const fullAddressMatchIssueNumber = new RegExp(
         `(fix(es)|closes?|resolves?)\\s*https://github.com/${workflowData.owner}/${workflowData.repo}/issues/(\\d+)`,
@@ -310,7 +310,6 @@ export default eventHandler(async (event) => {
       );
 
       if (syncCommentWithIssue && relatedIssueNumbers.length) {
-        prevIssueComments = [];
         for (const issueNumber of relatedIssueNumbers) {
           await installation.paginate(
             "GET /repos/{owner}/{repo}/issues/{issue_number}/comments",
