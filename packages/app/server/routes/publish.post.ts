@@ -251,13 +251,12 @@ export default eventHandler(async (event) => {
       let prevComment:
         | OctokitComponents["schemas"]["issue-comment"]
         | undefined;
-      let prevIssueComment:
-        | OctokitComponents["schemas"]["issue-comment"]
-        | undefined;
-      let relatedIssueNumber: number | undefined;
-      const matchIssueNumber = /(fix|close|resolve)\s*(\d+)/gi;
+      let prevIssueComments: OctokitComponents["schemas"]["issue-comment"][] =
+        [];
+      let relatedIssueNumbers: number[] = [];
+      const matchIssueNumber = /(fix(es)?|closes?|resolves?)\s*(\d+)/gi;
       const fullAddressMatchIssueNumber = new RegExp(
-        `(fix|close|resolve)\\s*https://github.com/${workflowData.owner}/${workflowData.repo}/issues/(\\d+)`,
+        `(fix(es)|closes?|resolves?)\\s*https://github.com/${workflowData.owner}/${workflowData.repo}/issues/(\\d+)`,
         "gi",
       );
 
@@ -281,19 +280,17 @@ export default eventHandler(async (event) => {
               while ((match = matchIssueNumber.exec(body)) !== null) {
                 const issueNumber = Number(match[2]);
                 if (!isNaN(issueNumber)) {
-                  relatedIssueNumber = issueNumber;
-                  break;
+                  relatedIssueNumbers.push(issueNumber);
                 }
               }
-              if (!relatedIssueNumber) {
+              if (!relatedIssueNumbers.length) {
                 fullAddressMatchIssueNumber.lastIndex = 0;
                 while (
                   (match = fullAddressMatchIssueNumber.exec(body)) !== null
                 ) {
                   const issueNumber = Number(match[2]);
                   if (!isNaN(issueNumber)) {
-                    relatedIssueNumber = issueNumber;
-                    break;
+                    relatedIssueNumbers.push(issueNumber);
                   }
                 }
               }
@@ -302,7 +299,7 @@ export default eventHandler(async (event) => {
               if (!syncCommentWithIssue) {
                 done();
                 break;
-              } else if (relatedIssueNumber) {
+              } else if (relatedIssueNumbers.length) {
                 done();
                 break;
               }
@@ -312,25 +309,28 @@ export default eventHandler(async (event) => {
         },
       );
 
-      if (syncCommentWithIssue && relatedIssueNumber) {
-        await installation.paginate(
-          "GET /repos/{owner}/{repo}/issues/{issue_number}/comments",
-          {
-            owner: workflowData.owner,
-            repo: workflowData.repo,
-            issue_number: relatedIssueNumber,
-          },
-          ({ data }, done) => {
-            for (const c of data) {
-              if (c.performed_via_github_app?.id === Number(appId)) {
-                prevIssueComment = c;
-                done();
-                break;
+      if (syncCommentWithIssue && relatedIssueNumbers.length) {
+        prevIssueComments = [];
+        for (const issueNumber of relatedIssueNumbers) {
+          await installation.paginate(
+            "GET /repos/{owner}/{repo}/issues/{issue_number}/comments",
+            {
+              owner: workflowData.owner,
+              repo: workflowData.repo,
+              issue_number: issueNumber,
+            },
+            ({ data }, done) => {
+              for (const c of data) {
+                if (c.performed_via_github_app?.id === Number(appId)) {
+                  prevIssueComments.push(c);
+                  done();
+                  break;
+                }
               }
-            }
-            return [];
-          },
-        );
+              return [];
+            },
+          );
+        }
       }
 
       if (comment !== "off") {
@@ -371,18 +371,23 @@ export default eventHandler(async (event) => {
             );
             if (
               syncCommentWithIssue &&
-              relatedIssueNumber &&
-              prevIssueComment
+              relatedIssueNumbers.length &&
+              prevIssueComments.length
             ) {
-              await installation.request(
-                "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}",
-                {
-                  owner: workflowData.owner,
-                  repo: workflowData.repo,
-                  comment_id: prevIssueComment.id,
-                  body: commentBody,
-                },
-              );
+              for (let i = 0; i < relatedIssueNumbers.length; i++) {
+                const prevIssueComment = prevIssueComments[i];
+                if (!prevIssueComment) continue;
+
+                await installation.request(
+                  "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}",
+                  {
+                    owner: workflowData.owner,
+                    repo: workflowData.repo,
+                    comment_id: prevIssueComment.id,
+                    body: commentBody,
+                  },
+                );
+              }
             }
           } else {
             const commentBody = generatePullRequestPublishMessage(
@@ -407,16 +412,18 @@ export default eventHandler(async (event) => {
                 body: commentBody,
               },
             );
-            if (syncCommentWithIssue && relatedIssueNumber) {
-              await installation.request(
-                "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
-                {
-                  owner: workflowData.owner,
-                  repo: workflowData.repo,
-                  issue_number: relatedIssueNumber,
-                  body: commentBody,
-                },
-              );
+            if (syncCommentWithIssue && relatedIssueNumbers.length) {
+              for (const relatedIssueNumber of relatedIssueNumbers) {
+                await installation.request(
+                  "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
+                  {
+                    owner: workflowData.owner,
+                    repo: workflowData.repo,
+                    issue_number: relatedIssueNumber,
+                    body: commentBody,
+                  },
+                );
+              }
             }
           }
         } catch (error) {
