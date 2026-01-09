@@ -12,6 +12,7 @@ export default [
       ".nuxt/**",
       "packages/*/dist/**",
       "packages/app/.nuxt/**",
+      "packages/app/.wrangler/**",
       "packages/cli/dist/**",
     ],
   },
