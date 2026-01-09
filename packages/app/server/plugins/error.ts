@@ -9,6 +9,11 @@ export default defineNitroPlugin((nitro) => {
     const routePath = matchedRoute === "/**" ? "pages/**" : matchedRoute || "-";
     const prefix = `[${method}] ${path} (${routePath}) [${statusCode}]`;
 
+    if (statusCode >= 400 && statusCode < 500) {
+      console.log(prefix, error?.message || "");
+      return;
+    }
+
     console.error(prefix, "Application error:", error);
   });
 });
