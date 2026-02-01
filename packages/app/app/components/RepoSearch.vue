@@ -1,117 +1,112 @@
 <script lang="ts" setup>
-import type { RepoNode } from "../../server/utils/types";
+import type { RepoNode } from '../../server/utils/types'
 
-const search = useSessionStorage("search", "");
-const searchResults = ref<RepoNode[]>([]);
-const isLoading = ref(false);
+const search = useSessionStorage('search', '')
+const searchResults = ref<RepoNode[]>([])
+const isLoading = ref(false)
 
-let abortController: AbortController | null = null;
-const throttledSearch = useThrottle(search, 500, true, false);
+let eventSource: EventSource | null = null
+const throttledSearch = useThrottle(search, 500, true, false)
+
+function closeEventSource(source: EventSource) {
+  source.close()
+  if (eventSource === source) {
+    eventSource = null
+    isLoading.value = false
+  }
+}
 
 watch(
   throttledSearch,
   async (query) => {
-    abortController?.abort();
-    searchResults.value = [];
+    if (eventSource) {
+      closeEventSource(eventSource)
+    }
+    searchResults.value = []
 
     if (!query) {
-      isLoading.value = false;
-      return;
+      isLoading.value = false
+      return
     }
 
-    const controller = new AbortController();
-    abortController = controller;
-    isLoading.value = true;
+    isLoading.value = true
+    const source = new EventSource(
+      `/api/repo/search?text=${encodeURIComponent(query)}`,
+    )
+    eventSource = source
 
-    try {
-      const response = await fetch(
-        `/api/repo/search?text=${encodeURIComponent(query)}`,
-        { signal: controller.signal },
-      );
+    source.onmessage = (event) => {
+      if (event.data === '[DONE]') {
+        closeEventSource(source)
+        return
+      }
 
-      const reader = response.body?.getReader();
-      if (!reader) return;
+      try {
+        const repo = JSON.parse(event.data) as RepoNode & { error?: string }
+        if (repo.error) {
+          return
+        }
 
-      const decoder = new TextDecoder();
-      let buffer = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n\n");
-        buffer = lines.pop() || "";
-
-        for (const line of lines) {
-          if (!line.startsWith("data: ")) continue;
-          const data = line.slice(6);
-          if (data === "[DONE]") return;
-
-          try {
-            const repo = JSON.parse(data) as RepoNode & { error?: string };
-            if (repo.error) continue;
-
-            // Insert sorted by stars, keep top 10
-            const idx = searchResults.value.findIndex(
-              (r) => r.stars < repo.stars,
-            );
-            searchResults.value.splice(
-              idx === -1 ? searchResults.value.length : idx,
-              0,
-              repo,
-            );
-            if (searchResults.value.length > 10) searchResults.value.pop();
-          } catch {
-            // Skip malformed JSON
-          }
+        // Insert sorted by stars, keep top 10
+        const idx = searchResults.value.findIndex(r => r.stars < repo.stars)
+        searchResults.value.splice(
+          idx === -1 ? searchResults.value.length : idx,
+          0,
+          repo,
+        )
+        if (searchResults.value.length > 10) {
+          searchResults.value.pop()
         }
       }
-    } catch (err: any) {
-      if (err.name !== "AbortError") console.error(err);
-    } finally {
-      if (abortController === controller) isLoading.value = false;
+      catch {
+        // Skip malformed JSON
+      }
+    }
+
+    source.onerror = (err) => {
+      console.error(err)
+      closeEventSource(source)
     }
   },
   { immediate: false },
-);
+)
 
 const examples = [
   {
-    owner: "vitejs",
-    name: "vite",
-    avatar: "https://avatars.githubusercontent.com/u/65625612?v=4",
+    owner: 'vitejs',
+    name: 'vite',
+    avatar: 'https://avatars.githubusercontent.com/u/65625612?v=4',
   },
   {
-    owner: "rolldown",
-    name: "rolldown",
-    avatar: "https://avatars.githubusercontent.com/u/94954945?s=200&v=4",
+    owner: 'rolldown',
+    name: 'rolldown',
+    avatar: 'https://avatars.githubusercontent.com/u/94954945?s=200&v=4',
   },
   {
-    owner: "vuejs",
-    name: "core",
-    avatar: "https://avatars.githubusercontent.com/u/6128107?v=4",
+    owner: 'vuejs',
+    name: 'core',
+    avatar: 'https://avatars.githubusercontent.com/u/6128107?v=4',
   },
   {
-    owner: "sveltejs",
-    name: "svelte",
-    avatar: "https://avatars.githubusercontent.com/u/23617963?s=200&v=4",
+    owner: 'sveltejs',
+    name: 'svelte',
+    avatar: 'https://avatars.githubusercontent.com/u/23617963?s=200&v=4',
   },
   {
-    owner: "Tresjs",
-    name: "tres",
-    avatar: "https://avatars.githubusercontent.com/u/119253150?v=4",
+    owner: 'Tresjs',
+    name: 'tres',
+    avatar: 'https://avatars.githubusercontent.com/u/119253150?v=4',
   },
-];
+]
 
-const router = useRouter();
+const router = useRouter()
 function openFirstResult() {
-  const [first] = searchResults.value;
+  const [first] = searchResults.value
   if (first) {
     router.push({
-      name: "repo:details",
+      name: 'repo:details',
       params: { owner: first.owner.login, repo: first.name },
-    });
+    })
   }
 }
 </script>
@@ -150,7 +145,9 @@ function openFirstResult() {
     </div>
 
     <div v-else-if="!search" class="flex flex-col gap-2 mt-4">
-      <div class="text-center">Or try it on:</div>
+      <div class="text-center">
+        Or try it on:
+      </div>
       <RepoButton
         v-for="(repo, index) in examples"
         :key="index"
