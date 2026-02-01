@@ -126,10 +126,10 @@ const main = defineCommand({
           const paths =
             args._.length > 0
               ? await glob(args._, {
-                expandDirectories: false,
-                onlyDirectories: true,
-                absolute: true,
-              })
+                  expandDirectories: false,
+                  onlyDirectories: true,
+                  absolute: true,
+                })
               : [process.cwd()];
 
           const templates = await glob(args.template || [], {
@@ -162,8 +162,8 @@ const main = defineCommand({
               (args.packageManager as string)
                 .split(",")
                 .filter((s) => s.trim()) as Array<
-                  "npm" | "bun" | "pnpm" | "yarn"
-                >,
+                "npm" | "bun" | "pnpm" | "yarn"
+              >,
             ),
           ];
           const packageManagers = ["npm", "bun", "pnpm", "yarn"];
