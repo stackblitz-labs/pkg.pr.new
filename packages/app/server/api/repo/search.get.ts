@@ -1,62 +1,64 @@
-import stringSimilarity from 'string-similarity'
-import { z } from 'zod'
-import { useOctokitApp } from '../../utils/octokit'
+import stringSimilarity from "string-similarity";
+import { z } from "zod";
+import { useOctokitApp } from "../../utils/octokit";
 
 const querySchema = z.object({
   text: z.string(),
-})
+});
 
 export default defineEventHandler(async (event) => {
-  const query = await getValidatedQuery(event, data => querySchema.parse(data))
+  const query = await getValidatedQuery(event, (data) =>
+    querySchema.parse(data),
+  );
 
   if (!query.text) {
-    return { nodes: [] }
+    return { nodes: [] };
   }
 
-  const { signal } = toWebRequest(event)
+  const { signal } = toWebRequest(event);
 
   setResponseHeaders(event, {
-    'Content-Type': 'text/event-stream',
-    'Cache-Control': 'no-cache',
-    'Connection': 'keep-alive',
-  })
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+    Connection: "keep-alive",
+  });
 
-  const app = useOctokitApp(event)
-  const searchText = query.text.toLowerCase()
+  const app = useOctokitApp(event);
+  const searchText = query.text.toLowerCase();
 
   async function* iterateMatches() {
-    const seen = new Set<number>()
+    const seen = new Set<number>();
 
     for await (const { installation } of app.eachInstallation.iterator()) {
       if (signal.aborted) {
-        return
+        return;
       }
 
       try {
-        const octokit = await app.getInstallationOctokit(installation.id)
+        const octokit = await app.getInstallationOctokit(installation.id);
         const { data } = await octokit.request(
-          'GET /installation/repositories',
+          "GET /installation/repositories",
           { per_page: 100 },
-        )
+        );
 
         for (const repo of data.repositories) {
           if (repo.private || seen.has(repo.id)) {
-            continue
+            continue;
           }
 
-          const name = repo.name.toLowerCase()
-          const owner = repo.owner.login.toLowerCase()
+          const name = repo.name.toLowerCase();
+          const owner = repo.owner.login.toLowerCase();
           const score = Math.max(
             stringSimilarity.compareTwoStrings(name, searchText),
             stringSimilarity.compareTwoStrings(owner, searchText),
-          )
+          );
 
           if (
-            score > 0.3
-            || name.includes(searchText)
-            || owner.includes(searchText)
+            score > 0.3 ||
+            name.includes(searchText) ||
+            owner.includes(searchText)
           ) {
-            seen.add(repo.id)
+            seen.add(repo.id);
             yield JSON.stringify({
               id: repo.id,
               name: repo.name,
@@ -65,37 +67,34 @@ export default defineEventHandler(async (event) => {
                 avatarUrl: repo.owner.avatar_url,
               },
               stars: repo.stargazers_count || 0,
-            })
+            });
           }
         }
-      }
-      catch {
+      } catch {
         // Skip suspended installations
       }
     }
 
-    yield '[DONE]'
+    yield "[DONE]";
   }
 
   const stream = new ReadableStream<string>({
     async start(controller) {
       const send = (data: string) => {
-        controller.enqueue(`data: ${data}\n\n`)
-      }
+        controller.enqueue(`data: ${data}\n\n`);
+      };
 
       try {
         for await (const match of iterateMatches()) {
-          send(match)
+          send(match);
         }
-      }
-      catch (err) {
-        send(JSON.stringify({ error: (err as Error).message }))
-      }
-      finally {
-        controller.close()
+      } catch (err) {
+        send(JSON.stringify({ error: (err as Error).message }));
+      } finally {
+        controller.close();
       }
     },
-  })
+  });
 
-  return stream.pipeThrough(new TextEncoderStream())
-})
+  return stream.pipeThrough(new TextEncoderStream());
+});

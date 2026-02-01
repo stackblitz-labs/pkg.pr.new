@@ -1,18 +1,18 @@
 <script lang="ts" setup>
-import type { RepoNode } from '../../server/utils/types'
+import type { RepoNode } from "../../server/utils/types";
 
-const search = useSessionStorage('search', '')
-const searchResults = ref<RepoNode[]>([])
-const isLoading = ref(false)
+const search = useSessionStorage("search", "");
+const searchResults = ref<RepoNode[]>([]);
+const isLoading = ref(false);
 
-let eventSource: EventSource | null = null
-const throttledSearch = useThrottle(search, 500, true, false)
+let eventSource: EventSource | null = null;
+const throttledSearch = useThrottle(search, 500, true, false);
 
 function closeEventSource(source: EventSource) {
-  source.close()
+  source.close();
   if (eventSource === source) {
-    eventSource = null
-    isLoading.value = false
+    eventSource = null;
+    isLoading.value = false;
   }
 }
 
@@ -20,93 +20,92 @@ watch(
   throttledSearch,
   async (query) => {
     if (eventSource) {
-      closeEventSource(eventSource)
+      closeEventSource(eventSource);
     }
-    searchResults.value = []
+    searchResults.value = [];
 
     if (!query) {
-      isLoading.value = false
-      return
+      isLoading.value = false;
+      return;
     }
 
-    isLoading.value = true
+    isLoading.value = true;
     const source = new EventSource(
       `/api/repo/search?text=${encodeURIComponent(query)}`,
-    )
-    eventSource = source
+    );
+    eventSource = source;
 
     source.onmessage = (event) => {
-      if (event.data === '[DONE]') {
-        closeEventSource(source)
-        return
+      if (event.data === "[DONE]") {
+        closeEventSource(source);
+        return;
       }
 
       try {
-        const repo = JSON.parse(event.data) as RepoNode & { error?: string }
+        const repo = JSON.parse(event.data) as RepoNode & { error?: string };
         if (repo.error) {
-          return
+          return;
         }
 
         // Insert sorted by stars, keep top 10
-        const idx = searchResults.value.findIndex(r => r.stars < repo.stars)
+        const idx = searchResults.value.findIndex((r) => r.stars < repo.stars);
         searchResults.value.splice(
           idx === -1 ? searchResults.value.length : idx,
           0,
           repo,
-        )
+        );
         if (searchResults.value.length > 10) {
-          searchResults.value.pop()
+          searchResults.value.pop();
         }
-      }
-      catch {
+      } catch {
         // Skip malformed JSON
       }
-    }
+    };
 
     source.onerror = (err) => {
-      console.error(err)
-      closeEventSource(source)
-    }
+      console.error(err);
+      closeEventSource(source);
+    };
   },
   { immediate: false },
-)
+);
 
 const examples = [
   {
-    owner: 'vitejs',
-    name: 'vite',
-    avatar: 'https://avatars.githubusercontent.com/u/65625612?v=4',
+    owner: "vitejs",
+    name: "vite",
+    avatar: "https://avatars.githubusercontent.com/u/65625612?v=4",
   },
   {
-    owner: 'rolldown',
-    name: 'rolldown',
-    avatar: 'https://avatars.githubusercontent.com/u/94954945?s=200&v=4',
+    owner: "rolldown",
+    name: "rolldown",
+    avatar: "https://avatars.githubusercontent.com/u/94954945?s=200&v=4",
   },
   {
-    owner: 'vuejs',
-    name: 'core',
-    avatar: 'https://avatars.githubusercontent.com/u/6128107?v=4',
+    owner: "vuejs",
+    name: "core",
+    avatar: "https://avatars.githubusercontent.com/u/6128107?v=4",
   },
   {
-    owner: 'sveltejs',
-    name: 'svelte',
-    avatar: 'https://avatars.githubusercontent.com/u/23617963?s=200&v=4',
+    owner: "sveltejs",
+    name: "svelte",
+    avatar: "https://avatars.githubusercontent.com/u/23617963?s=200&v=4",
   },
   {
-    owner: 'Tresjs',
-    name: 'tres',
-    avatar: 'https://avatars.githubusercontent.com/u/119253150?v=4',
+    owner: "Tresjs",
+    name: "tres",
+    avatar: "https://avatars.githubusercontent.com/u/119253150?v=4",
   },
-]
+];
 
-const router = useRouter()
+const router = useRouter();
 function openFirstResult() {
-  const [first] = searchResults.value
+  const [first] = searchResults.value;
   if (first) {
     router.push({
-      name: 'repo:details',
+      name: "repo:details",
       params: { owner: first.owner.login, repo: first.name },
-    })
+    });
   }
 }
 </script>
@@ -145,9 +144,7 @@ function openFirstResult() {
     </div>
 
     <div v-else-if="!search" class="flex flex-col gap-2 mt-4">
-      <div class="text-center">
-        Or try it on:
-      </div>
+      <div class="text-center">Or try it on:</div>
       <RepoButton
         v-for="(repo, index) in examples"
         :key="index"
