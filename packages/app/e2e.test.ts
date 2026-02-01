@@ -1,15 +1,21 @@
 import type { Response } from "@cloudflare/workers-types";
-import type { UnstableDevWorker } from "wrangler";
 import ezSpawn from "@jsdevtools/ez-spawn";
 import { simulation } from "@simulacrum/github-api-simulator";
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { unstable_dev } from "wrangler";
+import { unstable_dev, type UnstableDevWorker } from "wrangler";
 import prPullRequestSynchronizeFixture from "./fixtures/pr.pull_request.json";
 import prWorkflowRunRequestedFixture from "./fixtures/pr.workflow_run.requested.json";
 import pushWorkflowRunInProgressFixture from "./fixtures/workflow_run.in_progress.json";
 
+const E2E_TEMP_DIR_PREFIX = "pkg-pr-new-e2e-";
+
 let server: Awaited<ReturnType<ReturnType<typeof simulation>["listen"]>>;
 let workerUrl: string;
+let githubOutputDir: string;
+let githubOutputPath: string;
 
 let worker: UnstableDevWorker;
 beforeAll(async () => {
@@ -49,6 +55,13 @@ beforeAll(async () => {
   );
   const url = `${worker.proxyData.userWorkerUrl.protocol}//${worker.proxyData.userWorkerUrl.hostname}:${worker.proxyData.userWorkerUrl.port}`;
   workerUrl = url;
+
+  githubOutputDir = await fs.mkdtemp(
+    path.join(os.tmpdir(), E2E_TEMP_DIR_PREFIX),
+  );
+  githubOutputPath = path.join(githubOutputDir, "output");
+  await fs.writeFile(githubOutputPath, "");
+
   await ezSpawn.async(
     `pnpm cross-env TEST=true API_URL=${url} pnpm --filter=pkg-pr-new run build`,
     [],
@@ -61,6 +74,9 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await server.ensureClose();
+  if (githubOutputDir?.includes(E2E_TEMP_DIR_PREFIX)) {
+    await fs.rm(githubOutputDir, { recursive: true, force: true });
+  }
 });
 
 describe.sequential.each([
@@ -98,6 +114,7 @@ describe.sequential.each([
   it(`publishes playgrounds for ${mode}`, async () => {
     const env = Object.entries({
       TEST: true,
+      GITHUB_OUTPUT: githubOutputPath,
       GITHUB_SERVER_URL: new URL(payload.workflow_run.html_url).origin,
       GITHUB_REPOSITORY: payload.repository.full_name,
       GITHUB_RUN_ID: payload.workflow_run.id,
@@ -113,21 +130,23 @@ describe.sequential.each([
       .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
       .join(" ");
 
-    try {
-      const process = await ezSpawn.async(
-        `pnpm cross-env ${env} pnpm run -w publish:playgrounds`,
-        [],
-        {
-          stdio: "overlapped",
-          shell: true,
-        },
-      );
-      // eslint-disable-next-line no-console
-      console.log(process.stdout);
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.log(error);
-    }
+    const process = await ezSpawn.async(
+      `pnpm cross-env ${env} pnpm run -w publish:playgrounds`,
+      [],
+      {
+        stdio: "overlapped",
+        shell: true,
+      },
+    );
+
+    expect.soft(process.status).toBe(0);
+    expect.soft(process.stdout).toContain(`"owner": "stackblitz-labs"`);
+    expect(process.stderr).toContain("preparing template: example-1");
+    expect(process.stderr).toContain("preparing template: example-2");
+    expect(process.stderr).toContain("Your npm packages are published.");
+    expect(process.stderr).toContain("pkg-pr-new:");
+    expect(process.stderr).toContain("playground-a:");
+    expect(process.stderr).toContain("playground-b:");
   }, 10_000);
 
   it(`serves and installs playground-a for ${mode}`, async () => {
