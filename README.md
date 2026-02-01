@@ -109,6 +109,8 @@ These are some of the projects and companies using pkg.pr.new:
    <a href="https://typeorm.io"><img src="https://github.com/typeorm/typeorm/blob/master/resources/typeorm-logo-colored-light.png" height="40" /></a>
   <a href="https://preply.com"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/preply/design-system-visual-coverage/refs/heads/main/assets/logo-inverted.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/preply/design-system-visual-coverage/refs/heads/main/assets/logo.svg"><img height="40" alt="Preply" src="https://raw.githubusercontent.com/preply/design-system-visual-coverage/refs/heads/main/assets/logo.svg"></picture></a>
   <a href="https://github.com/playcanvas/react"><img alt="playcanvas-react" src="https://avatars.githubusercontent.com/u/1030579?v=4" height="40" /></a>
+  <a href="https://babel.dev/"><img src="https://avatars.githubusercontent.com/u/9637642?s=200&v=4" height="40" /></a>
+  <a href="https://wasp.sh/"><img src="https://avatars.githubusercontent.com/wasp-lang" height="40" /></a>
 </p>
 
 Feel free to add your project or company here to join the pkg.pr.new family :)
@@ -197,6 +199,34 @@ Using `--comment=update`, pkg.pr.new would generate one initial comment and then
 With `--comment=create`, each commit would generate a comment for itself, useful for triggering workflows, like workflow execution using maintainer comments.
 
 And `--comment=off` would turn off comments for maintainers who prefer minimal pull requests.
+
+> `--commentWithSha` specify whether to replace the pr number with sha commit in the generated comments.
+
+With `--commentWithSha`:
+
+```sh
+npm i https://pkg.pr.new/tinybench@a832a55
+```
+
+Without `--commentWithSha`:
+
+```sh
+npm i https://pkg.pr.new/tinybench@123
+```
+
+> `--commentWithDev` specify whether the generated link includes the `-D` parameter.
+
+With `--commentWithDev`:
+
+```sh
+npm i https://pkg.pr.new/tinybench@123 -D
+```
+
+Without `--commentWithDev`:
+
+```sh
+npm i https://pkg.pr.new/tinybench@123
+```
 
 To customize which package manager is reflected in the comments, use the `--packageManager=XYZ` flag. XYZ can be one of the following: npm (default), pnpm, yarn, or bun. Multiple valid values ​​can also be configured at the same time, such as `--packageManager=ABC,XYZ`.
 

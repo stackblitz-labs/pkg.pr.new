@@ -1,5 +1,4 @@
 /* eslint-disable unicorn/no-process-exit */
-import assert from "node:assert";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import fsSync from "node:fs";
@@ -89,6 +88,18 @@ const main = defineCommand({
             description: `"off" for no comments (silent mode). "create" for comment on each publish. "update" for one comment across the pull request with edits on each publish (default)`,
             default: "update",
           },
+          commentWithSha: {
+            type: "boolean",
+            description:
+              "use commit sha instead of the pr number in the comment links",
+            default: false,
+          },
+          commentWithDev: {
+            type: "boolean",
+            description:
+              "should install the packages with the 'dev' tag in the comment links",
+            default: false,
+          },
           "only-templates": {
             type: "boolean",
             description: `generate only stackblitz templates`,
@@ -101,7 +112,7 @@ const main = defineCommand({
           packageManager: {
             type: "string",
             description:
-              "Specify the package manager to use (npm, bun, pnpm, yarn)",
+              "Specify the package manager to use (npm, bun, pnpm, yarn). Comma-separated values are supported.",
             enum: ["npm", "bun", "pnpm", "yarn"],
             default: "npm",
           },
@@ -143,10 +154,18 @@ const main = defineCommand({
           const isPeerDepsEnabled = !!args.peerDeps;
           const isOnlyTemplates = !!args["only-templates"];
           const isBinaryApplication = !!args.bin;
+          const isCommentWithSha = !!args.commentWithSha;
+          const isCommentWithDev = !!args.commentWithDev;
           const comment: Comment = args.comment as Comment;
-          const selectedPackageManager = (args.packageManager as string)
-            .split(",")
-            .filter((s) => s.trim()) as Array<"npm" | "bun" | "pnpm" | "yarn">;
+          const selectedPackageManager = [
+            ...new Set(
+              (args.packageManager as string)
+                .split(",")
+                .filter((s) => s.trim()) as Array<
+                "npm" | "bun" | "pnpm" | "yarn"
+              >,
+            ),
+          ];
           const packageManagers = ["npm", "bun", "pnpm", "yarn"];
 
           if (!selectedPackageManager.length) {
@@ -191,17 +210,26 @@ const main = defineCommand({
 
           const key = hash(metadata);
 
-          const checkResponse = await fetch(new URL("/check", apiUrl), {
-            method: "POST",
-            body: JSON.stringify({
-              owner,
-              repo,
-              key,
-            }),
-          });
+          let checkResponse;
+          try {
+            checkResponse = await fetch(new URL("/check", apiUrl), {
+              method: "POST",
+              body: JSON.stringify({
+                owner,
+                repo,
+                key,
+              }),
+            });
+          } catch (error) {
+            console.error(`Failed to connect to server: ${error}`);
+            process.exit(1);
+          }
 
           if (!checkResponse.ok) {
-            console.error(await checkResponse.text());
+            const errorText = await checkResponse.text();
+            console.error(
+              `Check failed (${checkResponse.status}): ${errorText}`,
+            );
             process.exit(1);
           }
 
@@ -247,12 +275,22 @@ const main = defineCommand({
             realDeps?.set(pJson.name, pJson.version ?? longDepUrl);
 
             const controller = new AbortController();
-            const resource = await fetch(longDepUrl, {
-              signal: controller.signal,
-            });
-            if (resource.ok) {
+            try {
+              const resource = await fetch(longDepUrl, {
+                signal: controller.signal,
+              });
+              if (resource.ok) {
+                console.warn(
+                  `${pJson.name}@${formattedSha} was already published on ${longDepUrl}`,
+                );
+              } else if (resource.status >= 500) {
+                console.warn(
+                  `Server error checking ${longDepUrl} (${resource.status}), proceeding with publish`,
+                );
+              }
+            } catch (error) {
               console.warn(
-                `${pJson.name}@${formattedSha} was already published on ${longDepUrl}`,
+                `Failed to check if package exists at ${longDepUrl}: ${error}`,
               );
             }
             controller.abort();
@@ -519,15 +557,26 @@ const main = defineCommand({
               "sb-bin": `${isBinaryApplication}`,
               "sb-package-manager": selectedPackageManager.join(","),
               "sb-only-templates": `${isOnlyTemplates}`,
+              "sb-comment-with-sha": `${isCommentWithSha}`,
+              "sb-comment-with-dev": `${isCommentWithDev}`,
             },
             body: formData,
           });
-          const laterRes = await res.clone().json();
-          assert.equal(
-            res.status,
-            200,
-            `publishing failed: ${await res.text()}`,
-          );
+
+          if (!res.ok) {
+            const errorText = await res.text();
+            console.error(`Publishing failed (${res.status}): ${errorText}`);
+            process.exit(1);
+          }
+
+          let laterRes;
+          try {
+            laterRes = await res.json();
+          } catch (error) {
+            console.error(`Failed to parse server response as JSON: ${error}`);
+            console.error(`Raw response: ${await res.text()}`);
+            process.exit(1);
+          }
 
           const debug = laterRes.debug;
 
