@@ -1,91 +1,101 @@
-import { z } from "zod";
-import { useOctokitApp } from "../../utils/octokit";
-import stringSimilarity from "string-similarity";
+import stringSimilarity from 'string-similarity'
+import { z } from 'zod'
+import { useOctokitApp } from '../../utils/octokit'
 
 const querySchema = z.object({
   text: z.string(),
-});
+})
 
 export default defineEventHandler(async (event) => {
-  const query = await getValidatedQuery(event, (data) =>
-    querySchema.parse(data),
-  );
+  const query = await getValidatedQuery(event, data => querySchema.parse(data))
 
   if (!query.text) {
-    return { nodes: [] };
+    return { nodes: [] }
   }
 
-  const { signal } = toWebRequest(event);
+  const { signal } = toWebRequest(event)
 
   setResponseHeaders(event, {
-    "Content-Type": "text/event-stream",
-    "Cache-Control": "no-cache",
-    Connection: "keep-alive",
-  });
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+  })
 
-  const app = useOctokitApp(event);
-  const searchText = query.text.toLowerCase();
-  const seen = new Set<number>();
+  const app = useOctokitApp(event)
+  const searchText = query.text.toLowerCase()
 
-  const stream = new ReadableStream({
-    async start(controller) {
-      const encoder = new TextEncoder();
-      const send = (data: string) =>
-        controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+  async function* iterateMatches() {
+    const seen = new Set<number>()
+
+    for await (const { installation } of app.eachInstallation.iterator()) {
+      if (signal.aborted) {
+        return
+      }
 
       try {
-        for await (const { installation } of app.eachInstallation.iterator()) {
-          if (signal.aborted) break;
+        const octokit = await app.getInstallationOctokit(installation.id)
+        const { data } = await octokit.request(
+          'GET /installation/repositories',
+          { per_page: 100 },
+        )
 
-          try {
-            const octokit = await app.getInstallationOctokit(installation.id);
-            const { data } = await octokit.request(
-              "GET /installation/repositories",
-              { per_page: 100 },
-            );
+        for (const repo of data.repositories) {
+          if (repo.private || seen.has(repo.id)) {
+            continue
+          }
 
-            for (const repo of data.repositories) {
-              if (repo.private || seen.has(repo.id)) continue;
+          const name = repo.name.toLowerCase()
+          const owner = repo.owner.login.toLowerCase()
+          const score = Math.max(
+            stringSimilarity.compareTwoStrings(name, searchText),
+            stringSimilarity.compareTwoStrings(owner, searchText),
+          )
 
-              const name = repo.name.toLowerCase();
-              const owner = repo.owner.login.toLowerCase();
-              const score = Math.max(
-                stringSimilarity.compareTwoStrings(name, searchText),
-                stringSimilarity.compareTwoStrings(owner, searchText),
-              );
-
-              if (
-                score > 0.3 ||
-                name.includes(searchText) ||
-                owner.includes(searchText)
-              ) {
-                seen.add(repo.id);
-                send(
-                  JSON.stringify({
-                    id: repo.id,
-                    name: repo.name,
-                    owner: {
-                      login: repo.owner.login,
-                      avatarUrl: repo.owner.avatar_url,
-                    },
-                    stars: repo.stargazers_count || 0,
-                  }),
-                );
-              }
-            }
-          } catch {
-            // Skip suspended installations
+          if (
+            score > 0.3
+            || name.includes(searchText)
+            || owner.includes(searchText)
+          ) {
+            seen.add(repo.id)
+            yield JSON.stringify({
+              id: repo.id,
+              name: repo.name,
+              owner: {
+                login: repo.owner.login,
+                avatarUrl: repo.owner.avatar_url,
+              },
+              stars: repo.stargazers_count || 0,
+            })
           }
         }
+      }
+      catch {
+        // Skip suspended installations
+      }
+    }
 
-        send("[DONE]");
-      } catch (err) {
-        send(JSON.stringify({ error: (err as Error).message }));
-      } finally {
-        controller.close();
+    yield '[DONE]'
+  }
+
+  const stream = new ReadableStream<string>({
+    async start(controller) {
+      const send = (data: string) => {
+        controller.enqueue(`data: ${data}\n\n`)
+      }
+
+      try {
+        for await (const match of iterateMatches()) {
+          send(match)
+        }
+      }
+      catch (err) {
+        send(JSON.stringify({ error: (err as Error).message }))
+      }
+      finally {
+        controller.close()
       }
     },
-  });
+  })
 
-  return stream;
-});
+  return stream.pipeThrough(new TextEncoderStream())
+})
