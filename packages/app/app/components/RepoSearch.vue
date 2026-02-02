@@ -47,16 +47,7 @@ watch(
           return;
         }
 
-        // Insert sorted by stars, keep top 10
-        const idx = searchResults.value.findIndex((r) => r.stars < repo.stars);
-        searchResults.value.splice(
-          idx === -1 ? searchResults.value.length : idx,
-          0,
-          repo,
-        );
-        if (searchResults.value.length > 10) {
-          searchResults.value.pop();
-        }
+        searchResults.value.push(repo);
       } catch {
         // Skip malformed JSON
       }
