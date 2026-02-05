@@ -111,6 +111,7 @@ These are some of the projects and companies using pkg.pr.new:
   <a href="https://github.com/playcanvas/react"><img alt="playcanvas-react" src="https://avatars.githubusercontent.com/u/1030579?v=4" height="40" /></a>
   <a href="https://babel.dev/"><img src="https://avatars.githubusercontent.com/u/9637642?s=200&v=4" height="40" /></a>
   <a href="https://wasp.sh/"><img src="https://avatars.githubusercontent.com/wasp-lang" height="40" /></a>
+  <a href="https://better-auth.com/"><img src="https://avatars.githubusercontent.com/better-auth" height="40" /></a>
 </p>
 
 Feel free to add your project or company here to join the pkg.pr.new family :)
