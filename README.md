@@ -109,6 +109,9 @@ These are some of the projects and companies using pkg.pr.new:
    <a href="https://typeorm.io"><img src="https://github.com/typeorm/typeorm/blob/master/resources/typeorm-logo-colored-light.png" height="40" /></a>
   <a href="https://preply.com"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/preply/design-system-visual-coverage/refs/heads/main/assets/logo-inverted.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/preply/design-system-visual-coverage/refs/heads/main/assets/logo.svg"><img height="40" alt="Preply" src="https://raw.githubusercontent.com/preply/design-system-visual-coverage/refs/heads/main/assets/logo.svg"></picture></a>
   <a href="https://github.com/playcanvas/react"><img alt="playcanvas-react" src="https://avatars.githubusercontent.com/u/1030579?v=4" height="40" /></a>
+  <a href="https://babel.dev/"><img src="https://avatars.githubusercontent.com/u/9637642?s=200&v=4" height="40" /></a>
+  <a href="https://wasp.sh/"><img src="https://avatars.githubusercontent.com/wasp-lang" height="40" /></a>
+  <a href="https://better-auth.com/"><img src="https://avatars.githubusercontent.com/better-auth" height="40" /></a>
 </p>
 
 Feel free to add your project or company here to join the pkg.pr.new family :)
@@ -148,15 +151,15 @@ npx pkg-pr-new publish './packages/A' --template './examples/*'
 
 By default, pkg.pr.new will generate a template called "default" which includes each built package in the dependencies. This can be disabled with `--no-template`.
 
-For shorter urls, `--compact` can be useful:
+Compact URLs are the default (and will fall back to long form if npm metadata is unavailable). To force long-form URLs, use `--no-compact`:
 
 ```sh
-npx pkg-pr-new publish --compact './packages/A' './packages/B'
+npx pkg-pr-new publish --no-compact './packages/A' './packages/B'
 ```
 
-> `--compact` requires your package to be a valid (published) package on npm with a specified `repository` field in the package.json! See [this](https://docs.npmjs.com/cli/v7/configuring-npm/package-json#repository). pkg.pr.new is case sensitive, if the GitHub owner is `PuruVJ`, the package.json `repository` field should not have `puruvj`.
+> Compact URLs rely on your package being published on npm with a valid `repository` field in `package.json`. See [this](https://docs.npmjs.com/cli/v7/configuring-npm/package-json#repository). pkg.pr.new is case sensitive, if the GitHub owner is `PuruVJ`, the package.json `repository` field should not have `puruvj`.
 
-With `--compact`:
+With default compact URLs:
 
 ```sh
 npm i https://pkg.pr.new/tinybench@a832a55
@@ -207,6 +210,20 @@ npm i https://pkg.pr.new/tinybench@a832a55
 ```
 
 Without `--commentWithSha`:
+
+```sh
+npm i https://pkg.pr.new/tinybench@123
+```
+
+> `--commentWithDev` specify whether the generated link includes the `-D` parameter.
+
+With `--commentWithDev`:
+
+```sh
+npm i https://pkg.pr.new/tinybench@123 -D
+```
+
+Without `--commentWithDev`:
 
 ```sh
 npm i https://pkg.pr.new/tinybench@123

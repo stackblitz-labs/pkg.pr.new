@@ -15,6 +15,10 @@ const binCommands: Record<PackageManager, string> = {
   yarn: "npx",
   bun: "bunx",
 };
+const isMoreThanFourPackages = (
+  packages: string[],
+  packageManager: PackageManager,
+) => packages.length * packageManager.split(",").length > 4;
 
 export function generateCommitPublishMessage(
   origin: string,
@@ -24,8 +28,9 @@ export function generateCommitPublishMessage(
   compact: boolean,
   packageManager: PackageManager,
   bin: boolean,
+  commentWithDev: boolean,
 ) {
-  const isMoreThanFour = packages.length > 4;
+  const isMoreThanFour = isMoreThanFourPackages(packages, packageManager);
   const shaMessages = packages
     .map((packageName) => {
       let shaUrl = generatePublishUrl(
@@ -42,7 +47,7 @@ export function generateCommitPublishMessage(
             shaUrl = `${shaUrl}.tgz`;
           }
 
-          const descriptor = `${pm === "yarn" ? `${packageName}@` : ""}${shaUrl}`;
+          const descriptor = `${pm === "yarn" ? `${packageName}@` : ""}${shaUrl + (commentWithDev ? " -D" : "")}`;
 
           return `
   \`\`\`
@@ -79,8 +84,9 @@ export function generatePullRequestPublishMessage(
   packageManager: PackageManager,
   base: "sha" | "ref",
   bin: boolean,
+  commentWithDev: boolean,
 ) {
-  const isMoreThanFour = packages.length > 4;
+  const isMoreThanFour = isMoreThanFourPackages(packages, packageManager);
   const refMessages = packages
     .map((packageName) => {
       let refUrl = generatePublishUrl(
@@ -99,7 +105,7 @@ export function generatePullRequestPublishMessage(
 
           return `
   \`\`\`
-  ${bin ? binCommands[pm as PackageManager] : installCommands[pm as PackageManager]} ${refUrl}
+  ${bin ? binCommands[pm as PackageManager] : installCommands[pm as PackageManager]} ${refUrl + (commentWithDev ? " -D" : "")}
   \`\`\`
   `;
         })
