@@ -58,7 +58,12 @@ const main = defineCommand({
           compact: {
             type: "boolean",
             description:
-              "compact urls. The shortest form of urls like pkg.pr.new/tinybench@a832a55)",
+              "compact urls (default). The shortest form of urls like pkg.pr.new/tinybench@a832a55)",
+          },
+          "no-compact": {
+            type: "boolean",
+            description: "disable compact urls and always use long form",
+            default: false,
           },
           peerDeps: {
             type: "boolean",
@@ -140,7 +145,7 @@ const main = defineCommand({
 
           const formData = new FormData();
 
-          let isCompact = !!args.compact;
+          let isCompact = args["no-compact"] ? false : args.compact !== false;
           let packMethod: PackMethod = "npm";
 
           if (args.pnpm) {
