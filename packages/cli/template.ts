@@ -8,7 +8,7 @@ function generateShellCommand(
   return selectedPackageManager
     .map(
       (pm) =>
-        `${installCommands[pm]} ${url + (isCommentWithDev ? " -D" : "")}`,
+        `\`\`\`sh\n${installCommands[pm]} ${url + (isCommentWithDev ? " -D" : "")}\n\`\`\``,
     )
     .join("\n");
 }
