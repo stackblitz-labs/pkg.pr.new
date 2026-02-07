@@ -1,6 +1,22 @@
+import { installCommands } from "@pkg-pr-new/utils"
+
+function generateShellCommand(
+  url: string,
+  isCommentWithDev: boolean,
+  selectedPackageManager: ('npm' | 'yarn' | 'pnpm' | 'bun')[],
+) {
+  return selectedPackageManager
+    .map(
+      (pm) =>
+        `${installCommands[pm]} ${url + (isCommentWithDev ? " -D" : "")}`,
+    )
+    .join("\n");
+}
+
 export const createDefaultTemplate = (
   dependencies: Record<string, string>,
   isCommentWithDev: boolean,
+  selectedPackageManager: ('npm' | 'yarn' | 'pnpm' | 'bun')[],
 ) => ({
   "index.js": "",
   "README.md": `
@@ -16,11 +32,7 @@ As a user, you can check the package.json file and see the new generated package
 
 ${Object.values(dependencies)
   .map(
-    (url) => `
-\`\`\`sh
-npm i ${url + (isCommentWithDev ? " -D" : "")}
-\`\`\`
-`,
+    (url) => generateShellCommand(url, isCommentWithDev, selectedPackageManager)
   )
   .join("")}
 
