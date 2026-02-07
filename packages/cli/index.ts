@@ -406,6 +406,7 @@ const main = defineCommand({
             const project = createDefaultTemplate(
               Object.fromEntries(deps.entries()),
               isCommentWithDev,
+              selectedPackageManager,
             );
 
             for (const filePath of Object.keys(project)) {
