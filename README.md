@@ -112,6 +112,8 @@ These are some of the projects and companies using pkg.pr.new:
   <a href="https://babel.dev/"><img src="https://avatars.githubusercontent.com/u/9637642?s=200&v=4" height="40" /></a>
   <a href="https://wasp.sh/"><img src="https://avatars.githubusercontent.com/wasp-lang" height="40" /></a>
   <a href="https://better-auth.com/"><img src="https://avatars.githubusercontent.com/better-auth" height="40" /></a>
+  <a href="https://resend.com/"><picture><source media="(prefers-color-scheme: dark)" srcset="https://cdn.resend.com/brand/resend-wordmark-white.svg"><img src="https://cdn.resend.com/brand/resend-wordmark-black.svg" alt="Resend" height="40"></picture></a>
+  <a href="https://react.email/"><img src="https://react.email/brand/logo.png" alt="React Email" height="40" /></a>
 </p>
 
 Feel free to add your project or company here to join the pkg.pr.new family :)
