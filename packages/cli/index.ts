@@ -687,6 +687,15 @@ async function resolveTarball(pm: PackMethod, p: string, pJson: PackageJson) {
   if (pm !== "yarn" && pm !== "bun") {
     filename = lines[lines.length - 1].trim();
   }
+  if (pm === "bun") {
+    const tgzFiles = fsSync
+      .readdirSync(p)
+      .filter((file) => file.endsWith(".tgz"));
+    console.warn(`[bun pack] stdout:\n${stdout}`);
+    console.warn(
+      `[bun pack] expected filename: ${filename}; tgz files: ${tgzFiles.join(", ") || "(none)"}`,
+    );
+  }
 
   const shasum = createHash("sha1")
     .update(await fs.readFile(path.resolve(p, filename)))
