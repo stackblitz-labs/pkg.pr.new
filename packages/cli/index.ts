@@ -381,6 +381,7 @@ const main = defineCommand({
           if (!noDefaultTemplate && templates.length === 0) {
             const project = createDefaultTemplate(
               Object.fromEntries(deps.entries()),
+              isCommentWithDev,
             );
 
             for (const filePath of Object.keys(project)) {
