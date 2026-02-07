@@ -100,6 +100,12 @@ const main = defineCommand({
               "should install the packages with the 'dev' tag in the comment links",
             default: false,
           },
+          syncCommentWithIssue: {
+            type: "boolean",
+            description:
+              "sync the comment with the related issue if any (issue number is extracted from the comment body)",
+            default: false,
+          },
           "only-templates": {
             type: "boolean",
             description: `generate only stackblitz templates`,
@@ -156,6 +162,7 @@ const main = defineCommand({
           const isBinaryApplication = !!args.bin;
           const isCommentWithSha = !!args.commentWithSha;
           const isCommentWithDev = !!args.commentWithDev;
+          const isSyncCommentWithIssue = !!args.syncCommentWithIssue;
           const comment: Comment = args.comment as Comment;
           const selectedPackageManager = [
             ...new Set(
@@ -559,6 +566,7 @@ const main = defineCommand({
               "sb-only-templates": `${isOnlyTemplates}`,
               "sb-comment-with-sha": `${isCommentWithSha}`,
               "sb-comment-with-dev": `${isCommentWithDev}`,
+              "sb-sync-comment-with-issue": `${isSyncCommentWithIssue}`,
             },
             body: formData,
           });
