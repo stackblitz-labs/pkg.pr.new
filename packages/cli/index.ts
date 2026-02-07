@@ -676,7 +676,7 @@ async function resolveTarball(pm: PackMethod, p: string, pJson: PackageJson) {
   if (pm === "yarn") {
     cmd += ` --filename ${filename}`;
   } else if (pm === "bun") {
-    cmd = `bun pm pack --filename ${filename}`;
+    cmd = `bun pm pack --quiet --filename ${filename}`;
   }
   const { stdout } = await ezSpawn.async(cmd, {
     stdio: "overlapped",
@@ -686,6 +686,19 @@ async function resolveTarball(pm: PackMethod, p: string, pJson: PackageJson) {
 
   if (pm !== "yarn" && pm !== "bun") {
     filename = lines[lines.length - 1].trim();
+  }
+  if (pm === "bun") {
+    const tgzFiles = fsSync
+      .readdirSync(p)
+      .filter((file) => file.endsWith(".tgz"));
+    const bunFilename = stdout.trim();
+    if (bunFilename) {
+      filename = bunFilename;
+    }
+    console.warn(`[bun pack] stdout:\n${stdout}`);
+    console.warn(
+      `[bun pack] expected filename: ${filename}; tgz files: ${tgzFiles.join(", ") || "(none)"}`,
+    );
   }
 
   const shasum = createHash("sha1")
