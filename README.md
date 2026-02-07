@@ -165,7 +165,7 @@ With default compact URLs:
 npm i https://pkg.pr.new/tinybench@a832a55
 ```
 
-Without `--compact`:
+With `--no-compact` or if npm metadata is unavailable:
 
 ```sh
 npm i https://pkg.pr.new/tinylibs/tinybench/tinybench@a832a55
