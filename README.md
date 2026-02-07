@@ -151,15 +151,15 @@ npx pkg-pr-new publish './packages/A' --template './examples/*'
 
 By default, pkg.pr.new will generate a template called "default" which includes each built package in the dependencies. This can be disabled with `--no-template`.
 
-For shorter urls, `--compact` can be useful:
+Compact URLs are the default (and will fall back to long form if npm metadata is unavailable). To force long-form URLs, use `--no-compact`:
 
 ```sh
-npx pkg-pr-new publish --compact './packages/A' './packages/B'
+npx pkg-pr-new publish --no-compact './packages/A' './packages/B'
 ```
 
-> `--compact` requires your package to be a valid (published) package on npm with a specified `repository` field in the package.json! See [this](https://docs.npmjs.com/cli/v7/configuring-npm/package-json#repository). pkg.pr.new is case sensitive, if the GitHub owner is `PuruVJ`, the package.json `repository` field should not have `puruvj`.
+> Compact URLs rely on your package being published on npm with a valid `repository` field in `package.json`. See [this](https://docs.npmjs.com/cli/v7/configuring-npm/package-json#repository). pkg.pr.new is case sensitive, if the GitHub owner is `PuruVJ`, the package.json `repository` field should not have `puruvj`.
 
-With `--compact`:
+With default compact URLs:
 
 ```sh
 npm i https://pkg.pr.new/tinybench@a832a55

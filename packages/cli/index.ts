@@ -58,7 +58,7 @@ const main = defineCommand({
           compact: {
             type: "boolean",
             description:
-              "compact urls. The shortest form of urls like pkg.pr.new/tinybench@a832a55)",
+              "compact urls (default). The shortest form of urls like pkg.pr.new/tinybench@a832a55)",
           },
           peerDeps: {
             type: "boolean",
@@ -140,7 +140,7 @@ const main = defineCommand({
 
           const formData = new FormData();
 
-          const isCompact = !!args.compact;
+          let isCompact = args.compact !== false;
           let packMethod: PackMethod = "npm";
 
           if (args.pnpm) {
@@ -234,7 +234,6 @@ const main = defineCommand({
           }
 
           const { sha } = await checkResponse.json();
-          const formattedSha = isCompact ? abbreviateCommitHash(sha) : sha;
 
           const deps: Map<string, string> = new Map(); // pkg.pr.new versions of the package
           const realDeps: Map<string, string> | null = isPeerDepsEnabled
@@ -248,6 +247,11 @@ const main = defineCommand({
             packages: [],
             templates: [],
           };
+
+          const packageInfos: Array<{
+            packageName: string;
+            pJson: PackageJson;
+          }> = [];
 
           for (const p of paths) {
             const pJsonPath = path.resolve(p, "package.json");
@@ -264,15 +268,35 @@ const main = defineCommand({
               continue;
             }
 
-            if (isCompact) {
-              await verifyCompactMode(pJson.name);
+            const packageName = pJson.name;
+            packageInfos.push({ packageName, pJson });
+          }
+
+          if (isCompact) {
+            for (const { packageName } of packageInfos) {
+              try {
+                await verifyCompactMode(packageName);
+              } catch (error) {
+                const reason =
+                  error instanceof Error ? error.message : String(error);
+                console.warn(
+                  `Package ${packageName} cannot use --compact (${reason}). Falling back to non-compact URLs for this run.`,
+                );
+                isCompact = false;
+                break;
+              }
             }
+          }
+
+          const formattedSha = isCompact ? abbreviateCommitHash(sha) : sha;
+
+          for (const { packageName, pJson } of packageInfos) {
             const longDepUrl = new URL(
-              `/${owner}/${repo}/${pJson.name}@${formattedSha}`,
+              `/${owner}/${repo}/${packageName}@${formattedSha}`,
               apiUrl,
             ).href;
-            deps.set(pJson.name, longDepUrl);
-            realDeps?.set(pJson.name, pJson.version ?? longDepUrl);
+            deps.set(packageName, longDepUrl);
+            realDeps?.set(packageName, pJson.version ?? longDepUrl);
 
             const controller = new AbortController();
             try {
@@ -296,12 +320,12 @@ const main = defineCommand({
             controller.abort();
 
             const jsonUrl = isCompact
-              ? new URL(`/${pJson.name}@${formattedSha}`, apiUrl).href
+              ? new URL(`/${packageName}@${formattedSha}`, apiUrl).href
               : longDepUrl;
 
             // Collect package metadata
             outputMetadata.packages.push({
-              name: pJson.name,
+              name: packageName,
               url: jsonUrl,
               shasum: "", // will be filled later
             });
