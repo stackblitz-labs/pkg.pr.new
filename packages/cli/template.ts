@@ -1,6 +1,22 @@
+import { installCommands } from "@pkg-pr-new/utils";
+
+function generateShellCommand(
+  url: string,
+  isCommentWithDev: boolean,
+  selectedPackageManager: ("npm" | "yarn" | "pnpm" | "bun")[],
+) {
+  return selectedPackageManager
+    .map(
+      (pm) =>
+        `\`\`\`sh\n${installCommands[pm]} ${url + (isCommentWithDev ? " -D" : "")}\n\`\`\``,
+    )
+    .join("\n");
+}
+
 export const createDefaultTemplate = (
   dependencies: Record<string, string>,
   isCommentWithDev: boolean,
+  selectedPackageManager: ("npm" | "yarn" | "pnpm" | "bun")[],
 ) => ({
   "index.js": "",
   "README.md": `
@@ -15,12 +31,8 @@ Templates are particularly useful for creating live, interactive examples of you
 As a user, you can check the package.json file and see the new generated packages! You can just copy those and put them in your package.json or install them with your favorite package manager.
 
 ${Object.values(dependencies)
-  .map(
-    (url) => `
-\`\`\`sh
-npm i ${url + (isCommentWithDev ? " -D" : "")}
-\`\`\`
-`,
+  .map((url) =>
+    generateShellCommand(url, isCommentWithDev, selectedPackageManager),
   )
   .join("")}
 
