@@ -88,7 +88,7 @@ onBeforeMount(async () => {
       return `
         <div class="relative group my-4 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm">
           <div class="flex items-center justify-end px-4 py-1 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-            <button 
+            <button
               onclick='(${copyCodeHandler.toString()}).call(this, ${JSON.stringify(text)})'
               class="px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors opacity-0 group-hover:opacity-100"
               title="Copy to clipboard"
@@ -278,7 +278,7 @@ async function fetchMore() {
           </div>
 
           <div
-            class="max-w-full p-4 overflow-x-scroll border border-gray-100 dark:border-gray-800 rounded-lg prose dark:prose-invert flex flex-col gap-2"
+            class="max-w-full p-4 overflow-x-auto border border-gray-100 dark:border-gray-800 rounded-lg prose dark:prose-invert flex flex-col gap-2"
             v-html="marked(selectedCommit.release.text)"
           />
         </div>
