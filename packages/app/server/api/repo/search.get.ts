@@ -1,119 +1,115 @@
 import stringSimilarity from "string-similarity";
 import { z } from "zod";
+import { useBucket } from "../../utils/bucket";
 import { useOctokitApp } from "../../utils/octokit";
 
 const querySchema = z.object({
   text: z.string(),
 });
 
-const INSTALLATION_CACHE_TTL_MS = 5 * 60 * 1000;
+const REPO_INDEX_CACHE_KEY = "repo-search:index";
+const REPO_INDEX_CACHE_TTL_MS = 5 * 60 * 1000;
 
-interface CachedRepos {
-  fetchedAt: number;
-  repos: Array<{
-    id: number;
-    name: string;
-    private: boolean;
-    owner: { login: string; avatar_url: string };
-    stargazers_count?: number;
-  }>;
+interface RepoSearchIndexItem {
+  id: number;
+  name: string;
+  ownerLogin: string;
+  ownerAvatarUrl: string;
+  stars: number;
 }
 
-const installationRepoCache = new Map<number, CachedRepos>();
+interface RepoSearchIndexCache {
+  fetchedAt: number;
+  repos: RepoSearchIndexItem[];
+}
 
 export default defineEventHandler(async (event) => {
   const query = await getValidatedQuery(event, (data) =>
     querySchema.parse(data),
   );
-
   if (!query.text) {
     return { nodes: [] };
   }
 
   const { signal } = toWebRequest(event);
-
-  setResponseHeaders(event, {
-    "Content-Type": "text/event-stream",
-    "Cache-Control": "no-cache",
-    Connection: "keep-alive",
-  });
-
-  const app = useOctokitApp(event);
   const searchText = query.text.toLowerCase();
+  const app = useOctokitApp(event);
+  const bucket = useBucket(event);
 
-  async function getInstallationRepos(installationId: number) {
-    const cached = installationRepoCache.get(installationId);
-    const now = Date.now();
-
-    if (cached && now - cached.fetchedAt < INSTALLATION_CACHE_TTL_MS) {
-      return cached.repos;
-    }
-
-    try {
-      const octokit = await app.getInstallationOctokit(installationId);
-      const { data } = await octokit.request("GET /installation/repositories", {
-        per_page: 100,
-      });
-      installationRepoCache.set(installationId, {
-        fetchedAt: now,
-        repos: data.repositories,
-      });
-      return data.repositories;
-    } catch {
-      if (cached) {
-        return cached.repos;
-      }
-      throw new Error("Unable to load repositories");
-    }
-  }
-
-  async function* iterateMatches() {
+  const fetchInstalledRepos = async () => {
     const seen = new Set<number>();
+    const repos: RepoSearchIndexItem[] = [];
 
     for await (const { installation } of app.eachInstallation.iterator()) {
       if (signal.aborted) {
-        return;
+        break;
       }
 
       try {
-        const repos = await getInstallationRepos(installation.id);
+        const octokit = await app.getInstallationOctokit(installation.id);
+        let page = 1;
 
-        for (const repo of repos) {
-          if (repo.private || seen.has(repo.id)) {
-            continue;
-          }
-
-          const name = repo.name.toLowerCase();
-          const owner = repo.owner.login.toLowerCase();
-          const score = Math.max(
-            stringSimilarity.compareTwoStrings(name, searchText),
-            stringSimilarity.compareTwoStrings(owner, searchText),
+        while (true) {
+          const { data } = await octokit.request(
+            "GET /installation/repositories",
+            {
+              page,
+              per_page: 100,
+            },
           );
 
-          if (
-            score > 0.3 ||
-            name.includes(searchText) ||
-            owner.includes(searchText)
-          ) {
+          for (const repo of data.repositories) {
+            if (repo.private || seen.has(repo.id)) {
+              continue;
+            }
             seen.add(repo.id);
-            yield JSON.stringify({
+            repos.push({
               id: repo.id,
               name: repo.name,
-              owner: {
-                login: repo.owner.login,
-                avatarUrl: repo.owner.avatar_url,
-              },
+              ownerLogin: repo.owner.login,
+              ownerAvatarUrl: repo.owner.avatar_url,
               stars: repo.stargazers_count || 0,
             });
           }
+
+          if (data.repositories.length < 100) {
+            break;
+          }
+          page += 1;
         }
       } catch {
         // Skip suspended installations
       }
     }
 
-    yield "[DONE]";
-  }
+    return repos;
+  };
+
+  const getIndexedRepos = async () => {
+    const now = Date.now();
+    const cached =
+      await bucket.getItem<RepoSearchIndexCache>(REPO_INDEX_CACHE_KEY);
+
+    if (cached && now - cached.fetchedAt < REPO_INDEX_CACHE_TTL_MS) {
+      return cached.repos;
+    }
+
+    const repos = await fetchInstalledRepos();
+    if (!signal.aborted) {
+      await bucket.setItem(REPO_INDEX_CACHE_KEY, {
+        fetchedAt: now,
+        repos,
+      });
+    }
+
+    return repos;
+  };
+
+  setResponseHeaders(event, {
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+    Connection: "keep-alive",
+  });
 
   const stream = new ReadableStream<string>({
     async start(controller) {
@@ -122,9 +118,52 @@ export default defineEventHandler(async (event) => {
       };
 
       try {
-        for await (const match of iterateMatches()) {
-          send(match);
+        const repos = await getIndexedRepos(event, signal);
+        const matches = repos
+          .map((repo) => {
+            const name = repo.name.toLowerCase();
+            const owner = repo.ownerLogin.toLowerCase();
+            const score = Math.max(
+              stringSimilarity.compareTwoStrings(name, searchText),
+              stringSimilarity.compareTwoStrings(owner, searchText),
+            );
+
+            if (
+              score <= 0.3 &&
+              !name.includes(searchText) &&
+              !owner.includes(searchText)
+            ) {
+              return null;
+            }
+
+            return {
+              ...repo,
+              score,
+            };
+          })
+          .filter(
+            (repo): repo is RepoSearchIndexItem & { score: number } => !!repo,
+          )
+          .sort((a, b) => b.score - a.score || b.stars - a.stars);
+
+        for (const repo of matches) {
+          if (signal.aborted) {
+            break;
+          }
+          send(
+            JSON.stringify({
+              id: repo.id,
+              name: repo.name,
+              owner: {
+                login: repo.ownerLogin,
+                avatarUrl: repo.ownerAvatarUrl,
+              },
+              stars: repo.stars,
+            }),
+          );
         }
+
+        send("[DONE]");
       } catch (err) {
         send(JSON.stringify({ error: (err as Error).message }));
       } finally {
