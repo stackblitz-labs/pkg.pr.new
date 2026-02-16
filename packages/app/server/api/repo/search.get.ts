@@ -91,7 +91,10 @@ export default defineEventHandler(async (event) => {
       await bucket.getItem<RepoSearchIndexCache>(REPO_INDEX_CACHE_KEY);
 
     if (cached && now - cached.fetchedAt < REPO_INDEX_CACHE_TTL_MS) {
-      return cached.repos;
+      return {
+        repos: cached.repos,
+        cacheStatus: "hit" as const,
+      };
     }
 
     const repos = await fetchInstalledRepos();
@@ -102,7 +105,10 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    return repos;
+    return {
+      repos,
+      cacheStatus: "miss" as const,
+    };
   };
 
   setResponseHeaders(event, {
@@ -118,7 +124,8 @@ export default defineEventHandler(async (event) => {
       };
 
       try {
-        const repos = await getIndexedRepos(event, signal);
+        const { repos, cacheStatus } = await getIndexedRepos();
+        setResponseHeader(event, "x-repo-index-cache", cacheStatus);
         const matches = repos
           .map((repo) => {
             const name = repo.name.toLowerCase();
