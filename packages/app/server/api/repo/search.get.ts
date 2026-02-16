@@ -111,48 +111,46 @@ export default defineEventHandler(async (event) => {
     };
   };
 
+  const { repos, cacheStatus } = await getIndexedRepos();
+  const matches = repos
+    .map((repo) => {
+      const name = repo.name.toLowerCase();
+      const owner = repo.ownerLogin.toLowerCase();
+      const score = Math.max(
+        stringSimilarity.compareTwoStrings(name, searchText),
+        stringSimilarity.compareTwoStrings(owner, searchText),
+      );
+
+      if (
+        score <= 0.3 &&
+        !name.includes(searchText) &&
+        !owner.includes(searchText)
+      ) {
+        return null;
+      }
+
+      return {
+        ...repo,
+        score,
+      };
+    })
+    .filter((repo): repo is RepoSearchIndexItem & { score: number } => !!repo)
+    .sort((a, b) => b.score - a.score || b.stars - a.stars);
+
   setResponseHeaders(event, {
     "Content-Type": "text/event-stream",
     "Cache-Control": "no-cache",
     Connection: "keep-alive",
+    "x-repo-index-cache": cacheStatus,
   });
 
   const stream = new ReadableStream<string>({
-    async start(controller) {
+    start(controller) {
       const send = (data: string) => {
         controller.enqueue(`data: ${data}\n\n`);
       };
 
       try {
-        const { repos, cacheStatus } = await getIndexedRepos();
-        setResponseHeader(event, "x-repo-index-cache", cacheStatus);
-        const matches = repos
-          .map((repo) => {
-            const name = repo.name.toLowerCase();
-            const owner = repo.ownerLogin.toLowerCase();
-            const score = Math.max(
-              stringSimilarity.compareTwoStrings(name, searchText),
-              stringSimilarity.compareTwoStrings(owner, searchText),
-            );
-
-            if (
-              score <= 0.3 &&
-              !name.includes(searchText) &&
-              !owner.includes(searchText)
-            ) {
-              return null;
-            }
-
-            return {
-              ...repo,
-              score,
-            };
-          })
-          .filter(
-            (repo): repo is RepoSearchIndexItem & { score: number } => !!repo,
-          )
-          .sort((a, b) => b.score - a.score || b.stars - a.stars);
-
         for (const repo of matches) {
           if (signal.aborted) {
             break;
