@@ -5,23 +5,13 @@ const search = useSessionStorage("search", "");
 const searchResults = ref<RepoNode[]>([]);
 const isLoading = ref(false);
 
-let eventSource: EventSource | null = null;
+let abortController: AbortController | null = null;
 const throttledSearch = useThrottle(search, 500, true, false);
-
-function closeEventSource(source: EventSource) {
-  source.close();
-  if (eventSource === source) {
-    eventSource = null;
-    isLoading.value = false;
-  }
-}
 
 watch(
   throttledSearch,
   async (query) => {
-    if (eventSource) {
-      closeEventSource(eventSource);
-    }
+    abortController?.abort();
     searchResults.value = [];
 
     if (!query) {
@@ -29,34 +19,33 @@ watch(
       return;
     }
 
+    const controller = new AbortController();
+    abortController = controller;
     isLoading.value = true;
-    const source = new EventSource(
-      `/api/repo/search?text=${encodeURIComponent(query)}`,
-    );
-    eventSource = source;
 
-    source.onmessage = (event) => {
-      if (event.data === "[DONE]") {
-        closeEventSource(source);
+    try {
+      const response = await fetch(
+        `/api/repo/search?text=${encodeURIComponent(query)}`,
+        { signal: controller.signal },
+      );
+      const data = await response.json();
+
+      if (abortController !== controller) {
         return;
       }
 
-      try {
-        const repo = JSON.parse(event.data) as RepoNode & { error?: string };
-        if (repo.error) {
-          return;
-        }
-
-        searchResults.value.push(repo);
-      } catch {
-        // Skip malformed JSON
+      searchResults.value = Array.isArray(data?.nodes)
+        ? (data.nodes as RepoNode[])
+        : [];
+    } catch (err: any) {
+      if (err.name !== "AbortError") {
+        console.error(err);
       }
-    };
-
-    source.onerror = (err) => {
-      console.error(err);
-      closeEventSource(source);
-    };
+    } finally {
+      if (abortController === controller) {
+        isLoading.value = false;
+      }
+    }
   },
   { immediate: false },
 );

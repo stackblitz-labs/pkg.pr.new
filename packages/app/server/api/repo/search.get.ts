@@ -1,3 +1,4 @@
+import type { H3Event } from "h3";
 import stringSimilarity from "string-similarity";
 import { z } from "zod";
 import { useBucket } from "../../utils/bucket";
@@ -23,96 +24,104 @@ interface RepoSearchIndexCache {
   repos: RepoSearchIndexItem[];
 }
 
-export default defineEventHandler(async (event) => {
-  const query = await getValidatedQuery(event, (data) =>
-    querySchema.parse(data),
-  );
-  if (!query.text) {
-    return { nodes: [] };
+type CacheStatus = "hit" | "stale" | "miss";
+
+let revalidateRepoIndexPromise: Promise<void> | null = null;
+
+async function fetchInstalledRepos(event: H3Event) {
+  const app = useOctokitApp(event);
+  const seen = new Set<number>();
+  const repos: RepoSearchIndexItem[] = [];
+
+  for await (const { installation } of app.eachInstallation.iterator()) {
+    try {
+      const octokit = await app.getInstallationOctokit(installation.id);
+      const installationRepos = await octokit.paginate(
+        "GET /installation/repositories",
+        { per_page: 100 },
+        (response) => response.data.repositories,
+      );
+
+      for (const repo of installationRepos) {
+        if (repo.private || seen.has(repo.id)) {
+          continue;
+        }
+
+        seen.add(repo.id);
+        repos.push({
+          id: repo.id,
+          name: repo.name,
+          ownerLogin: repo.owner.login,
+          ownerAvatarUrl: repo.owner.avatar_url,
+          stars: repo.stargazers_count || 0,
+        });
+      }
+    } catch {
+      // Skip suspended installations
+    }
   }
 
-  const { signal } = toWebRequest(event);
-  const searchText = query.text.toLowerCase();
-  const app = useOctokitApp(event);
-  const bucket = useBucket(event);
+  return repos;
+}
 
-  const fetchInstalledRepos = async () => {
-    const seen = new Set<number>();
-    const repos: RepoSearchIndexItem[] = [];
+async function revalidateRepoIndex(event: H3Event) {
+  if (revalidateRepoIndexPromise) {
+    return revalidateRepoIndexPromise;
+  }
 
-    for await (const { installation } of app.eachInstallation.iterator()) {
-      if (signal.aborted) {
-        break;
-      }
+  revalidateRepoIndexPromise = (async () => {
+    const bucket = useBucket(event);
+    const repos = await fetchInstalledRepos(event);
 
-      try {
-        const octokit = await app.getInstallationOctokit(installation.id);
-        let page = 1;
-
-        while (true) {
-          const { data } = await octokit.request(
-            "GET /installation/repositories",
-            {
-              page,
-              per_page: 100,
-            },
-          );
-
-          for (const repo of data.repositories) {
-            if (repo.private || seen.has(repo.id)) {
-              continue;
-            }
-            seen.add(repo.id);
-            repos.push({
-              id: repo.id,
-              name: repo.name,
-              ownerLogin: repo.owner.login,
-              ownerAvatarUrl: repo.owner.avatar_url,
-              stars: repo.stargazers_count || 0,
-            });
-          }
-
-          if (data.repositories.length < 100) {
-            break;
-          }
-          page += 1;
-        }
-      } catch {
-        // Skip suspended installations
-      }
-    }
-
-    return repos;
-  };
-
-  const getIndexedRepos = async () => {
-    const now = Date.now();
-    const cached =
-      await bucket.getItem<RepoSearchIndexCache>(REPO_INDEX_CACHE_KEY);
-
-    if (cached && now - cached.fetchedAt < REPO_INDEX_CACHE_TTL_MS) {
-      return {
-        repos: cached.repos,
-        cacheStatus: "hit" as const,
-      };
-    }
-
-    const repos = await fetchInstalledRepos();
-    if (!signal.aborted) {
-      await bucket.setItem(REPO_INDEX_CACHE_KEY, {
-        fetchedAt: now,
-        repos,
-      });
-    }
-
-    return {
+    await bucket.setItem(REPO_INDEX_CACHE_KEY, {
+      fetchedAt: Date.now(),
       repos,
-      cacheStatus: "miss" as const,
-    };
-  };
+    });
+  })().finally(() => {
+    revalidateRepoIndexPromise = null;
+  });
 
-  const { repos, cacheStatus } = await getIndexedRepos();
-  const matches = repos
+  return revalidateRepoIndexPromise;
+}
+
+async function getIndexedRepos(event: H3Event): Promise<{
+  repos: RepoSearchIndexItem[];
+  cacheStatus: CacheStatus;
+}> {
+  const bucket = useBucket(event);
+  const now = Date.now();
+  const cached =
+    await bucket.getItem<RepoSearchIndexCache>(REPO_INDEX_CACHE_KEY);
+
+  if (cached && now - cached.fetchedAt < REPO_INDEX_CACHE_TTL_MS) {
+    return { repos: cached.repos, cacheStatus: "hit" };
+  }
+
+  if (cached) {
+    const refreshPromise = revalidateRepoIndex(event).catch((err) => {
+      console.error("Failed to refresh repo index cache", err);
+    });
+
+    if (typeof event.waitUntil === "function") {
+      event.waitUntil(refreshPromise);
+    }
+
+    return { repos: cached.repos, cacheStatus: "stale" };
+  }
+
+  const repos = await fetchInstalledRepos(event);
+  await bucket.setItem(REPO_INDEX_CACHE_KEY, {
+    fetchedAt: now,
+    repos,
+  });
+
+  return { repos, cacheStatus: "miss" };
+}
+
+function findMatches(repos: RepoSearchIndexItem[], text: string) {
+  const searchText = text.toLowerCase();
+
+  return repos
     .map((repo) => {
       const name = repo.name.toLowerCase();
       const owner = repo.ownerLogin.toLowerCase();
@@ -130,52 +139,34 @@ export default defineEventHandler(async (event) => {
       }
 
       return {
-        ...repo,
+        id: repo.id,
+        name: repo.name,
+        owner: {
+          login: repo.ownerLogin,
+          avatarUrl: repo.ownerAvatarUrl,
+        },
+        stars: repo.stars,
         score,
       };
     })
-    .filter((repo): repo is RepoSearchIndexItem & { score: number } => !!repo)
-    .sort((a, b) => b.score - a.score || b.stars - a.stars);
+    .filter((repo): repo is NonNullable<typeof repo> => !!repo)
+    .sort((a, b) => b.score - a.score || b.stars - a.stars)
+    .map(({ score: _score, ...repo }) => repo);
+}
 
-  setResponseHeaders(event, {
-    "Content-Type": "text/event-stream",
-    "Cache-Control": "no-cache",
-    Connection: "keep-alive",
-    "x-repo-index-cache": cacheStatus,
-  });
+export default defineEventHandler(async (event) => {
+  const query = await getValidatedQuery(event, (data) =>
+    querySchema.parse(data),
+  );
 
-  const stream = new ReadableStream<string>({
-    start(controller) {
-      const send = (data: string) => {
-        controller.enqueue(`data: ${data}\n\n`);
-      };
+  if (!query.text) {
+    return { nodes: [] };
+  }
 
-      try {
-        for (const repo of matches) {
-          if (signal.aborted) {
-            break;
-          }
-          send(
-            JSON.stringify({
-              id: repo.id,
-              name: repo.name,
-              owner: {
-                login: repo.ownerLogin,
-                avatarUrl: repo.ownerAvatarUrl,
-              },
-              stars: repo.stars,
-            }),
-          );
-        }
+  const { repos, cacheStatus } = await getIndexedRepos(event);
+  setResponseHeader(event, "x-repo-index-cache", cacheStatus);
 
-        send("[DONE]");
-      } catch (err) {
-        send(JSON.stringify({ error: (err as Error).message }));
-      } finally {
-        controller.close();
-      }
-    },
-  });
-
-  return stream.pipeThrough(new TextEncoderStream());
+  return {
+    nodes: findMatches(repos, query.text),
+  };
 });
