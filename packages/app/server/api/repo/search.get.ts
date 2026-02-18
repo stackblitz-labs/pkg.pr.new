@@ -36,11 +36,15 @@ async function fetchInstalledRepos(event: H3Event) {
   for await (const { installation } of app.eachInstallation.iterator()) {
     try {
       const octokit = await app.getInstallationOctokit(installation.id);
-      const installationRepos = await octokit.paginate(
+      const installationRepos = [];
+      for await (const { data } of (octokit as any).paginate.iterator(
         "GET /installation/repositories",
         { per_page: 100 },
-        (response) => response.data.repositories,
-      );
+      )) {
+        installationRepos.push(
+          ...(Array.isArray(data) ? data : (data.repositories ?? [])),
+        );
+      }
 
       for (const repo of installationRepos) {
         if (repo.private || seen.has(repo.id)) {
@@ -93,11 +97,15 @@ async function getIndexedRepos(event: H3Event): Promise<{
   const cached =
     await bucket.getItem<RepoSearchIndexCache>(REPO_INDEX_CACHE_KEY);
 
-  if (cached && now - cached.fetchedAt < REPO_INDEX_CACHE_TTL_MS) {
+  if (
+    cached &&
+    cached.repos.length > 0 &&
+    now - cached.fetchedAt < REPO_INDEX_CACHE_TTL_MS
+  ) {
     return { repos: cached.repos, cacheStatus: "hit" };
   }
 
-  if (cached) {
+  if (cached && cached.repos.length > 0) {
     const refreshPromise = revalidateRepoIndex(event).catch((err) => {
       console.error("Failed to refresh repo index cache", err);
     });
