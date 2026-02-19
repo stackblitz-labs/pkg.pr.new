@@ -68,20 +68,22 @@ async function fetchInstalledRepos(event: H3Event) {
   return repos;
 }
 
+async function rebuildRepoIndex(event: H3Event) {
+  const bucket = useBucket(event);
+  const repos = await fetchInstalledRepos(event);
+
+  await bucket.setItem(REPO_INDEX_CACHE_KEY, {
+    fetchedAt: Date.now(),
+    repos,
+  });
+}
+
 async function revalidateRepoIndex(event: H3Event) {
   if (revalidateRepoIndexPromise) {
     return revalidateRepoIndexPromise;
   }
 
-  revalidateRepoIndexPromise = (async () => {
-    const bucket = useBucket(event);
-    const repos = await fetchInstalledRepos(event);
-
-    await bucket.setItem(REPO_INDEX_CACHE_KEY, {
-      fetchedAt: Date.now(),
-      repos,
-    });
-  })().finally(() => {
+  revalidateRepoIndexPromise = rebuildRepoIndex(event).finally(() => {
     revalidateRepoIndexPromise = null;
   });
 
