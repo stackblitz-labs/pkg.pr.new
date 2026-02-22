@@ -1,41 +1,48 @@
 <script lang="ts" setup>
 import type { RepoNode } from "../../server/utils/types";
+
 const search = useSessionStorage("search", "");
 const searchResults = ref<RepoNode[]>([]);
 const isLoading = ref(false);
 
-let activeController: AbortController | null = null;
+let abortController: AbortController | null = null;
 const throttledSearch = useThrottle(search, 500, true, false);
 
 watch(
   throttledSearch,
-  async (newValue) => {
-    activeController?.abort();
+  async (query) => {
+    abortController?.abort();
     searchResults.value = [];
-    if (!newValue) {
+
+    if (!query) {
       isLoading.value = false;
       return;
     }
 
     const controller = new AbortController();
-    activeController = controller;
-
+    abortController = controller;
     isLoading.value = true;
+
     try {
       const response = await fetch(
-        `/api/repo/search?text=${encodeURIComponent(newValue)}`,
-        { signal: activeController.signal },
+        `/api/repo/search?text=${encodeURIComponent(query)}`,
+        { signal: controller.signal },
       );
-      const data = (await response.json()) as { nodes: RepoNode[] };
-      if (activeController === controller) {
-        searchResults.value = data.nodes ?? [];
+      const data = await response.json();
+
+      if (abortController !== controller) {
+        return;
       }
+
+      searchResults.value = Array.isArray(data?.nodes)
+        ? (data.nodes as RepoNode[])
+        : [];
     } catch (err: any) {
       if (err.name !== "AbortError") {
         console.error(err);
       }
     } finally {
-      if (activeController === controller) {
+      if (abortController === controller) {
         isLoading.value = false;
       }
     }
