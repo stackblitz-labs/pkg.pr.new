@@ -1,7 +1,23 @@
 <script lang="ts" setup>
 import type { RepoNode } from "../../server/utils/types";
 
-const search = useSessionStorage("search", "");
+const route = useRoute();
+const router = useRouter();
+const search = computed({
+  get: () => {
+    const text = route.query.text;
+    return typeof text === "string" ? text : "";
+  },
+  set: (value: string) => {
+    const queryText = value.trim();
+    router.replace({
+      query: {
+        ...route.query,
+        text: queryText || undefined,
+      },
+    });
+  },
+});
 const searchResults = ref<RepoNode[]>([]);
 const isLoading = ref(false);
 
@@ -24,11 +40,10 @@ watch(
     isLoading.value = true;
 
     try {
-      const response = await fetch(
-        `/api/repo/search?text=${encodeURIComponent(query)}`,
-        { signal: controller.signal },
-      );
-      const data = await response.json();
+      const data = await $fetch<{ nodes?: RepoNode[] }>("/api/repo/search", {
+        query: { text: query },
+        signal: controller.signal,
+      });
 
       if (abortController !== controller) {
         return;
@@ -47,7 +62,7 @@ watch(
       }
     }
   },
-  { immediate: false },
+  { immediate: true },
 );
 
 const examples = [
@@ -78,7 +93,6 @@ const examples = [
   },
 ];
 
-const router = useRouter();
 function openFirstResult() {
   const [first] = searchResults.value;
   if (first) {
