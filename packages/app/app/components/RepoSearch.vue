@@ -5,15 +5,15 @@ const route = useRoute();
 const router = useRouter();
 const search = computed({
   get: () => {
-    const text = route.query.text;
-    return typeof text === "string" ? text : "";
+    const q = route.query.q;
+    return typeof q === "string" ? q : "";
   },
   set: (value: string) => {
     const queryText = value.trim();
     router.replace({
       query: {
         ...route.query,
-        text: queryText || undefined,
+        q: queryText || undefined,
       },
     });
   },
@@ -41,7 +41,7 @@ watch(
 
     try {
       const data = await $fetch<{ nodes?: RepoNode[] }>("/api/repo/search", {
-        query: { text: query },
+        query: { q: query },
         signal: controller.signal,
       });
 
