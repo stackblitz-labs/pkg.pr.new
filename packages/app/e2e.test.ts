@@ -151,7 +151,10 @@ describe.sequential.each([
 
   it(`serves and installs playground-a for ${mode}`, async () => {
     const [owner, repo] = payload.repository.full_name.split("/");
-    const sha = payload.workflow_run.head_sha.substring(0, 7);
+    const { stdout: gitHeadSha } = await ezSpawn.async("git rev-parse HEAD", {
+      stdio: "overlapped",
+    });
+    const sha = gitHeadSha.trim().substring(0, 7);
     const ref = pr?.payload.number ?? payload.workflow_run.head_branch;
 
     // Test download with SHA
@@ -191,7 +194,10 @@ describe.sequential.each([
 
   it(`serves and installs playground-b for ${mode}`, async () => {
     const [owner, repo] = payload.repository.full_name.split("/");
-    const sha = payload.workflow_run.head_sha.substring(0, 7);
+    const { stdout: gitHeadSha } = await ezSpawn.async("git rev-parse HEAD", {
+      stdio: "overlapped",
+    });
+    const sha = gitHeadSha.trim().substring(0, 7);
 
     // Test download
     const response = await worker.fetch(

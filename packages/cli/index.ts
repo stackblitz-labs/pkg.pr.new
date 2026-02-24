@@ -233,7 +233,13 @@ const main = defineCommand({
             process.exit(1);
           }
 
-          const { sha } = await checkResponse.json();
+          const { stdout: gitShaOutput } = await ezSpawn.async(
+            "git rev-parse HEAD",
+            {
+              stdio: "overlapped",
+            },
+          );
+          const sha = gitShaOutput.trim();
 
           const deps: Map<string, string> = new Map(); // pkg.pr.new versions of the package
           const realDeps: Map<string, string> | null = isPeerDepsEnabled
@@ -575,6 +581,7 @@ const main = defineCommand({
           const res = await fetch(publishUrl, {
             method: "POST",
             headers: {
+              "sb-sha": sha,
               "sb-comment": comment,
               "sb-compact": `${isCompact}`,
               "sb-key": key,
