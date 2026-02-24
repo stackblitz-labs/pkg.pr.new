@@ -12,32 +12,55 @@ const props = defineProps<{
   repo: string;
 }>();
 
-const data = await $fetch("/api/repo/commits", {
-  query: {
-    owner: props.owner,
-    repo: props.repo,
-  },
-});
+type BranchesResponse = {
+  branches: string[];
+};
+
+const [data, branchesResponse] = await Promise.all([
+  $fetch("/api/repo/commits", {
+    query: {
+      owner: props.owner,
+      repo: props.repo,
+    },
+  }),
+  $fetch<BranchesResponse>("/api/repo/branches", {
+    query: {
+      owner: props.owner,
+      repo: props.repo,
+    },
+  }).catch(() => null),
+]);
 
 if (!data) {
   throw createError("Could not load Commits");
 }
 
 const branch = shallowReactive(data);
+const selectedBranch = ref(branch.name);
+const availableBranches = ref<string[]>(
+  branchesResponse?.branches?.length ? branchesResponse.branches : [branch.name],
+);
+
+if (!availableBranches.value.includes(branch.name)) {
+  availableBranches.value.unshift(branch.name);
+}
 
 const commitsWithRelease = computed(() =>
   branch.target.history.nodes
-    .filter((commit) =>
-      commit.statusCheckRollup?.contexts.nodes.some(
+    .flatMap((commit) => {
+      const release = commit.statusCheckRollup?.contexts.nodes.find(
         (context) => context.name === "Continuous Releases",
-      ),
-    )
-    .map((commit) => ({
-      ...commit,
-      release: commit.statusCheckRollup.contexts.nodes.find(
-        (context) => context.name === "Continuous Releases",
-      )!,
-    })),
+      );
+
+      return release
+        ? [
+            {
+              ...commit,
+              release,
+            },
+          ]
+        : [];
+    }),
 );
 
 const selectedCommit = shallowRef<
@@ -114,6 +137,39 @@ onBeforeUnmount(() => {
 // Pagination
 const fetching = ref(false);
 const fetchMoreForceDisabled = ref(!commitsWithRelease.value.length);
+const switchingBranch = ref(false);
+
+async function loadBranch(branchName: string) {
+  if (switchingBranch.value) {
+    return;
+  }
+
+  const previousBranch = branch.name;
+
+  try {
+    switchingBranch.value = true;
+    selectedCommit.value = null;
+
+    const result = await $fetch("/api/repo/commits", {
+      query: {
+        owner: props.owner,
+        repo: props.repo,
+        branch: branchName,
+      },
+    });
+
+    Object.assign(branch, result);
+    fetchMoreForceDisabled.value = !commitsWithRelease.value.length;
+  } catch (error) {
+    selectedBranch.value = previousBranch;
+  } finally {
+    switchingBranch.value = false;
+  }
+}
+
+async function onBranchChange() {
+  await loadBranch(selectedBranch.value);
+}
 
 async function fetchMore() {
   if (!branch.target.history.pageInfo.hasNextPage) {
@@ -133,6 +189,7 @@ async function fetchMore() {
       query: {
         owner: props.owner,
         repo: props.repo,
+        branch: selectedBranch.value,
         cursor,
       },
     });
@@ -159,10 +216,23 @@ async function fetchMore() {
 
 <template>
   <div class="flex flex-col gap-6">
-    <div class="text-center flex justify-center items-center gap-1 opacity-80">
+    <div class="text-center flex justify-center items-center gap-2 opacity-80">
       Continuous Releases from
       <UIcon name="i-ph-git-branch" />
-      {{ branch.name }}
+      <select
+        v-model="selectedBranch"
+        class="px-2 py-1 rounded-md bg-transparent border border-gray-300 dark:border-gray-700 text-sm"
+        :disabled="switchingBranch"
+        @change="onBranchChange"
+      >
+        <option
+          v-for="branchName of availableBranches"
+          :key="branchName"
+          :value="branchName"
+        >
+          {{ branchName }}
+        </option>
+      </select>
     </div>
 
     <div class="flex flex-col gap-2">

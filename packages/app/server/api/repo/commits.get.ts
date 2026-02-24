@@ -3,6 +3,7 @@ import { z } from "zod";
 const querySchema = z.object({
   owner: z.string(),
   repo: z.string(),
+  branch: z.string().optional(),
   cursor: z.string().optional(),
   page: z.string().optional(),
   per_page: z.string().optional().default("10"),
@@ -28,6 +29,7 @@ export default defineEventHandler(async (event) => {
     );
 
     const defaultBranch = repo.default_branch;
+    const targetBranch = query.branch || defaultBranch;
 
     const page = query.page
       ? Number.parseInt(query.page)
@@ -41,7 +43,7 @@ export default defineEventHandler(async (event) => {
       {
         owner: query.owner,
         repo: query.repo,
-        sha: defaultBranch,
+        sha: targetBranch,
         page,
         per_page,
       },
@@ -118,10 +120,10 @@ export default defineEventHandler(async (event) => {
     const nextPage = hasNextPage ? (page + 1).toString() : null;
 
     return {
-      id: `branch-${defaultBranch}`,
-      name: defaultBranch,
+      id: `branch-${targetBranch}`,
+      name: targetBranch,
       target: {
-        id: `target-${defaultBranch}`,
+        id: `target-${targetBranch}`,
         history: {
           nodes: commitsWithStatuses,
           pageInfo: {
