@@ -1,5 +1,5 @@
 import type { WorkflowData } from "../../../types";
-import { abbreviateCommitHash } from "@pkg-pr-new/utils";
+import { abbreviateCommitHash, isValidGitHash } from "@pkg-pr-new/utils";
 import { normalizeKey } from "unstorage";
 
 type Params = Omit<WorkflowData, "sha" | "ref"> & {
@@ -86,10 +86,3 @@ export default eventHandler(async (event) => {
     status: 404,
   });
 });
-
-const sha1Regex = /^[\da-f]{40}$/i;
-const sha256Regex = /^[\da-f]{64}$/i;
-
-function isValidGitHash(hash: string): boolean {
-  return sha1Regex.test(hash) || sha256Regex.test(hash);
-}

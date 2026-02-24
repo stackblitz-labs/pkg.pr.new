@@ -2,7 +2,11 @@ import type { H3Event } from "h3";
 import type { components as OctokitComponents } from "@octokit/openapi-types";
 import type { Comment, PackageManager } from "@pkg-pr-new/utils";
 import type { WorkflowData } from "../types";
-import { isPullRequest, isWhitelisted } from "@pkg-pr-new/utils";
+import {
+  isPullRequest,
+  isValidGitHash,
+  isWhitelisted,
+} from "@pkg-pr-new/utils";
 import { randomUUID } from "uncrypto";
 import { setItemStream, useTemplatesBucket } from "../utils/bucket";
 import { useOctokitInstallation } from "../utils/octokit";
@@ -56,7 +60,7 @@ export default eventHandler(async (event) => {
     }
 
     if (shaOverride) {
-      if (!/^[0-9a-f]{40}$/i.test(shaOverride)) {
+      if (!isValidGitHash(shaOverride)) {
         throw createError({
           statusCode: 400,
           message: "Invalid sb-sha: must be a 40-character hex SHA",
