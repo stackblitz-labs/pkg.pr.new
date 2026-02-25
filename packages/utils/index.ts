@@ -30,6 +30,13 @@ export function abbreviateCommitHash(fullHash: string) {
   return fullHash.substring(0, commitLength);
 }
 
+const sha1Regex = /^[\da-f]{40}$/i;
+const sha256Regex = /^[\da-f]{64}$/i;
+
+export function isValidGitHash(hash: string): boolean {
+  return sha1Regex.test(hash) || sha256Regex.test(hash);
+}
+
 export function isPullRequest(ref: string) {
   return !Number.isNaN(Number(ref));
 }

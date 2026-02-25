@@ -2,7 +2,11 @@ import type { H3Event } from "h3";
 import type { components as OctokitComponents } from "@octokit/openapi-types";
 import type { Comment, PackageManager } from "@pkg-pr-new/utils";
 import type { WorkflowData } from "../types";
-import { isPullRequest, isWhitelisted } from "@pkg-pr-new/utils";
+import {
+  isPullRequest,
+  isValidGitHash,
+  isWhitelisted,
+} from "@pkg-pr-new/utils";
 import { randomUUID } from "uncrypto";
 import { setItemStream, useTemplatesBucket } from "../utils/bucket";
 import { useOctokitInstallation } from "../utils/octokit";
@@ -23,6 +27,7 @@ export default eventHandler(async (event) => {
       "sb-only-templates": onlyTemplatesHeader,
       "sb-comment-with-sha": commentWithShaHeader,
       "sb-comment-with-dev": commentWithDevHeader,
+      "sb-sha": shaOverride,
     } = getHeaders(event);
     const compact = compactHeader === "true";
     const onlyTemplates = onlyTemplatesHeader === "true";
@@ -52,6 +57,16 @@ export default eventHandler(async (event) => {
         fatal: true,
         message: `There is no workflow defined for ${key}`,
       });
+    }
+
+    if (shaOverride) {
+      if (!isValidGitHash(shaOverride)) {
+        throw createError({
+          statusCode: 400,
+          message: "Invalid sb-sha: must be a 40-character hex SHA",
+        });
+      }
+      workflowData.sha = shaOverride;
     }
 
     const whitelisted = await isWhitelisted(
