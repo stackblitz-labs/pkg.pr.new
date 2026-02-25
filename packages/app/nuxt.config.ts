@@ -1,6 +1,3 @@
-// import ncb from "nitro-cloudflare-dev";
-import { resolve } from "pathe";
-
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   sourcemap: true,
@@ -55,23 +52,6 @@ export default defineNuxtConfig({
     rmStaleKey: "",
     ghBaseUrl: "https://api.github.com",
     test: "",
-  },
-
-  hooks: {
-    "nitro:build:before": (nitro) => {
-      // Override the server routes with the client routes so they are higher priority
-      const clientRenderer = resolve(
-        "node_modules/nuxt/dist/core/runtime/nitro/renderer",
-      );
-      nitro.options.handlers.unshift({
-        route: "/",
-        handler: clientRenderer,
-      });
-      nitro.options.handlers.unshift({
-        route: "/~/**",
-        handler: clientRenderer,
-      });
-    },
   },
 
   icon: {
