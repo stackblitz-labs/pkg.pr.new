@@ -5,7 +5,7 @@ import { useBucket } from "../../utils/bucket";
 import { useOctokitApp } from "../../utils/octokit";
 
 const querySchema = z.object({
-  text: z.string(),
+  q: z.string().optional(),
 });
 
 const REPO_INDEX_CACHE_KEY = "repo-search:index";
@@ -168,8 +168,9 @@ export default defineEventHandler(async (event) => {
   const query = await getValidatedQuery(event, (data) =>
     querySchema.parse(data),
   );
+  const searchQuery = (query.q ?? "").trim();
 
-  if (!query.text) {
+  if (!searchQuery) {
     return { nodes: [] };
   }
 
@@ -177,6 +178,6 @@ export default defineEventHandler(async (event) => {
   setResponseHeader(event, "x-repo-index-cache", cacheStatus);
 
   return {
-    nodes: findMatches(repos, query.text),
+    nodes: findMatches(repos, searchQuery),
   };
 });
