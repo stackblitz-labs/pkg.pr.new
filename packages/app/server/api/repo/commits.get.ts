@@ -25,6 +25,7 @@ interface ReleaseRow {
 
 interface CommitMeta {
   message: string | null;
+  fullMessage: string | null;
   branch: string | null;
 }
 
@@ -36,6 +37,7 @@ async function getCommitMetadata(
 ) {
   async function fetchCommitMeta(sha: string): Promise<CommitMeta> {
     let message: string | null = null;
+    let fullMessage: string | null = null;
     let branch: string | null = null;
 
     try {
@@ -44,9 +46,13 @@ async function getCommitMetadata(
         repo,
         ref: sha,
       });
-      const title = data.commit?.message?.split("\n")[0]?.trim();
+      const rawMessage = data.commit?.message?.trim();
+      const title = rawMessage?.split("\n")[0]?.trim();
       if (title) {
         message = title;
+      }
+      if (rawMessage) {
+        fullMessage = rawMessage;
       }
     } catch {}
 
@@ -88,6 +94,7 @@ async function getCommitMetadata(
 
     return {
       message,
+      fullMessage,
       branch,
     };
   }
@@ -257,6 +264,7 @@ export default defineEventHandler(async (event) => {
               oid: row.sha,
               abbreviatedOid,
               message: commitTitle ?? row.sha,
+              fullMessage: meta?.fullMessage ?? commitTitle ?? row.sha,
               unverified: !commitTitle,
               branch: meta?.branch ?? null,
               authoredDate: new Date(row.uploadedAt).toISOString(),
