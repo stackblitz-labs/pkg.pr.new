@@ -11,7 +11,17 @@ function createNoopApp(): AppType {
         // no-op: no installations available
       },
     },
-    getInstallationOctokit: async () => ({ paginate: { iterator: null } }),
+    getInstallationOctokit: async () =>
+      ({
+        request: async () => ({ data: {} }),
+        paginate: { iterator: null },
+        rest: {
+          repos: {
+            get: async () => ({ data: { default_branch: "main" } }),
+            getCommit: async () => ({ data: { commit: { message: "" } } }),
+          },
+        },
+      }) as any,
     webhooks: {
       on: () => {},
       removeListener: () => {},

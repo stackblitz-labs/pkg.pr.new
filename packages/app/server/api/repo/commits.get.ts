@@ -31,14 +31,11 @@ async function getCommitMessages(
 ) {
   async function fetchCommitTitle(sha: string) {
     try {
-      const { data } = await installation.request(
-        "GET /repos/{owner}/{repo}/commits/{ref}",
-        {
-          owner,
-          repo,
-          ref: sha,
-        },
-      );
+      const { data } = await installation.rest.repos.getCommit({
+        owner,
+        repo,
+        ref: sha,
+      });
       const message = data.commit?.message?.split("\n")[0]?.trim();
       if (message) {
         return message;
@@ -70,7 +67,7 @@ async function getDefaultBranchPinnedSha(
 ) {
   const {
     data: { default_branch: defaultBranch },
-  } = await installation.request("GET /repos/{owner}/{repo}", {
+  } = await installation.rest.repos.get({
     owner,
     repo,
   });
