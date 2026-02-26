@@ -11,8 +11,7 @@ useHead({
 
 useSeoMeta({
   title: "pkg.pr.new",
-  description:
-    "Search repositories on GitHub to list their continuous releases.",
+  description: "Search repositories to list their continuous releases.",
 });
 </script>
 

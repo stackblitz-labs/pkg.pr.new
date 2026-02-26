@@ -3,6 +3,27 @@ import type { App as AppType } from "octokit";
 import { paginateRest } from "@octokit/plugin-paginate-rest";
 import { App, Octokit } from "octokit";
 
+function createNoopApp(): AppType {
+  return {
+    octokit: { request: async () => ({ data: { id: 0 } }) },
+    eachInstallation: {
+      iterator: async function* () {
+        // no-op: no installations available
+      },
+    },
+    getInstallationOctokit: async () => ({ paginate: { iterator: null } }),
+    webhooks: {
+      on: () => {},
+      removeListener: () => {},
+      receive: async () => {},
+      verifyAndReceive: async () => {},
+    },
+    log: {
+      error: (...args: unknown[]) => console.error(...args),
+    },
+  } as any;
+}
+
 export function useOctokitApp(event: H3Event): AppType {
   try {
     const config = useRuntimeConfig(event);
@@ -10,10 +31,7 @@ export function useOctokitApp(event: H3Event): AppType {
 
     if (!appId || !privateKey || !webhookSecret) {
       console.warn("Missing required GitHub App credentials in runtime config");
-      return {
-        octokit: { request: async () => ({ data: { id: 0 } }) },
-        getInstallationOctokit: async () => ({}),
-      } as any;
+      return createNoopApp();
     }
 
     return new App({
@@ -27,10 +45,7 @@ export function useOctokitApp(event: H3Event): AppType {
     }) as unknown as AppType;
   } catch (error) {
     console.error("Error initializing GitHub App:", error);
-    return {
-      octokit: { request: async () => ({ data: { id: 0 } }) },
-      getInstallationOctokit: async () => ({}),
-    } as any;
+    return createNoopApp();
   }
 }
 

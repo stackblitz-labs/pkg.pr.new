@@ -2,7 +2,7 @@ import type { H3Event } from "h3";
 import stringSimilarity from "string-similarity";
 import { z } from "zod";
 import { useBucket } from "../../utils/bucket";
-import { useOctokitApp } from "../../utils/octokit";
+import { useBinding, usePackagesBucket } from "../../utils/bucket";
 
 const querySchema = z.object({
   text: z.string(),
@@ -12,11 +12,8 @@ const REPO_INDEX_CACHE_KEY = "repo-search:index";
 const REPO_INDEX_CACHE_TTL_MS = 5 * 60 * 1000;
 
 interface RepoSearchIndexItem {
-  id: number;
   name: string;
   ownerLogin: string;
-  ownerAvatarUrl: string;
-  stars: number;
 }
 
 interface RepoSearchIndexCache {
@@ -29,41 +26,38 @@ type CacheStatus = "hit" | "stale" | "miss";
 let revalidateRepoIndexPromise: Promise<void> | null = null;
 
 async function fetchInstalledRepos(event: H3Event) {
-  const app = useOctokitApp(event);
-  const seen = new Set<number>();
+  const binding = useBinding(event as any);
+  const seen = new Set<string>();
   const repos: RepoSearchIndexItem[] = [];
+  const prefix = `${usePackagesBucket.base}:`;
+  let cursor: string | undefined;
 
-  for await (const { installation } of app.eachInstallation.iterator()) {
-    try {
-      const octokit = await app.getInstallationOctokit(installation.id);
-      const installationRepos = [];
-      for await (const { data } of (octokit as any).paginate.iterator(
-        "GET /installation/repositories",
-        { per_page: 100 },
-      )) {
-        installationRepos.push(
-          ...(Array.isArray(data) ? data : (data.repositories ?? [])),
-        );
+  do {
+    const response = await binding.list({
+      cursor,
+      limit: 1000,
+      prefix,
+    } as any);
+
+    for (const { key } of response.objects) {
+      const trimmed = key.slice(prefix.length);
+      const [owner, repo] = trimmed.split(":");
+      if (!owner || !repo) {
+        continue;
       }
-
-      for (const repo of installationRepos) {
-        if (repo.private || seen.has(repo.id)) {
-          continue;
-        }
-
-        seen.add(repo.id);
-        repos.push({
-          id: repo.id,
-          name: repo.name,
-          ownerLogin: repo.owner.login,
-          ownerAvatarUrl: repo.owner.avatar_url,
-          stars: repo.stargazers_count || 0,
-        });
+      const fullName = `${owner}/${repo}`;
+      if (seen.has(fullName)) {
+        continue;
       }
-    } catch {
-      // Skip suspended installations
+      seen.add(fullName);
+      repos.push({
+        name: repo,
+        ownerLogin: owner,
+      });
     }
-  }
+
+    cursor = response.truncated ? response.cursor : undefined;
+  } while (cursor);
 
   return repos;
 }
@@ -149,13 +143,13 @@ function findMatches(repos: RepoSearchIndexItem[], text: string) {
       }
 
       return {
-        id: repo.id,
+        id: `${repo.ownerLogin}/${repo.name}`,
         name: repo.name,
         owner: {
           login: repo.ownerLogin,
-          avatarUrl: repo.ownerAvatarUrl,
+          avatarUrl: `https://github.com/${repo.ownerLogin}.png`,
         },
-        stars: repo.stars,
+        stars: 0,
         score,
       };
     })
