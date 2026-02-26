@@ -219,10 +219,12 @@ async function goPrevPage() {
             variant="subtle"
             size="xs"
             :ui="{
-              base: 'font-mono pointer-events-none whitespace-nowrap max-w-56 truncate',
+              base: 'font-mono pointer-events-none whitespace-nowrap shrink-0 inline-flex items-center',
             }"
           >
-            {{ commit.branch }}
+            <span class="block max-w-48 truncate whitespace-nowrap">
+              {{ commit.branch }}
+            </span>
           </UButton>
           <UButton
             :to="commit.url"
@@ -232,7 +234,7 @@ async function goPrevPage() {
             size="xs"
             aria-label="View Commit"
             :ui="{
-              base: 'font-mono',
+              base: 'font-mono whitespace-nowrap shrink-0 inline-flex items-center',
             }"
             @click.stop
           >
