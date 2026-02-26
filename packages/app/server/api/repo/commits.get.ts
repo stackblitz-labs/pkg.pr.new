@@ -23,58 +23,70 @@ interface ReleaseRow {
   packages: Set<string>;
 }
 
-interface RepoBranchInfo {
-  defaultBranch: string;
-  pinnedSha: string | null;
-  branchBySha: Map<string, string>;
+interface CommitMeta {
+  message: string | null;
+  branch: string | null;
 }
 
-async function getCommitMessages(
+async function getCommitMetadata(
   installation: Awaited<ReturnType<typeof useOctokitInstallation>>,
   owner: string,
   repo: string,
   shas: string[],
 ) {
-  async function fetchCommitTitle(sha: string) {
+  async function fetchCommitMeta(sha: string): Promise<CommitMeta> {
+    let message: string | null = null;
+    let branch: string | null = null;
+
     try {
       const { data } = await installation.rest.repos.getCommit({
         owner,
         repo,
         ref: sha,
       });
-      const message = data.commit?.message?.split("\n")[0]?.trim();
-      if (message) {
-        return message;
+      const title = data.commit?.message?.split("\n")[0]?.trim();
+      if (title) {
+        message = title;
       }
-    } catch {
-      return null;
-    }
+    } catch {}
 
-    return null;
+    try {
+      const { data } = await installation.request(
+        "GET /repos/{owner}/{repo}/commits/{commit_sha}/branches-where-head",
+        {
+          owner,
+          repo,
+          commit_sha: sha,
+        },
+      );
+      const branchName = (data as Array<{ name?: string }>)[0]?.name?.trim();
+      if (branchName) {
+        branch = branchName;
+      }
+    } catch {}
+
+    return {
+      message,
+      branch,
+    };
   }
 
   const entries = await Promise.all(
     shas.map(async (sha) => {
-      const message = await fetchCommitTitle(sha);
-      return message ? ([sha, message] as const) : null;
+      const meta = await fetchCommitMeta(sha);
+      return [sha, meta] as const;
     }),
   );
 
-  return new Map(
-    entries.filter((entry): entry is readonly [string, string] => !!entry),
-  );
+  return new Map(entries);
 }
 
-function isPullRequestRef(ref: string) {
-  return /^\d+$/.test(ref);
-}
-
-async function getRepoBranchInfo(
+async function getDefaultBranchPinnedSha(
   event: H3Event,
   installation: Awaited<ReturnType<typeof useOctokitInstallation>>,
   owner: string,
   repo: string,
-) : Promise<RepoBranchInfo> {
+) {
   const {
     data: { default_branch: defaultBranch },
   } = await installation.rest.repos.get({
@@ -85,59 +97,10 @@ async function getRepoBranchInfo(
   const cursorBucket = useCursorsBucket(
     event as Parameters<typeof useCursorsBucket>[0],
   );
-  const defaultCursor = await cursorBucket.getItem(
+  const cursor = await cursorBucket.getItem(
     `${owner}:${repo}:${defaultBranch}`,
   );
-  const pinnedSha = defaultCursor?.sha ?? null;
-
-  const binding = useBinding(event as Parameters<typeof useBinding>[0]);
-  const prefix = `${useCursorsBucket.base}:${owner}:${repo}:`;
-  const branchByShaCandidates = new Map<string, Set<string>>();
-  let listCursor: string | undefined;
-
-  do {
-    const response = await binding.list({
-      cursor: listCursor,
-      limit: 1000,
-      prefix,
-    } as any);
-
-    for (const object of response.objects) {
-      const trimmed = object.key.slice(prefix.length);
-      if (!trimmed || isPullRequestRef(trimmed)) {
-        continue;
-      }
-      const cursor = await cursorBucket.getItem(`${owner}:${repo}:${trimmed}`);
-      if (!cursor?.sha) {
-        continue;
-      }
-      const existing = branchByShaCandidates.get(cursor.sha) ?? new Set();
-      existing.add(trimmed);
-      branchByShaCandidates.set(cursor.sha, existing);
-    }
-
-    listCursor = response.truncated ? response.cursor : undefined;
-  } while (listCursor);
-
-  const branchBySha = new Map<string, string>();
-  for (const [sha, branches] of branchByShaCandidates) {
-    const ordered = [...branches].sort((a, b) => {
-      if (a === defaultBranch && b !== defaultBranch) {
-        return -1;
-      }
-      if (b === defaultBranch && a !== defaultBranch) {
-        return 1;
-      }
-      return a.localeCompare(b);
-    });
-    branchBySha.set(sha, ordered[0]!);
-  }
-
-  return {
-    defaultBranch,
-    pinnedSha,
-    branchBySha,
-  };
+  return cursor?.sha ?? null;
 }
 
 function makeReleaseText(
@@ -220,7 +183,7 @@ export default defineEventHandler(async (event) => {
       query.owner,
       query.repo,
     );
-    const { pinnedSha, branchBySha } = await getRepoBranchInfo(
+    const pinnedSha = await getDefaultBranchPinnedSha(
       event,
       installation,
       query.owner,
@@ -250,7 +213,7 @@ export default defineEventHandler(async (event) => {
     const totalCount = releases.length;
     const totalPages = Math.max(1, Math.ceil(totalCount / perPage));
     const origin = getRequestURL(event).origin;
-    const commitMessages = await getCommitMessages(
+    const commitMetadata = await getCommitMetadata(
       installation,
       query.owner,
       query.repo,
@@ -266,14 +229,15 @@ export default defineEventHandler(async (event) => {
           nodes: pageItems.map((row) => {
             const abbreviatedOid = row.sha.slice(0, 7);
             const sortedPackages = [...row.packages].sort();
-            const commitTitle = commitMessages.get(row.sha);
+            const meta = commitMetadata.get(row.sha);
+            const commitTitle = meta?.message ?? null;
             return {
               id: row.sha,
               oid: row.sha,
               abbreviatedOid,
               message: commitTitle ?? row.sha,
               unverified: !commitTitle,
-              branch: branchBySha.get(row.sha) ?? null,
+              branch: meta?.branch ?? null,
               authoredDate: new Date(row.uploadedAt).toISOString(),
               url: `https://github.com/${query.owner}/${query.repo}/commit/${row.sha}`,
               statusCheckRollup: {
