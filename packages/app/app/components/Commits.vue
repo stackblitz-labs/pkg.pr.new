@@ -204,6 +204,17 @@ async function goPrevPage() {
           </span>
           <span class="flex-1" />
           <UButton
+            v-if="commit.unverified"
+            color="neutral"
+            variant="subtle"
+            size="xs"
+            :ui="{
+              base: 'font-mono pointer-events-none',
+            }"
+          >
+            External
+          </UButton>
+          <UButton
             :to="commit.url"
             target="_blank"
             color="neutral"

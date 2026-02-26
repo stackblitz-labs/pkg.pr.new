@@ -1,7 +1,13 @@
+import type { H3Event } from "h3";
 import { z } from "zod";
 import type { PackageManager } from "@pkg-pr-new/utils";
 import { generateCommitPublishMessage } from "../../utils/markdown";
-import { useBinding, usePackagesBucket } from "../../utils/bucket";
+import {
+  useBinding,
+  useCursorsBucket,
+  usePackagesBucket,
+} from "../../utils/bucket";
+import { useOctokitInstallation } from "../../utils/octokit";
 
 const querySchema = z.object({
   owner: z.string(),
@@ -18,27 +24,36 @@ interface ReleaseRow {
 }
 
 async function getCommitMessages(
-  event: Parameters<typeof defineEventHandler>[0] extends (
-    event: infer T,
-  ) => any
-    ? T
-    : any,
+  installation: Awaited<ReturnType<typeof useOctokitInstallation>>,
   owner: string,
   repo: string,
   shas: string[],
 ) {
-  const { ghBaseUrl = "https://api.github.com" } = useRuntimeConfig(event);
+  async function fetchCommitTitle(sha: string) {
+    try {
+      const { data } = await installation.request(
+        "GET /repos/{owner}/{repo}/commits/{ref}",
+        {
+          owner,
+          repo,
+          ref: sha,
+        },
+      );
+      const message = data.commit?.message?.split("\n")[0]?.trim();
+      if (message) {
+        return message;
+      }
+    } catch {
+      return null;
+    }
+
+    return null;
+  }
+
   const entries = await Promise.all(
     shas.map(async (sha) => {
-      try {
-        const commit = await $fetch<{ commit?: { message?: string } }>(
-          `${ghBaseUrl}/repos/${owner}/${repo}/commits/${sha}`,
-        );
-        const message = commit.commit?.message?.split("\n")[0]?.trim();
-        return message ? ([sha, message] as const) : null;
-      } catch {
-        return null;
-      }
+      const message = await fetchCommitTitle(sha);
+      return message ? ([sha, message] as const) : null;
     }),
   );
 
@@ -47,14 +62,26 @@ async function getCommitMessages(
   );
 }
 
-function makeReleaseMessage(packages: string[], abbreviatedSha: string) {
-  if (packages.length === 0) {
-    return `Release ${abbreviatedSha}`;
-  }
-  if (packages.length === 1) {
-    return `Release ${packages[0]} (${abbreviatedSha})`;
-  }
-  return `Release ${packages.length} packages (${abbreviatedSha})`;
+async function getDefaultBranchPinnedSha(
+  event: H3Event,
+  installation: Awaited<ReturnType<typeof useOctokitInstallation>>,
+  owner: string,
+  repo: string,
+) {
+  const {
+    data: { default_branch: defaultBranch },
+  } = await installation.request("GET /repos/{owner}/{repo}", {
+    owner,
+    repo,
+  });
+
+  const cursorBucket = useCursorsBucket(
+    event as Parameters<typeof useCursorsBucket>[0],
+  );
+  const cursor = await cursorBucket.getItem(
+    `${owner}:${repo}:${defaultBranch}`,
+  );
+  return cursor?.sha ?? null;
 }
 
 function makeReleaseText(
@@ -94,7 +121,7 @@ export default defineEventHandler(async (event) => {
         ? Number.parseInt(query.cursor, 10)
         : 1;
 
-    const binding = useBinding(event as any);
+    const binding = useBinding(event as Parameters<typeof useBinding>[0]);
     const prefix = `${usePackagesBucket.base}:${query.owner}:${query.repo}:`;
     const rows = new Map<string, ReleaseRow>();
     let listCursor: string | undefined;
@@ -132,8 +159,28 @@ export default defineEventHandler(async (event) => {
       listCursor = response.truncated ? response.cursor : undefined;
     } while (listCursor);
 
+    const installation = await useOctokitInstallation(
+      event,
+      query.owner,
+      query.repo,
+    );
+    const pinnedSha = await getDefaultBranchPinnedSha(
+      event,
+      installation,
+      query.owner,
+      query.repo,
+    );
+
     // Server-side ordering guarantees pagination consistency.
     const releases = [...rows.values()].sort((a, b) => {
+      if (pinnedSha) {
+        if (a.sha === pinnedSha && b.sha !== pinnedSha) {
+          return -1;
+        }
+        if (b.sha === pinnedSha && a.sha !== pinnedSha) {
+          return 1;
+        }
+      }
       if (b.uploadedAt !== a.uploadedAt) {
         return b.uploadedAt - a.uploadedAt;
       }
@@ -148,7 +195,7 @@ export default defineEventHandler(async (event) => {
     const totalPages = Math.max(1, Math.ceil(totalCount / perPage));
     const origin = getRequestURL(event).origin;
     const commitMessages = await getCommitMessages(
-      event,
+      installation,
       query.owner,
       query.repo,
       pageItems.map((row) => row.sha),
@@ -163,13 +210,13 @@ export default defineEventHandler(async (event) => {
           nodes: pageItems.map((row) => {
             const abbreviatedOid = row.sha.slice(0, 7);
             const sortedPackages = [...row.packages].sort();
+            const commitTitle = commitMessages.get(row.sha);
             return {
               id: row.sha,
               oid: row.sha,
               abbreviatedOid,
-              message:
-                commitMessages.get(row.sha) ??
-                makeReleaseMessage(sortedPackages, abbreviatedOid),
+              message: commitTitle ?? row.sha,
+              unverified: !commitTitle,
               authoredDate: new Date(row.uploadedAt).toISOString(),
               url: `https://github.com/${query.owner}/${query.repo}/commit/${row.sha}`,
               statusCheckRollup: {
