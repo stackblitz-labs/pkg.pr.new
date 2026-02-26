@@ -23,6 +23,12 @@ interface ReleaseRow {
   packages: Set<string>;
 }
 
+interface RepoBranchInfo {
+  defaultBranch: string;
+  pinnedSha: string | null;
+  branchBySha: Map<string, string>;
+}
+
 async function getCommitMessages(
   installation: Awaited<ReturnType<typeof useOctokitInstallation>>,
   owner: string,
@@ -59,12 +65,16 @@ async function getCommitMessages(
   );
 }
 
-async function getDefaultBranchPinnedSha(
+function isPullRequestRef(ref: string) {
+  return /^\d+$/.test(ref);
+}
+
+async function getRepoBranchInfo(
   event: H3Event,
   installation: Awaited<ReturnType<typeof useOctokitInstallation>>,
   owner: string,
   repo: string,
-) {
+) : Promise<RepoBranchInfo> {
   const {
     data: { default_branch: defaultBranch },
   } = await installation.rest.repos.get({
@@ -75,10 +85,59 @@ async function getDefaultBranchPinnedSha(
   const cursorBucket = useCursorsBucket(
     event as Parameters<typeof useCursorsBucket>[0],
   );
-  const cursor = await cursorBucket.getItem(
+  const defaultCursor = await cursorBucket.getItem(
     `${owner}:${repo}:${defaultBranch}`,
   );
-  return cursor?.sha ?? null;
+  const pinnedSha = defaultCursor?.sha ?? null;
+
+  const binding = useBinding(event as Parameters<typeof useBinding>[0]);
+  const prefix = `${useCursorsBucket.base}:${owner}:${repo}:`;
+  const branchByShaCandidates = new Map<string, Set<string>>();
+  let listCursor: string | undefined;
+
+  do {
+    const response = await binding.list({
+      cursor: listCursor,
+      limit: 1000,
+      prefix,
+    } as any);
+
+    for (const object of response.objects) {
+      const trimmed = object.key.slice(prefix.length);
+      if (!trimmed || isPullRequestRef(trimmed)) {
+        continue;
+      }
+      const cursor = await cursorBucket.getItem(`${owner}:${repo}:${trimmed}`);
+      if (!cursor?.sha) {
+        continue;
+      }
+      const existing = branchByShaCandidates.get(cursor.sha) ?? new Set();
+      existing.add(trimmed);
+      branchByShaCandidates.set(cursor.sha, existing);
+    }
+
+    listCursor = response.truncated ? response.cursor : undefined;
+  } while (listCursor);
+
+  const branchBySha = new Map<string, string>();
+  for (const [sha, branches] of branchByShaCandidates) {
+    const ordered = [...branches].sort((a, b) => {
+      if (a === defaultBranch && b !== defaultBranch) {
+        return -1;
+      }
+      if (b === defaultBranch && a !== defaultBranch) {
+        return 1;
+      }
+      return a.localeCompare(b);
+    });
+    branchBySha.set(sha, ordered[0]!);
+  }
+
+  return {
+    defaultBranch,
+    pinnedSha,
+    branchBySha,
+  };
 }
 
 function makeReleaseText(
@@ -161,7 +220,7 @@ export default defineEventHandler(async (event) => {
       query.owner,
       query.repo,
     );
-    const pinnedSha = await getDefaultBranchPinnedSha(
+    const { pinnedSha, branchBySha } = await getRepoBranchInfo(
       event,
       installation,
       query.owner,
@@ -214,6 +273,7 @@ export default defineEventHandler(async (event) => {
               abbreviatedOid,
               message: commitTitle ?? row.sha,
               unverified: !commitTitle,
+              branch: branchBySha.get(row.sha) ?? null,
               authoredDate: new Date(row.uploadedAt).toISOString(),
               url: `https://github.com/${query.owner}/${query.repo}/commit/${row.sha}`,
               statusCheckRollup: {

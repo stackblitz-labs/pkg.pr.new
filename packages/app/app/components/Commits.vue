@@ -215,6 +215,17 @@ async function goPrevPage() {
             External
           </UButton>
           <UButton
+            v-if="commit.branch"
+            color="neutral"
+            variant="subtle"
+            size="xs"
+            :ui="{
+              base: 'font-mono pointer-events-none',
+            }"
+          >
+            {{ commit.branch }}
+          </UButton>
+          <UButton
             :to="commit.url"
             target="_blank"
             color="neutral"
