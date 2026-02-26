@@ -209,7 +209,7 @@ async function goPrevPage() {
             aria-label="Pinned release"
           />
           <UButton
-            v-if="commit.unverified && !commit.branch"
+            v-if="commit.unverified && !commit.branch && !commit.pinned"
             color="neutral"
             variant="subtle"
             size="xs"
