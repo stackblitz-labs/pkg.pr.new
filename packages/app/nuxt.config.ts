@@ -45,6 +45,15 @@ export default defineNuxtConfig({
     },
   },
 
+  routeRules: {
+    "/~/**": {
+      headers: {
+        "cache-control":
+          "public, max-age=30, s-maxage=120, stale-while-revalidate=300",
+      },
+    },
+  },
+
   runtimeConfig: {
     nitro: {
       envPrefix: "NITRO_",
