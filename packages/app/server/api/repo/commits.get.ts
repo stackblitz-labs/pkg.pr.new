@@ -103,7 +103,7 @@ async function getCommitMetadata(
   return new Map(entries);
 }
 
-async function getDefaultBranchPinnedSha(
+async function getDefaultBranchInfo(
   event: H3Event,
   installation: Awaited<ReturnType<typeof useOctokitInstallation>>,
   owner: string,
@@ -122,7 +122,10 @@ async function getDefaultBranchPinnedSha(
   const cursor = await cursorBucket.getItem(
     `${owner}:${repo}:${defaultBranch}`,
   );
-  return cursor?.sha ?? null;
+  return {
+    defaultBranch,
+    pinnedSha: cursor?.sha ?? null,
+  };
 }
 
 function makeReleaseText(
@@ -205,7 +208,7 @@ export default defineEventHandler(async (event) => {
       query.owner,
       query.repo,
     );
-    const pinnedSha = await getDefaultBranchPinnedSha(
+    const { pinnedSha, defaultBranch } = await getDefaultBranchInfo(
       event,
       installation,
       query.owner,
@@ -266,7 +269,8 @@ export default defineEventHandler(async (event) => {
               message: commitTitle ?? row.sha,
               unverified: !commitTitle,
               pinned: pinnedSha === row.sha,
-              branch: meta?.branch ?? null,
+              branch:
+                meta?.branch ?? (pinnedSha === row.sha ? defaultBranch : null),
               authoredDate: new Date(row.uploadedAt).toISOString(),
               url: `https://github.com/${query.owner}/${query.repo}/commit/${row.sha}`,
               statusCheckRollup: {
