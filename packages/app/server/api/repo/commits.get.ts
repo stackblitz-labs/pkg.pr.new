@@ -262,15 +262,15 @@ export default defineEventHandler(async (event) => {
             const sortedPackages = [...row.packages].sort();
             const meta = commitMetadata.get(row.sha);
             const commitTitle = meta?.message ?? null;
+            const pinned = pinnedSha === row.sha;
             return {
               id: row.sha,
               oid: row.sha,
               abbreviatedOid,
               message: commitTitle ?? row.sha,
               unverified: !commitTitle,
-              pinned: pinnedSha === row.sha,
-              branch:
-                meta?.branch ?? (pinnedSha === row.sha ? defaultBranch : null),
+              pinned,
+              branch: pinned ? defaultBranch : (meta?.branch ?? null),
               authoredDate: new Date(row.uploadedAt).toISOString(),
               url: `https://github.com/${query.owner}/${query.repo}/commit/${row.sha}`,
               statusCheckRollup: {
