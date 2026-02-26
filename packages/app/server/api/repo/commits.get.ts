@@ -65,6 +65,27 @@ async function getCommitMetadata(
       }
     } catch {}
 
+    if (!branch) {
+      try {
+        const { data } =
+          await installation.rest.repos.listPullRequestsAssociatedWithCommit({
+            owner,
+            repo,
+            commit_sha: sha,
+          });
+        const prBranch = data
+          .slice()
+          .sort(
+            (a, b) =>
+              new Date(b.updated_at ?? 0).getTime() -
+              new Date(a.updated_at ?? 0).getTime(),
+          )[0]?.head?.ref;
+        if (prBranch?.trim()) {
+          branch = prBranch.trim();
+        }
+      } catch {}
+    }
+
     return {
       message,
       branch,
