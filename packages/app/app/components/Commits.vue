@@ -254,7 +254,10 @@ async function goPrevPage() {
       </div>
     </div>
 
-    <div class="flex justify-center items-center gap-1 flex-wrap">
+    <div
+      v-if="commitsWithRelease.length"
+      class="flex justify-center items-center gap-1 flex-wrap"
+    >
       <UButton
         color="neutral"
         variant="subtle"
