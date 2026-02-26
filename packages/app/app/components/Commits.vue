@@ -12,18 +12,22 @@ const props = defineProps<{
   repo: string;
 }>();
 
-const data = await $fetch("/api/repo/commits", {
-  query: {
-    owner: props.owner,
-    repo: props.repo,
-  },
-});
+const { data } = await useAsyncData(
+  `repo-commits:${props.owner}:${props.repo}:page:1`,
+  () =>
+    $fetch("/api/repo/commits", {
+      query: {
+        owner: props.owner,
+        repo: props.repo,
+      },
+    }),
+);
 
-if (!data) {
+if (!data.value) {
   throw createError("Could not load Commits");
 }
 
-const branch = shallowReactive(data);
+const branch = shallowReactive(data.value);
 
 const commitsWithRelease = computed(() =>
   branch.target.history.nodes
