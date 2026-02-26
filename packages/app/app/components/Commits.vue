@@ -12,10 +12,12 @@ const props = defineProps<{
   repo: string;
 }>();
 
+const requestFetch = useRequestFetch();
+
 const { data } = await useAsyncData(
   `repo-commits:${props.owner}:${props.repo}:page:1`,
   () =>
-    $fetch("/api/repo/commits", {
+    requestFetch("/api/repo/commits", {
       query: {
         owner: props.owner,
         repo: props.repo,
