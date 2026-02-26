@@ -204,7 +204,7 @@ async function goPrevPage() {
           </span>
           <span class="flex-1" />
           <UButton
-            v-if="commit.unverified"
+            v-if="commit.unverified && !commit.branch"
             color="neutral"
             variant="subtle"
             size="xs"
