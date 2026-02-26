@@ -10,26 +10,19 @@ const querySchema = z.object({
 const getRepoInfo = defineCachedFunction(
   async (owner: string, repo: string, event: H3Event) => {
     try {
-      const installation = await useOctokitInstallation(event, owner, repo);
-
-      const { data } = await installation.request("GET /repos/{owner}/{repo}", {
-        owner,
-        repo,
-      });
-
-      const releaseCount = 0;
+      const releaseCount = await getRepoReleaseCount(event as any, owner, repo);
 
       return {
-        id: data.id.toString(),
-        name: data.name,
+        id: `${owner}/${repo}`,
+        name: repo,
         owner: {
-          id: data.owner.id.toString(),
-          avatarUrl: data.owner.avatar_url,
-          login: data.owner.login,
+          id: owner,
+          avatarUrl: `https://github.com/${owner}.png`,
+          login: owner,
         },
-        url: data.html_url,
-        homepageUrl: data.homepage || "",
-        description: data.description || "",
+        url: `https://github.com/${owner}/${repo}`,
+        homepageUrl: "",
+        description: "",
         releaseCount,
       };
     } catch (error) {
