@@ -248,6 +248,12 @@ export default defineEventHandler(async (event) => {
       pageItems.map((row) => row.sha),
     );
 
+    setHeader(
+      event,
+      "Cache-Control",
+      "public, max-age=30, s-maxage=120, stale-while-revalidate=300",
+    );
+
     return {
       id: `releases-${query.owner}-${query.repo}`,
       name: "all refs",
