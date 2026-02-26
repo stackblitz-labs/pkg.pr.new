@@ -196,20 +196,19 @@ async function goPrevPage() {
         aria-role="button"
         @click="selectedCommit = commit"
       >
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 min-w-0">
           <UIcon name="i-ph-git-commit" class="opacity-50 flex-none" />
-          <span class="truncate">{{ commit.message }}</span>
-          <span class="opacity-50 flex-none">
+          <span class="truncate min-w-0 flex-1">{{ commit.message }}</span>
+          <span class="opacity-50 flex-none whitespace-nowrap">
             {{ useTimeAgo(commit.authoredDate) }}
           </span>
-          <span class="flex-1" />
           <UButton
             v-if="commit.unverified && !commit.branch"
             color="neutral"
             variant="subtle"
             size="xs"
             :ui="{
-              base: 'font-mono pointer-events-none',
+              base: 'font-mono pointer-events-none whitespace-nowrap',
             }"
           >
             External
@@ -220,7 +219,7 @@ async function goPrevPage() {
             variant="subtle"
             size="xs"
             :ui="{
-              base: 'font-mono pointer-events-none',
+              base: 'font-mono pointer-events-none whitespace-nowrap max-w-56 truncate',
             }"
           >
             {{ commit.branch }}
