@@ -42,7 +42,9 @@ async function getCommitMessages(
     }),
   );
 
-  return new Map(entries.filter((entry): entry is readonly [string, string] => !!entry));
+  return new Map(
+    entries.filter((entry): entry is readonly [string, string] => !!entry),
+  );
 }
 
 function makeReleaseMessage(packages: string[], abbreviatedSha: string) {

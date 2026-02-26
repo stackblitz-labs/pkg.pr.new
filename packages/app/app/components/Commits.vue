@@ -114,7 +114,9 @@ onBeforeUnmount(() => {
 // Pagination
 const fetching = ref(false);
 const currentPage = ref(branch.target.history.pageInfo.currentPage || 1);
-const totalPages = computed(() => branch.target.history.pageInfo.totalPages || 1);
+const totalPages = computed(
+  () => branch.target.history.pageInfo.totalPages || 1,
+);
 const hasNextPage = computed(() => currentPage.value < totalPages.value);
 const hasPrevPage = computed(() => currentPage.value > 1);
 
@@ -179,7 +181,6 @@ async function goPrevPage() {
   }
   await fetchPage(currentPage.value - 1);
 }
-
 </script>
 
 <template>
