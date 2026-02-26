@@ -265,6 +265,7 @@ export default defineEventHandler(async (event) => {
               abbreviatedOid,
               message: commitTitle ?? row.sha,
               unverified: !commitTitle,
+              pinned: pinnedSha === row.sha,
               branch: meta?.branch ?? null,
               authoredDate: new Date(row.uploadedAt).toISOString(),
               url: `https://github.com/${query.owner}/${query.repo}/commit/${row.sha}`,

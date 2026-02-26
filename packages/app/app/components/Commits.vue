@@ -202,6 +202,12 @@ async function goPrevPage() {
           <span class="opacity-50 flex-none whitespace-nowrap">
             {{ useTimeAgo(commit.authoredDate) }}
           </span>
+          <UIcon
+            v-if="commit.pinned"
+            name="i-ph-push-pin"
+            class="opacity-70 flex-none"
+            aria-label="Pinned release"
+          />
           <UButton
             v-if="commit.unverified && !commit.branch"
             color="neutral"
