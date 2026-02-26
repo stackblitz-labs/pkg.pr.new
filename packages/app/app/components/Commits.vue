@@ -323,9 +323,7 @@ async function goPrevPage() {
             />
 
             <UIcon name="i-ph-git-commit" class="opacity-50 flex-none" />
-            <span class="min-w-0 whitespace-pre-wrap break-words">
-              {{ selectedCommit.fullMessage || selectedCommit.message }}
-            </span>
+            <span class="truncate">{{ selectedCommit.message }}</span>
             <span class="opacity-50 flex-none">
               {{ useTimeAgo(selectedCommit.authoredDate) }}
             </span>
