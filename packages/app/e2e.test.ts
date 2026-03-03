@@ -18,6 +18,13 @@ let tempDir: string;
 let githubOutputPath: string;
 
 let worker: UnstableDevWorker;
+
+const { stdout: gitRevParseOutput } = await ezSpawn.async(
+  "git rev-parse HEAD",
+  { stdio: "overlapped" },
+);
+const gitRevParse = gitRevParseOutput.trim();
+
 beforeAll(async () => {
   tempDir = await fs.mkdtemp(path.join(os.tmpdir(), E2E_TEMP_DIR_PREFIX));
 
@@ -122,6 +129,7 @@ describe.sequential.each([
       GITHUB_SHA: payload.workflow_run.head_sha,
       GITHUB_ACTION: payload.workflow_run.id,
       GITHUB_JOB: payload.workflow_run.name,
+      GITHUB_EVENT_NAME: payload.workflow_run.event,
       GITHUB_REF_NAME: pr
         ? `${pr.payload.number}/merge`
         : payload.workflow_run.head_branch,
@@ -150,10 +158,8 @@ describe.sequential.each([
 
   it(`serves and installs playground-a for ${mode}`, async () => {
     const [owner, repo] = payload.repository.full_name.split("/");
-    const { stdout: gitHeadSha } = await ezSpawn.async("git rev-parse HEAD", {
-      stdio: "overlapped",
-    });
-    const sha = gitHeadSha.trim().substring(0, 7);
+    const fullSha = pr ? payload.workflow_run.head_sha : gitRevParse;
+    const sha = fullSha.substring(0, 7);
     const ref = pr?.payload.number ?? payload.workflow_run.head_branch;
 
     // Test download with SHA
@@ -193,10 +199,8 @@ describe.sequential.each([
 
   it(`serves and installs playground-b for ${mode}`, async () => {
     const [owner, repo] = payload.repository.full_name.split("/");
-    const { stdout: gitHeadSha } = await ezSpawn.async("git rev-parse HEAD", {
-      stdio: "overlapped",
-    });
-    const sha = gitHeadSha.trim().substring(0, 7);
+    const fullSha = pr ? payload.workflow_run.head_sha : gitRevParse;
+    const sha = fullSha.substring(0, 7);
 
     // Test download
     const response = await worker.fetch(

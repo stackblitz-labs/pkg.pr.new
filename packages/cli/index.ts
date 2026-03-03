@@ -233,13 +233,24 @@ const main = defineCommand({
             process.exit(1);
           }
 
-          const { stdout: gitShaOutput } = await ezSpawn.async(
-            "git rev-parse HEAD",
-            {
-              stdio: "overlapped",
-            },
-          );
-          const sha = gitShaOutput.trim();
+          let { sha } = await checkResponse.json();
+
+          // on pull_request events, GitHub creates a virtual merge commit that doesn't
+          // actually belong to the PR, so we use the workflow's head_sha instead
+          if (process.env.GITHUB_EVENT_NAME !== "pull_request") {
+            try {
+              const { stdout: gitRevParseOutput } = await ezSpawn.async(
+                "git rev-parse HEAD",
+                { stdio: "overlapped" },
+              );
+
+              sha = gitRevParseOutput.trim();
+            } catch {
+              // git rev-parse fails when the CLI runs outside a git repository
+              // (e.g. the checkout was done in a separate job and only artifacts were restored here)
+              // falling back to the workflow's head_sha from checkResponse
+            }
+          }
 
           const deps: Map<string, string> = new Map(); // pkg.pr.new versions of the package
           const realDeps: Map<string, string> | null = isPeerDepsEnabled
