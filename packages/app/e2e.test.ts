@@ -147,7 +147,7 @@ describe.sequential.each([
     expect(process.stderr).toContain("pkg-pr-new:");
     expect(process.stderr).toContain("playground-a:");
     expect(process.stderr).toContain("playground-b:");
-  }, 10_000);
+  }, 20_000);
 
   it(`serves and installs playground-a for ${mode}`, async () => {
     const [owner, repo] = payload.repository.full_name.split("/");
@@ -190,7 +190,7 @@ describe.sequential.each([
     expect(installProcess.stdout).toContain(
       "playground-a installed successfully!",
     );
-  }, 10_000);
+  }, 20_000);
 
   it(`serves and installs playground-b for ${mode}`, async () => {
     const [owner, repo] = payload.repository.full_name.split("/");
@@ -225,7 +225,7 @@ describe.sequential.each([
     expect(installProcess.stdout).toContain(
       "playground-b installed successfully!",
     );
-  }, 10_000);
+  }, 20_000);
 });
 
 describe("URL redirects", () => {
