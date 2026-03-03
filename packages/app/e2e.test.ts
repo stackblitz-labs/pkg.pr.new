@@ -14,11 +14,13 @@ const E2E_TEMP_DIR_PREFIX = "pkg-pr-new-e2e-";
 
 let server: Awaited<ReturnType<ReturnType<typeof simulation>["listen"]>>;
 let workerUrl: string;
-let githubOutputDir: string;
+let tempDir: string;
 let githubOutputPath: string;
 
 let worker: UnstableDevWorker;
 beforeAll(async () => {
+  tempDir = await fs.mkdtemp(path.join(os.tmpdir(), E2E_TEMP_DIR_PREFIX));
+
   const app = simulation({
     initialState: {
       users: [],
@@ -51,15 +53,12 @@ beforeAll(async () => {
     `${import.meta.dirname}/dist/_worker.js/index.js`,
     {
       config: `${import.meta.dirname}/wrangler.toml`,
+      persistTo: path.join(tempDir, "worker"),
     },
   );
   const url = `${worker.proxyData.userWorkerUrl.protocol}//${worker.proxyData.userWorkerUrl.hostname}:${worker.proxyData.userWorkerUrl.port}`;
   workerUrl = url;
-
-  githubOutputDir = await fs.mkdtemp(
-    path.join(os.tmpdir(), E2E_TEMP_DIR_PREFIX),
-  );
-  githubOutputPath = path.join(githubOutputDir, "output");
+  githubOutputPath = path.join(tempDir, "output");
   await fs.writeFile(githubOutputPath, "");
 
   await ezSpawn.async(
@@ -74,8 +73,8 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await server.ensureClose();
-  if (githubOutputDir?.includes(E2E_TEMP_DIR_PREFIX)) {
-    await fs.rm(githubOutputDir, { recursive: true, force: true });
+  if (tempDir?.includes(E2E_TEMP_DIR_PREFIX)) {
+    await fs.rm(tempDir, { recursive: true, force: true });
   }
 });
 
