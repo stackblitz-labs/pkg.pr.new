@@ -184,7 +184,7 @@ export default defineEventHandler(async (event) => {
         if (!sha || packageNameParts.length === 0) {
           continue;
         }
-        const packageName = packageNameParts.join(":");
+        const packageName = packageNameParts.join(":").replaceAll(":", "/");
         const uploadedAt = new Date(object.uploaded).getTime();
 
         const row = rows.get(sha);
