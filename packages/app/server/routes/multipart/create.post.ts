@@ -1,8 +1,12 @@
-import { isWhitelisted } from "@pkg-pr-new/utils";
+import { isValidGitHash, isWhitelisted } from "@pkg-pr-new/utils";
 import { joinKeys } from "unstorage";
 
 export default eventHandler(async (event) => {
-  const { "sb-key": workflowKey, "sb-name": packageName } = getHeaders(event);
+  const {
+    "sb-key": workflowKey,
+    "sb-name": packageName,
+    "sb-sha": shaOverride,
+  } = getHeaders(event);
 
   if (!workflowKey) {
     throw createError({
@@ -33,6 +37,16 @@ export default eventHandler(async (event) => {
       message:
         "Multipart uploads are only accessible to those who are in the whitelist! Feel free to apply for the whitelist: https://github.com/stackblitz-labs/pkg.pr.new/blob/main/.whitelist",
     });
+  }
+
+  if (shaOverride) {
+    if (!isValidGitHash(shaOverride)) {
+      throw createError({
+        statusCode: 400,
+        message: "Invalid sb-sha: must be a valid hexadecimal SHA",
+      });
+    }
+    workflowData.sha = shaOverride;
   }
 
   const binding = useBinding(event);
