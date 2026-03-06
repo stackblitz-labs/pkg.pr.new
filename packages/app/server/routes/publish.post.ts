@@ -63,7 +63,7 @@ export default eventHandler(async (event) => {
       if (!isValidGitHash(shaOverride)) {
         throw createError({
           statusCode: 400,
-          message: "Invalid sb-sha: must be a 40-character hex SHA",
+          message: "Invalid sb-sha: must be a valid hexadecimal SHA",
         });
       }
       workflowData.sha = shaOverride;
