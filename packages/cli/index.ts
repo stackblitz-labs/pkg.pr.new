@@ -528,6 +528,7 @@ const main = defineCommand({
                   headers: {
                     "sb-key": key,
                     "sb-name": name.slice("package:".length),
+                    "sb-sha": sha,
                   },
                 });
                 if (!createMultipartRes.ok) {
