@@ -6,7 +6,7 @@
       "id": 9394452824,
       "name": "Preview & Release",
       "node_id": "WFR_kwLOLiqblM8AAAACL_P5WA",
-      "head_branch": "main",
+      "head_branch": "@test/@chaotic.branch/name-@v1.@",
       "head_sha": "ded05e838c418096e5dd77a29101c8af9e73daea",
       "path": ".github/workflows/ci.yml",
       "display_title": "chore: 007 (#94)",
