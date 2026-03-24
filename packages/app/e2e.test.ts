@@ -1,4 +1,3 @@
-import type { Response } from "@cloudflare/workers-types";
 import ezSpawn from "@jsdevtools/ez-spawn";
 import { simulation } from "@simulacrum/github-api-simulator";
 import fs from "node:fs/promises";
@@ -171,9 +170,15 @@ describe.sequential.each([
     expect(shaBlob.size).toBeGreaterThan(0);
 
     // Test download with ref matches SHA content
-    const refResponse = await fetchWithRedirect(
+    const refResponse = await worker.fetch(
       `/${owner}/${repo}/playground-a@${ref}`,
     );
+    expect(refResponse.status).toBe(200);
+    expect(refResponse.headers.get("x-pkg-name-key")).toBe("playground-a");
+    expect(refResponse.headers.get("x-commit-key")).toBe(
+      `${owner}:${repo}:${fullSha}`,
+    );
+
     const refBlob = await refResponse.blob();
     const shaBlobSize = await shaBlob.arrayBuffer();
     const refBlobSize = await refBlob.arrayBuffer();
@@ -196,6 +201,29 @@ describe.sequential.each([
       "playground-a installed successfully!",
     );
   }, 20_000);
+
+  it(`returns metadata for HEAD requests (${mode})`, async () => {
+    const [owner, repo] = payload.repository.full_name.split("/");
+    const fullSha = pr ? payload.workflow_run.head_sha : gitRevParse;
+    const sha = fullSha.substring(0, 7);
+
+    const headResponse = await worker.fetch(
+      `/${owner}/${repo}/playground-a@${sha}`,
+      { method: "HEAD" },
+    );
+
+    expect(headResponse.status).toBe(200);
+    expect(headResponse.headers.get("x-pkg-name-key")).toBe("playground-a");
+    expect(headResponse.headers.get("x-commit-key")).toBe(
+      `${owner}:${repo}:${sha}`,
+    );
+    expect(headResponse.headers.get("content-type")).toBe(
+      "application/tar+gzip",
+    );
+    expect(headResponse.headers.get("etag")).toBeDefined();
+    const lastModified = headResponse.headers.get("last-modified");
+    expect(new Date(lastModified!).toString()).not.toBe("Invalid Date");
+  });
 
   it(`serves and installs playground-b for ${mode}`, async () => {
     const [owner, repo] = payload.repository.full_name.split("/");
@@ -231,48 +259,57 @@ describe.sequential.each([
   }, 20_000);
 });
 
-describe("URL redirects", () => {
+describe("URL resolution", () => {
   describe("standard packages", () => {
-    it("redirects full URLs correctly", async () => {
-      const response = await fetchWithRedirect("/tinylibs/tinybench@a832a55");
-      expect(response.url).toContain("/tinylibs/tinybench/tinybench@a832a55");
+    it.each([
+      ["full", "/tinylibs/tinybench/tinybench@a832a55"],
+      ["compact", "/tinybench@a832a55"],
+      ["with .tgz extension", "/tinybench@a832a55.tgz"],
+    ])("resolves %s URLs", async (_, url) => {
+      const response = await worker.fetch(url);
+
+      expect(response.headers.get("x-commit-key")).toBe(
+        "tinylibs:tinybench:a832a55",
+      );
+      expect(response.headers.get("x-pkg-name-key")).toBe("tinybench");
     });
 
-    it("redirects compact URLs correctly", async () => {
-      const response = await fetchWithRedirect("/tinybench@a832a55");
-      expect(response.url).toContain("/tinylibs/tinybench/tinybench@a832a55");
+    it("resolves URL with full Git SHA", async () => {
+      const response = await worker.fetch(
+        "/tinylibs/tinybench/tinybench@a832a55e8f50c419ed8414024899e37e69b1f999",
+      );
+
+      expect(response.headers.get("x-pkg-name-key")).toBe("tinybench");
+      expect(response.headers.get("x-commit-key")).toBe(
+        "tinylibs:tinybench:a832a55e8f50c419ed8414024899e37e69b1f999",
+      );
     });
   });
 
   describe("scoped packages", () => {
-    const expectedPath = `/stackblitz/sdk/${encodeURIComponent("@stackblitz/sdk")}@a832a55`;
+    it.each([
+      ["full", "/stackblitz/sdk/@stackblitz/sdk@a832a55"],
+      ["encoded", "/stackblitz/sdk/%40stackblitz%2Fsdk@a832a55"],
+      ["compact", "/@stackblitz/sdk@a832a55"],
+      ["compact encoded", "/%40stackblitz%2Fsdk@a832a55"],
+    ])("resolves %s URLs", async (_, url) => {
+      const response = await worker.fetch(url);
 
-    it("redirects full scoped package URLs correctly", async () => {
-      const response = await fetchWithRedirect(
-        "/stackblitz/sdk/@stackblitz/sdk@a832a55",
+      expect(response.headers.get("x-pkg-name-key")).toBe("@stackblitz:sdk");
+      expect(response.headers.get("x-commit-key")).toBe(
+        "stackblitz:sdk:a832a55",
       );
-      expect(response.url).toContain(expectedPath);
     });
 
-    it("redirects compact scoped package URLs correctly", async () => {
-      const response = await fetchWithRedirect("/@stackblitz/sdk@a832a55");
-      expect(response.url).toContain(expectedPath);
+    it("resolves URL with full Git SHA", async () => {
+      const response = await worker.fetch(
+        "/stackblitz/sdk/@stackblitz/sdk@a832a55e8f50c419ed8414024899e37e69b1f999",
+      );
+
+      expect(response.headers.get("x-pkg-name-key")).toBe("@stackblitz:sdk");
+      expect(response.headers.get("x-commit-key")).toBe(
+        "stackblitz:sdk:a832a55e8f50c419ed8414024899e37e69b1f999",
+      );
     });
   });
 });
-
-async function fetchWithRedirect(
-  url: string,
-  maxRedirects = 999,
-): Promise<Response> {
-  const response = await worker.fetch(url, { redirect: "manual" });
-
-  if (response.status >= 300 && response.status < 400 && maxRedirects > 0) {
-    const location = response.headers.get("location");
-    if (location) {
-      return fetchWithRedirect(location, maxRedirects - 1);
-    }
-  }
-
-  return response as unknown as Response;
-}
