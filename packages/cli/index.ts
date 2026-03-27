@@ -696,36 +696,39 @@ async function resolveTarball(pm: PackMethod, p: string, pJson: PackageJson) {
   if (pm === "yarn") {
     cmd += ` --filename ${filename}`;
   } else if (pm === "bun") {
-    cmd = `bun pm pack --quiet --filename ${filename}`;
+    cmd = `bun pm pack --quiet --destination ${p}`;
   }
   const { stdout } = await ezSpawn.async(cmd, {
     stdio: "overlapped",
     cwd: p,
   });
-  const lines = stdout.split("\n").filter(Boolean);
 
-  if (pm !== "yarn" && pm !== "bun") {
-    filename = lines[lines.length - 1].trim();
+  if (pm !== "yarn") {
+    const lines = stdout.split("\n").filter(Boolean);
+    filename = lines[lines.length - 1].trim().split(path.sep).pop()!;
   }
-  if (pm === "bun") {
+
+  try {
+    const shasum = createHash("sha1")
+      .update(await fs.readFile(path.resolve(p, filename)))
+      .digest("hex");
+
+    return { filename, shasum };
+  } catch (error) {
+    console.error(`Failed to read tarball for shasum calculation`);
+    console.error(`[${pm} pack] expected filename: ${filename}`);
+    console.error(`[${pm} pack] stdout:\n${stdout}`);
+
     const tgzFiles = fsSync
       .readdirSync(p)
       .filter((file) => file.endsWith(".tgz"));
-    const bunFilename = stdout.trim();
-    if (bunFilename) {
-      filename = bunFilename;
-    }
-    console.warn(`[bun pack] stdout:\n${stdout}`);
-    console.warn(
-      `[bun pack] expected filename: ${filename}; tgz files: ${tgzFiles.join(", ") || "(none)"}`,
+
+    console.error(
+      `[${pm} pack] tgz files in directory: ${tgzFiles.join(", ") || "(none)"}`,
     );
+
+    throw error;
   }
-
-  const shasum = createHash("sha1")
-    .update(await fs.readFile(path.resolve(p, filename)))
-    .digest("hex");
-
-  return { filename, shasum };
 }
 
 async function writeDeps(
