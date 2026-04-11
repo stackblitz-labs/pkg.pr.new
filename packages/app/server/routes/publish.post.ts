@@ -293,6 +293,20 @@ export default eventHandler(async (event) => {
           },
         );
 
+        const body = generatePullRequestPublishMessage(
+          origin,
+          templatesHtmlMap,
+          packagesWithoutPrefix,
+          workflowData,
+          compact,
+          onlyTemplates,
+          checkRunUrl,
+          packageManager,
+          commentWithSha || comment !== "update" ? "sha" : "ref",
+          bin,
+          commentWithDev,
+        );
+
         try {
           if (comment === "update" && prevComment!) {
             await installation.request(
@@ -301,19 +315,7 @@ export default eventHandler(async (event) => {
                 owner: workflowData.owner,
                 repo: workflowData.repo,
                 comment_id: prevComment.id,
-                body: generatePullRequestPublishMessage(
-                  origin,
-                  templatesHtmlMap,
-                  packagesWithoutPrefix,
-                  workflowData,
-                  compact,
-                  onlyTemplates,
-                  checkRunUrl,
-                  packageManager,
-                  commentWithSha ? "sha" : "ref",
-                  bin,
-                  commentWithDev,
-                ),
+                body,
               },
             );
           } else {
@@ -323,19 +325,7 @@ export default eventHandler(async (event) => {
                 owner: workflowData.owner,
                 repo: workflowData.repo,
                 issue_number: Number(workflowData.ref),
-                body: generatePullRequestPublishMessage(
-                  origin,
-                  templatesHtmlMap,
-                  packagesWithoutPrefix,
-                  workflowData,
-                  compact,
-                  onlyTemplates,
-                  checkRunUrl,
-                  packageManager,
-                  comment === "update" ? "ref" : "sha",
-                  bin,
-                  commentWithDev,
-                ),
+                body,
               },
             );
           }
