@@ -257,6 +257,8 @@ importers:
         specifier: link:../playground-a
         version: link:../playground-a
 
+  playgrounds/private-playground: {}
+
   templates/example-1:
     dependencies:
       pkg-pr-new:
