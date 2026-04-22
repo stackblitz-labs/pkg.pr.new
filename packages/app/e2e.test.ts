@@ -153,6 +153,9 @@ describe.sequential.each([
     expect(process.stderr).toContain("pkg-pr-new:");
     expect(process.stderr).toContain("playground-a:");
     expect(process.stderr).toContain("playground-b:");
+    expect(process.stderr).toContain(
+      "private-playground/ because the package is private",
+    );
   }, 20_000);
 
   it(`serves and installs playground-a for ${mode}`, async () => {

@@ -274,15 +274,12 @@ const main = defineCommand({
             const pJsonPath = path.resolve(p, "package.json");
             const pJson = await readPackageJson(pJsonPath);
 
-            if (!pJson) {
+            if (!pJson || pJson.private) {
               continue;
             }
 
             if (!pJson.name) {
               throw new Error(`"name" field in ${pJsonPath} should be defined`);
-            }
-            if (pJson.private) {
-              continue;
             }
 
             const packageName = pJson.name;
@@ -471,14 +468,14 @@ const main = defineCommand({
             }
 
             try {
+              if (pJson.private) {
+                console.warn(`skipping ${p} because the package is private`);
+                continue;
+              }
               if (!pJson.name) {
                 throw new Error(
                   `"name" field in ${pJsonPath} should be defined`,
                 );
-              }
-              if (pJson.private) {
-                console.warn(`skipping ${p} because the package is private`);
-                continue;
               }
 
               const { filename, shasum } = await resolveTarball(
