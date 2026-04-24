@@ -127,17 +127,20 @@ First [install the GitHub Application](https://github.com/apps/pkg-pr-new).
 > [!IMPORTANT]
 > Make sure it's installed on the repository before trying to publish a package. To read about the permissions the app needs, check [#305](https://github.com/stackblitz-labs/pkg.pr.new/issues/305).
 
-After installing on your repository, you can run `npx pkg-pr-new publish` in your workflows and then you have continuous releases!
+After installing on your repository, run `pkg-pr-new` from your lockfile in workflows (for example with `pnpm exec pkg-pr-new publish`) to get continuous releases.
 
 ```sh
-npm install --save-dev pkg-pr-new # or `npx pkg-pr-new publish`
+npm install --save-dev pkg-pr-new
 ```
 
 For workspaces and monorepos:
 
 ```sh
-npx pkg-pr-new publish './packages/A' './packages/B' # or `npx pkg-pr-new publish './packages/*'`
+pnpm exec pkg-pr-new publish './packages/A' './packages/B' # or `pnpm exec pkg-pr-new publish './packages/*'`
 ```
+
+> [!CAUTION]
+> In CI environments, avoid `npx`, `pnpm dlx`, `yarn dlx`, and `bunx` for this step. Install `pkg-pr-new` as a dependency and execute it from the lockfile (`npm exec`, `pnpm exec`, `yarn`, or `bun run`).
 
 > [!IMPORTANT]
 > Make sure the pkg-pr-new command runs only once in a defined workflow (that's part of how it avoids spam)! So instead of multiple times running pkg-pr-new for each workspace package, the command should be run one time for all the desired packages using the pattern above.
@@ -148,7 +151,7 @@ For templates (experimental):
 > With templates, pkg.pr.new will generate Stackblitz instances for the given directories with the new built packages.
 
 ```sh
-npx pkg-pr-new publish './packages/A' --template './examples/*'
+pnpm exec pkg-pr-new publish './packages/A' --template './examples/*'
 ```
 
 By default, pkg.pr.new will generate a template called "default" which includes each built package in the dependencies. This can be disabled with `--no-template`.
@@ -156,7 +159,7 @@ By default, pkg.pr.new will generate a template called "default" which includes 
 Compact URLs are the default (and will fall back to long form if npm metadata is unavailable). To force long-form URLs, use `--no-compact`:
 
 ```sh
-npx pkg-pr-new publish --no-compact './packages/A' './packages/B'
+pnpm exec pkg-pr-new publish --no-compact './packages/A' './packages/B'
 ```
 
 > Compact URLs rely on your package being published on npm with a valid `repository` field in `package.json`. See [this](https://docs.npmjs.com/cli/v7/configuring-npm/package-json#repository). pkg.pr.new is case sensitive, if the GitHub owner is `PuruVJ`, the package.json `repository` field should not have `puruvj`.
@@ -176,7 +179,7 @@ npm i https://pkg.pr.new/tinylibs/tinybench/tinybench@a832a55
 For CLI applications you might want to show `npx` instead of `npm i` for the preview command. This can be accomplished with the `--bin` flag:
 
 ```sh
-npx pkg-pr-new publish --bin
+pnpm exec pkg-pr-new publish --bin
 ```
 
 With `--bin`:
@@ -194,7 +197,7 @@ npm i https://pkg.pr.new/pkg-pr-new@a832a55
 You can control publishing comments with `--comment`:
 
 ```sh
-npx pkg-pr-new publish --comment=update # default
+pnpm exec pkg-pr-new publish --comment=update # default
 ```
 
 Using `--comment=update`, pkg.pr.new would generate one initial comment and then edit it in the following commits.
@@ -271,7 +274,7 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - run: pnpm dlx pkg-pr-new publish
+      - run: pnpm exec pkg-pr-new publish
 ```
 
 #### Release approved pull requests only:
@@ -318,7 +321,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - run: pnpm dlx pkg-pr-new publish
+      - run: pnpm exec pkg-pr-new publish
 ```
 
 > Releasing approved pull requests is the recommended way of having continuous releases. This ensures users always install approved and safe packages.
@@ -379,7 +382,7 @@ jobs:
         run: pnpm build
 
       - id: publish
-        run: pnpm dlx pkg-pr-new publish
+        run: pnpm exec pkg-pr-new publish
 
   e2e-test:
     runs-on: ubuntu-latest
@@ -415,7 +418,7 @@ For advanced use cases where you want more control over the messages posted by p
 
 ```yml
 - name: Publish packages
-  run: npx pkg-pr-new publish --json output.json --comment=off
+  run: pnpm exec pkg-pr-new publish --json output.json --comment=off
 ```
 
 2. Add a custom step in your workflow to process the JSON output and create a custom comment:

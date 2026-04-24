@@ -23,7 +23,7 @@
         releases.
       </div>
 
-      <CodeSnippet code="npx pkg-pr-new publish" />
+      <CodeSnippet code="pnpm exec pkg-pr-new publish" />
 
       <template #actions>
         <UButton

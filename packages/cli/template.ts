@@ -41,7 +41,7 @@ ${Object.values(dependencies)
 To use this feature as a maintainer, you can run the following command:
 
 \`\`\`sh
-npx pkg-pr-new publish './packages/A' --template './examples/*'${isCommentWithDev ? " --commentWithDev" : ""}
+pnpm exec pkg-pr-new publish './packages/A' --template './examples/*'${isCommentWithDev ? " --commentWithDev" : ""}
 \`\`\`
 
 ## Benefits
