@@ -191,8 +191,7 @@ function buildInstallMarkdown(
   commit: (typeof commitsWithRelease.value)[number] | null,
 ) {
   if (!commit) return "";
-  const origin =
-    typeof window !== "undefined" ? window.location.origin : "";
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
   const packages: string[] = commit.release.packages ?? [];
   return packages
     .map((pkg) => {
