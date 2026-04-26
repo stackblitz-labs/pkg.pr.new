@@ -187,10 +187,6 @@ async function goPrevPage() {
   }
   await fetchPage(currentPage.value - 1);
 }
-
-// Build install snippet on the client so the URL always uses the real public
-// origin (window.location.origin) instead of a host resolved during SSR, which
-// can be `localhost` for internal Nitro dispatches on Cloudflare.
 function buildInstallMarkdown(
   commit: (typeof commitsWithRelease.value)[number] | null,
 ) {
