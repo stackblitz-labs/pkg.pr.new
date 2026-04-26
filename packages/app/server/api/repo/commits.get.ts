@@ -252,6 +252,30 @@ export default defineEventHandler(async (event) => {
     const totalCount = releases.length;
     const totalPages = Math.max(1, Math.ceil(totalCount / perPage));
     const origin = getCommitPanelOrigin(event);
+    // #region agent log
+    {
+      const _h = getHeaders(event);
+      const _u = getRequestURL(event);
+      console.log(
+        "[DEBUG-9e8f04][commits.get] hyp:A,B,C,D,E",
+        JSON.stringify({
+          owner: query.owner,
+          repo: query.repo,
+          page,
+          host: _h.host ?? null,
+          xForwardedHost: _h["x-forwarded-host"] ?? null,
+          xForwardedProto: _h["x-forwarded-proto"] ?? null,
+          referer: _h.referer ?? null,
+          userAgent: _h["user-agent"] ?? null,
+          requestUrl: _u.toString(),
+          resolvedOrigin: origin,
+          cfRay: _h["cf-ray"] ?? null,
+          cfCacheStatus: _h["cf-cache-status"] ?? null,
+          ts: Date.now(),
+        }),
+      );
+    }
+    // #endregion
     const commitMetadata = await getCommitMetadata(
       installation,
       query.owner,
