@@ -688,10 +688,10 @@ runMain(main)
 type PackMethod = "npm" | "pnpm" | "yarn" | "bun";
 
 async function resolveTarball(pm: PackMethod, p: string, pJson: PackageJson) {
-  let cmd = `${pm} pack`;
+  let cmd = `${pm} pack --pack-destination ${p}`;
   let filename = `${pJson.name!.replace("/", "-")}-${pJson.version}.tgz`;
   if (pm === "yarn") {
-    cmd += ` --filename ${filename}`;
+    cmd = `yarn pack --filename ${filename}`;
   } else if (pm === "bun") {
     cmd = `bun pm pack --quiet --destination ${p}`;
   }
