@@ -187,20 +187,6 @@ async function goPrevPage() {
   }
   await fetchPage(currentPage.value - 1);
 }
-function buildInstallMarkdown(
-  commit: (typeof commitsWithRelease.value)[number] | null,
-) {
-  if (!commit) return "";
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const packages: string[] = commit.release.packages ?? [];
-  return packages
-    .map((pkg) => {
-      const shorter = props.repo === pkg;
-      const repoSegment = shorter ? "" : `/${props.repo}`;
-      return `\`\`\`\nnpm i ${origin}/${props.owner}${repoSegment}/${pkg}@${commit.abbreviatedOid}\n\`\`\``;
-    })
-    .join("\n\n");
-}
 </script>
 
 <template>
@@ -372,7 +358,7 @@ function buildInstallMarkdown(
 
           <div
             class="max-w-full p-4 overflow-x-auto border border-gray-100 dark:border-gray-800 rounded-lg prose dark:prose-invert flex flex-col gap-2"
-            v-html="marked(buildInstallMarkdown(selectedCommit))"
+            v-html="marked(selectedCommit.release.text)"
           />
         </div>
       </template>

@@ -1,5 +1,7 @@
 import type { H3Event } from "h3";
 import { z } from "zod";
+import type { PackageManager } from "@pkg-pr-new/utils";
+import { generateCommitPublishMessage } from "../../utils/markdown";
 import {
   useBinding,
   useCursorsBucket,
@@ -126,6 +128,30 @@ async function getDefaultBranchInfo(
   };
 }
 
+function makeReleaseText(
+  origin: string,
+  owner: string,
+  repo: string,
+  sha: string,
+  packages: string[],
+) {
+  return generateCommitPublishMessage(
+    origin,
+    {},
+    packages,
+    {
+      owner,
+      repo,
+      sha,
+      ref: sha,
+    },
+    false,
+    "npm" satisfies PackageManager,
+    false,
+    false,
+  ).trim();
+}
+
 export default defineEventHandler(async (event) => {
   try {
     const query = await getValidatedQuery(event, (data) =>
@@ -211,6 +237,9 @@ export default defineEventHandler(async (event) => {
     const nextCursor = hasNextPage ? String(page + 1) : null;
     const totalCount = releases.length;
     const totalPages = Math.max(1, Math.ceil(totalCount / perPage));
+    const origin = import.meta.dev
+      ? getRequestURL(event).origin
+      : "https://pkg.pr.new";
     const commitMetadata = await getCommitMetadata(
       installation,
       query.owner,
@@ -257,7 +286,13 @@ export default defineEventHandler(async (event) => {
                       name: "Continuous Releases",
                       title: "Continuous Releases",
                       summary: `Published ${sortedPackages.length} package(s)`,
-                      packages: sortedPackages,
+                      text: makeReleaseText(
+                        origin,
+                        query.owner,
+                        query.repo,
+                        row.sha,
+                        sortedPackages,
+                      ),
                       detailsUrl: `https://github.com/${query.owner}/${query.repo}/commit/${row.sha}`,
                       url: `https://github.com/${query.owner}/${query.repo}/commit/${row.sha}`,
                     },
