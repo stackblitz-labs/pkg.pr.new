@@ -47,7 +47,8 @@
   },
   "dependencies": {
     "@cloudflare/vitest-pool-workers": "^0.6.8",
-    "wrangler": "^3.57.1"
+    "wrangler": "^3.57.1",
+    "zod": "^4.3.6"
   },
   "packageManager": "pnpm@10.33.0"
 }
