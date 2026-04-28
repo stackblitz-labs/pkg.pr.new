@@ -28,20 +28,6 @@ interface CommitMeta {
   branch: string | null;
 }
 
-function getCommitPanelOrigin(event: H3Event) {
-  const requestUrl = getRequestURL(event);
-  const headers = getHeaders(event);
-  const host =
-    headers["x-forwarded-host"]?.split(",")[0]?.trim() ||
-    headers.host?.split(",")[0]?.trim() ||
-    requestUrl.host;
-  const protocol =
-    headers["x-forwarded-proto"]?.split(",")[0]?.trim() ||
-    requestUrl.protocol.replace(":", "");
-
-  return `${protocol}://${host}`;
-}
-
 async function getCommitMetadata(
   installation: Awaited<ReturnType<typeof useOctokitInstallation>>,
   owner: string,
@@ -251,7 +237,9 @@ export default defineEventHandler(async (event) => {
     const nextCursor = hasNextPage ? String(page + 1) : null;
     const totalCount = releases.length;
     const totalPages = Math.max(1, Math.ceil(totalCount / perPage));
-    const origin = getCommitPanelOrigin(event);
+    const origin = import.meta.dev
+      ? getRequestURL(event).origin
+      : "https://pkg.pr.new";
     const commitMetadata = await getCommitMetadata(
       installation,
       query.owner,
