@@ -3,6 +3,7 @@ export interface WorkflowData {
   repo: string;
   sha: string;
   ref: string;
+  headBranch?: string | null;
 }
 
 export interface PullRequestData {

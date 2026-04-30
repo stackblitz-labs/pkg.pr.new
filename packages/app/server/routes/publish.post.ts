@@ -202,6 +202,20 @@ export default eventHandler(async (event) => {
       });
     }
 
+    if (
+      workflowData.headBranch &&
+      workflowData.headBranch !== workflowData.ref
+    ) {
+      const branchCursorKey = `${baseKey}:${workflowData.headBranch}`;
+      const branchCursor = await cursorBucket.getItem(branchCursorKey);
+      if (!branchCursor || branchCursor.timestamp < runId) {
+        await cursorBucket.setItem(branchCursorKey, {
+          sha: workflowData.sha,
+          timestamp: runId,
+        });
+      }
+    }
+
     await workflowsBucket.removeItem(key);
 
     const urls = packagesWithoutPrefix.map((packageName) =>

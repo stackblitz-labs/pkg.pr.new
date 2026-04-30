@@ -55,11 +55,18 @@ export default eventHandler(async (event) => {
       const lookupKey = isNewPullRequest ? prKey : oldPrDataHash;
       const prNumber = await pullRequestNumbersBucket.getItem(lookupKey);
 
+      const headBranch = payload.workflow_run.head_branch;
+      const isHeadOnUpstream =
+        payload.workflow_run.head_repository?.full_name ===
+        payload.repository.full_name;
+
       const data: WorkflowData = {
         owner,
         repo,
         sha: payload.workflow_run.head_sha,
-        ref: isPullRequest ? `${prNumber}` : payload.workflow_run.head_branch!, // it's a pull request workflow
+        ref: isPullRequest ? `${prNumber}` : headBranch!,
+        headBranch:
+          isPullRequest && isHeadOnUpstream && headBranch ? headBranch : null,
       };
 
       // Publishing is only available throughout the lifetime of a workflow_job
