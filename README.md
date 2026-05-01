@@ -206,15 +206,27 @@ With `--comment=create`, each commit would generate a comment for itself, useful
 
 And `--comment=off` would turn off comments for maintainers who prefer minimal pull requests.
 
-> `--commentWithSha` specify whether to replace the pr number with sha commit in the generated comments.
+> `--commentWithSha` specifies whether to replace the PR number with the commit SHA in the generated comments.
 
 With `--commentWithSha`:
+
+```sh
+pnpm exec pkg-pr-new publish --commentWithSha
+```
+
+Generated comments use commit SHA URLs:
 
 ```sh
 npm i https://pkg.pr.new/tinybench@a832a55
 ```
 
 Without `--commentWithSha`:
+
+```sh
+pnpm exec pkg-pr-new publish
+```
+
+Generated comments use PR number URLs:
 
 ```sh
 npm i https://pkg.pr.new/tinybench@123
@@ -274,7 +286,7 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - run: pnpm exec pkg-pr-new publish
+      - run: pnpm exec pkg-pr-new publish --commentWithSha
 ```
 
 #### Release approved pull requests only:
@@ -321,7 +333,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - run: pnpm exec pkg-pr-new publish
+      - run: pnpm exec pkg-pr-new publish --commentWithSha
 ```
 
 > Releasing approved pull requests is the recommended way of having continuous releases. This ensures users always install approved and safe packages.
@@ -382,7 +394,7 @@ jobs:
         run: pnpm build
 
       - id: publish
-        run: pnpm exec pkg-pr-new publish
+        run: pnpm exec pkg-pr-new publish --commentWithSha
 
   e2e-test:
     runs-on: ubuntu-latest
