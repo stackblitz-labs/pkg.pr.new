@@ -75,13 +75,13 @@ export default eventHandler(async (event) => {
     );
     const contentLength = Number(getHeader(event, "content-length"));
 
-    // 20mb limit for now
-    if (!whitelisted && contentLength > 1024 * 1024 * 20) {
+    const maxPayloadSizeMb = 120;
+
+    if (!whitelisted && contentLength > 1024 * 1024 * maxPayloadSizeMb) {
       // Payload too large
       throw createError({
         statusCode: 413,
-        message:
-          "Max payload limit is 20mb! Feel free to apply for the whitelist: https://github.com/stackblitz-labs/pkg.pr.new/blob/main/.whitelist",
+        message: `Max payload limit is ${maxPayloadSizeMb}mb! Feel free to apply for the whitelist: https://github.com/stackblitz-labs/pkg.pr.new/blob/main/.whitelist`,
       });
     }
 
