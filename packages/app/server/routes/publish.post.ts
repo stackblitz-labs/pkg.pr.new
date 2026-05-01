@@ -364,6 +364,7 @@ export default eventHandler(async (event) => {
         key,
         runId,
         webhookDebug: webhookDebugData,
+        currentCursor,
       },
     };
   } catch (error: unknown) {
