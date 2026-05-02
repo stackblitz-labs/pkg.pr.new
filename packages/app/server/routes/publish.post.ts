@@ -195,7 +195,16 @@ export default eventHandler(async (event) => {
       templatesHtmlMap[template] = new URL(`/template/${uuid}`, origin).href;
     }
 
-    if (!currentCursor || currentCursor.timestamp < runId) {
+    const LEGACY_MS_TIMESTAMP_CUTOFF = 1e12;
+    const isStaleCursor = (cursor: { timestamp?: number } | null) => {
+      if (!cursor) return true;
+      const ts = Number(cursor.timestamp);
+      if (!Number.isFinite(ts)) return true;
+      if (ts >= LEGACY_MS_TIMESTAMP_CUTOFF) return true;
+      return ts < runId;
+    };
+
+    if (isStaleCursor(currentCursor)) {
       await cursorBucket.setItem(cursorKey, {
         sha: workflowData.sha,
         timestamp: runId,
@@ -208,7 +217,7 @@ export default eventHandler(async (event) => {
     ) {
       const branchCursorKey = `${baseKey}:${workflowData.headBranch}`;
       const branchCursor = await cursorBucket.getItem(branchCursorKey);
-      if (!branchCursor || branchCursor.timestamp < runId) {
+      if (isStaleCursor(branchCursor)) {
         await cursorBucket.setItem(branchCursorKey, {
           sha: workflowData.sha,
           timestamp: runId,
