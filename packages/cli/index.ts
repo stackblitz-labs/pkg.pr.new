@@ -621,6 +621,10 @@ const main = defineCommand({
           }
 
           const debug = laterRes.debug;
+          // include the new version in the debug output for better visibility
+          Object.assign(debug, {
+            pkgPrNewVersion: pkg.version,
+          })
 
           core.startGroup("🔍 Info");
           core.notice(JSON.stringify(debug, null, 2));
