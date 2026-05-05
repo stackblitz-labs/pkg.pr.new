@@ -20,20 +20,18 @@
   "keywords": [],
   "author": "",
   "license": "MIT",
-  "dependencies": {
+  "dependencies": {},
+  "devDependencies": {
     "@actions/core": "^3.0.1",
     "@jsdevtools/ez-spawn": "^3.0.4",
-    "@octokit/action": "^8.0.4",
+    "@pkg-pr-new/utils": "workspace:^",
+    "citty": "^0.1.6",
     "ignore": "^7.0.5",
     "isbinaryfile": "^6.0.0",
+    "ohash": "^1.1.4",
     "pkg-types": "^2.3.1",
     "query-registry": "^4.3.0",
     "tinyglobby": "^0.2.16",
-    "zod": "^4.3.6"
-  },
-  "devDependencies": {
-    "@pkg-pr-new/utils": "workspace:^",
-    "citty": "^0.1.6",
     "tsup": "^8.0.2"
   }
 }

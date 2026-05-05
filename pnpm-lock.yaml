@@ -168,7 +168,7 @@ importers:
         version: link:../utils
       '@simulacrum/github-api-simulator':
         specifier: ^0.5.4
-        version: 0.5.6(ajv@8.17.1)(picomatch@4.0.2)(react@18.3.1)
+        version: 0.5.6(ajv@8.17.1)(picomatch@4.0.4)(react@18.3.1)
       '@types/string-similarity':
         specifier: ^4.0.2
         version: 4.0.2
@@ -210,22 +210,28 @@ importers:
         version: 3.57.1(@cloudflare/workers-types@4.20241218.0)
 
   packages/cli:
-    dependencies:
+    devDependencies:
       '@actions/core':
         specifier: ^3.0.1
         version: 3.0.1
       '@jsdevtools/ez-spawn':
         specifier: ^3.0.4
         version: 3.0.4
-      '@octokit/action':
-        specifier: ^8.0.4
-        version: 8.0.4
+      '@pkg-pr-new/utils':
+        specifier: workspace:^
+        version: link:../utils
+      citty:
+        specifier: ^0.1.6
+        version: 0.1.6
       ignore:
         specifier: ^7.0.5
         version: 7.0.5
       isbinaryfile:
         specifier: ^6.0.0
         version: 6.0.0
+      ohash:
+        specifier: ^1.1.4
+        version: 1.1.4
       pkg-types:
         specifier: ^2.3.1
         version: 2.3.1
@@ -235,16 +241,6 @@ importers:
       tinyglobby:
         specifier: ^0.2.16
         version: 0.2.16
-      zod:
-        specifier: ^4.3.6
-        version: 4.3.6
-    devDependencies:
-      '@pkg-pr-new/utils':
-        specifier: workspace:^
-        version: link:../utils
-      citty:
-        specifier: ^0.1.6
-        version: 0.1.6
       tsup:
         specifier: ^8.0.2
         version: 8.3.5(jiti@2.4.2)(postcss@8.5.3)(tsx@4.19.2)(typescript@5.7.2)(yaml@2.7.1)
@@ -1882,10 +1878,6 @@ packages:
   '@nuxtjs/mdc@0.17.0':
     resolution: {integrity: sha512-5HFJ2Xatl4oSfEZuYRJhzYhVHNvb31xc9Tu/qfXpRIWeQsQphqjaV3wWB5VStZYEHpTw1i6Hzyz/ojQZVl4qPg==}
 
-  '@octokit/action@8.0.4':
-    resolution: {integrity: sha512-1qFYTCrShafc5fQaEbLNUo4xIi/nf98R8iAcJ0ITTCfoRnei9g5Ss9kGkN2tOA7gBlI4HB08Seub4navWXSSbg==}
-    engines: {node: '>= 20'}
-
   '@octokit/app@15.1.1':
     resolution: {integrity: sha512-fk8xrCSPTJGpyBdBNI+DcZ224dm0aApv4vi6X7/zTmANXlegKV2Td+dJ+fd7APPaPN7R+xttUsj2Fm+AFDSfMQ==}
     engines: {node: '>= 18'}
@@ -1893,10 +1885,6 @@ packages:
   '@octokit/app@15.1.5':
     resolution: {integrity: sha512-6cxLT9U8x7GGQ7lNWsKtFr4ccg9oLkGvowk373sX9HvX5U37kql5d55SzaQUxPE8PwgX2cqkzDm5NF5aPKevqg==}
     engines: {node: '>= 18'}
-
-  '@octokit/auth-action@6.0.2':
-    resolution: {integrity: sha512-gEBsz0QioHOMoEU7u2VMr2FfOvfJCrGc42K9rliS7LnlZJLcEMFccIiCiPpPNH+yXs7YYNKQ7lOX67ZTWn6Ysg==}
-    engines: {node: '>= 20'}
 
   '@octokit/auth-app@7.1.3':
     resolution: {integrity: sha512-GZdkOp2kZTIy5dG9oXqvzUAZiPvDx4C/lMlN6yQjtG9d/+hYa7W8WXTJoOrXE8UdfL9A/sZMl206dmtkl9lwVQ==}
@@ -2042,21 +2030,9 @@ packages:
     peerDependencies:
       '@octokit/core': '>=6'
 
-  '@octokit/plugin-paginate-rest@14.0.0':
-    resolution: {integrity: sha512-fNVRE7ufJiAA3XUrha2omTA39M6IXIc6GIZLvlbsm8QOQCYvpq/LkMNGyFlB1d8hTDzsAXa3OKtybdMAYsV/fw==}
-    engines: {node: '>= 20'}
-    peerDependencies:
-      '@octokit/core': '>=6'
-
   '@octokit/plugin-rest-endpoint-methods@13.5.0':
     resolution: {integrity: sha512-9Pas60Iv9ejO3WlAX3maE1+38c5nqbJXV5GrncEfkndIpZrJ/WPMRd2xYDcPPEt5yzpxcjw9fWNoPhsSGzqKqw==}
     engines: {node: '>= 18'}
-    peerDependencies:
-      '@octokit/core': '>=6'
-
-  '@octokit/plugin-rest-endpoint-methods@17.0.0':
-    resolution: {integrity: sha512-B5yCyIlOJFPqUUeiD0cnBJwWJO8lkJs5d8+ze9QDP6SvfiXSz1BF+91+0MeI1d2yxgOhU/O+CvtiZ9jSkHhFAw==}
-    engines: {node: '>= 20'}
     peerDependencies:
       '@octokit/core': '>=6'
 
@@ -7595,10 +7571,6 @@ packages:
     resolution: {integrity: sha512-ZgpWDC5gmNiuY9CnLVXEH8rl50xhRCuLNA97fAUnKi8RRuV4E6KG31pDTsLVUKnohJE0I3XDrTeEydAXRw47xg==}
     engines: {node: '>=18.17'}
 
-  undici@7.25.0:
-    resolution: {integrity: sha512-xXnp4kTyor2Zq+J1FfPI6Eq3ew5h6Vl0F/8d9XU5zZQf1tX9s2Su1/3PiMmUANFULpmksxkClamIZcaUqryHsQ==}
-    engines: {node: '>=20.18.1'}
-
   unenv-nightly@2.0.0-20241204-140205-a5d5190:
     resolution: {integrity: sha512-jpmAytLeiiW01pl5bhVn9wYJ4vtiLdhGe10oXlJBuQEX8mxjxO8BlEXGHU4vr4yEikjFP1wsomTHt/CLU8kUwg==}
 
@@ -9542,7 +9514,7 @@ snapshots:
       citty: 0.1.6
       clipboardy: 4.0.0
       consola: 3.4.2
-      defu: 6.1.4
+      defu: 6.1.7
       fuse.js: 7.1.0
       giget: 2.0.0
       h3: 1.15.1
@@ -9559,7 +9531,7 @@ snapshots:
       semver: 7.7.1
       std-env: 3.9.0
       tinyexec: 1.0.1
-      ufo: 1.5.4
+      ufo: 1.6.3
       youch: 4.1.0-beta.6
     transitivePeerDependencies:
       - magicast
@@ -9776,7 +9748,7 @@ snapshots:
       '@nuxt/schema': 3.15.3
       c12: 2.0.1(magicast@0.3.5)
       consola: 3.4.2
-      defu: 6.1.4
+      defu: 6.1.7
       destr: 2.0.3
       globby: 14.1.0
       ignore: 7.0.5
@@ -9790,7 +9762,7 @@ snapshots:
       scule: 1.3.0
       semver: 7.7.1
       std-env: 3.9.0
-      ufo: 1.5.4
+      ufo: 1.6.3
       unctx: 2.4.1
       unimport: 4.1.3
       untyped: 1.5.2
@@ -9848,7 +9820,7 @@ snapshots:
   '@nuxt/schema@3.15.3':
     dependencies:
       consola: 3.4.2
-      defu: 6.1.4
+      defu: 6.1.7
       pathe: 2.0.3
       std-env: 3.9.0
 
@@ -9964,7 +9936,7 @@ snapshots:
       autoprefixer: 10.4.20(postcss@8.5.3)
       consola: 3.4.2
       cssnano: 7.0.6(postcss@8.5.3)
-      defu: 6.1.4
+      defu: 6.1.7
       esbuild: 0.24.2
       escape-string-regexp: 5.0.0
       externality: 1.0.2
@@ -9981,7 +9953,7 @@ snapshots:
       postcss: 8.5.3
       rollup-plugin-visualizer: 5.14.0(rollup@4.29.1)
       std-env: 3.9.0
-      ufo: 1.5.4
+      ufo: 1.6.3
       unenv: 1.10.0
       unplugin: 2.2.2
       vite: 6.2.5(@types/node@20.17.10)(jiti@2.4.2)(lightningcss@1.28.2)(terser@5.37.0)(tsx@4.19.2)(yaml@2.7.1)
@@ -10071,15 +10043,6 @@ snapshots:
       - magicast
       - supports-color
 
-  '@octokit/action@8.0.4':
-    dependencies:
-      '@octokit/auth-action': 6.0.2
-      '@octokit/core': 7.0.6
-      '@octokit/plugin-paginate-rest': 14.0.0(@octokit/core@7.0.6)
-      '@octokit/plugin-rest-endpoint-methods': 17.0.0(@octokit/core@7.0.6)
-      '@octokit/types': 16.0.0
-      undici: 7.25.0
-
   '@octokit/app@15.1.1':
     dependencies:
       '@octokit/auth-app': 7.1.3
@@ -10099,11 +10062,6 @@ snapshots:
       '@octokit/plugin-paginate-rest': 11.6.0(@octokit/core@6.1.4)
       '@octokit/types': 13.10.0
       '@octokit/webhooks': 13.8.0
-
-  '@octokit/auth-action@6.0.2':
-    dependencies:
-      '@octokit/auth-token': 6.0.0
-      '@octokit/types': 16.0.0
 
   '@octokit/auth-app@7.1.3':
     dependencies:
@@ -10324,20 +10282,10 @@ snapshots:
       '@octokit/core': 6.1.4
       '@octokit/types': 13.10.0
 
-  '@octokit/plugin-paginate-rest@14.0.0(@octokit/core@7.0.6)':
-    dependencies:
-      '@octokit/core': 7.0.6
-      '@octokit/types': 16.0.0
-
   '@octokit/plugin-rest-endpoint-methods@13.5.0(@octokit/core@6.1.4)':
     dependencies:
       '@octokit/core': 6.1.4
       '@octokit/types': 13.10.0
-
-  '@octokit/plugin-rest-endpoint-methods@17.0.0(@octokit/core@7.0.6)':
-    dependencies:
-      '@octokit/core': 7.0.6
-      '@octokit/types': 16.0.0
 
   '@octokit/plugin-retry@7.2.0(@octokit/core@6.1.4)':
     dependencies:
@@ -10790,12 +10738,12 @@ snapshots:
 
   '@shikijs/vscode-textmate@10.0.2': {}
 
-  '@simulacrum/foundation-simulator@0.4.0(ajv@8.17.1)(picomatch@4.0.2)(react@18.3.1)':
+  '@simulacrum/foundation-simulator@0.4.0(ajv@8.17.1)(picomatch@4.0.4)(react@18.3.1)':
     dependencies:
       ajv-formats: 3.0.1(ajv@8.17.1)
       cors: 2.8.5
       express: 4.21.2
-      fdir: 6.4.3(picomatch@4.0.2)
+      fdir: 6.4.3(picomatch@4.0.4)
       http-proxy-middleware: 3.0.3
       lodash: 4.17.21
       openapi-backend: 5.11.1
@@ -10812,10 +10760,10 @@ snapshots:
       - redux
       - supports-color
 
-  '@simulacrum/github-api-simulator@0.5.6(ajv@8.17.1)(picomatch@4.0.2)(react@18.3.1)':
+  '@simulacrum/github-api-simulator@0.5.6(ajv@8.17.1)(picomatch@4.0.4)(react@18.3.1)':
     dependencies:
       '@faker-js/faker': 9.6.0
-      '@simulacrum/foundation-simulator': 0.4.0(ajv@8.17.1)(picomatch@4.0.2)(react@18.3.1)
+      '@simulacrum/foundation-simulator': 0.4.0(ajv@8.17.1)(picomatch@4.0.4)(react@18.3.1)
       assert-ts: 0.3.4
       graphql: 16.10.0
       graphql-yoga: 5.13.2(graphql@16.10.0)
@@ -11944,7 +11892,7 @@ snapshots:
     dependencies:
       chokidar: 4.0.3
       confbox: 0.1.8
-      defu: 6.1.4
+      defu: 6.1.7
       dotenv: 16.4.7
       giget: 1.2.3
       jiti: 2.4.2
@@ -13383,9 +13331,9 @@ snapshots:
     optionalDependencies:
       picomatch: 4.0.2
 
-  fdir@6.4.3(picomatch@4.0.2):
+  fdir@6.4.3(picomatch@4.0.4):
     optionalDependencies:
-      picomatch: 4.0.2
+      picomatch: 4.0.4
 
   fdir@6.5.0(picomatch@4.0.4):
     optionalDependencies:
@@ -13713,12 +13661,12 @@ snapshots:
     dependencies:
       cookie-es: 1.2.2
       crossws: 0.3.4
-      defu: 6.1.4
+      defu: 6.1.7
       destr: 2.0.3
       iron-webcrypto: 1.2.1
       node-mock-http: 1.0.0
       radix3: 1.1.2(patch_hash=35eb325322f6de1aa3fc5c4c45acfc4e268f7512c5c235316b1c760dbb94b2cf)
-      ufo: 1.5.4
+      ufo: 1.6.3
       uncrypto: 0.1.3
 
   h3@1.15.3:
@@ -13730,7 +13678,7 @@ snapshots:
       iron-webcrypto: 1.2.1
       node-mock-http: 1.0.0
       radix3: 1.1.2(patch_hash=35eb325322f6de1aa3fc5c4c45acfc4e268f7512c5c235316b1c760dbb94b2cf)
-      ufo: 1.6.1
+      ufo: 1.6.3
       uncrypto: 0.1.3
 
   has-bigints@1.1.0: {}
@@ -14992,7 +14940,7 @@ snapshots:
       croner: 9.0.0
       crossws: 0.3.1
       db0: 0.2.1
-      defu: 6.1.4
+      defu: 6.1.7
       destr: 2.0.3
       dot-prop: 9.0.0
       esbuild: 0.24.2
@@ -15029,7 +14977,7 @@ snapshots:
       serve-placeholder: 2.0.2
       serve-static: 1.16.2
       std-env: 3.8.0
-      ufo: 1.5.4
+      ufo: 1.6.3
       uncrypto: 0.1.3
       unctx: 2.4.1
       unenv: 1.10.0
@@ -15283,7 +15231,7 @@ snapshots:
       pathe: 2.0.3
       pkg-types: 1.3.1
       tinyexec: 0.3.2
-      ufo: 1.5.4
+      ufo: 1.6.3
 
   nypm@0.6.0:
     dependencies:
@@ -15347,7 +15295,7 @@ snapshots:
     dependencies:
       destr: 2.0.3
       node-fetch-native: 1.6.4
-      ufo: 1.5.4
+      ufo: 1.6.3
 
   ohash@1.1.4: {}
 
@@ -16986,8 +16934,6 @@ snapshots:
 
   undici@6.25.0: {}
 
-  undici@7.25.0: {}
-
   unenv-nightly@2.0.0-20241204-140205-a5d5190:
     dependencies:
       defu: 6.1.7
@@ -16998,7 +16944,7 @@ snapshots:
   unenv@1.10.0:
     dependencies:
       consola: 3.4.2
-      defu: 6.1.4
+      defu: 6.1.7
       mime: 3.0.0
       node-fetch-native: 1.6.4
       pathe: 1.1.2
@@ -17238,7 +17184,7 @@ snapshots:
       '@babel/standalone': 7.26.4
       '@babel/types': 7.26.3
       citty: 0.1.6
-      defu: 6.1.4
+      defu: 6.1.7
       jiti: 2.4.2
       knitwork: 1.2.0
       scule: 1.3.0
@@ -17485,7 +17431,7 @@ snapshots:
 
   vue-bundle-renderer@2.1.1:
     dependencies:
-      ufo: 1.5.4
+      ufo: 1.6.3
 
   vue-demi@0.14.10(vue@3.5.13):
     dependencies:
