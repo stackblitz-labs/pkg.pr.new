@@ -227,8 +227,8 @@ importers:
         specifier: ^7.0.5
         version: 7.0.5
       isbinaryfile:
-        specifier: ^6.0.0
-        version: 6.0.0
+        specifier: 5.0.2
+        version: 5.0.2
       ohash:
         specifier: ^1.1.4
         version: 1.1.4
@@ -5356,9 +5356,9 @@ packages:
   isarray@2.0.5:
     resolution: {integrity: sha512-xHjhDr3cNBK0BzdUJSPXZntQUx/mwMS5Rw4A7lPJ90XGAO6ISP/ePDNuo0vhqOZU+UD5JoodwCAAoZQd3FeAKw==}
 
-  isbinaryfile@6.0.0:
-    resolution: {integrity: sha512-2FN2B8MAqKv6d5TaKsLvMrwMcghxwHTpcKy0L5mhNbRqjNqo2++SpCqN6eG1lCC1GmTQgvrYJYXv2+Chvyevag==}
-    engines: {node: '>= 24.0.0'}
+  isbinaryfile@5.0.2:
+    resolution: {integrity: sha512-GvcjojwonMjWbTkfMpnVHVqXW/wKMYDfEpY94/8zy8HFMOqb/VL6oeONq9v87q4ttVlaTLnGXnJD4B5B1OTGIg==}
+    engines: {node: '>= 18.0.0'}
 
   isexe@2.0.0:
     resolution: {integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==}
@@ -14161,7 +14161,7 @@ snapshots:
 
   isarray@2.0.5: {}
 
-  isbinaryfile@6.0.0: {}
+  isbinaryfile@5.0.2: {}
 
   isexe@2.0.0: {}
 
