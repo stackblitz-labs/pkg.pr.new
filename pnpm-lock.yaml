@@ -88,6 +88,12 @@ importers:
         specifier: ^1.1.0
         version: 1.1.0
 
+  .tmp-trust-check:
+    dependencies:
+      isbinaryfile:
+        specifier: 5.0.2
+        version: 5.0.2
+
   packages/app:
     dependencies:
       '@iconify-json/ph':
@@ -168,7 +174,7 @@ importers:
         version: link:../utils
       '@simulacrum/github-api-simulator':
         specifier: ^0.5.4
-        version: 0.5.6(ajv@8.17.1)(picomatch@4.0.2)(react@18.3.1)
+        version: 0.5.6(ajv@8.17.1)(picomatch@4.0.4)(react@18.3.1)
       '@types/string-similarity':
         specifier: ^4.0.2
         version: 4.0.2
@@ -224,8 +230,8 @@ importers:
         specifier: ^7.0.5
         version: 7.0.5
       isbinaryfile:
-        specifier: ^6.0.0
-        version: 6.0.0
+        specifier: 5.0.2
+        version: 5.0.2
       pkg-types:
         specifier: ^2.3.1
         version: 2.3.1
@@ -5380,9 +5386,9 @@ packages:
   isarray@2.0.5:
     resolution: {integrity: sha512-xHjhDr3cNBK0BzdUJSPXZntQUx/mwMS5Rw4A7lPJ90XGAO6ISP/ePDNuo0vhqOZU+UD5JoodwCAAoZQd3FeAKw==}
 
-  isbinaryfile@6.0.0:
-    resolution: {integrity: sha512-2FN2B8MAqKv6d5TaKsLvMrwMcghxwHTpcKy0L5mhNbRqjNqo2++SpCqN6eG1lCC1GmTQgvrYJYXv2+Chvyevag==}
-    engines: {node: '>= 24.0.0'}
+  isbinaryfile@5.0.2:
+    resolution: {integrity: sha512-GvcjojwonMjWbTkfMpnVHVqXW/wKMYDfEpY94/8zy8HFMOqb/VL6oeONq9v87q4ttVlaTLnGXnJD4B5B1OTGIg==}
+    engines: {node: '>= 18.0.0'}
 
   isexe@2.0.0:
     resolution: {integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==}
@@ -10790,12 +10796,12 @@ snapshots:
 
   '@shikijs/vscode-textmate@10.0.2': {}
 
-  '@simulacrum/foundation-simulator@0.4.0(ajv@8.17.1)(picomatch@4.0.2)(react@18.3.1)':
+  '@simulacrum/foundation-simulator@0.4.0(ajv@8.17.1)(picomatch@4.0.4)(react@18.3.1)':
     dependencies:
       ajv-formats: 3.0.1(ajv@8.17.1)
       cors: 2.8.5
       express: 4.21.2
-      fdir: 6.4.3(picomatch@4.0.2)
+      fdir: 6.4.3(picomatch@4.0.4)
       http-proxy-middleware: 3.0.3
       lodash: 4.17.21
       openapi-backend: 5.11.1
@@ -10812,10 +10818,10 @@ snapshots:
       - redux
       - supports-color
 
-  '@simulacrum/github-api-simulator@0.5.6(ajv@8.17.1)(picomatch@4.0.2)(react@18.3.1)':
+  '@simulacrum/github-api-simulator@0.5.6(ajv@8.17.1)(picomatch@4.0.4)(react@18.3.1)':
     dependencies:
       '@faker-js/faker': 9.6.0
-      '@simulacrum/foundation-simulator': 0.4.0(ajv@8.17.1)(picomatch@4.0.2)(react@18.3.1)
+      '@simulacrum/foundation-simulator': 0.4.0(ajv@8.17.1)(picomatch@4.0.4)(react@18.3.1)
       assert-ts: 0.3.4
       graphql: 16.10.0
       graphql-yoga: 5.13.2(graphql@16.10.0)
@@ -13383,9 +13389,9 @@ snapshots:
     optionalDependencies:
       picomatch: 4.0.2
 
-  fdir@6.4.3(picomatch@4.0.2):
+  fdir@6.4.3(picomatch@4.0.4):
     optionalDependencies:
-      picomatch: 4.0.2
+      picomatch: 4.0.4
 
   fdir@6.5.0(picomatch@4.0.4):
     optionalDependencies:
@@ -14213,7 +14219,7 @@ snapshots:
 
   isarray@2.0.5: {}
 
-  isbinaryfile@6.0.0: {}
+  isbinaryfile@5.0.2: {}
 
   isexe@2.0.0: {}
 
