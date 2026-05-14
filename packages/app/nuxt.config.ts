@@ -7,9 +7,29 @@ export default defineNuxtConfig({
   future: { compatibilityVersion: 4 },
 
   // https://nuxt.com/modules
-  modules: ["@nuxt/eslint", "@nuxt/ui", "@vueuse/nuxt", "nitro-cloudflare-dev"],
+  modules: [
+    "@nuxt/eslint",
+    "@nuxt/ui",
+    "@vueuse/nuxt",
+    "nitro-cloudflare-dev",
+    "nuxt-og-image",
+  ],
 
   css: ["~/assets/css/main.css"],
+
+  site: {
+    url: "https://pkg.pr.new",
+    name: "pkg.pr.new",
+  },
+
+  ogImage: {
+    defaults: {
+      component: "Brand",
+      width: 1200,
+      height: 630,
+      cacheMaxAgeSeconds: 60 * 60 * 24 * 7,
+    },
+  },
 
   // https://eslint.nuxt.com
   eslint: {
@@ -38,6 +58,8 @@ export default defineNuxtConfig({
         "query-registry",
         "@simulacrum",
         "@jsdevtools",
+        "consola",
+        "nuxt-site-config",
       ],
     },
   },

@@ -30,8 +30,15 @@ useSeoMeta({
   description: `See all ${repository.name} recent continuous releases.`,
   ogTitle: `${repository.owner.login}/${repository.name} Continuous Releases`,
   ogDescription: `See all ${repository.name} recent continuous releases.`,
+  ogType: "website",
+  twitterCard: "summary_large_image",
 });
-// TODO: OG Image
+
+defineOgImageComponent("Repo", {
+  owner: repository.owner.login,
+  repo: repository.name,
+  releaseCount: repository.releaseCount,
+});
 </script>
 
 <template>
