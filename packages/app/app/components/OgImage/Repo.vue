@@ -34,12 +34,6 @@ function formatCount(n?: number): string {
         right: 0;
         height: 6px;
         display: flex;
-        background: linear-gradient(
-          90deg,
-          #f38020 0%,
-          #38bdf8 55%,
-          #0ea5e9 100%
-        );
       "
     />
 
@@ -61,8 +55,7 @@ function formatCount(n?: number): string {
           align-items: center;
           font-size: 24px;
           color: #7dd3fc;
-          letter-spacing: 0.16em;
-          text-transform: uppercase;
+          letter-spacing: 0.06em;
         "
       >
         <img
@@ -75,7 +68,7 @@ function formatCount(n?: number): string {
         <span style="display: flex">pkg.pr.new</span>
         <span style="display: flex; color: #475569; margin: 0 14px">/</span>
         <span style="display: flex; color: #94a3b8; letter-spacing: 0.08em"
-          >Continuous Releases</span
+          >Continuous releases</span
         >
       </div>
 

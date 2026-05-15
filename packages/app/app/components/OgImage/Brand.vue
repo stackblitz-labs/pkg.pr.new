@@ -24,46 +24,6 @@ withDefaults(
       overflow: hidden;
     "
   >
-    <div
-      style="
-        position: absolute;
-        top: -100px;
-        left: -120px;
-        width: 600px;
-        height: 600px;
-        display: flex;
-        background: #0c2235;
-        border-radius: 600px;
-        opacity: 0.9;
-      "
-    />
-    <div
-      style="
-        position: absolute;
-        top: 120px;
-        left: -40px;
-        width: 360px;
-        height: 360px;
-        display: flex;
-        background: #1e3a5f;
-        border-radius: 360px;
-        opacity: 0.5;
-      "
-    />
-    <div
-      style="
-        position: absolute;
-        bottom: -160px;
-        right: -120px;
-        width: 480px;
-        height: 480px;
-        display: flex;
-        background: #1a1208;
-        border-radius: 480px;
-        opacity: 0.7;
-      "
-    />
-
     <!-- top accent bar -->
     <div
       style="
@@ -97,8 +57,7 @@ withDefaults(
           display: flex;
           align-items: center;
           font-size: 24px;
-          letter-spacing: 0.18em;
-          text-transform: uppercase;
+          letter-spacing: 0.06em;
           color: #7dd3fc;
         "
       >
@@ -109,7 +68,11 @@ withDefaults(
           alt=""
           style="margin-right: 18px"
         />
-        <span style="display: flex">Continuous (Preview) Releases</span>
+        <span style="display: flex">pkg.pr.new</span>
+        <span style="display: flex; color: #475569; margin: 0 14px">/</span>
+        <span style="display: flex; color: #94a3b8; letter-spacing: 0.08em"
+          >Continuous releases</span
+        >
       </div>
 
       <div
@@ -121,7 +84,6 @@ withDefaults(
           letter-spacing: -0.045em;
           line-height: 1;
           margin-top: 28px;
-          text-shadow: 0 0 28px rgba(56, 189, 248, 0.65);
         "
       >
         {{ title }}
