@@ -11,9 +11,9 @@ useHead({
 
 useSeoMeta({
   title: "pkg.pr.new",
-  description: "Search repositories to list their continuous releases.",
+  description: "Continuous preview releases for your libraries.",
   ogTitle: "pkg.pr.new",
-  ogDescription: "Continuous (pre)Releases for your libraries.",
+  ogDescription: "Continuous preview releases for your libraries.",
   ogType: "website",
   twitterCard: "summary_large_image",
 });

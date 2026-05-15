@@ -2,11 +2,11 @@
 withDefaults(
   defineProps<{
     title?: string;
-    description?: string;
+    tagline?: string;
   }>(),
   {
     title: "pkg.pr.new",
-    description: "Continuous (pre)Releases for your libraries.",
+    tagline: "Instant preview releases. Without publishing to npm.",
   },
 );
 </script>
@@ -17,65 +17,140 @@ withDefaults(
       width: 100%;
       height: 100%;
       display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      background: #0b0b0f;
+      position: relative;
+      background: #050714;
       color: #ffffff;
-      padding: 80px;
-      font-family: &quot;Inter&quot;, sans-serif;
+      font-family: 'Inter', sans-serif;
+      overflow: hidden;
     "
   >
+    <div
+      style="
+        position: absolute;
+        top: -100px;
+        left: -120px;
+        width: 600px;
+        height: 600px;
+        display: flex;
+        background: #0c2235;
+        border-radius: 600px;
+        opacity: 0.9;
+      "
+    />
+    <div
+      style="
+        position: absolute;
+        top: 120px;
+        left: -40px;
+        width: 360px;
+        height: 360px;
+        display: flex;
+        background: #1e3a5f;
+        border-radius: 360px;
+        opacity: 0.5;
+      "
+    />
+    <div
+      style="
+        position: absolute;
+        bottom: -160px;
+        right: -120px;
+        width: 480px;
+        height: 480px;
+        display: flex;
+        background: #1a1208;
+        border-radius: 480px;
+        opacity: 0.7;
+      "
+    />
+
+    <!-- top accent bar -->
     <div
       style="
         position: absolute;
         top: 0;
         left: 0;
         right: 0;
-        height: 8px;
-        background: linear-gradient(90deg, #f38020 0%, #0ea5e9 100%);
+        height: 6px;
+        display: flex;
+        background: linear-gradient(90deg, #f38020 0%, #38bdf8 55%, #0ea5e9 100%);
       "
     />
 
-    <img src="/favicon.svg" width="128" height="128" alt="" />
-
     <div
       style="
-        font-size: 88px;
-        font-weight: 800;
-        margin-top: 32px;
-        letter-spacing: -0.02em;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 72px 80px;
+        flex: 1;
+        z-index: 1;
       "
     >
-      {{ title }}
-    </div>
+      <div
+        style="
+          display: flex;
+          align-items: center;
+          font-size: 24px;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          color: #7dd3fc;
+        "
+      >
+        <img
+          src="/favicon.svg"
+          width="48"
+          height="48"
+          alt=""
+          style="margin-right: 18px"
+        />
+        <span style="display: flex">Continuous (Preview) Releases</span>
+      </div>
 
-    <div
-      style="
-        font-size: 36px;
-        opacity: 0.7;
-        margin-top: 16px;
-        text-align: center;
-        max-width: 900px;
-      "
-    >
-      {{ description }}
+      <div
+        style="
+          display: flex;
+          font-size: 132px;
+          font-weight: 800;
+          color: #38bdf8;
+          letter-spacing: -0.045em;
+          line-height: 1;
+          margin-top: 28px;
+          text-shadow: 0 0 28px rgba(56, 189, 248, 0.65);
+        "
+      >
+        {{ title }}
+      </div>
+
+      <div
+        style="
+          display: flex;
+          font-size: 38px;
+          color: #cbd5e1;
+          margin-top: 28px;
+          line-height: 1.25;
+        "
+      >
+        {{ tagline }}
+      </div>
+
     </div>
 
     <div
       style="
         position: absolute;
-        bottom: 48px;
+        bottom: 28px;
         left: 80px;
         right: 80px;
         display: flex;
-        justify-content: space-between;
-        font-size: 24px;
-        opacity: 0.5;
+        justify-content: flex-start;
+        align-items: center;
+        font-size: 22px;
+        color: #64748b;
+        z-index: 1;
       "
     >
-      <span>Continuous (pre)Releases</span>
-      <span>pkg.pr.new</span>
+      <span style="display: flex">github.com/stackblitz-labs/pkg.pr.new</span>
     </div>
   </div>
 </template>

@@ -4,6 +4,13 @@ defineProps<{
   repo: string;
   releaseCount?: number;
 }>();
+
+function formatCount(n?: number): string {
+  if (n == null) return "0";
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(n >= 10_000 ? 0 : 1)}k`;
+  return String(n);
+}
 </script>
 
 <template>
@@ -12,12 +19,11 @@ defineProps<{
       width: 100%;
       height: 100%;
       display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      background: #0b0b0f;
+      position: relative;
+      background: #050714;
       color: #ffffff;
-      padding: 64px;
-      font-family: &quot;Inter&quot;, sans-serif;
+      font-family: 'Inter', sans-serif;
+      overflow: hidden;
     "
   >
     <div
@@ -26,59 +32,104 @@ defineProps<{
         top: 0;
         left: 0;
         right: 0;
-        height: 8px;
-        background: linear-gradient(90deg, #f38020 0%, #0ea5e9 100%);
+        height: 6px;
+        display: flex;
+        background: linear-gradient(90deg, #f38020 0%, #38bdf8 55%, #0ea5e9 100%);
       "
     />
 
-    <div style="display: flex; align-items: center; gap: 16px">
-      <img src="/favicon.svg" width="56" height="56" alt="" />
-      <div style="font-size: 28px; opacity: 0.7">pkg.pr.new</div>
-    </div>
-
-    <div style="display: flex; align-items: center; gap: 32px">
-      <img
-        :src="`https://github.com/${owner}.png?size=200`"
-        width="180"
-        height="180"
-        style="border-radius: 20px"
-        alt=""
-      />
-      <div style="display: flex; flex-direction: column">
-        <div style="font-size: 36px; opacity: 0.6">{{ owner }} /</div>
-        <div
-          style="
-            font-size: 84px;
-            font-weight: 800;
-            line-height: 1;
-            letter-spacing: -0.02em;
-          "
-        >
-          {{ repo }}
-        </div>
-      </div>
-    </div>
-
     <div
       style="
+        position: absolute;
+        top: 56px;
+        left: 64px;
+        right: 64px;
+        bottom: 56px;
         display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 28px;
+        flex-direction: column;
+        align-items: flex-start;
       "
     >
-      <span style="opacity: 0.7">Continuous Releases</span>
-      <span
-        v-if="releaseCount != null"
+      <div
         style="
-          background: rgba(14, 165, 233, 0.15);
-          color: #38bdf8;
-          padding: 8px 20px;
-          border-radius: 999px;
+          display: flex;
+          align-items: center;
+          font-size: 24px;
+          color: #7dd3fc;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
         "
       >
-        {{ releaseCount }} releases
-      </span>
+        <img
+          src="/favicon.svg"
+          width="40"
+          height="40"
+          alt=""
+          style="margin-right: 14px"
+        />
+        <span style="display: flex">pkg.pr.new</span>
+        <span style="display: flex; color: #475569; margin: 0 14px">/</span>
+        <span style="display: flex; color: #94a3b8; letter-spacing: 0.08em"
+          >Continuous Releases</span
+        >
+      </div>
+
+      <div
+        style="
+          display: flex;
+          flex: 1;
+          flex-direction: column;
+          justify-content: center;
+          align-items: flex-start;
+          width: 100%;
+        "
+      >
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            font-size: 54px;
+            font-weight: 700;
+            color: #e2e8f0;
+          "
+        >
+          <img
+            :src="`https://github.com/${owner}.png?size=128`"
+            width="88"
+            height="88"
+            alt=""
+            style="display: flex; border-radius: 14px; margin-right: 16px"
+          />
+          {{ owner }}
+          <span style="display: flex; color: #64748b">/</span>
+          {{ repo }}
+        </div>
+
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            color: #94a3b8;
+            font-size: 24px;
+            margin-top: 18px;
+          "
+        >
+          github.com/{{ owner }}/{{ repo }}
+        </div>
+
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            color: #7dd3fc;
+            font-size: 30px;
+            font-weight: 600;
+            margin-top: 28px;
+          "
+        >
+          <span style="display: flex">{{ formatCount(releaseCount) }} releases</span>
+        </div>
+      </div>
     </div>
   </div>
 </template>
