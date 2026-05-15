@@ -18,7 +18,7 @@ export default defineNuxtConfig({
   css: ["~/assets/css/main.css"],
 
   site: {
-    url: process.env.CF_PAGES_URL || "https://pkg.pr.new",
+    url: "https://pkg.pr.new",
     name: "pkg.pr.new",
   },
 
