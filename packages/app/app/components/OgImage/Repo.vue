@@ -22,7 +22,7 @@ function formatCount(n?: number): string {
       position: relative;
       background: #050714;
       color: #ffffff;
-      font-family: 'Inter', sans-serif;
+      font-family: &quot;Inter&quot;, sans-serif;
       overflow: hidden;
     "
   >
@@ -34,7 +34,12 @@ function formatCount(n?: number): string {
         right: 0;
         height: 6px;
         display: flex;
-        background: linear-gradient(90deg, #f38020 0%, #38bdf8 55%, #0ea5e9 100%);
+        background: linear-gradient(
+          90deg,
+          #f38020 0%,
+          #38bdf8 55%,
+          #0ea5e9 100%
+        );
       "
     />
 
@@ -127,7 +132,9 @@ function formatCount(n?: number): string {
             margin-top: 28px;
           "
         >
-          <span style="display: flex">{{ formatCount(releaseCount) }} releases</span>
+          <span style="display: flex"
+            >{{ formatCount(releaseCount) }} releases</span
+          >
         </div>
       </div>
     </div>
