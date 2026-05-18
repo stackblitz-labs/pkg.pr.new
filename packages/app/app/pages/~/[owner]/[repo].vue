@@ -19,10 +19,13 @@ if (!data.value) {
 
 const repository = data.value;
 
+const ogImageUrl = `/__og-image__/image/~/${repository.owner.login}/${repository.name}/og.png`;
+
 useHead({
   link: [
     { rel: "icon", href: "/favicon.png" },
     { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+    { rel: "prefetch", as: "image", href: ogImageUrl },
   ],
 });
 useSeoMeta({
