@@ -68,10 +68,11 @@ onBeforeMount(async () => {
       );
     },
     code({ text }) {
+      const code = text.trim();
       const currentTheme = document.documentElement.classList.contains("dark")
         ? "github-dark"
         : "github-light";
-      const highlightedCode = shiki.codeToHtml(text, {
+      const highlightedCode = shiki.codeToHtml(code, {
         theme: currentTheme,
         lang: "bash",
       });
@@ -95,7 +96,7 @@ onBeforeMount(async () => {
         <div class="relative group my-4 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm">
           <div class="flex items-center justify-end px-4 py-1 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
             <button
-              onclick='(${copyCodeHandler.toString()}).call(this, ${JSON.stringify(text)})'
+              onclick='(${copyCodeHandler.toString()}).call(this, ${JSON.stringify(code)})'
               class="px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors opacity-0 group-hover:opacity-100"
               title="Copy to clipboard"
             >
