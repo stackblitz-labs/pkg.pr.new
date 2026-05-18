@@ -71,6 +71,14 @@ export default defineNuxtConfig({
           "public, max-age=30, s-maxage=120, stale-while-revalidate=300",
       },
     },
+    "/__og-image__/**": {
+      headers: {
+        "cache-control":
+          "public, max-age=604800, s-maxage=604800, stale-while-revalidate=86400",
+        "cdn-cache-control":
+          "public, max-age=604800, stale-while-revalidate=86400",
+      },
+    },
   },
 
   runtimeConfig: {
