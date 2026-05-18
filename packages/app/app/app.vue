@@ -15,10 +15,10 @@ useSeoMeta({
   ogTitle: "pkg.pr.new",
   ogDescription: "Continuous preview releases for your libraries.",
   ogType: "website",
+  ogImage: "https://pkg.pr.new/og.png",
+  twitterImage: "https://pkg.pr.new/og.png",
   twitterCard: "summary_large_image",
 });
-
-defineOgImageComponent("Brand");
 </script>
 
 <template>
