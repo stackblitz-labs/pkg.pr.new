@@ -24,7 +24,6 @@ export default defineNuxtConfig({
 
   ogImage: {
     defaults: {
-      component: "Brand",
       width: 1200,
       height: 630,
       cacheMaxAgeSeconds: 60 * 60 * 24 * 7,
