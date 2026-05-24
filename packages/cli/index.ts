@@ -659,7 +659,13 @@ const main = defineCommand({
             await fs.writeFile(jsonFilePath, output);
             console.warn(`metadata written to ${jsonFilePath}`);
           }
-
+          if (laterRes.commentId !== undefined) {
+            await fs.appendFile(
+              GITHUB_OUTPUT,
+              `commentId=${laterRes.commentId}\n`,
+              "utf8",
+            );
+          }
           await fs.appendFile(GITHUB_OUTPUT, `sha=${formattedSha}\n`, "utf8");
           await fs.appendFile(
             GITHUB_OUTPUT,

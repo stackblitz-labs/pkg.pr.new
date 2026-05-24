@@ -280,6 +280,8 @@ export default eventHandler(async (event) => {
       checkRunUrl = html_url!;
     }
 
+    let commentId: number | undefined;
+
     if (
       isPullRequest(workflowData.ref) &&
       (await getPullRequestState(installation, workflowData)) === "open"
@@ -332,7 +334,7 @@ export default eventHandler(async (event) => {
 
         try {
           if (comment === "update" && prevComment!) {
-            await installation.request(
+            const { data } = await installation.request(
               "PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}",
               {
                 owner: workflowData.owner,
@@ -341,8 +343,9 @@ export default eventHandler(async (event) => {
                 body,
               },
             );
+            commentId = data.id;
           } else {
-            await installation.request(
+            const { data } = await installation.request(
               "POST /repos/{owner}/{repo}/issues/{issue_number}/comments",
               {
                 owner: workflowData.owner,
@@ -351,6 +354,7 @@ export default eventHandler(async (event) => {
                 body,
               },
             );
+            commentId = data.id;
           }
         } catch (error) {
           console.error("failed to create/update comment", error, permissions);
@@ -368,6 +372,7 @@ export default eventHandler(async (event) => {
     return {
       ok: true,
       urls,
+      commentId,
       debug: {
         workflowData,
         key,
