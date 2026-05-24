@@ -9,13 +9,20 @@ const props = defineProps<{
 const copied = ref(false);
 const isLoading = ref(true);
 const imgEl = ref<HTMLImageElement | null>(null);
+const site = useSiteConfig();
 
 const badgeUrl = computed(() => `/badge/${props.owner}/${props.repo}`);
 
 const redirectUrl = computed(() => `/~/${props.owner}/${props.repo}`);
 
+const absoluteBadgeUrl = computed(() => new URL(badgeUrl.value, site.url).href);
+
+const absoluteRedirectUrl = computed(
+  () => new URL(redirectUrl.value, site.url).href,
+);
+
 function copyBadgeCode() {
-  const md = `[![pkg.pr.new](${badgeUrl.value})](${redirectUrl.value})`;
+  const md = `[![pkg.pr.new](${absoluteBadgeUrl.value})](${absoluteRedirectUrl.value})`;
   navigator.clipboard.writeText(md);
   copied.value = true;
   setTimeout(() => (copied.value = false), 2000);
