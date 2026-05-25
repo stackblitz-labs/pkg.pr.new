@@ -1,11 +1,16 @@
 <script lang="ts" setup>
-import type { RendererObject } from "marked";
 import bash from "@shikijs/langs/bash";
 import githubDark from "@shikijs/themes/github-dark";
 import githubLight from "@shikijs/themes/github-light";
-import { marked } from "marked";
 import { createHighlighterCoreSync, type HighlighterCore } from "shiki/core";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
+
+interface PackageInfo {
+  name: string;
+  installUrl: string;
+  installCommand: string;
+  isOnNpm: boolean;
+}
 
 const props = defineProps<{
   owner: string;
@@ -50,73 +55,47 @@ const selectedCommit = shallowRef<
   (typeof commitsWithRelease.value)[number] | null
 >(null);
 
-let shiki: HighlighterCore;
+let shiki: HighlighterCore | null = null;
+const colorMode = useColorMode();
 
-onBeforeMount(async () => {
+const highlightCache = new Map<string, string>();
+
+function highlightInstallCommand(code: string) {
+  if (!shiki) return "";
+  const theme = colorMode.value === "dark" ? "github-dark" : "github-light";
+  const cacheKey = `${theme}::${code}`;
+  const cached = highlightCache.get(cacheKey);
+  if (cached) return cached;
+  const html = shiki.codeToHtml(code, { theme, lang: "bash" });
+  highlightCache.set(cacheKey, html);
+  return html;
+}
+
+onBeforeMount(() => {
   shiki = createHighlighterCoreSync({
     themes: [githubDark, githubLight],
     langs: [bash],
     engine: createJavaScriptRegexEngine(),
   });
-
-  const renderer: RendererObject = {
-    link(originalLink) {
-      const link = marked.Renderer.prototype.link.call(this, originalLink);
-      return link.replace(
-        "<a",
-        "<a target='_blank' rel='noreferrer' class='text-primary underline'",
-      );
-    },
-    code({ text }) {
-      const code = text.trim();
-      const currentTheme = document.documentElement.classList.contains("dark")
-        ? "github-dark"
-        : "github-light";
-      const highlightedCode = shiki.codeToHtml(code, {
-        theme: currentTheme,
-        lang: "bash",
-      });
-
-      function copyCodeHandler(this: HTMLButtonElement, codeText: string) {
-        navigator.clipboard?.writeText(codeText);
-        if (this.dataset.timeoutId) {
-          clearTimeout(parseInt(this.dataset.timeoutId));
-        }
-        this.textContent = "Copied!";
-        this.classList.add("!text-green-600", "dark:!text-green-400");
-        const timeoutId = setTimeout(() => {
-          this.textContent = "Copy";
-          this.classList.remove("!text-green-600", "dark:!text-green-400");
-          delete this.dataset.timeoutId;
-        }, 2000);
-        this.dataset.timeoutId = timeoutId.toString();
-      }
-
-      return `
-        <div class="relative group my-4 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm">
-          <div class="flex items-center justify-end px-4 py-1 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-            <button
-              onclick='(${copyCodeHandler.toString()}).call(this, ${JSON.stringify(code)})'
-              class="px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors opacity-0 group-hover:opacity-100"
-              title="Copy to clipboard"
-            >
-              Copy
-            </button>
-          </div>
-          <div class="overflow-x-auto">
-            <div class="[&>pre]:!my-0 [&>pre]:!bg-transparent [&>pre]:!border-0 [&>pre]:!rounded-none [&>pre]:!p-4">${highlightedCode}</div>
-          </div>
-        </div>
-      `;
-    },
-  };
-
-  marked.use({ renderer });
 });
 
 onBeforeUnmount(() => {
   shiki?.dispose();
+  shiki = null;
 });
+
+const copiedPackage = ref<string | null>(null);
+let copyTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
+function copyInstallCommand(pkg: PackageInfo) {
+  navigator.clipboard?.writeText(pkg.installCommand);
+  copiedPackage.value = pkg.name;
+  if (copyTimeoutId) clearTimeout(copyTimeoutId);
+  copyTimeoutId = setTimeout(() => {
+    copiedPackage.value = null;
+    copyTimeoutId = null;
+  }, 2000);
+}
 
 // Pagination
 const fetching = ref(false);
@@ -358,9 +337,58 @@ async function goPrevPage() {
           </div>
 
           <div
-            class="max-w-full p-4 overflow-x-auto border border-gray-100 dark:border-gray-800 rounded-lg prose dark:prose-invert flex flex-col gap-2"
-            v-html="marked(selectedCommit.release.text)"
-          />
+            class="max-w-full p-4 border border-gray-100 dark:border-gray-800 rounded-lg flex flex-col gap-3"
+          >
+            <div
+              v-for="pkg in selectedCommit.release.packages"
+              :key="pkg.name"
+              class="relative group rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm"
+            >
+              <div
+                class="flex items-center justify-between gap-2 px-4 py-1 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700"
+              >
+                <span
+                  class="font-mono text-sm text-gray-700 dark:text-gray-300 truncate"
+                >
+                  {{ pkg.name }}
+                </span>
+                <div class="flex items-center gap-1">
+                  <UButton
+                    v-if="pkg.isOnNpm"
+                    :to="`https://npmx.dev/package/${pkg.name}`"
+                    external
+                    target="_blank"
+                    color="neutral"
+                    variant="ghost"
+                    size="xs"
+                    :aria-label="`${pkg.name} on npmx`"
+                  >
+                    <template #leading>
+                      <NpmxLogo class="h-3.5 w-auto" />
+                    </template>
+                  </UButton>
+                  <UButton
+                    color="neutral"
+                    variant="ghost"
+                    size="xs"
+                    :icon="
+                      copiedPackage === pkg.name
+                        ? 'i-ph-check-bold'
+                        : 'i-ph-copy'
+                    "
+                    aria-label="Copy install command"
+                    @click="copyInstallCommand(pkg)"
+                  />
+                </div>
+              </div>
+              <div class="overflow-x-auto">
+                <div
+                  class="[&>pre]:!my-0 [&>pre]:!bg-transparent [&>pre]:!border-0 [&>pre]:!rounded-none [&>pre]:!p-4 text-sm"
+                  v-html="highlightInstallCommand(pkg.installCommand)"
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </template>
     </USlideover>

@@ -1,13 +1,30 @@
 import type { H3Event } from "h3";
 import { z } from "zod";
-import type { PackageManager } from "@pkg-pr-new/utils";
-import { generateCommitPublishMessage } from "../../utils/markdown";
+import { getPackageManifest } from "query-registry";
+import { generatePublishUrl } from "../../utils/markdown";
 import {
   useBinding,
   useCursorsBucket,
   usePackagesBucket,
 } from "../../utils/bucket";
 import { useOctokitInstallation } from "../../utils/octokit";
+
+const isPackageOnNpm = defineCachedFunction(
+  async (packageName: string): Promise<boolean> => {
+    try {
+      await getPackageManifest(packageName);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+  {
+    name: "isPackageOnNpm",
+    getKey: (packageName: string) => packageName,
+    maxAge: 60 * 60,
+    swr: true,
+  },
+);
 
 const querySchema = z.object({
   owner: z.string(),
@@ -128,28 +145,27 @@ async function getDefaultBranchInfo(
   };
 }
 
-function makeReleaseText(
+function buildPackageInfo(
   origin: string,
   owner: string,
   repo: string,
   sha: string,
-  packages: string[],
+  packageName: string,
+  onNpm: boolean,
 ) {
-  return generateCommitPublishMessage(
+  const installUrl = generatePublishUrl(
+    "sha",
     origin,
-    {},
-    packages,
-    {
-      owner,
-      repo,
-      sha,
-      ref: sha,
-    },
+    packageName,
+    { owner, repo, sha, ref: sha },
     false,
-    "npm" satisfies PackageManager,
-    false,
-    false,
-  ).trim();
+  );
+  return {
+    name: packageName,
+    installUrl,
+    installCommand: `npm i ${installUrl}`,
+    isOnNpm: onNpm,
+  };
 }
 
 export default defineEventHandler(async (event) => {
@@ -247,6 +263,23 @@ export default defineEventHandler(async (event) => {
       pageItems.map((row) => row.sha),
     );
 
+    const uniquePackages = new Set<string>();
+    for (const row of pageItems) {
+      for (const name of row.packages) uniquePackages.add(name);
+    }
+    const npmCheckResults = await Promise.all(
+      [...uniquePackages].map(async (name) => {
+        try {
+          return [name, await isPackageOnNpm(name)] as const;
+        } catch {
+          return [name, false] as const;
+        }
+      }),
+    );
+    const packagesOnNpm = new Set<string>(
+      npmCheckResults.filter(([, ok]) => ok).map(([name]) => name),
+    );
+
     setHeader(
       event,
       "Cache-Control",
@@ -265,6 +298,16 @@ export default defineEventHandler(async (event) => {
             const meta = commitMetadata.get(row.sha);
             const commitTitle = meta?.message ?? null;
             const pinned = pinnedSha === row.sha;
+            const packages = sortedPackages.map((name) =>
+              buildPackageInfo(
+                origin,
+                query.owner,
+                query.repo,
+                row.sha,
+                name,
+                packagesOnNpm.has(name),
+              ),
+            );
             return {
               id: row.sha,
               oid: row.sha,
@@ -286,13 +329,7 @@ export default defineEventHandler(async (event) => {
                       name: "Continuous Releases",
                       title: "Continuous Releases",
                       summary: `Published ${sortedPackages.length} package(s)`,
-                      text: makeReleaseText(
-                        origin,
-                        query.owner,
-                        query.repo,
-                        row.sha,
-                        sortedPackages,
-                      ),
+                      packages,
                       detailsUrl: `https://github.com/${query.owner}/${query.repo}/commit/${row.sha}`,
                       url: `https://github.com/${query.owner}/${query.repo}/commit/${row.sha}`,
                     },
