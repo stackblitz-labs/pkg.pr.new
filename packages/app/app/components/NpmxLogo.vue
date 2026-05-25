@@ -3,7 +3,7 @@
     aria-hidden="true"
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 602 170"
-    class="h-full w-auto"
+    preserveAspectRatio="xMidYMid meet"
   >
     <title>npmx logo</title>
     <g transform="translate(0 14.602)">

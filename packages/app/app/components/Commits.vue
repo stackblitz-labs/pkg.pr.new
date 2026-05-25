@@ -359,11 +359,9 @@ async function goPrevPage() {
                     target="_blank"
                     rel="noopener noreferrer"
                     :aria-label="`${pkg.name} on npmx`"
-                    class="inline-flex items-center justify-center h-6 px-2 rounded text-gray-700 dark:text-gray-300 hover:text-primary-500 hover:bg-gray-100 dark:hover:bg-gray-700 border border-red-500/30"
-                    title="npmx debug link"
+                    class="inline-flex items-center justify-center px-1.5 py-1 rounded text-gray-600 dark:text-gray-400 hover:text-primary-500 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                   >
-                    <NpmxLogo class="h-4 w-auto shrink-0" />
-                    <span class="ml-1 text-[10px] font-mono">npmx</span>
+                    <NpmxLogo class="h-3 w-auto shrink-0" />
                   </a>
                   <UButton
                     color="neutral"
