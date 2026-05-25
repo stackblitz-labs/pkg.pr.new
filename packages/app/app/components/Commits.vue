@@ -353,18 +353,18 @@ async function goPrevPage() {
                   {{ pkg.name }}
                 </span>
                 <div class="flex items-center gap-1">
-                  <UButton
+                  <a
                     v-if="pkg.isOnNpm"
-                    :to="`https://npmx.dev/package/${pkg.name}`"
-                    external
+                    :href="`https://npmx.dev/package/${pkg.name}`"
                     target="_blank"
-                    color="neutral"
-                    variant="ghost"
-                    size="xs"
+                    rel="noopener noreferrer"
                     :aria-label="`${pkg.name} on npmx`"
+                    class="inline-flex items-center justify-center h-6 px-2 rounded text-gray-700 dark:text-gray-300 hover:text-primary-500 hover:bg-gray-100 dark:hover:bg-gray-700 border border-red-500/30"
+                    title="npmx debug link"
                   >
-                    <NpmxLogo class="h-3.5 w-auto shrink-0" />
-                  </UButton>
+                    <NpmxLogo class="h-4 w-auto shrink-0" />
+                    <span class="ml-1 text-[10px] font-mono">npmx</span>
+                  </a>
                   <UButton
                     color="neutral"
                     variant="ghost"
