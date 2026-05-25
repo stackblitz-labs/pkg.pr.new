@@ -36,23 +36,6 @@ if (!data.value) {
 
 const branch = shallowReactive(data.value);
 
-if (import.meta.client) {
-  const firstCommit = branch.target.history.nodes[0];
-  const firstRelease = firstCommit?.statusCheckRollup?.contexts.nodes.find(
-    (context: { name: string }) => context.name === "Continuous Releases",
-  );
-  console.log("[npmx-debug] /api/repo/commits response:", {
-    owner: props.owner,
-    repo: props.repo,
-    commitCount: branch.target.history.nodes.length,
-    firstCommitSha: firstCommit?.oid,
-    firstReleaseHasPackagesField: firstRelease
-      ? "packages" in firstRelease
-      : "no release",
-    firstReleasePackages: (firstRelease as { packages?: unknown })?.packages,
-  });
-}
-
 const commitsWithRelease = computed(() =>
   branch.target.history.nodes
     .filter((commit) =>
@@ -71,24 +54,6 @@ const commitsWithRelease = computed(() =>
 const selectedCommit = shallowRef<
   (typeof commitsWithRelease.value)[number] | null
 >(null);
-
-watch(selectedCommit, (commit) => {
-  if (!commit) return;
-  const packages = (commit.release as { packages?: unknown })?.packages;
-  console.log("[npmx-debug] commit selected:", {
-    sha: commit.oid,
-    hasPackagesField: !!packages,
-    packagesIsArray: Array.isArray(packages),
-    packages,
-  });
-  if (Array.isArray(packages)) {
-    for (const pkg of packages) {
-      console.log(
-        `[npmx-debug]   • ${pkg?.name} → isOnNpm=${pkg?.isOnNpm} (type=${typeof pkg?.isOnNpm})`,
-      );
-    }
-  }
-});
 
 let shiki: HighlighterCore | null = null;
 const colorMode = useColorMode();
@@ -398,9 +363,7 @@ async function goPrevPage() {
                     size="xs"
                     :aria-label="`${pkg.name} on npmx`"
                   >
-                    <template #leading>
-                      <NpmxLogo class="h-3.5 w-auto" />
-                    </template>
+                    <NpmxLogo class="h-3.5 w-auto shrink-0" />
                   </UButton>
                   <UButton
                     color="neutral"
