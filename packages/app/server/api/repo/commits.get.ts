@@ -1,6 +1,5 @@
 import type { H3Event } from "h3";
 import { z } from "zod";
-import { getPackageManifest } from "query-registry";
 import { generatePublishUrl } from "../../utils/markdown";
 import {
   useBinding,
@@ -9,12 +8,24 @@ import {
 } from "../../utils/bucket";
 import { useOctokitInstallation } from "../../utils/octokit";
 
+function encodePackageNameForUrl(packageName: string): string {
+  if (packageName.startsWith("@")) {
+    const slash = packageName.indexOf("/");
+    if (slash > 0) {
+      return `${packageName.slice(0, slash)}/${encodeURIComponent(packageName.slice(slash + 1))}`;
+    }
+  }
+  return encodeURIComponent(packageName);
+}
+
 const isPackageOnNpm = defineCachedFunction(
   async (packageName: string): Promise<boolean> => {
     try {
-      await getPackageManifest(packageName);
-      return true;
-    } catch {
+      const url = `https://registry.npmjs.org/${encodePackageNameForUrl(packageName)}`;
+      const res = await fetch(url, { method: "HEAD" });
+      return res.ok;
+    } catch (err) {
+      console.error(`[isPackageOnNpm] check failed for ${packageName}:`, err);
       return false;
     }
   },
