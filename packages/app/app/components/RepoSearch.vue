@@ -82,6 +82,11 @@ const examples = [
     avatar: "https://avatars.githubusercontent.com/u/6128107?v=4",
   },
   {
+    owner: "nuxt",
+    name: "nuxt",
+    avatar: "https://avatars.githubusercontent.com/u/23360933?v=4",
+  },
+  {
     owner: "sveltejs",
     name: "svelte",
     avatar: "https://avatars.githubusercontent.com/u/23617963?s=200&v=4",
