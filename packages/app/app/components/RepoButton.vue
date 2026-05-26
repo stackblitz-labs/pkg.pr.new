@@ -3,6 +3,7 @@ defineProps<{
   owner: string;
   name: string;
   avatar?: string;
+  withDev?: boolean;
 }>();
 </script>
 
@@ -13,6 +14,7 @@ defineProps<{
       params: {
         owner,
         repo: name,
+        withDev: String(!!withDev),
       },
     }"
     class="w-full"
