@@ -15,6 +15,7 @@ interface PackageInfo {
 const props = defineProps<{
   owner: string;
   repo: string;
+  withDev: boolean;
 }>();
 
 const requestFetch = useRequestFetch();
@@ -61,6 +62,9 @@ const colorMode = useColorMode();
 const highlightCache = new Map<string, string>();
 
 function highlightInstallCommand(code: string) {
+  if (props.withDev) {
+    code += " --dev";
+  }
   if (!shiki) return "";
   const theme = colorMode.value === "dark" ? "github-dark" : "github-light";
   const cacheKey = `${theme}::${code}`;
@@ -88,7 +92,10 @@ const copiedPackage = ref<string | null>(null);
 let copyTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
 function copyInstallCommand(pkg: PackageInfo) {
-  navigator.clipboard?.writeText(pkg.installCommand);
+  const text = props.withDev
+    ? `${pkg.installCommand} --dev`
+    : pkg.installCommand;
+  navigator.clipboard?.writeText(text);
   copiedPackage.value = pkg.name;
   if (copyTimeoutId) clearTimeout(copyTimeoutId);
   copyTimeoutId = setTimeout(() => {

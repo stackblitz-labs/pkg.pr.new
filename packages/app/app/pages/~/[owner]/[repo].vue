@@ -100,6 +100,10 @@ defineOgImageComponent("Repo", {
       </div>
     </div>
 
-    <Commits :owner="repository.owner.login" :repo="repository.name" />
+    <Commits
+      :owner="repository.owner.login"
+      :repo="repository.name"
+      :withDev="route.params.withDev === 'true'"
+    />
   </div>
 </template>

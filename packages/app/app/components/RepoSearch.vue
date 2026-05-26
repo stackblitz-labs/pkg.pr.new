@@ -70,31 +70,37 @@ const examples = [
     owner: "vitejs",
     name: "vite",
     avatar: "https://avatars.githubusercontent.com/u/65625612?v=4",
+    withDev: true,
   },
   {
     owner: "rolldown",
     name: "rolldown",
     avatar: "https://avatars.githubusercontent.com/u/94954945?s=200&v=4",
+    withDev: true,
   },
   {
     owner: "vuejs",
     name: "core",
     avatar: "https://avatars.githubusercontent.com/u/6128107?v=4",
+    withDev: false,
   },
   {
     owner: "nuxt",
     name: "nuxt",
     avatar: "https://avatars.githubusercontent.com/u/23360933?v=4",
+    withDev: true,
   },
   {
     owner: "sveltejs",
     name: "svelte",
     avatar: "https://avatars.githubusercontent.com/u/23617963?s=200&v=4",
+    withDev: false,
   },
   {
     owner: "Tresjs",
     name: "tres",
     avatar: "https://avatars.githubusercontent.com/u/119253150?v=4",
+    withDev: false,
   },
 ];
 
