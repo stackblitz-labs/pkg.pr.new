@@ -75,7 +75,7 @@ beforeAll(async () => {
       shell: true,
     },
   );
-}, 180_000);
+}, 70_000);
 
 afterAll(async () => {
   await server.ensureClose();
