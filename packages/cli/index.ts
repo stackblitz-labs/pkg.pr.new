@@ -132,8 +132,6 @@ const main = defineCommand({
                 })
               : [process.cwd()];
 
-          // Split inputs into directories (existing flow) and prebuilt tarballs
-          // (new flow). A tarball is any regular file ending in .tgz or .tar.gz.
           const paths: string[] = [];
           const tarballPaths: string[] = [];
           for (const input of rawInputs) {
