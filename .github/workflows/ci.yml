@@ -116,7 +116,6 @@ jobs:
         working-directory: ./playgrounds/playground-b
 
       - name: pkg.pr.new
-        run: pnpm publish:playgrounds --comment=off
 
       - name: pack playground-a for tarball-publish
         working-directory: ./playgrounds/playground-a
