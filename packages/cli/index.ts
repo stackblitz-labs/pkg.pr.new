@@ -15,6 +15,7 @@ import {
   installCommands,
 } from "@pkg-pr-new/utils";
 import { glob } from "tinyglobby";
+import { parseTarGzip, type ParsedTarFileItem } from "nanotar";
 import ignore from "ignore";
 import "./environments";
 import { isBinaryFile } from "isbinaryfile";
@@ -123,14 +124,49 @@ const main = defineCommand({
           },
         },
         run: async ({ args }) => {
-          const paths =
+          const rawInputs =
             args._.length > 0
               ? await glob(args._, {
                   expandDirectories: false,
-                  onlyDirectories: true,
                   absolute: true,
                 })
               : [process.cwd()];
+
+          // Split inputs into directories (existing flow) and prebuilt tarballs
+          // (new flow). A tarball is any regular file ending in .tgz or .tar.gz.
+          const paths: string[] = [];
+          const tarballPaths: string[] = [];
+          for (const input of rawInputs) {
+            let stat;
+            try {
+              stat = await fs.stat(input);
+            } catch {
+              console.warn(`Skipping ${input}: cannot stat`);
+              continue;
+            }
+            if (stat.isDirectory()) {
+              paths.push(input);
+            } else if (
+              stat.isFile() &&
+              (input.endsWith(".tgz") || input.endsWith(".tar.gz"))
+            ) {
+              tarballPaths.push(input);
+            } else {
+              console.warn(
+                `Skipping ${input}: not a directory or .tgz/.tar.gz file`,
+              );
+            }
+          }
+
+          if (paths.length > 0 && tarballPaths.length > 0) {
+            console.error(
+              "pkg-pr-new: cannot mix directory and prebuilt tarball inputs in the same publish. " +
+                "Pass either package directories (e.g. './packages/*') OR .tgz files (e.g. './artifacts/*.tgz'), not both.",
+            );
+            process.exit(1);
+          }
+
+          const isTarballMode = tarballPaths.length > 0;
 
           const templates = await glob(args.template || [], {
             expandDirectories: false,
@@ -268,6 +304,7 @@ const main = defineCommand({
           const packageInfos: Array<{
             packageName: string;
             pJson: PackageJson;
+            tarballPath?: string;
           }> = [];
 
           for (const p of paths) {
@@ -284,6 +321,82 @@ const main = defineCommand({
 
             const packageName = pJson.name;
             packageInfos.push({ packageName, pJson });
+          }
+
+          for (const tgzPath of tarballPaths) {
+            let pJson: PackageJson | null;
+            try {
+              pJson = await readPackageJsonFromTarball(tgzPath);
+            } catch (error) {
+              console.warn(
+                `Skipping ${tgzPath}: ${error instanceof Error ? error.message : String(error)}`,
+              );
+              continue;
+            }
+
+            if (!pJson) {
+              console.warn(
+                `Skipping ${tgzPath}: no top-level package.json found inside the tarball`,
+              );
+              continue;
+            }
+
+            if (pJson.private) {
+              console.warn(
+                `Skipping ${tgzPath}: the package is marked private`,
+              );
+              continue;
+            }
+
+            if (!pJson.name) {
+              throw new Error(
+                `"name" field in the package.json inside ${tgzPath} should be defined`,
+              );
+            }
+
+            packageInfos.push({
+              packageName: pJson.name,
+              pJson,
+              tarballPath: tgzPath,
+            });
+          }
+
+          if (isTarballMode && packageInfos.length > 1) {
+            const allPackageNames = new Set(
+              packageInfos.map((info) => info.packageName),
+            );
+            const depFields = [
+              "dependencies",
+              "devDependencies",
+              "optionalDependencies",
+              ...(isPeerDepsEnabled ? (["peerDependencies"] as const) : []),
+            ] as const;
+
+            for (const info of packageInfos) {
+              const siblings = new Set<string>();
+              for (const field of depFields) {
+                const deps = info.pJson[field];
+                if (!deps) {
+                  continue;
+                }
+                for (const depName of Object.keys(deps)) {
+                  if (
+                    allPackageNames.has(depName) &&
+                    depName !== info.packageName
+                  ) {
+                    siblings.add(depName);
+                  }
+                }
+              }
+              if (siblings.size > 0) {
+                const list = [...siblings].map((s) => `'${s}'`).join(", ");
+                console.warn(
+                  `warning: prebuilt tarball '${info.tarballPath}' references sibling package(s) ${list} in its package.json. ` +
+                    `Those references will NOT be rewritten to pkg.pr.new URLs because the tarball is taken as-is. ` +
+                    `Pass the source directory instead, or repack after replacing those versions manually if you need cross-package linking.`,
+                );
+              }
+            }
           }
 
           if (isCompact) {
@@ -503,6 +616,27 @@ const main = defineCommand({
             } finally {
               await restoreMap.get(p)?.();
             }
+          }
+
+          for (const info of packageInfos) {
+            if (!info.tarballPath) {
+              continue;
+            }
+            const filename = path.basename(info.tarballPath);
+            const buffer = await fs.readFile(info.tarballPath);
+            const shasum = createHash("sha1").update(buffer).digest("hex");
+
+            shasums[info.packageName] = shasum;
+
+            const outputPkg = outputMetadata.packages.find(
+              (p) => p.name === info.packageName,
+            )!;
+            outputPkg.shasum = shasum;
+
+            const blob = new Blob([buffer], {
+              type: "application/octet-stream",
+            });
+            formData.append(`package:${info.packageName}`, blob, filename);
           }
 
           const formDataPackagesSize = [...formData.entries()].reduce(
@@ -839,4 +973,30 @@ function parsePackageJson(contents: string) {
   } catch {
     return null;
   }
+}
+
+async function readPackageJsonFromTarball(
+  tarballPath: string,
+): Promise<PackageJson | null> {
+  const compressed = await fs.readFile(tarballPath);
+
+  let entries: ParsedTarFileItem[];
+  try {
+    entries = await parseTarGzip(compressed, {
+      filter: (file) => {
+        const segments = file.name.split("/");
+        return segments.length === 2 && segments[1] === "package.json";
+      },
+    });
+  } catch (error) {
+    throw new Error(
+      `failed to read tarball (${error instanceof Error ? error.message : String(error)})`,
+    );
+  }
+
+  const entry = entries[0];
+  if (!entry) {
+    return null;
+  }
+  return parsePackageJson(entry.text);
 }

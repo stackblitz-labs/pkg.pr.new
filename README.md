@@ -139,6 +139,15 @@ For workspaces and monorepos:
 pnpm exec pkg-pr-new publish './packages/A' './packages/B' # or `pnpm exec pkg-pr-new publish './packages/*'`
 ```
 
+You can also pass **prebuilt tarballs** (`.tgz` or `.tar.gz`) directly, which is handy when your build pipeline already produces tarballs in a custom way:
+
+```sh
+pnpm exec pkg-pr-new publish './artifacts/*.tgz'
+```
+
+> [!NOTE]
+> Prebuilt tarballs are uploaded **as-is**: pkg.pr.new will not repack them. If one tarball references another tarball being published in the same call, pkg.pr.new will print a warning and that reference will not be rewritten to a pkg.pr.new URL. Repack with the resolved version yourself if you need cross-package linking.
+
 > [!CAUTION]
 > In CI environments, avoid `npx`, `pnpm dlx`, `yarn dlx`, and `bunx` for this step. Install `pkg-pr-new` as a dependency and execute it from the lockfile (`npm exec`, `pnpm exec`, `yarn`, or `bun run`).
 
