@@ -128,6 +128,7 @@ const main = defineCommand({
             args._.length > 0
               ? await glob(args._, {
                   expandDirectories: false,
+                  onlyFiles: false,
                   absolute: true,
                 })
               : [process.cwd()];
