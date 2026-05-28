@@ -115,12 +115,5 @@ jobs:
           echo "File $file_path created with random content of size $file_size MB."
         working-directory: ./playgrounds/playground-b
 
-      - name: pack playground-a for tarball-publish smoke test
-        working-directory: ./playgrounds/playground-a
-        run: |
-          mkdir -p "$GITHUB_WORKSPACE/ci-tarballs"
-          pnpm pack --pack-destination "$GITHUB_WORKSPACE/ci-tarballs"
-          ls -l "$GITHUB_WORKSPACE/ci-tarballs"
-
-      - name: pkg.pr.new (prebuilt tarball smoke test)
-        run: pnpm pkg-pr-new publish './ci-tarballs/*.tgz'
+      - name: pkg.pr.new
+        run: pnpm publish:playgrounds --comment=off
