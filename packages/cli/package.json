@@ -20,7 +20,6 @@
   "keywords": [],
   "author": "",
   "license": "MIT",
-  "dependencies": {},
   "devDependencies": {
     "@actions/core": "^3.0.1",
     "@jsdevtools/ez-spawn": "^3.0.4",
@@ -28,6 +27,7 @@
     "citty": "^0.1.6",
     "ignore": "^7.0.5",
     "isbinaryfile": "5.0.2",
+    "nanotar": "^0.3.0",
     "ohash": "^1.1.4",
     "pkg-types": "^2.3.1",
     "query-registry": "^4.3.0",
