@@ -116,4 +116,14 @@ jobs:
         working-directory: ./playgrounds/playground-b
 
       - name: pkg.pr.new
-        run: pnpm publish:playgrounds
+        run: pnpm publish:playgrounds --comment=off
+
+      - name: pack playground-a for tarball-publish
+        working-directory: ./playgrounds/playground-a
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/ci-tarballs"
+          pnpm pack --pack-destination "$GITHUB_WORKSPACE/ci-tarballs"
+          ls -l "$GITHUB_WORKSPACE/ci-tarballs"
+
+      - name: pkg.pr.new (prebuilt tarball)
+        run: pnpm pkg-pr-new publish './ci-tarballs/*.tgz'
