@@ -116,4 +116,4 @@ jobs:
         working-directory: ./playgrounds/playground-b
 
       - name: pkg.pr.new
-        run: pnpm publish:playgrounds --comment=off
+        run: pnpm publish:playgrounds
