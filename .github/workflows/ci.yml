@@ -115,8 +115,6 @@ jobs:
           echo "File $file_path created with random content of size $file_size MB."
         working-directory: ./playgrounds/playground-b
 
-      - name: pkg.pr.new
-
       - name: pack playground-a for tarball-publish
         working-directory: ./playgrounds/playground-a
         run: |
