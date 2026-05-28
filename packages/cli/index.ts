@@ -158,8 +158,7 @@ const main = defineCommand({
 
           if (paths.length > 0 && tarballPaths.length > 0) {
             console.error(
-              "pkg-pr-new: cannot mix directory and prebuilt tarball inputs in the same publish. " +
-                "Pass either package directories (e.g. './packages/*') OR .tgz files (e.g. './artifacts/*.tgz'), not both.",
+              "pkg-pr-new: cannot mix directory and prebuilt tarball inputs in the same publish.",
             );
             process.exit(1);
           }
