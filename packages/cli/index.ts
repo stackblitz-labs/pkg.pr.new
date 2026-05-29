@@ -246,7 +246,7 @@ const main = defineCommand({
 
           let checkResponse;
           try {
-            checkResponse = await fetch(new URL("/check", apiUrl), {
+            checkResponse = await fetchWithRetry(new URL("/check", apiUrl), {
               method: "POST",
               body: JSON.stringify({
                 owner,
@@ -652,14 +652,17 @@ const main = defineCommand({
                   continue;
                 }
                 const totalChunks = Math.ceil(file.size / chunkSize);
-                const createMultipartRes = await fetch(createMultipart, {
-                  method: "POST",
-                  headers: {
-                    "sb-key": key,
-                    "sb-name": name.slice("package:".length),
-                    "sb-sha": sha,
+                const createMultipartRes = await fetchWithRetry(
+                  createMultipart,
+                  {
+                    method: "POST",
+                    headers: {
+                      "sb-key": key,
+                      "sb-name": name.slice("package:".length),
+                      "sb-sha": sha,
+                    },
                   },
-                });
+                );
                 if (!createMultipartRes.ok) {
                   console.error(await createMultipartRes.text());
                   continue;
@@ -678,15 +681,18 @@ const main = defineCommand({
                   const end = Math.min(file.size, start + chunkSize);
                   const chunk = file.slice(start, end);
 
-                  const uploadMultipartRes = await fetch(uploadMultipart, {
-                    method: "PUT",
-                    headers: {
-                      key: uploadKey,
-                      id: uploadId,
-                      "part-number": `${i + 1}`,
+                  const uploadMultipartRes = await fetchWithRetry(
+                    uploadMultipart,
+                    {
+                      method: "PUT",
+                      headers: {
+                        key: uploadKey,
+                        id: uploadId,
+                        "part-number": `${i + 1}`,
+                      },
+                      body: chunk,
                     },
-                    body: chunk,
-                  });
+                  );
 
                   if (!uploadMultipartRes.ok) {
                     console.error(
@@ -697,14 +703,17 @@ const main = defineCommand({
                   const { part } = await uploadMultipartRes.json();
                   uploadedParts.push(part);
                 }
-                const completeMultipartRes = await fetch(completeMultipart, {
-                  method: "POST",
-                  headers: {
-                    key: uploadKey,
-                    id: uploadId,
-                    "uploaded-parts": JSON.stringify(uploadedParts),
+                const completeMultipartRes = await fetchWithRetry(
+                  completeMultipart,
+                  {
+                    method: "POST",
+                    headers: {
+                      key: uploadKey,
+                      id: uploadId,
+                      "uploaded-parts": JSON.stringify(uploadedParts),
+                    },
                   },
-                });
+                );
                 if (!completeMultipartRes.ok) {
                   console.error(
                     `Error completing ${key}: ${await completeMultipartRes.text()}`,
@@ -719,7 +728,7 @@ const main = defineCommand({
             }
           }
 
-          const res = await fetch(publishUrl, {
+          const res = await fetchWithRetry(publishUrl, {
             method: "POST",
             headers: {
               "sb-sha": sha,
@@ -904,6 +913,26 @@ function hijackDeps(
       oldDeps[newDep] = url;
     }
   }
+}
+
+// Retries on 5xx server errors (e.g. transient Cloudflare R2 / GitHub API
+// blips) with a 1s/2s/4s backoff. Non-5xx responses are returned as-is so the
+// caller can handle them. See https://github.com/stackblitz-labs/pkg.pr.new/issues/316
+async function fetchWithRetry(
+  input: URL | string,
+  init: RequestInit,
+): Promise<Response> {
+  const maxRetries = 3;
+  let res = await fetch(input, init);
+  for (let attempt = 1; attempt <= maxRetries && res.status >= 500; attempt++) {
+    const delay = 1000 * 2 ** (attempt - 1); // 1s, 2s, 4s
+    console.warn(
+      `Server error (${res.status}). Retrying in ${delay / 1000}s (attempt ${attempt}/${maxRetries})...`,
+    );
+    await new Promise((resolve) => setTimeout(resolve, delay));
+    res = await fetch(input, init);
+  }
+  return res;
 }
 
 function getFormEntrySize(entry: FormDataEntryValue) {
