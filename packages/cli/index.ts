@@ -915,9 +915,6 @@ function hijackDeps(
   }
 }
 
-// Retries on 5xx server errors (e.g. transient Cloudflare R2 / GitHub API
-// blips) with a 1s/2s/4s backoff. Non-5xx responses are returned as-is so the
-// caller can handle them. See https://github.com/stackblitz-labs/pkg.pr.new/issues/316
 async function fetchWithRetry(
   input: URL | string,
   init: RequestInit,
