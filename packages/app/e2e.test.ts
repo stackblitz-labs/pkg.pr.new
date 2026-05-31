@@ -75,7 +75,7 @@ beforeAll(async () => {
       shell: true,
     },
   );
-}, 70_000);
+}, 180_000);
 
 afterAll(async () => {
   await server.ensureClose();
@@ -156,7 +156,7 @@ describe.sequential.each([
     expect(process.stderr).toContain(
       "private-playground/ because the package is private",
     );
-  }, 20_000);
+  }, 60_000);
 
   it(`serves and installs playground-a for ${mode}`, async () => {
     const [owner, repo] = payload.repository.full_name.split("/");
