@@ -23,6 +23,7 @@ export default eventHandler(async (event) => {
       "sb-comment": commentHeader,
       "sb-compact": compactHeader,
       "sb-bin": binHeader,
+      "sb-bin-packages": binPackagesHeader,
       "sb-package-manager": packageManagerHeader,
       "sb-only-templates": onlyTemplatesHeader,
       "sb-comment-with-sha": commentWithShaHeader,
@@ -32,7 +33,10 @@ export default eventHandler(async (event) => {
     const compact = compactHeader === "true";
     const onlyTemplates = onlyTemplatesHeader === "true";
     const comment: Comment = (commentHeader ?? "update") as Comment;
-    const bin = binHeader === "true";
+    const isBinPackage = parseBinPackagesHeader(
+      binPackagesHeader,
+      binHeader === "true",
+    );
     const packageManager: PackageManager =
       (packageManagerHeader as PackageManager) || "npm";
     const commentWithSha = commentWithShaHeader === "true";
@@ -271,7 +275,7 @@ export default eventHandler(async (event) => {
             workflowData,
             compact,
             packageManager,
-            bin,
+            isBinPackage,
             commentWithDev,
           ),
         },
@@ -328,7 +332,7 @@ export default eventHandler(async (event) => {
           checkRunUrl,
           packageManager,
           commentWithSha || comment !== "update" ? "sha" : "ref",
-          bin,
+          isBinPackage,
           commentWithDev,
         );
 
@@ -407,6 +411,26 @@ export default eventHandler(async (event) => {
     });
   }
 });
+
+function parseBinPackagesHeader(
+  header: string | undefined,
+  legacyBinAll: boolean,
+): (packageName: string) => boolean {
+  if (header === undefined) {
+    return legacyBinAll ? () => true : () => false;
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(header);
+  } catch {
+    return () => false;
+  }
+  if (!Array.isArray(parsed)) {
+    return () => false;
+  }
+  const set = new Set(parsed.filter((v): v is string => typeof v === "string"));
+  return (name) => set.has(name);
+}
 
 async function getPullRequestState(
   installation: Awaited<ReturnType<typeof useOctokitInstallation>>,

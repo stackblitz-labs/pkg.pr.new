@@ -27,7 +27,7 @@ export function generateCommitPublishMessage(
   workflowData: WorkflowData,
   compact: boolean,
   packageManager: PackageManager,
-  bin: boolean,
+  isBin: (packageName: string) => boolean,
   commentWithDev: boolean,
 ) {
   const isMoreThanFour = isMoreThanFourPackages(packages, packageManager);
@@ -40,6 +40,7 @@ export function generateCommitPublishMessage(
         workflowData,
         compact,
       );
+      const packageIsBin = isBin(packageName);
       return packageManager
         .split(",")
         .map((pm) => {
@@ -51,7 +52,7 @@ export function generateCommitPublishMessage(
 
           return `
   \`\`\`
-  ${bin ? binCommands[pm as PackageManager] : installCommands[pm as PackageManager]} ${descriptor}
+  ${packageIsBin ? binCommands[pm as PackageManager] : installCommands[pm as PackageManager]} ${descriptor}
   \`\`\`
         `;
         })
@@ -83,7 +84,7 @@ export function generatePullRequestPublishMessage(
   checkRunUrl: string,
   packageManager: PackageManager,
   base: "sha" | "ref",
-  bin: boolean,
+  isBin: (packageName: string) => boolean,
   commentWithDev: boolean,
 ) {
   const isMoreThanFour = isMoreThanFourPackages(packages, packageManager);
@@ -96,6 +97,7 @@ export function generatePullRequestPublishMessage(
         workflowData,
         compact,
       );
+      const packageIsBin = isBin(packageName);
       return packageManager
         .split(",")
         .map((pm) => {
@@ -105,7 +107,7 @@ export function generatePullRequestPublishMessage(
 
           return `
   \`\`\`
-  ${bin ? binCommands[pm as PackageManager] : installCommands[pm as PackageManager]} ${refUrl + (commentWithDev ? " -D" : "")}
+  ${packageIsBin ? binCommands[pm as PackageManager] : installCommands[pm as PackageManager]} ${refUrl + (commentWithDev ? " -D" : "")}
   \`\`\`
   `;
         })
