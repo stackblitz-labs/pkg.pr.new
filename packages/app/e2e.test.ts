@@ -23,6 +23,29 @@ const { stdout: gitRevParseOutput } = await ezSpawn.async(
   { stdio: "overlapped" },
 );
 const gitRevParse = gitRevParseOutput.trim();
+const workspaceRoot = path.resolve(import.meta.dirname, "..", "..");
+const playgroundADir = path.join(workspaceRoot, "playgrounds", "playground-a");
+
+function getPublishEnv(payload: any, pr?: { payload: { number: number } }) {
+  return Object.entries({
+    TEST: true,
+    GITHUB_OUTPUT: githubOutputPath,
+    GITHUB_SERVER_URL: new URL(payload.workflow_run.html_url).origin,
+    GITHUB_REPOSITORY: payload.repository.full_name,
+    GITHUB_RUN_ID: payload.workflow_run.id,
+    GITHUB_RUN_ATTEMPT: payload.workflow_run.run_attempt,
+    GITHUB_ACTOR_ID: payload.sender.id,
+    GITHUB_SHA: payload.workflow_run.head_sha,
+    GITHUB_ACTION: payload.workflow_run.id,
+    GITHUB_JOB: payload.workflow_run.name,
+    GITHUB_EVENT_NAME: payload.workflow_run.event,
+    GITHUB_REF_NAME: pr
+      ? `${pr.payload.number}/merge`
+      : payload.workflow_run.head_branch,
+  })
+    .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
+    .join(" ");
+}
 
 beforeAll(async () => {
   tempDir = await fs.mkdtemp(path.join(os.tmpdir(), E2E_TEMP_DIR_PREFIX));
@@ -117,24 +140,7 @@ describe.sequential.each([
   });
 
   it(`publishes playgrounds for ${mode}`, async () => {
-    const env = Object.entries({
-      TEST: true,
-      GITHUB_OUTPUT: githubOutputPath,
-      GITHUB_SERVER_URL: new URL(payload.workflow_run.html_url).origin,
-      GITHUB_REPOSITORY: payload.repository.full_name,
-      GITHUB_RUN_ID: payload.workflow_run.id,
-      GITHUB_RUN_ATTEMPT: payload.workflow_run.run_attempt,
-      GITHUB_ACTOR_ID: payload.sender.id,
-      GITHUB_SHA: payload.workflow_run.head_sha,
-      GITHUB_ACTION: payload.workflow_run.id,
-      GITHUB_JOB: payload.workflow_run.name,
-      GITHUB_EVENT_NAME: payload.workflow_run.event,
-      GITHUB_REF_NAME: pr
-        ? `${pr.payload.number}/merge`
-        : payload.workflow_run.head_branch,
-    })
-      .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
-      .join(" ");
+    const env = getPublishEnv(payload, pr);
 
     const process = await ezSpawn.async(
       `pnpm cross-env ${env} pnpm run -w publish:playgrounds`,
@@ -155,6 +161,77 @@ describe.sequential.each([
     expect(process.stderr).toContain("playground-b:");
     expect(process.stderr).toContain(
       "private-playground/ because the package is private",
+    );
+  }, 60_000);
+
+  it(`publishes prebuilt tarballs and rejects mixed inputs for ${mode}`, async () => {
+    // Each publish workflow key is single-use; re-post webhook events once for this test.
+    if (pr) {
+      const prResponse = await worker.fetch("/webhook", {
+        method: "POST",
+        headers: {
+          "x-github-delivery": "d81876a0-e8c4-11ee-8fca-9d3a2baa9707",
+          "x-github-event": "pull_request",
+        },
+        body: JSON.stringify(pr.payload),
+      });
+      expect(await prResponse.json()).toEqual({ ok: true });
+    }
+    const workflowResponse = await worker.fetch("/webhook", {
+      method: "POST",
+      headers: {
+        "x-github-delivery": "d81876a0-e8c4-11ee-8fca-9d3a2baa9707",
+        "x-github-event": event,
+      },
+      body: JSON.stringify(payload),
+    });
+    expect(await workflowResponse.json()).toEqual({ ok: true });
+
+    const env = getPublishEnv(payload, pr);
+    const tarballDir = await fs.mkdtemp(path.join(tempDir, "tarballs-"));
+
+    const packResult = await ezSpawn.async(
+      `pnpm --dir ${JSON.stringify(playgroundADir)} pack --pack-destination ${JSON.stringify(tarballDir)}`,
+      [],
+      {
+        stdio: "overlapped",
+        shell: true,
+      },
+    );
+    expect(packResult.status).toBe(0);
+
+    const tarballs = await fs.readdir(tarballDir);
+    const tarballName = tarballs.find((entry) => entry.endsWith(".tgz"));
+    expect(tarballName).toBeDefined();
+    const tarballPath = path.join(tarballDir, tarballName!);
+
+    const publishResult = await ezSpawn.async(
+      `pnpm cross-env ${env} pnpm -w pkg-pr-new publish ${JSON.stringify(tarballPath)}`,
+      [],
+      {
+        stdio: "overlapped",
+        shell: true,
+      },
+    );
+
+    expect(publishResult.status).toBe(0);
+    expect(publishResult.stderr).toContain("Your npm packages are published.");
+    expect(publishResult.stderr).toContain("playground-a:");
+
+    const error = await ezSpawn
+      .async(
+        `pnpm cross-env ${env} pnpm -w pkg-pr-new publish ${JSON.stringify(tarballPath)} ${JSON.stringify(playgroundADir)}`,
+        [],
+        {
+          stdio: "overlapped",
+          shell: true,
+        },
+      )
+      .catch((error_) => error_);
+
+    expect(error).toBeInstanceOf(Error);
+    expect(String(error)).toContain(
+      "cannot mix directory and prebuilt tarball inputs in the same publish",
     );
   }, 60_000);
 
