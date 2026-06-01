@@ -47,6 +47,24 @@ describe("utils", () => {
         utils.extractOwnerAndRepo("git+http://github.com/org/repo.git"),
       ).toEqual(["org", "repo"]);
     });
+
+    it("returns org and repo for GitHub shorthand", () => {
+      expect(utils.extractOwnerAndRepo("org/repo")).toEqual(["org", "repo"]);
+    });
+
+    it("returns org and repo for github: shorthand", () => {
+      expect(utils.extractOwnerAndRepo("github:org/repo")).toEqual([
+        "org",
+        "repo",
+      ]);
+    });
+
+    it("returns org and repo for URLs without .git suffix", () => {
+      expect(utils.extractOwnerAndRepo("https://github.com/org/repo")).toEqual([
+        "org",
+        "repo",
+      ]);
+    });
   });
 
   describe("extractRepository", () => {
