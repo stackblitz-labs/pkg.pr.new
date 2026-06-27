@@ -29,6 +29,10 @@ const { data } = await useAsyncData(
         repo: props.repo,
       },
     }),
+  {
+    server: false,
+    lazy: true,
+  },
 );
 
 if (!data.value) {
