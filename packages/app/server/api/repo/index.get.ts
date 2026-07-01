@@ -1,6 +1,6 @@
 import type { H3Event } from "h3";
 import { z } from "zod";
-import { getRepoReleaseCount } from "../../utils/bucket";
+import { getRepoReleaseRows } from "../../utils/repo-releases";
 
 const querySchema = z.object({
   owner: z.string(),
@@ -10,7 +10,8 @@ const querySchema = z.object({
 const getRepoInfo = defineCachedFunction(
   async (owner: string, repo: string, event: H3Event) => {
     try {
-      const releaseCount = await getRepoReleaseCount(event as any, owner, repo);
+      const releaseRows = await getRepoReleaseRows(event, owner, repo);
+      const releaseCount = releaseRows.length;
 
       return {
         id: `${owner}/${repo}`,
@@ -45,6 +46,11 @@ export default defineEventHandler(async (event) => {
   try {
     const query = await getValidatedQuery(event, (data) =>
       querySchema.parse(data),
+    );
+    setHeader(
+      event,
+      "Cache-Control",
+      "public, max-age=30, s-maxage=120, stale-while-revalidate=300",
     );
     return getRepoInfo(query.owner, query.repo, event);
   } catch (error) {

@@ -1,12 +1,9 @@
 import type { H3Event } from "h3";
 import { z } from "zod";
 import { generatePublishUrl } from "../../utils/markdown";
-import {
-  useBinding,
-  useCursorsBucket,
-  usePackagesBucket,
-} from "../../utils/bucket";
+import { useCursorsBucket } from "../../utils/bucket";
 import { useOctokitInstallation } from "../../utils/octokit";
+import { getRepoReleaseRows } from "../../utils/repo-releases";
 
 function encodePackageNameForUrl(packageName: string): string {
   if (packageName.startsWith("@")) {
@@ -44,12 +41,6 @@ const querySchema = z.object({
   page: z.string().optional(),
   per_page: z.string().optional().default("10"),
 });
-
-interface ReleaseRow {
-  sha: string;
-  uploadedAt: number;
-  packages: Set<string>;
-}
 
 interface CommitMeta {
   message: string | null;
@@ -192,43 +183,11 @@ export default defineEventHandler(async (event) => {
         ? Number.parseInt(query.cursor, 10)
         : 1;
 
-    const binding = useBinding(event as Parameters<typeof useBinding>[0]);
-    const prefix = `${usePackagesBucket.base}:${query.owner}:${query.repo}:`;
-    const rows = new Map<string, ReleaseRow>();
-    let listCursor: string | undefined;
-
-    do {
-      const response = await binding.list({
-        cursor: listCursor,
-        limit: 1000,
-        prefix,
-      } as any);
-
-      for (const object of response.objects) {
-        const key = object.key;
-        const trimmed = key.slice(prefix.length);
-        const [sha, ...packageNameParts] = trimmed.split(":");
-        if (!sha || packageNameParts.length === 0) {
-          continue;
-        }
-        const packageName = packageNameParts.join("/");
-        const uploadedAt = new Date(object.uploaded).getTime();
-
-        const row = rows.get(sha);
-        if (row) {
-          row.packages.add(packageName);
-          row.uploadedAt = Math.max(row.uploadedAt, uploadedAt);
-        } else {
-          rows.set(sha, {
-            sha,
-            uploadedAt,
-            packages: new Set([packageName]),
-          });
-        }
-      }
-
-      listCursor = response.truncated ? response.cursor : undefined;
-    } while (listCursor);
+    const releaseRows = await getRepoReleaseRows(
+      event,
+      query.owner,
+      query.repo,
+    );
 
     const installation = await useOctokitInstallation(
       event,
@@ -243,20 +202,22 @@ export default defineEventHandler(async (event) => {
     );
 
     // Server-side ordering guarantees pagination consistency.
-    const releases = [...rows.values()].sort((a, b) => {
-      if (pinnedSha) {
-        if (a.sha === pinnedSha && b.sha !== pinnedSha) {
-          return -1;
+    const releases = releaseRows
+      .map((row) => ({ ...row, packages: new Set(row.packages) }))
+      .sort((a, b) => {
+        if (pinnedSha) {
+          if (a.sha === pinnedSha && b.sha !== pinnedSha) {
+            return -1;
+          }
+          if (b.sha === pinnedSha && a.sha !== pinnedSha) {
+            return 1;
+          }
         }
-        if (b.sha === pinnedSha && a.sha !== pinnedSha) {
-          return 1;
+        if (b.uploadedAt !== a.uploadedAt) {
+          return b.uploadedAt - a.uploadedAt;
         }
-      }
-      if (b.uploadedAt !== a.uploadedAt) {
-        return b.uploadedAt - a.uploadedAt;
-      }
-      return b.sha.localeCompare(a.sha);
-    });
+        return b.sha.localeCompare(a.sha);
+      });
     const start = Math.max(0, (page - 1) * perPage);
     const end = start + perPage;
     const pageItems = releases.slice(start, end);

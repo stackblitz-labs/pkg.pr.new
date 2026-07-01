@@ -12,6 +12,25 @@ interface PackageInfo {
   isOnNpm: boolean;
 }
 
+interface RepoCommitsResponse {
+  id: string;
+  name: string;
+  target: {
+    id: string;
+    history: {
+      nodes: any[];
+      pageInfo: {
+        hasNextPage: boolean;
+        endCursor: string | null;
+        currentPage: number;
+        perPage: number;
+        totalCount: number;
+        totalPages: number;
+      };
+    };
+  };
+}
+
 const props = defineProps<{
   owner: string;
   repo: string;
@@ -20,7 +39,28 @@ const props = defineProps<{
 
 const requestFetch = useRequestFetch();
 
-const { data } = await useAsyncData(
+function createEmptyBranch(owner: string, repo: string): RepoCommitsResponse {
+  return {
+    id: `releases-${owner}-${repo}`,
+    name: "all refs",
+    target: {
+      id: `releases-target-${owner}-${repo}`,
+      history: {
+        nodes: [],
+        pageInfo: {
+          hasNextPage: false,
+          endCursor: null as string | null,
+          currentPage: 1,
+          perPage: 10,
+          totalCount: 0,
+          totalPages: 1,
+        },
+      },
+    },
+  };
+}
+
+const { data, pending } = await useAsyncData<RepoCommitsResponse>(
   `repo-commits:${props.owner}:${props.repo}:page:1`,
   () =>
     requestFetch("/api/repo/commits", {
@@ -28,30 +68,44 @@ const { data } = await useAsyncData(
         owner: props.owner,
         repo: props.repo,
       },
-    }),
+    }) as Promise<RepoCommitsResponse>,
   {
     server: false,
     lazy: true,
+    default: () => createEmptyBranch(props.owner, props.repo),
   },
 );
 
-if (!data.value) {
-  throw createError("Could not load Commits");
-}
-
-const branch = shallowReactive(data.value);
+const branch = shallowReactive<RepoCommitsResponse>(
+  createEmptyBranch(props.owner, props.repo),
+);
+watch(
+  data,
+  (next) => {
+    if (!next) {
+      return;
+    }
+    branch.id = next.id;
+    branch.name = next.name;
+    branch.target = next.target;
+  },
+  { immediate: true },
+);
+const showInitialLoading = computed(
+  () => pending.value && branch.target.history.nodes.length === 0,
+);
 
 const commitsWithRelease = computed(() =>
   branch.target.history.nodes
     .filter((commit) =>
       commit.statusCheckRollup?.contexts.nodes.some(
-        (context) => context.name === "Continuous Releases",
+        (context: { name: string }) => context.name === "Continuous Releases",
       ),
     )
     .map((commit) => ({
       ...commit,
       release: commit.statusCheckRollup.contexts.nodes.find(
-        (context) => context.name === "Continuous Releases",
+        (context: { name: string }) => context.name === "Continuous Releases",
       )!,
     })),
 );
@@ -148,13 +202,13 @@ async function fetchPage(page: number) {
 
   try {
     fetching.value = true;
-    const result = await $fetch("/api/repo/commits", {
+    const result = (await $fetch("/api/repo/commits", {
       query: {
         owner: props.owner,
         repo: props.repo,
         page: String(page),
       },
-    });
+    })) as RepoCommitsResponse;
 
     currentPage.value = result.target.history.pageInfo.currentPage || page;
     branch.id = result.id;
@@ -182,7 +236,11 @@ async function goPrevPage() {
 
 <template>
   <div class="flex flex-col gap-6">
-    <div class="flex flex-col gap-2">
+    <div v-if="showInitialLoading" class="flex justify-center py-12">
+      <UIcon name="i-ph-spinner-gap" class="animate-spin text-2xl opacity-70" />
+    </div>
+
+    <div v-else class="flex flex-col gap-2">
       <div
         v-for="commit of commitsWithRelease"
         :key="commit.id"
@@ -288,7 +346,7 @@ async function goPrevPage() {
     </div>
 
     <div
-      v-if="!commitsWithRelease.length"
+      v-if="!showInitialLoading && !commitsWithRelease.length"
       class="flex flex-col items-center gap-4 border border-gray-100 dark:border-gray-800 rounded-xl p-8"
     >
       <UIcon name="i-ph-crane-tower-light" class="text-6xl opacity-50" />
