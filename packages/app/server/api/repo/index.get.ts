@@ -42,33 +42,45 @@ const getRepoInfo = defineCachedFunction(
   },
 );
 
-export default defineEventHandler(async (event) => {
-  try {
-    const query = await getValidatedQuery(event, (data) =>
-      querySchema.parse(data),
-    );
-    setHeader(
-      event,
-      "Cache-Control",
-      "public, max-age=30, s-maxage=120, stale-while-revalidate=300",
-    );
-    return getRepoInfo(query.owner, query.repo, event);
-  } catch (error) {
-    console.error("Error in repo info endpoint:", error);
-    return {
-      error: true,
-      message: (error as Error).message,
-      id: "error",
-      name: "error",
-      owner: {
+export default defineCachedEventHandler(
+  async (event) => {
+    try {
+      const query = await getValidatedQuery(event, (data) =>
+        querySchema.parse(data),
+      );
+      setHeader(
+        event,
+        "CDN-Cache-Control",
+        "public, max-age=300, stale-while-revalidate=3600",
+      );
+      return getRepoInfo(query.owner, query.repo, event);
+    } catch (error) {
+      console.error("Error in repo info endpoint:", error);
+      return {
+        error: true,
+        message: (error as Error).message,
         id: "error",
-        avatarUrl: "",
-        login: "error",
-      },
-      url: "",
-      homepageUrl: "",
-      description: "Error fetching repository data",
-      releaseCount: 0,
-    };
-  }
-});
+        name: "error",
+        owner: {
+          id: "error",
+          avatarUrl: "",
+          login: "error",
+        },
+        url: "",
+        homepageUrl: "",
+        description: "Error fetching repository data",
+        releaseCount: 0,
+      };
+    }
+  },
+  {
+    name: "api-repo",
+    getKey: (event) => {
+      const q = getQuery(event) as Record<string, string | undefined>;
+      return `${q.owner ?? ""}:${q.repo ?? ""}`;
+    },
+    maxAge: 60 * 5,
+    swr: true,
+    staleMaxAge: 60 * 60,
+  },
+);
