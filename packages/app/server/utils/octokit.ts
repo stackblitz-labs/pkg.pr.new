@@ -59,16 +59,29 @@ export function useOctokitApp(event: H3Event): AppType {
   }
 }
 
+const getInstallationIdCached = defineCachedFunction(
+  async (owner: string, repo: string, event: H3Event): Promise<number> => {
+    const app = useOctokitApp(event);
+    const { data } = await app.octokit.request(
+      "GET /repos/{owner}/{repo}/installation",
+      { owner, repo },
+    );
+    return data.id as number;
+  },
+  {
+    name: "installationId",
+    getKey: (owner: string, repo: string) => `${owner}/${repo}`,
+    maxAge: 60 * 60 * 6,
+    swr: true,
+  },
+);
+
 export async function useOctokitInstallation(
   event: H3Event,
   owner: string,
   repo: string,
 ) {
   const app = useOctokitApp(event);
-  const { data: installationData } = await app.octokit.request(
-    "GET /repos/{owner}/{repo}/installation",
-    { owner, repo },
-  );
-
-  return app.getInstallationOctokit(installationData.id);
+  const id = await getInstallationIdCached(owner, repo, event);
+  return app.getInstallationOctokit(id);
 }
