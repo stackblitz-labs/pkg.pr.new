@@ -155,11 +155,7 @@ async function getDefaultBranchInfo(
   owner: string,
   repo: string,
 ) {
-  const defaultBranch = await getDefaultBranchCached(
-    owner,
-    repo,
-    installation,
-  );
+  const defaultBranch = await getDefaultBranchCached(owner, repo, installation);
 
   const cursorBucket = useCursorsBucket(
     event as Parameters<typeof useCursorsBucket>[0],
