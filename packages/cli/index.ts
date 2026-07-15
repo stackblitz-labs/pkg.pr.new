@@ -122,6 +122,12 @@ const main = defineCommand({
             description:
               "Set to true if your package is a binary application and you would like to show an execute command instead of an install command.",
           },
+          previewVersion: {
+            type: "boolean",
+            description:
+              "Rewrite the version field of every published package.json to '0.0.0-preview-<sha>' so package managers and consumers can clearly tell this is a preview build (not the real npm version). For monorepos, cross-package peerDependencies are updated to match.",
+            default: false,
+          },
         },
         run: async ({ args }) => {
           const rawInputs =
@@ -190,6 +196,14 @@ const main = defineCommand({
           const isBinaryApplication = !!args.bin;
           const isCommentWithSha = !!args.commentWithSha;
           const isCommentWithDev = !!args.commentWithDev;
+          const isPreviewVersion = !!args.previewVersion;
+
+          if (isPreviewVersion && tarballPaths.length > 0) {
+            console.error(
+              "pkg-pr-new: --previewVersion is not supported with prebuilt tarball (.tgz) inputs because the version is baked into the tarball at pack time. Rewrite the version before packing, or pass source directories instead.",
+            );
+            process.exit(1);
+          }
           const comment: Comment = args.comment as Comment;
           const selectedPackageManager = [
             ...new Set(
@@ -415,13 +429,26 @@ const main = defineCommand({
 
           const formattedSha = isCompact ? abbreviateCommitHash(sha) : sha;
 
+          const previewVersion = isPreviewVersion
+            ? `0.0.0-preview-${abbreviateCommitHash(sha)}`
+            : null;
+
+          if (previewVersion) {
+            console.warn(
+              `Rewriting package versions to ${previewVersion} (--previewVersion).`,
+            );
+          }
+
           for (const { packageName, pJson } of packageInfos) {
             const longDepUrl = new URL(
               `/${owner}/${repo}/${packageName}@${formattedSha}`,
               apiUrl,
             ).href;
             deps.set(packageName, longDepUrl);
-            realDeps?.set(packageName, pJson.version ?? longDepUrl);
+            realDeps?.set(
+              packageName,
+              previewVersion ?? pJson.version ?? longDepUrl,
+            );
 
             const controller = new AbortController();
             try {
@@ -482,6 +509,7 @@ const main = defineCommand({
               pJson,
               deps,
               realDeps,
+              null,
             );
 
             const gitignorePath = path.join(templateDir, ".gitignore");
@@ -563,7 +591,14 @@ const main = defineCommand({
 
             restoreMap.set(
               p,
-              await writeDeps(p, pJsonContents, pJson, deps, realDeps),
+              await writeDeps(
+                p,
+                pJsonContents,
+                pJson,
+                deps,
+                realDeps,
+                previewVersion,
+              ),
             );
           }
 
@@ -885,6 +920,7 @@ async function writeDeps(
   pJson: PackageJson,
   deps: Map<string, string>,
   realDeps: Map<string, string> | null,
+  newVersion: string | null,
 ) {
   const pJsonPath = path.resolve(p, "package.json");
 
@@ -894,6 +930,10 @@ async function writeDeps(
 
   if (realDeps) {
     hijackDeps(realDeps, pJson.peerDependencies);
+  }
+
+  if (newVersion) {
+    pJson.version = newVersion;
   }
 
   await writePackageJSON(pJsonPath, pJson);
