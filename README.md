@@ -146,7 +146,7 @@ pnpm exec pkg-pr-new publish './artifacts/*.tgz'
 ```
 
 > [!NOTE]
-> Prebuilt tarballs are uploaded **as-is**: pkg.pr.new will not repack them. If one tarball references another tarball being published in the same call, pkg.pr.new will print a warning and that reference will not be rewritten to a pkg.pr.new URL. Repack with the resolved version yourself if you need cross-package linking.
+> Prebuilt tarballs are uploaded **as-is**: pkg.pr.new will not repack them. If one tarball references another tarball being published in the same call, pkg.pr.new will print a warning and that reference will not be rewritten to a pkg.pr.new URL. Repack with the resolved version yourself if you need cross-package linking. `--previewVersion` is also unsupported with prebuilt tarballs for the same reason.
 
 > [!CAUTION]
 > In CI environments, avoid `npx`, `pnpm dlx`, `yarn dlx`, and `bunx` for this step. Install `pkg-pr-new` as a dependency and execute it from the lockfile (`npm exec`, `pnpm exec`, `yarn`, or `bun run`).
@@ -202,6 +202,21 @@ Without `--bin`:
 ```sh
 npm i https://pkg.pr.new/pkg-pr-new@a832a55
 ```
+
+By default, preview packages keep the `version` from your source `package.json`. That can clash with a later npm release of the same version: a lockfile may keep resolving `1.0.0` to the pkg.pr.new tarball instead of the published package.
+
+Use `--previewVersion` to rewrite every published package's `version` to `0.0.0-preview-<sha>` before packing (working tree is restored afterward):
+
+```sh
+pnpm exec pkg-pr-new publish --previewVersion './packages/*'
+```
+
+For example, `1.0.0` becomes `0.0.0-preview-a832a55`. The `0.0.0-` prefix cannot satisfy a normal semver range for a real release, so lockfile collisions with npm versions are avoided.
+
+In monorepos, sibling `dependencies` / `devDependencies` / `optionalDependencies` are still rewritten to pkg.pr.new URLs as usual. With `--peerDeps`, cross-package `peerDependencies` are updated to the preview version as well.
+
+> [!NOTE]
+> `--previewVersion` only works with source directories. It is not supported when publishing prebuilt `.tgz` / `.tar.gz` inputs — rewrite the version before packing, or pass directories instead.
 
 You can control publishing comments with `--comment`:
 
