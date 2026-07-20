@@ -215,8 +215,7 @@ For example, `1.0.0` becomes `0.0.0-preview-a832a55`. The `0.0.0-` prefix cannot
 
 In monorepos, sibling `dependencies` / `devDependencies` / `optionalDependencies` are still rewritten to pkg.pr.new URLs as usual. With `--peerDeps`, cross-package `peerDependencies` are updated to the preview version as well.
 
-> [!NOTE]
-> `--previewVersion` only works with source directories. It is not supported when publishing prebuilt `.tgz` / `.tar.gz` inputs — rewrite the version before packing, or pass directories instead.
+> [!NOTE] > `--previewVersion` only works with source directories. It is not supported when publishing prebuilt `.tgz` / `.tar.gz` inputs — rewrite the version before packing, or pass directories instead.
 
 You can control publishing comments with `--comment`:
 
