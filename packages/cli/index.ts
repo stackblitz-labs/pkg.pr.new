@@ -589,12 +589,35 @@ const main = defineCommand({
               continue;
             }
 
+            // `pack` publishes the package.json from publishConfig.directory when set, so rewrite
+            // the deps in that built package.json rather than the source one — otherwise its
+            // workspace:/link: specifiers get resolved to plain versions instead of pkg.pr.new URLs.
+            // See https://github.com/stackblitz-labs/pkg.pr.new/issues/389
+            let depDir = p;
+            let depContents = pJsonContents;
+            let depJson = pJson;
+            const publishDir = pJson.publishConfig?.directory;
+            if (typeof publishDir === "string") {
+              const builtDir = path.resolve(p, publishDir);
+              const builtContents = await tryReadFile(
+                path.resolve(builtDir, "package.json"),
+              );
+              const builtJson = builtContents
+                ? parsePackageJson(builtContents)
+                : null;
+              if (builtContents && builtJson) {
+                depDir = builtDir;
+                depContents = builtContents;
+                depJson = builtJson;
+              }
+            }
+
             restoreMap.set(
               p,
               await writeDeps(
-                p,
-                pJsonContents,
-                pJson,
+                depDir,
+                depContents,
+                depJson,
                 deps,
                 realDeps,
                 previewVersion,
@@ -922,41 +945,23 @@ async function writeDeps(
   realDeps: Map<string, string> | null,
   newVersion: string | null,
 ) {
-  // When publishConfig.directory is set, `pack` publishes the package.json from that directory,
-  // not this one. That built package.json still holds the original workspace:/link: specifiers,
-  // so the dependency rewriting has to target it — otherwise the packed tarball ships resolved
-  // versions instead of pkg.pr.new URLs. See https://github.com/stackblitz-labs/pkg.pr.new/issues/389
-  let targetPath = path.resolve(p, "package.json");
-  let targetContents = pJsonContents;
-  let targetJson = pJson;
+  const pJsonPath = path.resolve(p, "package.json");
 
-  const publishDir = pJson.publishConfig?.directory;
-  if (typeof publishDir === "string") {
-    const builtPath = path.resolve(p, publishDir, "package.json");
-    const builtContents = await tryReadFile(builtPath);
-    const builtJson = builtContents ? parsePackageJson(builtContents) : null;
-    if (builtContents && builtJson) {
-      targetPath = builtPath;
-      targetContents = builtContents;
-      targetJson = builtJson;
-    }
-  }
-
-  hijackDeps(deps, targetJson.dependencies);
-  hijackDeps(deps, targetJson.devDependencies);
-  hijackDeps(deps, targetJson.optionalDependencies);
+  hijackDeps(deps, pJson.dependencies);
+  hijackDeps(deps, pJson.devDependencies);
+  hijackDeps(deps, pJson.optionalDependencies);
 
   if (realDeps) {
-    hijackDeps(realDeps, targetJson.peerDependencies);
+    hijackDeps(realDeps, pJson.peerDependencies);
   }
 
   if (newVersion) {
-    targetJson.version = newVersion;
+    pJson.version = newVersion;
   }
 
-  await writePackageJSON(targetPath, targetJson);
+  await writePackageJSON(pJsonPath, pJson);
 
-  return () => fs.writeFile(targetPath, targetContents);
+  return () => fs.writeFile(pJsonPath, pJsonContents);
 }
 
 function hijackDeps(
