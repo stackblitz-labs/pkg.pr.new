@@ -589,12 +589,41 @@ const main = defineCommand({
               continue;
             }
 
+            // `pnpm pack` publishes the package.json from publishConfig.directory when set, so
+            // rewrite the deps in that built package.json rather than the source one — otherwise its
+            // workspace:/link: specifiers get resolved to plain versions instead of pkg.pr.new URLs.
+            // Only pnpm honors publishConfig.directory; npm/yarn/bun pack the source dir as-is.
+            // See https://github.com/stackblitz-labs/pkg.pr.new/issues/389
+            let depDir = p;
+            let depContents = pJsonContents;
+            let depJson = pJson;
+            const publishDir = pJson.publishConfig?.directory;
+            if (packMethod === "pnpm" && typeof publishDir === "string") {
+              const builtDir = path.resolve(p, publishDir);
+              const builtContents = await tryReadFile(
+                path.resolve(builtDir, "package.json"),
+              );
+              const builtJson = builtContents
+                ? parsePackageJson(builtContents)
+                : null;
+              if (builtContents && builtJson) {
+                depDir = builtDir;
+                depContents = builtContents;
+                depJson = builtJson;
+              } else {
+                console.warn(
+                  `Could not read ${path.join(publishDir, "package.json")} for ${pJson.name}; ` +
+                    `its workspace dependencies may not be rewritten to pkg.pr.new URLs.`,
+                );
+              }
+            }
+
             restoreMap.set(
               p,
               await writeDeps(
-                p,
-                pJsonContents,
-                pJson,
+                depDir,
+                depContents,
+                depJson,
                 deps,
                 realDeps,
                 previewVersion,
