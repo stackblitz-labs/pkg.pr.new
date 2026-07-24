@@ -193,7 +193,17 @@ const main = defineCommand({
 
           const isPeerDepsEnabled = !!args.peerDeps;
           const isOnlyTemplates = !!args["only-templates"];
-          const isBinaryApplication = !!args.bin;
+          const binArg = args.bin as boolean | string | undefined;
+          const binAllPackages =
+            binArg === true ||
+            (typeof binArg === "string" && binArg.toLowerCase() === "true");
+          const binExplicitNames =
+            typeof binArg === "string" && !binAllPackages
+              ? binArg
+                  .split(",")
+                  .map((s) => s.trim())
+                  .filter(Boolean)
+              : [];
           const isCommentWithSha = !!args.commentWithSha;
           const isCommentWithDev = !!args.commentWithDev;
           const isPreviewVersion = !!args.previewVersion;
@@ -410,6 +420,23 @@ const main = defineCommand({
               }
             }
           }
+
+          const knownPackageNames = new Set(
+            packageInfos.map((info) => info.packageName),
+          );
+          const binPackages = new Set<string>(
+            binAllPackages
+              ? knownPackageNames
+              : binExplicitNames.filter((name) => {
+                  if (knownPackageNames.has(name)) {
+                    return true;
+                  }
+                  console.warn(
+                    `--bin: '${name}' does not match any package being published (known: ${[...knownPackageNames].join(", ") || "(none)"}). Ignoring.`,
+                  );
+                  return false;
+                }),
+          );
 
           if (isCompact) {
             for (const { packageName } of packageInfos) {
@@ -801,7 +828,8 @@ const main = defineCommand({
               "sb-key": key,
               "sb-shasums": JSON.stringify(shasums),
               "sb-run-id": GITHUB_RUN_ID,
-              "sb-bin": `${isBinaryApplication}`,
+              "sb-bin": `${binPackages.size > 0 && binPackages.size === knownPackageNames.size}`,
+              "sb-bin-packages": JSON.stringify([...binPackages]),
               "sb-package-manager": selectedPackageManager.join(","),
               "sb-only-templates": `${isOnlyTemplates}`,
               "sb-comment-with-sha": `${isCommentWithSha}`,
