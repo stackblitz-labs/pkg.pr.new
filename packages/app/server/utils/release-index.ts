@@ -111,25 +111,11 @@ async function putJson(
   });
 }
 
-async function deletePrefix(binding: R2Bucket, prefix: string): Promise<void> {
-  let listCursor: string | undefined;
-  do {
-    const response = await binding.list({
-      cursor: listCursor,
-      limit: 1000,
-      prefix,
-    } as any);
-    if (response.objects.length > 0) {
-      await Promise.all(
-        response.objects.map((object: { key: string }) =>
-          binding.delete(object.key),
-        ),
-      );
-    }
-    listCursor = response.truncated ? response.cursor : undefined;
-  } while (listCursor);
-}
-
+/**
+ * Best-effort upsert of one commit's release index entry.
+ * Only deletes a prior *index* key for the same sha when the timestamp key changes.
+ * Never touches `bucket:package:...` tarball objects.
+ */
 export async function upsertReleaseIndexEntry(
   event: Event,
   owner: string,
@@ -243,30 +229,35 @@ export async function ensureReleaseIndexBackfilled(
 
     listCursor = response.truncated ? response.cursor : undefined;
   } while (listCursor);
-
-  // drop any partial index left by publishes before backfill finished
-  await deletePrefix(binding, indexPrefix(owner, repo));
-  await deletePrefix(binding, shaPrefix(owner, repo));
-
   const entries = [...rows.entries()];
-  const batchSize = 25;
-  for (let i = 0; i < entries.length; i += batchSize) {
-    const batch = entries.slice(i, i + batchSize);
-    await Promise.all(
-      batch.map(async ([sha, value]) => {
-        const payload: ReleaseIndexEntry = {
-          sha,
-          uploadedAt: value.uploadedAt,
-          packages: [...value.packages].sort(),
-        };
-        await putJson(
-          binding,
-          indexObjectKey(owner, repo, payload.uploadedAt, sha),
-          payload,
-        );
-        await putJson(binding, shaPointerKey(owner, repo, sha), payload);
-      }),
-    );
+  for (const [sha, value] of entries) {
+    const pointerKey = shaPointerKey(owner, repo, sha);
+    const existing = await readJson<ReleaseIndexEntry>(binding, pointerKey);
+    const payload: ReleaseIndexEntry = {
+      sha,
+      uploadedAt: value.uploadedAt,
+      packages: [...value.packages].sort(),
+    };
+    const newKey = indexObjectKey(owner, repo, payload.uploadedAt, sha);
+
+    if (existing) {
+      const oldKey = indexObjectKey(
+        owner,
+        repo,
+        existing.uploadedAt,
+        existing.sha,
+      );
+      if (oldKey !== newKey) {
+        try {
+          await binding.delete(oldKey);
+        } catch {
+          // ignore stale index key cleanup failures
+        }
+      }
+    }
+
+    await putJson(binding, newKey, payload);
+    await putJson(binding, pointerKey, payload);
   }
 
   await putJson(binding, countKey(owner, repo), rows.size);
