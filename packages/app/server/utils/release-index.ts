@@ -18,7 +18,14 @@ export interface ReleaseIndexPage {
   hasNextPage: boolean;
 }
 
-// Fits inverted timestamps in a fixed-width lexicographic field.
+interface BackfillMeta {
+  version: number;
+  at: number;
+  count: number;
+}
+
+const BACKFILL_VERSION = 1;
+
 const TS_WIDTH = 16;
 const TS_MAX = 10 ** TS_WIDTH - 1;
 
@@ -43,6 +50,13 @@ export const useReleaseCountBucket = {
   },
 };
 
+export const useReleaseBackfillBucket = {
+  key: "release-backfill",
+  get base() {
+    return joinKeys("bucket", this.key);
+  },
+};
+
 function invertTimestamp(uploadedAt: number): string {
   const inverted = Math.max(0, TS_MAX - Math.trunc(uploadedAt));
   return String(inverted).padStart(TS_WIDTH, "0");
@@ -50,6 +64,10 @@ function invertTimestamp(uploadedAt: number): string {
 
 function indexPrefix(owner: string, repo: string): string {
   return `${useReleaseIndexBucket.base}:${owner}:${repo}:`;
+}
+
+function shaPrefix(owner: string, repo: string): string {
+  return `${useReleaseShaBucket.base}:${owner}:${repo}:`;
 }
 
 function indexObjectKey(
@@ -62,11 +80,15 @@ function indexObjectKey(
 }
 
 function shaPointerKey(owner: string, repo: string, sha: string): string {
-  return `${useReleaseShaBucket.base}:${owner}:${repo}:${sha}`;
+  return `${shaPrefix(owner, repo)}${sha}`;
 }
 
 function countKey(owner: string, repo: string): string {
   return `${useReleaseCountBucket.base}:${owner}:${repo}`;
+}
+
+function backfillKey(owner: string, repo: string): string {
+  return `${useReleaseBackfillBucket.base}:${owner}:${repo}`;
 }
 
 async function readJson<T>(binding: R2Bucket, key: string): Promise<T | null> {
@@ -87,6 +109,25 @@ async function putJson(
   await binding.put(key, JSON.stringify(value), {
     httpMetadata: { contentType: "application/json" },
   });
+}
+
+async function deletePrefix(binding: R2Bucket, prefix: string): Promise<void> {
+  let listCursor: string | undefined;
+  do {
+    const response = await binding.list({
+      cursor: listCursor,
+      limit: 1000,
+      prefix,
+    } as any);
+    if (response.objects.length > 0) {
+      await Promise.all(
+        response.objects.map((object: { key: string }) =>
+          binding.delete(object.key),
+        ),
+      );
+    }
+    listCursor = response.truncated ? response.cursor : undefined;
+  } while (listCursor);
 }
 
 export async function upsertReleaseIndexEntry(
@@ -150,26 +191,22 @@ export async function getReleaseIndexEntryBySha(
   return readJson<ReleaseIndexEntry>(binding, shaPointerKey(owner, repo, sha));
 }
 
-async function indexHasAny(
+async function isBackfillComplete(
   event: Event,
   owner: string,
   repo: string,
 ): Promise<boolean> {
   const binding = useBinding(event);
-  const listed = await binding.list({
-    prefix: indexPrefix(owner, repo),
-    limit: 1,
-  } as any);
-  return listed.objects.length > 0;
+  const meta = await readJson<BackfillMeta>(binding, backfillKey(owner, repo));
+  return meta?.version === BACKFILL_VERSION;
 }
 
-// one time per repo
 export async function ensureReleaseIndexBackfilled(
   event: Event,
   owner: string,
   repo: string,
 ): Promise<void> {
-  if (await indexHasAny(event, owner, repo)) {
+  if (await isBackfillComplete(event, owner, repo)) {
     return;
   }
 
@@ -207,6 +244,10 @@ export async function ensureReleaseIndexBackfilled(
     listCursor = response.truncated ? response.cursor : undefined;
   } while (listCursor);
 
+  // drop any partial index left by publishes before backfill finished
+  await deletePrefix(binding, indexPrefix(owner, repo));
+  await deletePrefix(binding, shaPrefix(owner, repo));
+
   const entries = [...rows.entries()];
   const batchSize = 25;
   for (let i = 0; i < entries.length; i += batchSize) {
@@ -229,6 +270,11 @@ export async function ensureReleaseIndexBackfilled(
   }
 
   await putJson(binding, countKey(owner, repo), rows.size);
+  await putJson(binding, backfillKey(owner, repo), {
+    version: BACKFILL_VERSION,
+    at: Date.now(),
+    count: rows.size,
+  } satisfies BackfillMeta);
 }
 
 export async function listReleaseIndexPage(
@@ -281,18 +327,16 @@ export async function listReleaseIndexPage(
     }
 
     if (!response.truncated || items.length >= safePerPage) {
-      listCursor = response.truncated ? response.cursor : undefined;
       break;
     }
     listCursor = response.cursor;
   }
 
-  // Peek one more only when count is missing/stale.
   let hasNextPage = skip + items.length < totalCount;
   if (!hasNextPage && items.length === safePerPage) {
     const peek = await binding.list({
       prefix,
-      limit: skip + safePerPage + 1,
+      limit: Math.min(1000, skip + safePerPage + 1),
     } as any);
     hasNextPage = peek.objects.length > skip + safePerPage;
   }
