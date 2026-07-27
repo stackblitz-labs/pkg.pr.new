@@ -1,6 +1,9 @@
 import type { H3Event } from "h3";
 import { z } from "zod";
-import { getRepoReleaseCount } from "../../utils/bucket";
+import {
+  ensureReleaseIndexBackfilled,
+  getReleaseCount,
+} from "../../utils/release-index";
 
 const querySchema = z.object({
   owner: z.string(),
@@ -10,7 +13,8 @@ const querySchema = z.object({
 const getRepoInfo = defineCachedFunction(
   async (owner: string, repo: string, event: H3Event) => {
     try {
-      const releaseCount = await getRepoReleaseCount(event as any, owner, repo);
+      await ensureReleaseIndexBackfilled(event as any, owner, repo);
+      const releaseCount = await getReleaseCount(event as any, owner, repo);
 
       return {
         id: `${owner}/${repo}`,

@@ -3,9 +3,11 @@ import {
   setHeader,
   getRouterParams,
   createError,
-  getQuery,
 } from "h3";
-import { getRepoReleaseCount } from "../../../utils/bucket";
+import {
+  ensureReleaseIndexBackfilled,
+  getReleaseCount,
+} from "../../../utils/release-index";
 import { LOGO_BASE64 } from "../../../../shared/constants";
 
 export default defineEventHandler(async (event) => {
@@ -20,7 +22,8 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const releaseCount = await getRepoReleaseCount(event, owner, repo);
+  await ensureReleaseIndexBackfilled(event, owner, repo);
+  const releaseCount = await getReleaseCount(event, owner, repo);
 
   const style = "flat";
   const color = "000";
