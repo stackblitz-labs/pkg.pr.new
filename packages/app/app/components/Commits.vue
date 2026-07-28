@@ -12,6 +12,26 @@ interface PackageInfo {
   isOnNpm: boolean;
 }
 
+interface RepoCommitsResponse {
+  id: string;
+  name: string;
+  target: {
+    id: string;
+    history: {
+      nodes: any[];
+      pageInfo: {
+        hasNextPage: boolean;
+        endCursor: string | null;
+        currentPage: number;
+        perPage: number;
+        totalCount: number;
+        totalPages: number;
+        indexReady?: boolean;
+      };
+    };
+  };
+}
+
 const props = defineProps<{
   owner: string;
   repo: string;
@@ -20,7 +40,29 @@ const props = defineProps<{
 
 const requestFetch = useRequestFetch();
 
-const { data } = await useAsyncData(
+function createEmptyBranch(): RepoCommitsResponse {
+  return {
+    id: `releases-${props.owner}-${props.repo}`,
+    name: "all refs",
+    target: {
+      id: `releases-target-${props.owner}-${props.repo}`,
+      history: {
+        nodes: [],
+        pageInfo: {
+          hasNextPage: false,
+          endCursor: null,
+          currentPage: 1,
+          perPage: 10,
+          totalCount: 0,
+          totalPages: 1,
+          indexReady: true,
+        },
+      },
+    },
+  };
+}
+
+const { data, pending } = await useAsyncData<RepoCommitsResponse>(
   `repo-commits:${props.owner}:${props.repo}:page:1`,
   () =>
     requestFetch("/api/repo/commits", {
@@ -28,30 +70,44 @@ const { data } = await useAsyncData(
         owner: props.owner,
         repo: props.repo,
       },
-    }),
+    }) as Promise<RepoCommitsResponse>,
   {
     server: false,
     lazy: true,
+    default: createEmptyBranch,
   },
 );
 
-if (!data.value) {
-  throw createError("Could not load Commits");
-}
+const branch = shallowReactive<RepoCommitsResponse>(createEmptyBranch());
+watch(
+  data,
+  (next) => {
+    if (!next) return;
+    branch.id = next.id;
+    branch.name = next.name;
+    branch.target = next.target;
+  },
+  { immediate: true },
+);
 
-const branch = shallowReactive(data.value);
+const indexReady = computed(
+  () => branch.target.history.pageInfo.indexReady !== false,
+);
+const showInitialLoading = computed(
+  () => pending.value && branch.target.history.nodes.length === 0,
+);
 
 const commitsWithRelease = computed(() =>
   branch.target.history.nodes
     .filter((commit) =>
       commit.statusCheckRollup?.contexts.nodes.some(
-        (context) => context.name === "Continuous Releases",
+        (context: { name: string }) => context.name === "Continuous Releases",
       ),
     )
     .map((commit) => ({
       ...commit,
       release: commit.statusCheckRollup.contexts.nodes.find(
-        (context) => context.name === "Continuous Releases",
+        (context: { name: string }) => context.name === "Continuous Releases",
       )!,
     })),
 );
@@ -60,8 +116,16 @@ const selectedCommit = shallowRef<
   (typeof commitsWithRelease.value)[number] | null
 >(null);
 
+function closeSelectedCommit() {
+  selectedCommit.value = null;
+}
+
 let shiki: HighlighterCore | null = null;
 const colorMode = useColorMode();
+let backfillPollTimer: ReturnType<typeof setTimeout> | null = null;
+let backfillPollAttempts = 0;
+
+const MAX_BACKFILL_POLL_ATTEMPTS = 30;
 
 const highlightCache = new Map<string, string>();
 
@@ -88,6 +152,10 @@ onBeforeMount(() => {
 });
 
 onBeforeUnmount(() => {
+  if (backfillPollTimer) {
+    clearTimeout(backfillPollTimer);
+    backfillPollTimer = null;
+  }
   shiki?.dispose();
   shiki = null;
 });
@@ -148,13 +216,13 @@ async function fetchPage(page: number) {
 
   try {
     fetching.value = true;
-    const result = await $fetch("/api/repo/commits", {
+    const result = (await $fetch("/api/repo/commits", {
       query: {
         owner: props.owner,
         repo: props.repo,
         page: String(page),
       },
-    });
+    })) as RepoCommitsResponse;
 
     currentPage.value = result.target.history.pageInfo.currentPage || page;
     branch.id = result.id;
@@ -164,6 +232,46 @@ async function fetchPage(page: number) {
     fetching.value = false;
   }
 }
+
+function scheduleBackfillPoll() {
+  if (
+    import.meta.server ||
+    indexReady.value ||
+    backfillPollTimer ||
+    backfillPollAttempts >= MAX_BACKFILL_POLL_ATTEMPTS
+  ) {
+    return;
+  }
+
+  const delay = Math.min(10000, 2000 * (backfillPollAttempts + 1));
+  backfillPollTimer = setTimeout(async () => {
+    backfillPollTimer = null;
+    backfillPollAttempts += 1;
+    try {
+      await fetchPage(1);
+    } catch (error) {
+      console.error("[pkg.pr.new] Failed to refresh release index:", error);
+    } finally {
+      scheduleBackfillPoll();
+    }
+  }, delay);
+}
+
+watch(
+  indexReady,
+  (ready) => {
+    if (ready) {
+      backfillPollAttempts = 0;
+    }
+    if (ready && backfillPollTimer) {
+      clearTimeout(backfillPollTimer);
+      backfillPollTimer = null;
+      return;
+    }
+    scheduleBackfillPoll();
+  },
+  { immediate: true },
+);
 
 async function goNextPage() {
   if (!hasNextPage.value) {
@@ -182,7 +290,17 @@ async function goPrevPage() {
 
 <template>
   <div class="flex flex-col gap-6">
-    <div class="flex flex-col gap-2">
+    <div
+      v-if="showInitialLoading || !indexReady"
+      class="flex flex-col items-center gap-3 py-12"
+    >
+      <UIcon name="i-ph-spinner-gap" class="animate-spin text-2xl opacity-70" />
+      <p v-if="!indexReady" class="text-sm opacity-70">
+        Indexing historical releases in the background…
+      </p>
+    </div>
+
+    <div v-else class="flex flex-col gap-2">
       <div
         v-for="commit of commitsWithRelease"
         :key="commit.id"
@@ -248,7 +366,7 @@ async function goPrevPage() {
     </div>
 
     <div
-      v-if="commitsWithRelease.length"
+      v-if="indexReady && commitsWithRelease.length"
       class="flex justify-center items-center gap-1 flex-wrap"
     >
       <UButton
@@ -288,7 +406,7 @@ async function goPrevPage() {
     </div>
 
     <div
-      v-if="!commitsWithRelease.length"
+      v-if="!showInitialLoading && indexReady && !commitsWithRelease.length"
       class="flex flex-col items-center gap-4 border border-gray-100 dark:border-gray-800 rounded-xl p-8"
     >
       <UIcon name="i-ph-crane-tower-light" class="text-6xl opacity-50" />
@@ -311,7 +429,7 @@ async function goPrevPage() {
       :ui="{
         content: 'w-screen max-w-[800px]',
       }"
-      @update:open="selectedCommit = null"
+      @update:open="closeSelectedCommit"
     >
       <template #content>
         <div
@@ -325,7 +443,7 @@ async function goPrevPage() {
               variant="subtle"
               size="sm"
               class="mr-2"
-              @click="selectedCommit = null"
+              @click="closeSelectedCommit"
             />
 
             <UIcon name="i-ph-git-commit" class="opacity-50 flex-none" />

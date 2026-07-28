@@ -1,8 +1,7 @@
-import type { H3Event } from "h3";
 import { z } from "zod";
 import {
-  ensureReleaseIndexBackfilled,
   getReleaseCount,
+  scheduleReleaseIndexBackfill,
 } from "../../utils/release-index";
 
 const querySchema = z.object({
@@ -10,47 +9,52 @@ const querySchema = z.object({
   repo: z.string(),
 });
 
-const getRepoInfo = defineCachedFunction(
-  async (owner: string, repo: string, event: H3Event) => {
-    try {
-      await ensureReleaseIndexBackfilled(event as any, owner, repo);
-      const releaseCount = await getReleaseCount(event as any, owner, repo);
-
-      return {
-        id: `${owner}/${repo}`,
-        name: repo,
-        owner: {
-          id: owner,
-          avatarUrl: `https://github.com/${owner}.png`,
-          login: owner,
-        },
-        url: `https://github.com/${owner}/${repo}`,
-        homepageUrl: "",
-        description: "",
-        releaseCount,
-      };
-    } catch (error) {
-      console.error(
-        `Error fetching repository info for ${owner}/${repo}:`,
-        error,
-      );
-      throw error;
-    }
-  },
-  {
-    getKey: (owner: string, repo: string, _event?: H3Event) =>
-      `${owner}/${repo}`,
-    maxAge: 60 * 30, // 30 minutes
-    swr: true,
-  },
-);
-
 export default defineEventHandler(async (event) => {
   try {
     const query = await getValidatedQuery(event, (data) =>
       querySchema.parse(data),
     );
-    return getRepoInfo(query.owner, query.repo, event);
+    let releaseIndexReady = false;
+    let releaseCount = 0;
+    try {
+      releaseIndexReady = await scheduleReleaseIndexBackfill(
+        event,
+        query.owner,
+        query.repo,
+      );
+      releaseCount = await getReleaseCount(event, query.owner, query.repo);
+    } catch (error) {
+      // Repository identity is derived from the route and does not depend on
+      // the index. Keep the page available if R2 is temporarily unavailable.
+      console.error(
+        `Error reading release index for ${query.owner}/${query.repo}:`,
+        error,
+      );
+    }
+
+    // Never cache an incomplete migration result.
+    setHeader(
+      event,
+      "Cache-Control",
+      releaseIndexReady
+        ? "public, max-age=30, s-maxage=120, stale-while-revalidate=300"
+        : "no-store",
+    );
+
+    return {
+      id: `${query.owner}/${query.repo}`,
+      name: query.repo,
+      owner: {
+        id: query.owner,
+        avatarUrl: `https://github.com/${query.owner}.png`,
+        login: query.owner,
+      },
+      url: `https://github.com/${query.owner}/${query.repo}`,
+      homepageUrl: "",
+      description: "",
+      releaseCount,
+      releaseIndexReady,
+    };
   } catch (error) {
     console.error("Error in repo info endpoint:", error);
     return {

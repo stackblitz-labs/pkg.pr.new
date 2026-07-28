@@ -188,13 +188,14 @@ export default defineEventHandler(async (event) => {
         : 1;
 
     const bindingEvent = event as Parameters<typeof listReleaseIndexPage>[0];
-    const { items, totalCount, hasNextPage } = await listReleaseIndexPage(
-      bindingEvent,
-      query.owner,
-      query.repo,
-      page,
-      perPage,
-    );
+    const { items, totalCount, hasNextPage, indexReady } =
+      await listReleaseIndexPage(
+        bindingEvent,
+        query.owner,
+        query.repo,
+        page,
+        perPage,
+      );
 
     const installation = await useOctokitInstallation(
       event,
@@ -259,7 +260,9 @@ export default defineEventHandler(async (event) => {
     setHeader(
       event,
       "Cache-Control",
-      "public, max-age=30, s-maxage=120, stale-while-revalidate=300",
+      indexReady
+        ? "public, max-age=30, s-maxage=120, stale-while-revalidate=300"
+        : "no-store",
     );
 
     return {
@@ -321,6 +324,7 @@ export default defineEventHandler(async (event) => {
             perPage,
             totalCount,
             totalPages,
+            indexReady,
           },
         },
       },

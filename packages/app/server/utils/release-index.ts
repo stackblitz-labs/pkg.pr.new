@@ -4,6 +4,7 @@ import { useBinding, usePackagesBucket } from "./bucket";
 
 interface Event {
   context: { cloudflare: H3EventContext["cloudflare"] };
+  waitUntil?: (promise: Promise<unknown>) => void;
 }
 
 export interface ReleaseIndexEntry {
@@ -16,6 +17,7 @@ export interface ReleaseIndexPage {
   items: ReleaseIndexEntry[];
   totalCount: number;
   hasNextPage: boolean;
+  indexReady: boolean;
 }
 
 interface BackfillMeta {
@@ -27,7 +29,10 @@ interface BackfillMeta {
 const BACKFILL_VERSION = 1;
 
 const TS_WIDTH = 16;
-const TS_MAX = 10 ** TS_WIDTH - 1;
+const TS_MAX = Number.MAX_SAFE_INTEGER;
+const BACKFILL_BATCH_SIZE = 25;
+
+const activeBackfills = new Map<string, Promise<void>>();
 
 export const useReleaseIndexBucket = {
   key: "release-index",
@@ -177,7 +182,7 @@ export async function getReleaseIndexEntryBySha(
   return readJson<ReleaseIndexEntry>(binding, shaPointerKey(owner, repo, sha));
 }
 
-async function isBackfillComplete(
+export async function isReleaseIndexReady(
   event: Event,
   owner: string,
   repo: string,
@@ -192,7 +197,7 @@ export async function ensureReleaseIndexBackfilled(
   owner: string,
   repo: string,
 ): Promise<void> {
-  if (await isBackfillComplete(event, owner, repo)) {
+  if (await isReleaseIndexReady(event, owner, repo)) {
     return;
   }
 
@@ -230,34 +235,41 @@ export async function ensureReleaseIndexBackfilled(
     listCursor = response.truncated ? response.cursor : undefined;
   } while (listCursor);
   const entries = [...rows.entries()];
-  for (const [sha, value] of entries) {
-    const pointerKey = shaPointerKey(owner, repo, sha);
-    const existing = await readJson<ReleaseIndexEntry>(binding, pointerKey);
-    const payload: ReleaseIndexEntry = {
-      sha,
-      uploadedAt: value.uploadedAt,
-      packages: [...value.packages].sort(),
-    };
-    const newKey = indexObjectKey(owner, repo, payload.uploadedAt, sha);
+  for (let i = 0; i < entries.length; i += BACKFILL_BATCH_SIZE) {
+    await Promise.all(
+      entries.slice(i, i + BACKFILL_BATCH_SIZE).map(async ([sha, value]) => {
+        const pointerKey = shaPointerKey(owner, repo, sha);
+        const existing = await readJson<ReleaseIndexEntry>(binding, pointerKey);
+        const payload: ReleaseIndexEntry = {
+          sha,
+          uploadedAt: value.uploadedAt,
+          packages: [...value.packages].sort(),
+        };
+        const newKey = indexObjectKey(owner, repo, payload.uploadedAt, sha);
 
-    if (existing) {
-      const oldKey = indexObjectKey(
-        owner,
-        repo,
-        existing.uploadedAt,
-        existing.sha,
-      );
-      if (oldKey !== newKey) {
-        try {
-          await binding.delete(oldKey);
-        } catch {
-          // ignore stale index key cleanup failures
+        // Write the replacement before deleting stale index metadata.
+        await Promise.all([
+          putJson(binding, newKey, payload),
+          putJson(binding, pointerKey, payload),
+        ]);
+
+        if (existing) {
+          const oldKey = indexObjectKey(
+            owner,
+            repo,
+            existing.uploadedAt,
+            existing.sha,
+          );
+          if (oldKey !== newKey) {
+            try {
+              await binding.delete(oldKey);
+            } catch {
+              // ignore stale index key cleanup failures
+            }
+          }
         }
-      }
-    }
-
-    await putJson(binding, newKey, payload);
-    await putJson(binding, pointerKey, payload);
+      }),
+    );
   }
 
   await putJson(binding, countKey(owner, repo), rows.size);
@@ -268,6 +280,40 @@ export async function ensureReleaseIndexBackfilled(
   } satisfies BackfillMeta);
 }
 
+/**
+ * Start historical indexing without adding it to request latency.
+ * The work is idempotent; the marker is written only after a complete rebuild.
+ */
+export async function scheduleReleaseIndexBackfill(
+  event: Event,
+  owner: string,
+  repo: string,
+): Promise<boolean> {
+  if (await isReleaseIndexReady(event, owner, repo)) {
+    return true;
+  }
+
+  const key = `${owner}/${repo}`;
+  let task = activeBackfills.get(key);
+  if (!task) {
+    task = ensureReleaseIndexBackfilled(event, owner, repo).finally(() => {
+      activeBackfills.delete(key);
+    });
+    activeBackfills.set(key, task);
+  }
+
+  const handledTask = task.catch((error) => {
+    console.error(`[release-index] backfill failed for ${key}:`, error);
+  });
+  if (typeof event.waitUntil === "function") {
+    event.waitUntil(handledTask);
+  } else {
+    void handledTask;
+  }
+
+  return false;
+}
+
 export async function listReleaseIndexPage(
   event: Event,
   owner: string,
@@ -275,7 +321,7 @@ export async function listReleaseIndexPage(
   page: number,
   perPage: number,
 ): Promise<ReleaseIndexPage> {
-  await ensureReleaseIndexBackfilled(event, owner, repo);
+  const indexReady = await scheduleReleaseIndexBackfill(event, owner, repo);
 
   const binding = useBinding(event);
   const prefix = indexPrefix(owner, repo);
@@ -337,5 +383,6 @@ export async function listReleaseIndexPage(
     totalCount:
       totalCount > 0 ? totalCount : skip + items.length + (hasNextPage ? 1 : 0),
     hasNextPage,
+    indexReady,
   };
 }
