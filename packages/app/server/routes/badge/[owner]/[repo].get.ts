@@ -5,8 +5,8 @@ import {
   createError,
 } from "h3";
 import {
-  ensureReleaseIndexBackfilled,
   getReleaseCount,
+  scheduleReleaseIndexBackfill,
 } from "../../../utils/release-index";
 import { LOGO_BASE64 } from "../../../../shared/constants";
 
@@ -22,15 +22,22 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  await ensureReleaseIndexBackfilled(event, owner, repo);
+  const releaseIndexReady = await scheduleReleaseIndexBackfill(
+    event,
+    owner,
+    repo,
+  );
   const releaseCount = await getReleaseCount(event, owner, repo);
 
   const style = "flat";
   const color = "000";
+  const message = releaseIndexReady
+    ? `${releaseCount} | pkg.pr.new`
+    : "indexing | pkg.pr.new";
 
   const shieldsUrl =
     `https://img.shields.io/static/v1?` +
-    `label=&message=${encodeURIComponent(`${releaseCount} | pkg.pr.new`)}` +
+    `label=&message=${encodeURIComponent(message)}` +
     `&color=${color}` +
     `&style=${style}` +
     `&logo=data:image/svg+xml;base64,${LOGO_BASE64}` +
@@ -40,6 +47,10 @@ export default defineEventHandler(async (event) => {
   const svg = await res.text();
 
   setHeader(event, "Content-Type", "image/svg+xml");
-  setHeader(event, "Cache-Control", "public, max-age=86400, immutable");
+  setHeader(
+    event,
+    "Cache-Control",
+    releaseIndexReady ? "public, max-age=86400, immutable" : "no-store",
+  );
   return svg;
 });
