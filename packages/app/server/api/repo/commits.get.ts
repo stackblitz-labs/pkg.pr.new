@@ -1,35 +1,13 @@
 import type { H3Event } from "h3";
 import { z } from "zod";
 import { generatePublishUrl } from "../../utils/markdown";
-import {
-  useBinding,
-  useCursorsBucket,
-  usePackagesBucket,
-} from "../../utils/bucket";
+import { useCursorsBucket } from "../../utils/bucket";
 import { useOctokitInstallation } from "../../utils/octokit";
-
-function createTimer(label: string) {
-  const start = Date.now();
-  const marks: Array<{ name: string; ms: number }> = [];
-  let last = start;
-  return {
-    mark(name: string, extra?: Record<string, unknown>) {
-      const now = Date.now();
-      const ms = now - last;
-      last = now;
-      marks.push({ name, ms, ...extra });
-      console.log(`[commits.timing] ${label} ${name}=${ms}ms`, extra ?? "");
-    },
-    end(extra?: Record<string, unknown>) {
-      const total = Date.now() - start;
-      console.log(
-        `[commits.timing] ${label} TOTAL=${total}ms`,
-        JSON.stringify({ marks, ...extra }),
-      );
-      return total;
-    },
-  };
-}
+import {
+  getReleaseIndexEntryBySha,
+  listReleaseIndexPage,
+  type ReleaseIndexEntry,
+} from "../../utils/release-index";
 
 function encodePackageNameForUrl(packageName: string): string {
   if (packageName.startsWith("@")) {
@@ -43,20 +21,12 @@ function encodePackageNameForUrl(packageName: string): string {
 
 const isPackageOnNpm = defineCachedFunction(
   async (packageName: string): Promise<boolean> => {
-    // This body only runs on a cache MISS, so it measures the real network cost.
-    const start = Date.now();
     try {
       const url = `https://registry.npmjs.org/${encodePackageNameForUrl(packageName)}`;
       const res = await fetch(url, { method: "HEAD" });
-      console.log(
-        `[isPackageOnNpm.timing] MISS ${packageName}=${Date.now() - start}ms ok=${res.ok}`,
-      );
       return res.ok;
     } catch (err) {
-      console.error(
-        `[isPackageOnNpm] check failed for ${packageName} after ${Date.now() - start}ms:`,
-        err,
-      );
+      console.error(`[isPackageOnNpm] check failed for ${packageName}:`, err);
       return false;
     }
   },
@@ -76,12 +46,6 @@ const querySchema = z.object({
   per_page: z.string().optional().default("10"),
 });
 
-interface ReleaseRow {
-  sha: string;
-  uploadedAt: number;
-  packages: Set<string>;
-}
-
 interface CommitMeta {
   message: string | null;
   branch: string | null;
@@ -93,24 +57,10 @@ async function getCommitMetadata(
   repo: string,
   shas: string[],
 ) {
-  const githubTimings = {
-    getCommit: { count: 0, totalMs: 0, maxMs: 0 },
-    branchesWhereHead: { count: 0, totalMs: 0, maxMs: 0 },
-    listPRs: { count: 0, totalMs: 0, maxMs: 0 },
-  };
-
-  function record(bucket: keyof typeof githubTimings, ms: number) {
-    const b = githubTimings[bucket];
-    b.count += 1;
-    b.totalMs += ms;
-    b.maxMs = Math.max(b.maxMs, ms);
-  }
-
   async function fetchCommitMeta(sha: string): Promise<CommitMeta> {
     let message: string | null = null;
     let branch: string | null = null;
 
-    let t = Date.now();
     try {
       const { data } = await installation.rest.repos.getCommit({
         owner,
@@ -123,9 +73,7 @@ async function getCommitMetadata(
         message = title;
       }
     } catch {}
-    record("getCommit", Date.now() - t);
 
-    t = Date.now();
     try {
       const { data } = await installation.request(
         "GET /repos/{owner}/{repo}/commits/{commit_sha}/branches-where-head",
@@ -140,10 +88,8 @@ async function getCommitMetadata(
         branch = branchName;
       }
     } catch {}
-    record("branchesWhereHead", Date.now() - t);
 
     if (!branch) {
-      t = Date.now();
       try {
         const { data } =
           await installation.rest.repos.listPullRequestsAssociatedWithCommit({
@@ -162,7 +108,6 @@ async function getCommitMetadata(
           branch = prBranch.trim();
         }
       } catch {}
-      record("listPRs", Date.now() - t);
     }
 
     return {
@@ -176,11 +121,6 @@ async function getCommitMetadata(
       const meta = await fetchCommitMeta(sha);
       return [sha, meta] as const;
     }),
-  );
-
-  console.log(
-    `[commits.timing] ${owner}/${repo} github-calls`,
-    JSON.stringify(githubTimings),
   );
 
   return new Map(entries);
@@ -240,8 +180,6 @@ export default defineEventHandler(async (event) => {
       querySchema.parse(data),
     );
 
-    const timer = createTimer(`${query.owner}/${query.repo}`);
-
     const perPage = Number.parseInt(query.per_page, 10);
     const page = query.page
       ? Number.parseInt(query.page, 10)
@@ -249,91 +187,47 @@ export default defineEventHandler(async (event) => {
         ? Number.parseInt(query.cursor, 10)
         : 1;
 
-    const binding = useBinding(event as Parameters<typeof useBinding>[0]);
-    const prefix = `${usePackagesBucket.base}:${query.owner}:${query.repo}:`;
-    const rows = new Map<string, ReleaseRow>();
-    let listCursor: string | undefined;
-    let listPages = 0;
-    let listObjects = 0;
-
-    do {
-      const response = await binding.list({
-        cursor: listCursor,
-        limit: 1000,
-        prefix,
-      } as any);
-
-      listPages += 1;
-      listObjects += response.objects.length;
-
-      for (const object of response.objects) {
-        const key = object.key;
-        const trimmed = key.slice(prefix.length);
-        const [sha, ...packageNameParts] = trimmed.split(":");
-        if (!sha || packageNameParts.length === 0) {
-          continue;
-        }
-        const packageName = packageNameParts.join("/");
-        const uploadedAt = new Date(object.uploaded).getTime();
-
-        const row = rows.get(sha);
-        if (row) {
-          row.packages.add(packageName);
-          row.uploadedAt = Math.max(row.uploadedAt, uploadedAt);
-        } else {
-          rows.set(sha, {
-            sha,
-            uploadedAt,
-            packages: new Set([packageName]),
-          });
-        }
-      }
-
-      listCursor = response.truncated ? response.cursor : undefined;
-    } while (listCursor);
-
-    timer.mark("r2-list", {
-      pages: listPages,
-      objects: listObjects,
-      commits: rows.size,
-    });
+    const bindingEvent = event as Parameters<typeof listReleaseIndexPage>[0];
+    const { items, totalCount, hasNextPage } = await listReleaseIndexPage(
+      bindingEvent,
+      query.owner,
+      query.repo,
+      page,
+      perPage,
+    );
 
     const installation = await useOctokitInstallation(
       event,
       query.owner,
       query.repo,
     );
-    timer.mark("octokit-installation");
-
     const { pinnedSha, defaultBranch } = await getDefaultBranchInfo(
       event,
       installation,
       query.owner,
       query.repo,
     );
-    timer.mark("default-branch-info");
 
-    // Server-side ordering guarantees pagination consistency.
-    const releases = [...rows.values()].sort((a, b) => {
-      if (pinnedSha) {
-        if (a.sha === pinnedSha && b.sha !== pinnedSha) {
-          return -1;
-        }
-        if (b.sha === pinnedSha && a.sha !== pinnedSha) {
-          return 1;
-        }
+    // keep pinned default-branch release first on page 1
+    let pageItems: ReleaseIndexEntry[] = items;
+    if (page === 1 && pinnedSha) {
+      const pinned =
+        items.find((row) => row.sha === pinnedSha) ??
+        (await getReleaseIndexEntryBySha(
+          bindingEvent,
+          query.owner,
+          query.repo,
+          pinnedSha,
+        ));
+      if (pinned) {
+        pageItems = [
+          pinned,
+          ...items.filter((row) => row.sha !== pinned.sha),
+        ].slice(0, perPage);
       }
-      if (b.uploadedAt !== a.uploadedAt) {
-        return b.uploadedAt - a.uploadedAt;
-      }
-      return b.sha.localeCompare(a.sha);
-    });
-    const start = Math.max(0, (page - 1) * perPage);
-    const end = start + perPage;
-    const pageItems = releases.slice(start, end);
-    const hasNextPage = end < releases.length;
+    }
+
     const nextCursor = hasNextPage ? String(page + 1) : null;
-    const totalCount = releases.length;
     const totalPages = Math.max(1, Math.ceil(totalCount / perPage));
     const origin = import.meta.dev
       ? getRequestURL(event).origin
@@ -344,7 +238,6 @@ export default defineEventHandler(async (event) => {
       query.repo,
       pageItems.map((row) => row.sha),
     );
-    timer.mark("commit-metadata", { commits: pageItems.length });
 
     const uniquePackages = new Set<string>();
     for (const row of pageItems) {
@@ -362,20 +255,12 @@ export default defineEventHandler(async (event) => {
     const packagesOnNpm = new Set<string>(
       npmCheckResults.filter(([, ok]) => ok).map(([name]) => name),
     );
-    timer.mark("npm-checks", { packages: uniquePackages.size });
 
     setHeader(
       event,
       "Cache-Control",
       "public, max-age=30, s-maxage=120, stale-while-revalidate=300",
     );
-
-    timer.end({
-      page,
-      perPage,
-      totalCommits: releases.length,
-      returnedCommits: pageItems.length,
-    });
 
     return {
       id: `releases-${query.owner}-${query.repo}`,

@@ -143,48 +143,17 @@ export function useDebugBucket(event: Event) {
 useDebugBucket.key = "debug";
 useDebugBucket.base = joinKeys(useBucket.base, useDebugBucket.key);
 
+/** @deprecated Prefer getReleaseCount from release-index after ensureReleaseIndexBackfilled. */
 export async function getRepoReleaseCount(
   event: Event,
   owner: string,
   repo: string,
 ): Promise<number> {
-  const start = Date.now();
   try {
-    const binding = useBinding(event);
-    const prefix = `${usePackagesBucket.base}:${owner}:${repo}:`;
-
-    const uniqueCommitShas = new Set<string>();
-    let cursor: string | undefined;
-    let pages = 0;
-    let objects = 0;
-
-    do {
-      const response = await binding.list({
-        cursor,
-        limit: 1000,
-        prefix,
-      } as any);
-
-      pages += 1;
-      objects += response.objects.length;
-
-      for (const { key } of response.objects) {
-        if (!key.startsWith(prefix)) continue;
-
-        const trimmedKey = key.slice(prefix.length);
-        const [sha] = trimmedKey.split(":");
-        if (sha) uniqueCommitShas.add(sha);
-      }
-
-      cursor = response.truncated ? response.cursor : undefined;
-    } while (cursor);
-
-    console.log(
-      `[releaseCount.timing] ${owner}/${repo} TOTAL=${Date.now() - start}ms`,
-      JSON.stringify({ pages, objects, commits: uniqueCommitShas.size }),
-    );
-
-    return uniqueCommitShas.size;
+    const { ensureReleaseIndexBackfilled, getReleaseCount } =
+      await import("./release-index");
+    await ensureReleaseIndexBackfilled(event, owner, repo);
+    return await getReleaseCount(event, owner, repo);
   } catch (error) {
     console.error(`Error counting releases for ${owner}/${repo}:`, error);
     return 0;
