@@ -9,6 +9,7 @@ on:
 
 jobs:
   deploy:
+    if: github.repository == 'stackblitz-labs/pkg.pr.new'
     runs-on: ubuntu-latest
     name: Deploy
     environment: ${{ startsWith(github.ref, 'refs/tags/v') && 'Production' || 'Staging' }}
