@@ -295,12 +295,12 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - run: corepack enable
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 24
           cache: "pnpm"
 
       - name: Install dependencies
@@ -345,12 +345,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - run: corepack enable
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 24
           cache: "pnpm"
 
       - name: Install dependencies
@@ -402,12 +402,12 @@ jobs:
       urls: ${{ steps.publish.outputs.urls }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - run: corepack enable
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 24
           cache: "pnpm"
 
       - name: Install dependencies
@@ -424,14 +424,14 @@ jobs:
     needs: publish
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: user/my-package-e2e
 
       - run: corepack enable
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 24
 
       - name: Install dependencies
         run: pnpm install
@@ -460,7 +460,7 @@ For advanced use cases where you want more control over the messages posted by p
 
 ```yml
 - name: Post or update comment
-  uses: actions/github-script@v6
+  uses: actions/github-script@v9
   with:
     github-token: ${{ secrets.GITHUB_TOKEN }}
     script: |
