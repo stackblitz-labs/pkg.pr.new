@@ -62,6 +62,23 @@ export const useReleaseBackfillBucket = {
   },
 };
 
+export const useReleaseStatusBucket = {
+  key: "release-status",
+  get base() {
+    return joinKeys("bucket", this.key);
+  },
+};
+
+export interface BackfillStatus {
+  phase: "listing" | "writing" | "done" | "error";
+  listedObjects: number;
+  distinctShas: number;
+  written: number;
+  startedAt: number;
+  updatedAt: number;
+  error?: string;
+}
+
 function invertTimestamp(uploadedAt: number): string {
   const inverted = Math.max(0, TS_MAX - Math.trunc(uploadedAt));
   return String(inverted).padStart(TS_WIDTH, "0");
@@ -96,6 +113,10 @@ function backfillKey(owner: string, repo: string): string {
   return `${useReleaseBackfillBucket.base}:${owner}:${repo}`;
 }
 
+function statusKey(owner: string, repo: string): string {
+  return `${useReleaseStatusBucket.base}:${owner}:${repo}`;
+}
+
 async function readJson<T>(binding: R2Bucket, key: string): Promise<T | null> {
   const obj = await binding.get(key);
   if (!obj) return null;
@@ -114,6 +135,27 @@ async function putJson(
   await binding.put(key, JSON.stringify(value), {
     httpMetadata: { contentType: "application/json" },
   });
+}
+
+async function putStatus(
+  binding: R2Bucket,
+  owner: string,
+  repo: string,
+  status: Omit<BackfillStatus, "updatedAt">,
+): Promise<void> {
+  await putJson(binding, statusKey(owner, repo), {
+    ...status,
+    updatedAt: Date.now(),
+  } satisfies BackfillStatus);
+}
+
+export async function readBackfillStatus(
+  event: Event,
+  owner: string,
+  repo: string,
+): Promise<BackfillStatus | null> {
+  const binding = useBinding(event);
+  return readJson<BackfillStatus>(binding, statusKey(owner, repo));
 }
 
 /**
@@ -202,82 +244,127 @@ export async function ensureReleaseIndexBackfilled(
   }
 
   const binding = useBinding(event);
+  const startedAt = Date.now();
   const prefix = `${usePackagesBucket.base}:${owner}:${repo}:`;
   const rows = new Map<string, { uploadedAt: number; packages: Set<string> }>();
   let listCursor: string | undefined;
+  let listedObjects = 0;
 
-  do {
-    const response = await binding.list({
-      cursor: listCursor,
-      limit: 1000,
-      prefix,
-    } as any);
+  try {
+    await putStatus(binding, owner, repo, {
+      phase: "listing",
+      listedObjects: 0,
+      distinctShas: 0,
+      written: 0,
+      startedAt,
+    });
 
-    for (const object of response.objects) {
-      const trimmed = object.key.slice(prefix.length);
-      const [sha, ...packageNameParts] = trimmed.split(":");
-      if (!sha || packageNameParts.length === 0) continue;
+    do {
+      const response = await binding.list({
+        cursor: listCursor,
+        limit: 1000,
+        prefix,
+      } as any);
 
-      const packageName = packageNameParts.join("/");
-      const uploadedAt = new Date(object.uploaded).getTime();
-      const row = rows.get(sha);
-      if (row) {
-        row.packages.add(packageName);
-        row.uploadedAt = Math.max(row.uploadedAt, uploadedAt);
-      } else {
-        rows.set(sha, {
-          uploadedAt,
-          packages: new Set([packageName]),
-        });
+      for (const object of response.objects) {
+        listedObjects += 1;
+        const trimmed = object.key.slice(prefix.length);
+        const [sha, ...packageNameParts] = trimmed.split(":");
+        if (!sha || packageNameParts.length === 0) continue;
+
+        const packageName = packageNameParts.join("/");
+        const uploadedAt = new Date(object.uploaded).getTime();
+        const row = rows.get(sha);
+        if (row) {
+          row.packages.add(packageName);
+          row.uploadedAt = Math.max(row.uploadedAt, uploadedAt);
+        } else {
+          rows.set(sha, {
+            uploadedAt,
+            packages: new Set([packageName]),
+          });
+        }
       }
-    }
 
-    listCursor = response.truncated ? response.cursor : undefined;
-  } while (listCursor);
-  const entries = [...rows.entries()];
-  for (let i = 0; i < entries.length; i += BACKFILL_BATCH_SIZE) {
-    await Promise.all(
-      entries.slice(i, i + BACKFILL_BATCH_SIZE).map(async ([sha, value]) => {
-        const pointerKey = shaPointerKey(owner, repo, sha);
-        const existing = await readJson<ReleaseIndexEntry>(binding, pointerKey);
-        const payload: ReleaseIndexEntry = {
-          sha,
-          uploadedAt: value.uploadedAt,
-          packages: [...value.packages].sort(),
-        };
-        const newKey = indexObjectKey(owner, repo, payload.uploadedAt, sha);
+      listCursor = response.truncated ? response.cursor : undefined;
+    } while (listCursor);
 
-        // Write the replacement before deleting stale index metadata.
-        await Promise.all([
-          putJson(binding, newKey, payload),
-          putJson(binding, pointerKey, payload),
-        ]);
+    const entries = [...rows.entries()];
+    await putStatus(binding, owner, repo, {
+      phase: "writing",
+      listedObjects,
+      distinctShas: entries.length,
+      written: 0,
+      startedAt,
+    });
 
-        if (existing) {
-          const oldKey = indexObjectKey(
-            owner,
-            repo,
-            existing.uploadedAt,
-            existing.sha,
+    let written = 0;
+    for (let i = 0; i < entries.length; i += BACKFILL_BATCH_SIZE) {
+      await Promise.all(
+        entries.slice(i, i + BACKFILL_BATCH_SIZE).map(async ([sha, value]) => {
+          const pointerKey = shaPointerKey(owner, repo, sha);
+          const existing = await readJson<ReleaseIndexEntry>(
+            binding,
+            pointerKey,
           );
-          if (oldKey !== newKey) {
-            try {
-              await binding.delete(oldKey);
-            } catch {
-              // ignore stale index key cleanup failures
+          const payload: ReleaseIndexEntry = {
+            sha,
+            uploadedAt: value.uploadedAt,
+            packages: [...value.packages].sort(),
+          };
+          const newKey = indexObjectKey(owner, repo, payload.uploadedAt, sha);
+
+          // Write the replacement before deleting stale index metadata.
+          await Promise.all([
+            putJson(binding, newKey, payload),
+            putJson(binding, pointerKey, payload),
+          ]);
+
+          if (existing) {
+            const oldKey = indexObjectKey(
+              owner,
+              repo,
+              existing.uploadedAt,
+              existing.sha,
+            );
+            if (oldKey !== newKey) {
+              try {
+                await binding.delete(oldKey);
+              } catch {
+                // ignore stale index key cleanup failures
+              }
             }
           }
-        }
-      }),
-    );
-  }
+        }),
+      );
+      written = Math.min(entries.length, i + BACKFILL_BATCH_SIZE);
+    }
 
-  await putJson(binding, countKey(owner, repo), rows.size);
-  await putJson(binding, backfillKey(owner, repo), {
-    version: BACKFILL_VERSION,
-    at: Date.now(),
-    count: rows.size,
-  } satisfies BackfillMeta);
+    await putJson(binding, countKey(owner, repo), rows.size);
+    await putJson(binding, backfillKey(owner, repo), {
+      version: BACKFILL_VERSION,
+      at: Date.now(),
+      count: rows.size,
+    } satisfies BackfillMeta);
+
+    await putStatus(binding, owner, repo, {
+      phase: "done",
+      listedObjects,
+      distinctShas: entries.length,
+      written,
+      startedAt,
+    });
+  } catch (error) {
+    await putStatus(binding, owner, repo, {
+      phase: "error",
+      listedObjects,
+      distinctShas: rows.size,
+      written: 0,
+      startedAt,
+      error: error instanceof Error ? error.message : String(error),
+    }).catch(() => {});
+    throw error;
+  }
 }
 
 /**
