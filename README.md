@@ -28,6 +28,21 @@ It is aiming to reduce the number of these comments :)
 
 > This was fixed in #18. Can we release that fix?
 
+## Table of Contents
+
+- [Badge](#badge)
+- [Setup](#setup)
+  - [Install the GitHub App](#install-the-github-app)
+  - [Publish Packages](#publish-packages)
+  - [CLI Options](#cli-options)
+    - [Comment Options](#comment-options)
+    - [URL and Version Options](#url-and-version-options)
+    - [Template Options](#template-options)
+    - [Package Manager for Packing](#package-manager-for-packing)
+  - [Workflow Examples](#workflow-examples)
+- [Custom GitHub Messages and Comments](#custom-github-messages-and-comments)
+- [Who's Using pkg.pr.new](#whos-using-pkgprnew)
+
 ## Badge
 
 Show that your project uses pkg.pr.new by adding a badge to your README:
@@ -46,86 +61,16 @@ Show that your project uses pkg.pr.new by adding a badge to your README:
    ```
    Just replace `OWNER` and `REPO` with your GitHub username/organization and repository name.
 
-These are some of the projects and companies using pkg.pr.new:
-
-<p align="center">
-  <a href="https://trigger.dev/"><img src="https://trigger.dev/assets/triggerdev-logo--with-border.svg" height="40"></a>
-  <a href="https://vuejs.org/"><img src="https://vuejs.org/images/logo.png" height="40"></a>
-  <a href="https://huggingface.co/"><img src="https://huggingface.co/front/assets/huggingface_logo.svg" height="40"></a>
-  <a href="https://about.meta.com/"><img src="https://github.com/facebook.png" height="40"></a>
-  <a href="https://nuxt.com/"><img src="https://nuxt.com/assets/design-kit/icon-green.png" height="40"></a>
-  <a href="https://vitejs.dev/"><img src="https://vitejs.dev/logo.svg" height="40"></a>
-  <a href="https://vitest.dev/"><img src="https://vitest.dev/logo.svg" height="40"></a>
-  <a href="https://github.com/volarjs"><img src="https://github.com/volarjs.png" height="40"></a>
-  <a href="https://qwik.builder.io/"><img src="https://qwik.builder.io/logos/qwik-logo.svg" height="40"></a>
-  <a href="https://qwikui.com/"><img src="https://qwikui.com/favicon.svg" height="40"></a>
-  <a href="https://tanstack.com/"><img src="https://avatars.githubusercontent.com/u/72518640?s=200&v=4" height="40"></a>
-  <a href="https://biomejs.dev/"><img src="https://github.com/biomejs.png" height="40"></a>
-  <a href="https://github.com/tinylibs"><img src="https://github.com/tinylibs.png" height="40"></a>
-  <a href="https://github.com/sanity-io/sanity"><picture><source media="(prefers-color-scheme: dark)" srcset="https://www.sanity.io/static/images/logo_white.svg"><source media="(prefers-color-scheme: light)" srcset="https://www.sanity.io/static/images/logo_black.svg"><img height="40" alt="Sanity" src="https://www.sanity.io/static/images/logo.svg"></picture></a>
-  <a href="https://unjs.io/"><img src="https://avatars.githubusercontent.com/u/80154025?s=200&v=4" height="40"></a>
-  <a href="https://reka-ui.com/"><img src="https://reka-ui.com/logo.svg" height="40"></a>
-  <a href="https://www.gradio.app/"><img src="https://www.gradio.app/_app/immutable/assets/gradio.CHB5adID.svg" height="40"></a>
-  <a href="https://clockworklabs.io/"><img src="https://github.com/user-attachments/assets/85d42291-6676-4592-b6a0-ee4b6350dc47" height="40"></a>
-  <a href="https://valtio.pmnd.rs/"><img src="https://blog.stackblitz.com/posts/pkg-pr-new/valtio.svg" height="40"></a>
-  <a href="https://github.com/nksaraf/vinxi"><img src="https://github.com/nksaraf/vinxi/raw/main/docs/public/logo.png" height="40"></a>
-  <a href="https://github.com/scalar/scalar"><img src="https://github.com/scalar.png" height="40"></a>
-  <a href="https://tresjs.org/"><img src="https://avatars.githubusercontent.com/u/119253150?s=200&v=4" height="40"></a>
-  <a href="https://github.com/capawesome-team/"><img src="https://avatars.githubusercontent.com/u/105555861?s=200&v=4" height="40"></a>
-  <a href="https://unocss.dev"><img src="https://unocss.dev/logo.svg" height="40"></a>
-  <a href="https://github.com/kazupon/vue-i18n">
-    <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/intlify/art/master/logo_symbol_negative.svg" height="40" />
-        <img height="40" src="https://raw.githubusercontent.com/intlify/art/master/logo_symbol.svg">
-    </picture>
-  </a>
-  <a href="https://github.com/vite-pwa">
-    <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/vite-pwa/.github/main/hero-dark.svg" height="40" />
-        <img height="40" src="https://raw.githubusercontent.com/vite-pwa/.github/main/hero-light.svg">
-    </picture>
-  </a>
-   <a href="https://github.com/forge42dev/open-source-stack"><img src="https://avatars.githubusercontent.com/u/161314831?s=200&v=4" height="40"></a>
-   <a href="https://sidebase.io"><img src="https://avatars.githubusercontent.com/u/112630501?s=200&v=4" height="40"></a>
-   <a href="https://rolldown.rs/"><img src="https://avatars.githubusercontent.com/u/94954945" height="40"></a>
-   <a href="https://element-plus.org/"><img src="https://avatars.githubusercontent.com/u/68583457" height="40"></a>
-   <a href="https://valibot.dev/"><img src="https://raw.githubusercontent.com/fabian-hiller/valibot/main/brand/valibot-icon.svg" height="40"></a>
-   <a href="https://codemod.com/"><img src="https://github.com/codemod-com.png" height="40"></a>
-   <a href="https://uploadthing.com/"><img src="https://uploadthing.com/UploadThing-Logo.svg" height="40"></a>
-   <a href="https://nuqs.47ng.com"><img src="https://raw.githubusercontent.com/47ng/nuqs/e65560b518e5b60500ea28e59ce55bdb2079fcda/packages/docs/src/app/icon.svg" height="40"></a>
-   <a href="https://github.com/nuxt-modules/i18n"><img height="40" src="https://raw.githubusercontent.com/nuxt-modules/i18n/main/docs/public/icon.svg"></a>
-   <a href="https://github.com/codiume/orbit"><img height="40" src="https://avatars.githubusercontent.com/u/98262232"></a>
-   <a href="https://vue-mess-detector.webmania.cc"><img src="https://vue-mess-detector.webmania.cc/logo.png" alt="Vue Mess Detector Logo" height="40" /></a>
-   <a href="https://wxt.dev/"><img src="https://raw.githubusercontent.com/wxt-dev/wxt/HEAD/docs/public/hero-logo.svg" alt="WXT Framework Logo" height="40" /></a>
-   <a href="https://rspack.dev/"><img src="https://assets.rspack.dev/rspack/rspack-logo.svg" height="40"></a>
-   <a href="https://kermanx.github.io/reactive-vscode/"><img src="https://kermanx.github.io/reactive-vscode/logo.svg" height="40"></a>
-   <a href="https://fast-check.dev/"><img src="https://raw.githubusercontent.com/dubzzz/fast-check/252853fa2984d7f1a060d92423ffd6603735c086/website/static/img/mug.svg" height="40"></a>
-   <a href="https://svelte.dev"><img src="https://svelte.dev/favicon.png" height="40" /></a>
-   <a href="https://trpc.io"><img src="https://trpc.io/img/logo.svg" height="40" /></a>
-   <a href="https://kysely.dev"><img src="https://kysely.dev/img/logo.svg" height="40" /></a>
-   <a href="https://tutorialkit.dev/"><img src="https://raw.githubusercontent.com/stackblitz/tutorialkit/refs/tags/1.3.0/extensions/vscode/resources/tutorialkit-icon.png" height="40" /></a>
-   <a href="https://heyapi.dev"><img src="https://heyapi.dev/images/logo-300w.png" height="40" /></a>
-   <a href="https://github.com/ant-design"><img src="https://github.com/ant-design.png" height="40" /></a>
-   <a href="https://typeorm.io"><img src="https://github.com/typeorm/typeorm/blob/master/resources/typeorm-logo-colored-light.png" height="40" /></a>
-  <a href="https://preply.com"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/preply/design-system-visual-coverage/refs/heads/main/assets/logo-inverted.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/preply/design-system-visual-coverage/refs/heads/main/assets/logo.svg"><img height="40" alt="Preply" src="https://raw.githubusercontent.com/preply/design-system-visual-coverage/refs/heads/main/assets/logo.svg"></picture></a>
-  <a href="https://github.com/playcanvas/react"><img alt="playcanvas-react" src="https://avatars.githubusercontent.com/u/1030579?v=4" height="40" /></a>
-  <a href="https://babel.dev/"><img src="https://avatars.githubusercontent.com/u/9637642?s=200&v=4" height="40" /></a>
-  <a href="https://wasp.sh/"><img src="https://avatars.githubusercontent.com/wasp-lang" height="40" /></a>
-  <a href="https://better-auth.com/"><img src="https://avatars.githubusercontent.com/better-auth" height="40" /></a>
-  <a href="https://resend.com/"><picture><source media="(prefers-color-scheme: dark)" srcset="https://cdn.resend.com/brand/resend-wordmark-white.svg"><img src="https://cdn.resend.com/brand/resend-wordmark-black.svg" alt="Resend" height="40"></picture></a>
-  <a href="https://react.email/"><img src="https://react.email/brand/logo.png" alt="React Email" height="40" /></a>
-</p>
-
-Feel free to add your project or company here to join the pkg.pr.new family :)
-
-You can also join our discord server [here](https://discord.gg/stackblitz), so we all have fun together!
-
 ## Setup
+
+### Install the GitHub App
 
 First [install the GitHub Application](https://github.com/apps/pkg-pr-new).
 
 > [!IMPORTANT]
 > Make sure it's installed on the repository before trying to publish a package. To read about the permissions the app needs, check [#305](https://github.com/stackblitz-labs/pkg.pr.new/issues/305).
+
+### Publish Packages
 
 After installing on your repository, run `pkg-pr-new` from your lockfile in workflows (for example with `pnpm exec pkg-pr-new publish`) to get continuous releases.
 
@@ -154,68 +99,28 @@ pnpm exec pkg-pr-new publish './artifacts/*.tgz'
 > [!IMPORTANT]
 > Make sure the pkg-pr-new command runs only once in a defined workflow (that's part of how it avoids spam)! So instead of multiple times running pkg-pr-new for each workspace package, the command should be run one time for all the desired packages using the pattern above.
 
-For templates (experimental):
+### CLI Options
 
-> [!NOTE]
-> With templates, pkg.pr.new will generate Stackblitz instances for the given directories with the new built packages.
+Quick reference:
 
-```sh
-pnpm exec pkg-pr-new publish './packages/A' --template './examples/*'
-```
+| Flag                                    | Description                                                                                                             |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `--comment=update\|create\|off`         | How PR comments are posted (default: `update`)                                                                          |
+| `--commentWithSha`                      | Use commit SHA URLs instead of PR number URLs in comments                                                               |
+| `--commentWithDev`                      | Add the `-D` flag to install commands in comments                                                                       |
+| `--packageManager=npm\|pnpm\|yarn\|bun` | Package manager(s) shown in comments; accepts comma-separated values                                                    |
+| `--only-templates`                      | Show only templates in comments                                                                                         |
+| `--template './examples/*'`             | Generate StackBlitz templates for the given directories (experimental)                                                  |
+| `--no-template`                         | Disable the default template                                                                                            |
+| `--no-compact`                          | Force long-form URLs instead of compact URLs                                                                            |
+| `--bin`                                 | Show `npx` instead of `npm i` in comments                                                                               |
+| `--previewVersion`                      | Rewrite package versions to `0.0.0-preview-<sha>` before packing                                                        |
+| `--pnpm` / `--yarn` / `--bun`           | Use `pnpm pack`, `yarn pack`, or `bun pm pack` instead of `npm pack`                                                    |
+| `--json <file>`                         | Write publish metadata to a JSON file (see [Custom GitHub Messages and Comments](#custom-github-messages-and-comments)) |
 
-By default, pkg.pr.new will generate a template called "default" which includes each built package in the dependencies. This can be disabled with `--no-template`.
+#### Comment Options
 
-Compact URLs are the default (and will fall back to long form if npm metadata is unavailable). To force long-form URLs, use `--no-compact`:
-
-```sh
-pnpm exec pkg-pr-new publish --no-compact './packages/A' './packages/B'
-```
-
-> Compact URLs rely on your package being published on npm with a valid `repository` field in `package.json`. See [this](https://docs.npmjs.com/cli/v7/configuring-npm/package-json#repository). pkg.pr.new is case sensitive, if the GitHub owner is `PuruVJ`, the package.json `repository` field should not have `puruvj`.
-
-With default compact URLs:
-
-```sh
-npm i https://pkg.pr.new/tinybench@a832a55
-```
-
-With `--no-compact` or if npm metadata is unavailable:
-
-```sh
-npm i https://pkg.pr.new/tinylibs/tinybench/tinybench@a832a55
-```
-
-For CLI applications you might want to show `npx` instead of `npm i` for the preview command. This can be accomplished with the `--bin` flag:
-
-```sh
-pnpm exec pkg-pr-new publish --bin
-```
-
-With `--bin`:
-
-```sh
-npx https://pkg.pr.new/pkg-pr-new@a832a55
-```
-
-Without `--bin`:
-
-```sh
-npm i https://pkg.pr.new/pkg-pr-new@a832a55
-```
-
-By default, preview packages keep the `version` from your source `package.json`. That can clash with a later npm release of the same version: a lockfile may keep resolving `1.0.0` to the pkg.pr.new tarball instead of the published package.
-
-Use `--previewVersion` to rewrite every published package's `version` to `0.0.0-preview-<sha>` before packing (working tree is restored afterward):
-
-```sh
-pnpm exec pkg-pr-new publish --previewVersion './packages/*'
-```
-
-For example, `1.0.0` becomes `0.0.0-preview-a832a55`. The `0.0.0-` prefix cannot satisfy a normal semver range for a real release, so lockfile collisions with npm versions are avoided.
-
-In monorepos, sibling `dependencies` / `devDependencies` / `optionalDependencies` are still rewritten to pkg.pr.new URLs as usual. With `--peerDeps`, cross-package `peerDependencies` are updated to the preview version as well.
-
-> [!NOTE] > `--previewVersion` only works with source directories. It is not supported when publishing prebuilt `.tgz` / `.tar.gz` inputs — rewrite the version before packing, or pass directories instead.
+**`--comment`**
 
 You can control publishing comments with `--comment`:
 
@@ -228,6 +133,8 @@ Using `--comment=update`, pkg.pr.new would generate one initial comment and then
 With `--comment=create`, each commit would generate a comment for itself, useful for triggering workflows, like workflow execution using maintainer comments.
 
 And `--comment=off` would turn off comments for maintainers who prefer minimal pull requests.
+
+**`--commentWithSha`**
 
 > `--commentWithSha` specifies whether to replace the PR number with the commit SHA in the generated comments.
 
@@ -255,6 +162,8 @@ Generated comments use PR number URLs:
 npm i https://pkg.pr.new/tinybench@123
 ```
 
+**`--commentWithDev`**
+
 > `--commentWithDev` specify whether the generated link includes the `-D` parameter.
 
 With `--commentWithDev`:
@@ -269,9 +178,92 @@ Without `--commentWithDev`:
 npm i https://pkg.pr.new/tinybench@123
 ```
 
-To customize which package manager is reflected in the comments, use the `--packageManager=XYZ` flag. XYZ can be one of the following: npm (default), pnpm, yarn, or bun. Multiple valid values ​​can also be configured at the same time, such as `--packageManager=ABC,XYZ`.
+**`--packageManager`**
+
+To customize which package manager is reflected in the comments, use the `--packageManager=XYZ` flag. XYZ can be one of the following: npm (default), pnpm, yarn, or bun. Multiple valid values can also be configured at the same time, such as `--packageManager=ABC,XYZ`.
+
+**`--only-templates`**
 
 For repositories with many packages, comments might get too long. In that case, you can use `--only-templates` to only show templates.
+
+#### URL and Version Options
+
+**`--no-compact`**
+
+Compact URLs are the default (and will fall back to long form if npm metadata is unavailable). To force long-form URLs, use `--no-compact`:
+
+```sh
+pnpm exec pkg-pr-new publish --no-compact './packages/A' './packages/B'
+```
+
+> Compact URLs rely on your package being published on npm with a valid `repository` field in `package.json`. See [this](https://docs.npmjs.com/cli/v7/configuring-npm/package-json#repository). pkg.pr.new is case sensitive, if the GitHub owner is `PuruVJ`, the package.json `repository` field should not have `puruvj`.
+
+With default compact URLs:
+
+```sh
+npm i https://pkg.pr.new/tinybench@a832a55
+```
+
+With `--no-compact` or if npm metadata is unavailable:
+
+```sh
+npm i https://pkg.pr.new/tinylibs/tinybench/tinybench@a832a55
+```
+
+**`--bin`**
+
+For CLI applications you might want to show `npx` instead of `npm i` for the preview command. This can be accomplished with the `--bin` flag:
+
+```sh
+pnpm exec pkg-pr-new publish --bin
+```
+
+With `--bin`:
+
+```sh
+npx https://pkg.pr.new/pkg-pr-new@a832a55
+```
+
+Without `--bin`:
+
+```sh
+npm i https://pkg.pr.new/pkg-pr-new@a832a55
+```
+
+**`--previewVersion`**
+
+By default, preview packages keep the `version` from your source `package.json`. That can clash with a later npm release of the same version: a lockfile may keep resolving `1.0.0` to the pkg.pr.new tarball instead of the published package.
+
+Use `--previewVersion` to rewrite every published package's `version` to `0.0.0-preview-<sha>` before packing (working tree is restored afterward):
+
+```sh
+pnpm exec pkg-pr-new publish --previewVersion './packages/*'
+```
+
+For example, `1.0.0` becomes `0.0.0-preview-a832a55`. The `0.0.0-` prefix cannot satisfy a normal semver range for a real release, so lockfile collisions with npm versions are avoided.
+
+In monorepos, sibling `dependencies` / `devDependencies` / `optionalDependencies` are still rewritten to pkg.pr.new URLs as usual. With `--peerDeps`, cross-package `peerDependencies` are updated to the preview version as well.
+
+> [!NOTE] > `--previewVersion` only works with source directories. It is not supported when publishing prebuilt `.tgz` / `.tar.gz` inputs — rewrite the version before packing, or pass directories instead.
+
+#### Template Options
+
+**`--template`**
+
+For templates (experimental):
+
+> [!NOTE]
+> With templates, pkg.pr.new will generate Stackblitz instances for the given directories with the new built packages.
+
+```sh
+pnpm exec pkg-pr-new publish './packages/A' --template './examples/*'
+```
+
+**`--no-template`**
+
+By default, pkg.pr.new will generate a template called "default" which includes each built package in the dependencies. This can be disabled with `--no-template`.
+
+#### Package Manager for Packing
 
 pkg.pr.new uses `npm pack --json` under the hood, in case you face issues, you can also use the `--pnpm`, `--yarn`, or `--bun` flag so it starts using `pnpm pack`, `yarn pack`, or `bun pm pack`. This is not necessary in most cases.
 
@@ -286,7 +278,7 @@ pkg.pr.new uses `npm pack --json` under the hood, in case you face issues, you c
 
 pkg.pr.new is not available in your local environment and it only works in workflows.
 
-### Examples
+### Workflow Examples
 
 #### Release each commit and pull request:
 
@@ -591,3 +583,79 @@ This custom approach gives you full control over how pkg.pr.new communicates its
 Publishing is only available in workflows and it supports any workflow trigger event, more information [here](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#about-events-that-trigger-workflows).
 
 <p align="center"><img src="https://github.com/stackblitz-labs/pkg.pr.new/assets/37929992/e15abdc6-aaeb-4895-b2e9-0b73a019c1d0" /></p>
+
+## Who's Using pkg.pr.new
+
+These are some of the projects and companies using pkg.pr.new:
+
+<p align="center">
+  <a href="https://trigger.dev/"><img src="https://trigger.dev/assets/triggerdev-logo--with-border.svg" height="40"></a>
+  <a href="https://vuejs.org/"><img src="https://vuejs.org/images/logo.png" height="40"></a>
+  <a href="https://huggingface.co/"><img src="https://huggingface.co/front/assets/huggingface_logo.svg" height="40"></a>
+  <a href="https://about.meta.com/"><img src="https://github.com/facebook.png" height="40"></a>
+  <a href="https://nuxt.com/"><img src="https://nuxt.com/assets/design-kit/icon-green.png" height="40"></a>
+  <a href="https://vitejs.dev/"><img src="https://vitejs.dev/logo.svg" height="40"></a>
+  <a href="https://vitest.dev/"><img src="https://vitest.dev/logo.svg" height="40"></a>
+  <a href="https://github.com/volarjs"><img src="https://github.com/volarjs.png" height="40"></a>
+  <a href="https://qwik.builder.io/"><img src="https://qwik.builder.io/logos/qwik-logo.svg" height="40"></a>
+  <a href="https://qwikui.com/"><img src="https://qwikui.com/favicon.svg" height="40"></a>
+  <a href="https://tanstack.com/"><img src="https://avatars.githubusercontent.com/u/72518640?s=200&v=4" height="40"></a>
+  <a href="https://biomejs.dev/"><img src="https://github.com/biomejs.png" height="40"></a>
+  <a href="https://github.com/tinylibs"><img src="https://github.com/tinylibs.png" height="40"></a>
+  <a href="https://github.com/sanity-io/sanity"><picture><source media="(prefers-color-scheme: dark)" srcset="https://www.sanity.io/static/images/logo_white.svg"><source media="(prefers-color-scheme: light)" srcset="https://www.sanity.io/static/images/logo_black.svg"><img height="40" alt="Sanity" src="https://www.sanity.io/static/images/logo.svg"></picture></a>
+  <a href="https://unjs.io/"><img src="https://avatars.githubusercontent.com/u/80154025?s=200&v=4" height="40"></a>
+  <a href="https://reka-ui.com/"><img src="https://reka-ui.com/logo.svg" height="40"></a>
+  <a href="https://www.gradio.app/"><img src="https://www.gradio.app/_app/immutable/assets/gradio.CHB5adID.svg" height="40"></a>
+  <a href="https://clockworklabs.io/"><img src="https://github.com/user-attachments/assets/85d42291-6676-4592-b6a0-ee4b6350dc47" height="40"></a>
+  <a href="https://valtio.pmnd.rs/"><img src="https://blog.stackblitz.com/posts/pkg-pr-new/valtio.svg" height="40"></a>
+  <a href="https://github.com/nksaraf/vinxi"><img src="https://github.com/nksaraf/vinxi/raw/main/docs/public/logo.png" height="40"></a>
+  <a href="https://github.com/scalar/scalar"><img src="https://github.com/scalar.png" height="40"></a>
+  <a href="https://tresjs.org/"><img src="https://avatars.githubusercontent.com/u/119253150?s=200&v=4" height="40"></a>
+  <a href="https://github.com/capawesome-team/"><img src="https://avatars.githubusercontent.com/u/105555861?s=200&v=4" height="40"></a>
+  <a href="https://unocss.dev"><img src="https://unocss.dev/logo.svg" height="40"></a>
+  <a href="https://github.com/kazupon/vue-i18n">
+    <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/intlify/art/master/logo_symbol_negative.svg" height="40" />
+        <img height="40" src="https://raw.githubusercontent.com/intlify/art/master/logo_symbol.svg">
+    </picture>
+  </a>
+  <a href="https://github.com/vite-pwa">
+    <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/vite-pwa/.github/main/hero-dark.svg" height="40" />
+        <img height="40" src="https://raw.githubusercontent.com/vite-pwa/.github/main/hero-light.svg">
+    </picture>
+  </a>
+   <a href="https://github.com/forge42dev/open-source-stack"><img src="https://avatars.githubusercontent.com/u/161314831?s=200&v=4" height="40"></a>
+   <a href="https://sidebase.io"><img src="https://avatars.githubusercontent.com/u/112630501?s=200&v=4" height="40"></a>
+   <a href="https://rolldown.rs/"><img src="https://avatars.githubusercontent.com/u/94954945" height="40"></a>
+   <a href="https://element-plus.org/"><img src="https://avatars.githubusercontent.com/u/68583457" height="40"></a>
+   <a href="https://valibot.dev/"><img src="https://raw.githubusercontent.com/fabian-hiller/valibot/main/brand/valibot-icon.svg" height="40"></a>
+   <a href="https://codemod.com/"><img src="https://github.com/codemod-com.png" height="40"></a>
+   <a href="https://uploadthing.com/"><img src="https://uploadthing.com/UploadThing-Logo.svg" height="40"></a>
+   <a href="https://nuqs.47ng.com"><img src="https://raw.githubusercontent.com/47ng/nuqs/e65560b518e5b60500ea28e59ce55bdb2079fcda/packages/docs/src/app/icon.svg" height="40"></a>
+   <a href="https://github.com/nuxt-modules/i18n"><img height="40" src="https://raw.githubusercontent.com/nuxt-modules/i18n/main/docs/public/icon.svg"></a>
+   <a href="https://github.com/codiume/orbit"><img height="40" src="https://avatars.githubusercontent.com/u/98262232"></a>
+   <a href="https://vue-mess-detector.webmania.cc"><img src="https://vue-mess-detector.webmania.cc/logo.png" alt="Vue Mess Detector Logo" height="40" /></a>
+   <a href="https://wxt.dev/"><img src="https://raw.githubusercontent.com/wxt-dev/wxt/HEAD/docs/public/hero-logo.svg" alt="WXT Framework Logo" height="40" /></a>
+   <a href="https://rspack.dev/"><img src="https://assets.rspack.dev/rspack/rspack-logo.svg" height="40"></a>
+   <a href="https://kermanx.github.io/reactive-vscode/"><img src="https://kermanx.github.io/reactive-vscode/logo.svg" height="40"></a>
+   <a href="https://fast-check.dev/"><img src="https://raw.githubusercontent.com/dubzzz/fast-check/252853fa2984d7f1a060d92423ffd6603735c086/website/static/img/mug.svg" height="40"></a>
+   <a href="https://svelte.dev"><img src="https://svelte.dev/favicon.png" height="40" /></a>
+   <a href="https://trpc.io"><img src="https://trpc.io/img/logo.svg" height="40" /></a>
+   <a href="https://kysely.dev"><img src="https://kysely.dev/img/logo.svg" height="40" /></a>
+   <a href="https://tutorialkit.dev/"><img src="https://raw.githubusercontent.com/stackblitz/tutorialkit/refs/tags/1.3.0/extensions/vscode/resources/tutorialkit-icon.png" height="40" /></a>
+   <a href="https://heyapi.dev"><img src="https://heyapi.dev/images/logo-300w.png" height="40" /></a>
+   <a href="https://github.com/ant-design"><img src="https://github.com/ant-design.png" height="40" /></a>
+   <a href="https://typeorm.io"><img src="https://github.com/typeorm/typeorm/blob/master/resources/typeorm-logo-colored-light.png" height="40" /></a>
+  <a href="https://preply.com"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/preply/design-system-visual-coverage/refs/heads/main/assets/logo-inverted.svg"><source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/preply/design-system-visual-coverage/refs/heads/main/assets/logo.svg"><img height="40" alt="Preply" src="https://raw.githubusercontent.com/preply/design-system-visual-coverage/refs/heads/main/assets/logo.svg"></picture></a>
+  <a href="https://github.com/playcanvas/react"><img alt="playcanvas-react" src="https://avatars.githubusercontent.com/u/1030579?v=4" height="40" /></a>
+  <a href="https://babel.dev/"><img src="https://avatars.githubusercontent.com/u/9637642?s=200&v=4" height="40" /></a>
+  <a href="https://wasp.sh/"><img src="https://avatars.githubusercontent.com/wasp-lang" height="40" /></a>
+  <a href="https://better-auth.com/"><img src="https://avatars.githubusercontent.com/better-auth" height="40" /></a>
+  <a href="https://resend.com/"><picture><source media="(prefers-color-scheme: dark)" srcset="https://cdn.resend.com/brand/resend-wordmark-white.svg"><img src="https://cdn.resend.com/brand/resend-wordmark-black.svg" alt="Resend" height="40"></picture></a>
+  <a href="https://react.email/"><img src="https://react.email/brand/logo.png" alt="React Email" height="40" /></a>
+</p>
+
+Feel free to add your project or company here to join the pkg.pr.new family :)
+
+You can also join our discord server [here](https://discord.gg/stackblitz), so we all have fun together!
