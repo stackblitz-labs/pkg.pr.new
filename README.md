@@ -302,10 +302,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - run: corepack enable
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 24
           cache: "pnpm"
@@ -339,7 +339,7 @@ jobs:
     steps:
       - name: Check permissions
         id: checkPermissions
-        uses: actions-cool/check-user-permission@v2
+        uses: actions-cool/check-user-permission@c21884f3dda18dafc2f8b402fe807ccc9ec1aa5e # v2
         with:
           # In this example, the approver must have the write access
           # to the repository to trigger the package preview.
@@ -352,10 +352,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - run: corepack enable
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 24
           cache: "pnpm"
@@ -409,10 +409,10 @@ jobs:
       urls: ${{ steps.publish.outputs.urls }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - run: corepack enable
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 24
           cache: "pnpm"
@@ -431,12 +431,12 @@ jobs:
     needs: publish
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           repository: user/my-package-e2e
 
       - run: corepack enable
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 24
 
@@ -467,7 +467,7 @@ For advanced use cases where you want more control over the messages posted by p
 
 ```yml
 - name: Post or update comment
-  uses: actions/github-script@v9
+  uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
   with:
     github-token: ${{ secrets.GITHUB_TOKEN }}
     script: |
