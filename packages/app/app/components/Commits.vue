@@ -26,7 +26,6 @@ interface RepoCommitsResponse {
         perPage: number;
         totalCount: number;
         totalPages: number;
-        indexReady?: boolean;
       };
     };
   };
@@ -55,7 +54,6 @@ function createEmptyBranch(): RepoCommitsResponse {
           perPage: 10,
           totalCount: 0,
           totalPages: 1,
-          indexReady: true,
         },
       },
     },
@@ -90,9 +88,6 @@ watch(
   { immediate: true },
 );
 
-const indexReady = computed(
-  () => branch.target.history.pageInfo.indexReady !== false,
-);
 const showInitialLoading = computed(
   () => pending.value && branch.target.history.nodes.length === 0,
 );
@@ -122,10 +117,6 @@ function closeSelectedCommit() {
 
 let shiki: HighlighterCore | null = null;
 const colorMode = useColorMode();
-let backfillPollTimer: ReturnType<typeof setTimeout> | null = null;
-let backfillPollAttempts = 0;
-
-const MAX_BACKFILL_POLL_ATTEMPTS = 30;
 
 const highlightCache = new Map<string, string>();
 
@@ -152,10 +143,6 @@ onBeforeMount(() => {
 });
 
 onBeforeUnmount(() => {
-  if (backfillPollTimer) {
-    clearTimeout(backfillPollTimer);
-    backfillPollTimer = null;
-  }
   shiki?.dispose();
   shiki = null;
 });
@@ -233,46 +220,6 @@ async function fetchPage(page: number) {
   }
 }
 
-function scheduleBackfillPoll() {
-  if (
-    import.meta.server ||
-    indexReady.value ||
-    backfillPollTimer ||
-    backfillPollAttempts >= MAX_BACKFILL_POLL_ATTEMPTS
-  ) {
-    return;
-  }
-
-  const delay = Math.min(10000, 2000 * (backfillPollAttempts + 1));
-  backfillPollTimer = setTimeout(async () => {
-    backfillPollTimer = null;
-    backfillPollAttempts += 1;
-    try {
-      await fetchPage(1);
-    } catch (error) {
-      console.error("[pkg.pr.new] Failed to refresh release index:", error);
-    } finally {
-      scheduleBackfillPoll();
-    }
-  }, delay);
-}
-
-watch(
-  indexReady,
-  (ready) => {
-    if (ready) {
-      backfillPollAttempts = 0;
-    }
-    if (ready && backfillPollTimer) {
-      clearTimeout(backfillPollTimer);
-      backfillPollTimer = null;
-      return;
-    }
-    scheduleBackfillPoll();
-  },
-  { immediate: true },
-);
-
 async function goNextPage() {
   if (!hasNextPage.value) {
     return;
@@ -291,24 +238,13 @@ async function goPrevPage() {
 <template>
   <div class="flex flex-col gap-6">
     <div
-      v-if="showInitialLoading || (!indexReady && !commitsWithRelease.length)"
+      v-if="showInitialLoading"
       class="flex flex-col items-center gap-3 py-12"
     >
       <UIcon name="i-ph-spinner-gap" class="animate-spin text-2xl opacity-70" />
-      <p v-if="!indexReady" class="text-sm opacity-70">
-        Indexing historical releases in the background…
-      </p>
     </div>
 
     <div v-else class="flex flex-col gap-2">
-      <div
-        v-if="!indexReady"
-        class="flex items-center justify-center gap-2 text-xs opacity-60 pb-1"
-      >
-        <UIcon name="i-ph-spinner-gap" class="animate-spin" />
-        <span>Still indexing older releases…</span>
-      </div>
-
       <div
         v-for="commit of commitsWithRelease"
         :key="commit.id"
@@ -374,7 +310,7 @@ async function goPrevPage() {
     </div>
 
     <div
-      v-if="indexReady && commitsWithRelease.length"
+      v-if="commitsWithRelease.length && totalPages > 1"
       class="flex justify-center items-center gap-1 flex-wrap"
     >
       <UButton
@@ -414,7 +350,7 @@ async function goPrevPage() {
     </div>
 
     <div
-      v-if="!showInitialLoading && indexReady && !commitsWithRelease.length"
+      v-if="!showInitialLoading && !commitsWithRelease.length"
       class="flex flex-col items-center gap-4 border border-gray-100 dark:border-gray-800 rounded-xl p-8"
     >
       <UIcon name="i-ph-crane-tower-light" class="text-6xl opacity-50" />

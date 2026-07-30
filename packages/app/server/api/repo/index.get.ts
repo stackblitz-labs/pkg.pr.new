@@ -1,8 +1,5 @@
 import { z } from "zod";
-import {
-  getReleaseCount,
-  scheduleReleaseIndexBackfill,
-} from "../../utils/release-index";
+import { getRepoReleaseCount } from "../../utils/bucket";
 
 const querySchema = z.object({
   owner: z.string(),
@@ -14,31 +11,22 @@ export default defineEventHandler(async (event) => {
     const query = await getValidatedQuery(event, (data) =>
       querySchema.parse(data),
     );
-    let releaseIndexReady = false;
     let releaseCount = 0;
     try {
-      releaseIndexReady = await scheduleReleaseIndexBackfill(
-        event,
-        query.owner,
-        query.repo,
-      );
-      releaseCount = await getReleaseCount(event, query.owner, query.repo);
+      releaseCount = await getRepoReleaseCount(event, query.owner, query.repo);
     } catch (error) {
       // Repository identity is derived from the route and does not depend on
-      // the index. Keep the page available if R2 is temporarily unavailable.
+      // the release count. Keep the page available if R2 is temporarily down.
       console.error(
-        `Error reading release index for ${query.owner}/${query.repo}:`,
+        `Error counting releases for ${query.owner}/${query.repo}:`,
         error,
       );
     }
 
-    // Never cache an incomplete migration result.
     setHeader(
       event,
       "Cache-Control",
-      releaseIndexReady
-        ? "public, max-age=30, s-maxage=120, stale-while-revalidate=300"
-        : "no-store",
+      "public, max-age=30, s-maxage=120, stale-while-revalidate=300",
     );
 
     return {
@@ -53,7 +41,6 @@ export default defineEventHandler(async (event) => {
       homepageUrl: "",
       description: "",
       releaseCount,
-      releaseIndexReady,
     };
   } catch (error) {
     console.error("Error in repo info endpoint:", error);

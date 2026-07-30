@@ -76,6 +76,41 @@ export function usePackagesBucket(event: Event) {
 usePackagesBucket.key = "package";
 usePackagesBucket.base = joinKeys(useBucket.base, usePackagesBucket.key);
 
+export async function getRepoReleaseCount(
+  event: Event,
+  owner: string,
+  repo: string,
+): Promise<number> {
+  try {
+    const binding = useBinding(event);
+    const prefix = `${usePackagesBucket.base}:${owner}:${repo}:`;
+
+    const uniqueCommitShas = new Set<string>();
+    let cursor: string | undefined;
+
+    do {
+      const response = await binding.list({
+        cursor,
+        limit: 1000,
+        prefix,
+      } as any);
+
+      for (const { key } of response.objects) {
+        if (!key.startsWith(prefix)) continue;
+        const [sha] = key.slice(prefix.length).split(":");
+        if (sha) uniqueCommitShas.add(sha);
+      }
+
+      cursor = response.truncated ? response.cursor : undefined;
+    } while (cursor);
+
+    return uniqueCommitShas.size;
+  } catch (error) {
+    console.error(`Error counting releases for ${owner}/${repo}:`, error);
+    return 0;
+  }
+}
+
 export function useTemplatesBucket(event: Event) {
   const storage = useBucket(event);
   return prefixStorage<Uint8Array>(storage, useTemplatesBucket.key);

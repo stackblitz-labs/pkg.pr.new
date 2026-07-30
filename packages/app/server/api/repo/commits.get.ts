@@ -1,13 +1,18 @@
 import type { H3Event } from "h3";
 import { z } from "zod";
 import { generatePublishUrl } from "../../utils/markdown";
-import { useCursorsBucket } from "../../utils/bucket";
-import { useOctokitInstallation } from "../../utils/octokit";
 import {
-  getReleaseIndexEntryBySha,
-  listReleaseIndexPage,
-  type ReleaseIndexEntry,
-} from "../../utils/release-index";
+  useBinding,
+  useCursorsBucket,
+  usePackagesBucket,
+} from "../../utils/bucket";
+import { useOctokitInstallation } from "../../utils/octokit";
+
+interface ReleaseRow {
+  sha: string;
+  uploadedAt: number;
+  packages: Set<string>;
+}
 
 function encodePackageNameForUrl(packageName: string): string {
   if (packageName.startsWith("@")) {
@@ -187,15 +192,36 @@ export default defineEventHandler(async (event) => {
         ? Number.parseInt(query.cursor, 10)
         : 1;
 
-    const bindingEvent = event as Parameters<typeof listReleaseIndexPage>[0];
-    const { items, totalCount, hasNextPage, indexReady } =
-      await listReleaseIndexPage(
-        bindingEvent,
-        query.owner,
-        query.repo,
-        page,
-        perPage,
-      );
+    const binding = useBinding(event as Parameters<typeof useBinding>[0]);
+    const prefix = `${usePackagesBucket.base}:${query.owner}:${query.repo}:`;
+    const rows = new Map<string, ReleaseRow>();
+    let listCursor: string | undefined;
+
+    do {
+      const response = await binding.list({
+        cursor: listCursor,
+        limit: 1000,
+        prefix,
+      } as any);
+
+      for (const object of response.objects) {
+        const trimmed = object.key.slice(prefix.length);
+        const [sha, ...packageNameParts] = trimmed.split(":");
+        if (!sha || packageNameParts.length === 0) continue;
+
+        const packageName = packageNameParts.join("/");
+        const uploadedAt = new Date(object.uploaded).getTime();
+        const row = rows.get(sha);
+        if (row) {
+          row.packages.add(packageName);
+          row.uploadedAt = Math.max(row.uploadedAt, uploadedAt);
+        } else {
+          rows.set(sha, { sha, uploadedAt, packages: new Set([packageName]) });
+        }
+      }
+
+      listCursor = response.truncated ? response.cursor : undefined;
+    } while (listCursor);
 
     const installation = await useOctokitInstallation(
       event,
@@ -209,25 +235,20 @@ export default defineEventHandler(async (event) => {
       query.repo,
     );
 
-    // keep pinned default-branch release first on page 1
-    let pageItems: ReleaseIndexEntry[] = items;
-    if (page === 1 && pinnedSha) {
-      const pinned =
-        items.find((row) => row.sha === pinnedSha) ??
-        (await getReleaseIndexEntryBySha(
-          bindingEvent,
-          query.owner,
-          query.repo,
-          pinnedSha,
-        ));
-      if (pinned) {
-        pageItems = [
-          pinned,
-          ...items.filter((row) => row.sha !== pinned.sha),
-        ].slice(0, perPage);
+    // Order newest-first, keeping the pinned default-branch release on top.
+    const releases = [...rows.values()].sort((a, b) => {
+      if (pinnedSha) {
+        if (a.sha === pinnedSha && b.sha !== pinnedSha) return -1;
+        if (b.sha === pinnedSha && a.sha !== pinnedSha) return 1;
       }
-    }
+      if (b.uploadedAt !== a.uploadedAt) return b.uploadedAt - a.uploadedAt;
+      return b.sha.localeCompare(a.sha);
+    });
 
+    const totalCount = releases.length;
+    const start = Math.max(0, (page - 1) * perPage);
+    const pageItems = releases.slice(start, start + perPage);
+    const hasNextPage = start + perPage < totalCount;
     const nextCursor = hasNextPage ? String(page + 1) : null;
     const totalPages = Math.max(1, Math.ceil(totalCount / perPage));
     const origin = import.meta.dev
@@ -260,9 +281,7 @@ export default defineEventHandler(async (event) => {
     setHeader(
       event,
       "Cache-Control",
-      indexReady
-        ? "public, max-age=30, s-maxage=120, stale-while-revalidate=300"
-        : "no-store",
+      "public, max-age=30, s-maxage=120, stale-while-revalidate=300",
     );
 
     return {
@@ -324,7 +343,6 @@ export default defineEventHandler(async (event) => {
             perPage,
             totalCount,
             totalPages,
-            indexReady,
           },
         },
       },
