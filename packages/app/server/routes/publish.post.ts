@@ -11,7 +11,6 @@ import { randomUUID } from "uncrypto";
 import { setItemStream, useTemplatesBucket } from "../utils/bucket";
 import { useOctokitInstallation } from "../utils/octokit";
 import { generateTemplateHtml } from "../utils/template";
-import { upsertReleaseIndexEntry } from "../utils/release-index";
 import { joinKeys } from "unstorage";
 
 export default eventHandler(async (event) => {
@@ -153,24 +152,6 @@ export default eventHandler(async (event) => {
         return null;
       }),
     );
-
-    try {
-      await upsertReleaseIndexEntry(
-        event,
-        workflowData.owner,
-        workflowData.repo,
-        {
-          sha: workflowData.sha,
-          uploadedAt: Date.now(),
-          packages: packagesWithoutPrefix,
-        },
-      );
-    } catch (error) {
-      console.error(
-        `[release-index] failed to upsert ${workflowData.owner}/${workflowData.repo}@${workflowData.sha}:`,
-        error,
-      );
-    }
 
     const templatesMap = new Map<string, Record<string, string>>();
 
