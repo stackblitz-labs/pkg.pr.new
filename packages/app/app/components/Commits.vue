@@ -291,7 +291,7 @@ async function goPrevPage() {
 <template>
   <div class="flex flex-col gap-6">
     <div
-      v-if="showInitialLoading || !indexReady"
+      v-if="showInitialLoading || (!indexReady && !commitsWithRelease.length)"
       class="flex flex-col items-center gap-3 py-12"
     >
       <UIcon name="i-ph-spinner-gap" class="animate-spin text-2xl opacity-70" />
@@ -301,6 +301,14 @@ async function goPrevPage() {
     </div>
 
     <div v-else class="flex flex-col gap-2">
+      <div
+        v-if="!indexReady"
+        class="flex items-center justify-center gap-2 text-xs opacity-60 pb-1"
+      >
+        <UIcon name="i-ph-spinner-gap" class="animate-spin" />
+        <span>Still indexing older releases…</span>
+      </div>
+
       <div
         v-for="commit of commitsWithRelease"
         :key="commit.id"

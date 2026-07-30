@@ -32,8 +32,6 @@ const TS_WIDTH = 16;
 const TS_MAX = Number.MAX_SAFE_INTEGER;
 const BACKFILL_BATCH_SIZE = 25;
 
-const activeBackfills = new Map<string, Promise<void>>();
-
 export const useReleaseIndexBucket = {
   key: "release-index",
   get base() {
@@ -380,22 +378,19 @@ export async function scheduleReleaseIndexBackfill(
     return true;
   }
 
-  const key = `${owner}/${repo}`;
-  let task = activeBackfills.get(key);
-  if (!task) {
-    task = ensureReleaseIndexBackfilled(event, owner, repo).finally(() => {
-      activeBackfills.delete(key);
-    });
-    activeBackfills.set(key, task);
-  }
+  const task = ensureReleaseIndexBackfilled(event, owner, repo).catch(
+    (error) => {
+      console.error(
+        `[release-index] backfill failed for ${owner}/${repo}:`,
+        error,
+      );
+    },
+  );
 
-  const handledTask = task.catch((error) => {
-    console.error(`[release-index] backfill failed for ${key}:`, error);
-  });
   if (typeof event.waitUntil === "function") {
-    event.waitUntil(handledTask);
+    event.waitUntil(task);
   } else {
-    void handledTask;
+    void task;
   }
 
   return false;
