@@ -111,6 +111,26 @@ export async function getRepoReleaseCount(
   }
 }
 
+export async function hasRepoReleases(
+  event: Event,
+  owner: string,
+  repo: string,
+): Promise<boolean> {
+  try {
+    const binding = useBinding(event);
+    const prefix = `${usePackagesBucket.base}:${owner}:${repo}:`;
+    const response = await binding.list({
+      limit: 1,
+      prefix,
+    } as any);
+
+    return response.objects.length > 0;
+  } catch (error) {
+    console.error(`Error checking releases for ${owner}/${repo}:`, error);
+    return false;
+  }
+}
+
 export function useTemplatesBucket(event: Event) {
   const storage = useBucket(event);
   return prefixStorage<Uint8Array>(storage, useTemplatesBucket.key);
