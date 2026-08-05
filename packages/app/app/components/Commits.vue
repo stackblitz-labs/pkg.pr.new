@@ -8,9 +8,13 @@ import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
 interface PackageInfo {
   name: string;
   installUrl: string;
-  installCommand: string;
   isOnNpm: boolean;
 }
+
+type PackageManager = "npm" | "yarn" | "pnpm" | "bun";
+
+const packageManagers: PackageManager[] = ["npm", "yarn", "pnpm", "bun"];
+const selectedPackageManager = ref<PackageManager>("npm");
 
 interface RepoCommitsResponse {
   id: string;
@@ -120,10 +124,23 @@ const colorMode = useColorMode();
 
 const highlightCache = new Map<string, string>();
 
-function highlightInstallCommand(code: string) {
-  if (props.withDev) {
-    code += " --dev";
-  }
+function getInstallCommand(pkg: PackageInfo) {
+  const descriptor =
+    selectedPackageManager.value === "yarn"
+      ? `${pkg.name}@${pkg.installUrl}.tgz`
+      : pkg.installUrl;
+  const installCommand: Record<PackageManager, string> = {
+    npm: "npm i",
+    yarn: "yarn add",
+    pnpm: "pnpm add",
+    bun: "bun add",
+  };
+
+  return `${installCommand[selectedPackageManager.value]} ${descriptor}${props.withDev ? " -D" : ""}`;
+}
+
+function highlightInstallCommand(pkg: PackageInfo) {
+  const code = getInstallCommand(pkg);
   if (!shiki) return "";
   const theme = colorMode.value === "dark" ? "github-dark" : "github-light";
   const cacheKey = `${theme}::${code}`;
@@ -151,11 +168,8 @@ const copiedPackage = ref<string | null>(null);
 let copyTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
 function copyInstallCommand(pkg: PackageInfo) {
-  const text = props.withDev
-    ? `${pkg.installCommand} --dev`
-    : pkg.installCommand;
-  navigator.clipboard?.writeText(text);
-  copiedPackage.value = pkg.name;
+  navigator.clipboard?.writeText(getInstallCommand(pkg));
+  copiedPackage.value = `${selectedPackageManager.value}:${pkg.name}`;
   if (copyTimeoutId) clearTimeout(copyTimeoutId);
   copyTimeoutId = setTimeout(() => {
     copiedPackage.value = null;
@@ -412,6 +426,30 @@ async function goPrevPage() {
           <div
             class="max-w-full p-4 border border-gray-100 dark:border-gray-800 rounded-lg flex flex-col gap-3"
           >
+            <div class="flex justify-end">
+              <div
+                class="inline-flex overflow-hidden rounded-md border border-gray-200 dark:border-gray-700"
+                role="group"
+                aria-label="Package manager"
+              >
+                <UButton
+                  v-for="packageManager in packageManagers"
+                  :key="packageManager"
+                  color="neutral"
+                  :variant="
+                    selectedPackageManager === packageManager
+                      ? 'subtle'
+                      : 'ghost'
+                  "
+                  size="xs"
+                  :ui="{ base: 'rounded-none font-mono' }"
+                  :aria-pressed="selectedPackageManager === packageManager"
+                  @click="selectedPackageManager = packageManager"
+                >
+                  {{ packageManager }}
+                </UButton>
+              </div>
+            </div>
             <div
               v-for="pkg in selectedCommit.release.packages"
               :key="pkg.name"
@@ -441,7 +479,7 @@ async function goPrevPage() {
                     variant="ghost"
                     size="xs"
                     :icon="
-                      copiedPackage === pkg.name
+                      copiedPackage === `${selectedPackageManager}:${pkg.name}`
                         ? 'i-ph-check-bold'
                         : 'i-ph-copy'
                     "
@@ -453,7 +491,7 @@ async function goPrevPage() {
               <div class="overflow-x-auto">
                 <div
                   class="[&>pre]:!my-0 [&>pre]:!bg-transparent [&>pre]:!border-0 [&>pre]:!rounded-none [&>pre]:!p-4 text-sm"
-                  v-html="highlightInstallCommand(pkg.installCommand)"
+                  v-html="highlightInstallCommand(pkg)"
                 />
               </div>
             </div>
