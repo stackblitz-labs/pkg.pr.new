@@ -58,6 +58,7 @@ export default defineNuxtConfig({
         "@simulacrum",
         "@jsdevtools",
         "consola",
+        "entities",
         "nuxt-site-config",
       ],
     },
