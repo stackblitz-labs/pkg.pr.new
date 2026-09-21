@@ -17,18 +17,11 @@ export default eventHandler(async (event) => {
       authenticated = true;
     } catch {}
 
-    try {
-      await app.octokit.request("GET /orgs/{org}/installation", {
-        org: owner,
-      });
-      authenticated = true;
-    } catch {}
-
     if (!authenticated) {
       throw createError({
         statusCode: 404,
         fatal: true,
-        message: `The app https://github.com/apps/pkg-pr-new is not installed on ${owner}/${repo}.`,
+        message: `The app https://github.com/apps/pkg-pr-new is not installed on or does not have access to ${owner}/${repo}.`,
       });
     }
 
