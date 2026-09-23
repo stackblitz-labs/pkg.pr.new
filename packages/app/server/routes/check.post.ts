@@ -18,6 +18,23 @@ export default eventHandler(async (event) => {
     } catch {}
 
     if (!authenticated) {
+      try {
+        const { data: installation } = await app.octokit.request(
+          "GET /orgs/{org}/installation",
+          { org: owner },
+        );
+        const installationOctokit = await app.getInstallationOctokit(
+          installation.id,
+        );
+        await installationOctokit.request("GET /repos/{owner}/{repo}", {
+          owner,
+          repo,
+        });
+        authenticated = true;
+      } catch {}
+    }
+
+    if (!authenticated) {
       throw createError({
         statusCode: 404,
         fatal: true,
