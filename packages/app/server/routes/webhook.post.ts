@@ -28,7 +28,7 @@ export default eventHandler(async (event) => {
       repo,
       run: payload.workflow_run.id,
       attempt: payload.workflow_run.run_attempt,
-      actor: payload.sender.id,
+      actor: payload.workflow_run.actor.id,
     };
     const hashKey = hash(metadata);
 
