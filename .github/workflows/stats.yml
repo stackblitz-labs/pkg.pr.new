@@ -18,6 +18,35 @@ jobs:
         uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6
         with:
           script: |
+            const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+            async function fetchWithRetry(url, maxAttempts = 5) {
+              for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+                try {
+                  const response = await fetch(url);
+
+                  if (!response.ok) {
+                    const body = (await response.text()).slice(0, 500);
+                    throw new Error(
+                      `HTTP error! status: ${response.status}${body ? `: ${body}` : ""}`,
+                    );
+                  }
+
+                  return response;
+                } catch (error) {
+                  if (attempt === maxAttempts) {
+                    throw error;
+                  }
+
+                  const delay = Math.min(1000 * 2 ** (attempt - 1), 30000);
+                  console.warn(
+                    `Fetch failed (${attempt}/${maxAttempts}): ${error.message}. Retrying in ${delay / 1000}s.`,
+                  );
+                  await sleep(delay);
+                }
+              }
+            }
+
             async function fetchAndCountData(url) {
               const counts = {
                 templates: 0,
@@ -35,11 +64,7 @@ jobs:
                   const fetchUrl = cursor ? `${url}?cursor=${encodeURIComponent(cursor)}` : url;
 
                   // Fetch the data from the API
-                  const response = await fetch(fetchUrl);
-
-                  if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                  }
+                  const response = await fetchWithRetry(fetchUrl);
 
                   const responseData = await response.json();
 
@@ -67,7 +92,7 @@ jobs:
                   cursor = responseData.nextCursor || null;
                 } catch (error) {
                   console.error(`Error fetching data: ${error.message}`);
-                  cursor = null; // Exit the loop on error
+                  throw error;
                 }
               } while (cursor);
 
