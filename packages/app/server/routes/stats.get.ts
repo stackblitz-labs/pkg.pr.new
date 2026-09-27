@@ -13,7 +13,7 @@ export default eventHandler(async (event) => {
 
     const results = [];
 
-    const response = await binding.list({ cursor, limit: 500 });
+    const response = await binding.list({ cursor, limit: 1000 });
 
     for (const { key } of response.objects) {
       let result = null;
