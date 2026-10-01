@@ -10,10 +10,23 @@ export default eventHandler(async (event) => {
     const packagesPrefix = `${usePackagesBucket.base}:`;
     const cursorsPrefix = `${useCursorsBucket.base}:`;
     const templatesPrefix = `${useTemplatesBucket.base}:`;
+    const prefixes = {
+      package: packagesPrefix,
+      cursor: cursorsPrefix,
+      template: templatesPrefix,
+    } as const;
+    const requestedPrefix =
+      typeof query.type === "string" && query.type in prefixes
+        ? prefixes[query.type as keyof typeof prefixes]
+        : undefined;
 
     const results = [];
 
-    const response = await binding.list({ cursor, limit: 1000 });
+    const response = await binding.list({
+      cursor,
+      limit: 1000,
+      ...(requestedPrefix ? { prefix: requestedPrefix } : {}),
+    });
 
     for (const { key } of response.objects) {
       let result = null;
