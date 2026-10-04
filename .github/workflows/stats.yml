@@ -61,7 +61,7 @@ jobs:
               do {
                 try {
                   // Construct the URL with cursor if available
-                  const fetchUrl = `${url}?type=${type}${
+                  const fetchUrl = `${url}?type=${type}&batch=10${
                     cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""
                   }`;
 
@@ -69,7 +69,7 @@ jobs:
                   const response = await fetchWithRetry(fetchUrl);
 
                   const responseData = await response.json();
-                  pages += 1;
+                  pages += responseData.pages || 1;
 
                   // Process the current page of data
                   if (responseData.data) {
