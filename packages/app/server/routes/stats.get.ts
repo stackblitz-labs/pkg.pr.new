@@ -10,57 +10,86 @@ export default eventHandler(async (event) => {
     const packagesPrefix = `${usePackagesBucket.base}:`;
     const cursorsPrefix = `${useCursorsBucket.base}:`;
     const templatesPrefix = `${useTemplatesBucket.base}:`;
+    const prefixes = {
+      package: packagesPrefix,
+      cursor: cursorsPrefix,
+      template: templatesPrefix,
+    } as const;
+    const requestedPrefix =
+      typeof query.type === "string" && query.type in prefixes
+        ? prefixes[query.type as keyof typeof prefixes]
+        : undefined;
+    const requestedBatchSize =
+      typeof query.batch === "string" ? Number(query.batch) : 1;
+    const batchSize =
+      requestedPrefix && Number.isInteger(requestedBatchSize)
+        ? Math.min(Math.max(requestedBatchSize, 1), 10)
+        : 1;
 
     const results = [];
+    let nextCursor = cursor;
+    let pages = 0;
 
-    const response = await binding.list({ cursor, limit: 1000 });
+    for (let page = 0; page < batchSize; page += 1) {
+      const response = await binding.list({
+        cursor: nextCursor,
+        limit: 1000,
+        ...(requestedPrefix ? { prefix: requestedPrefix } : {}),
+      });
+      pages += 1;
 
-    for (const { key } of response.objects) {
-      let result = null;
+      for (const { key } of response.objects) {
+        let result = null;
 
-      if (key.startsWith(packagesPrefix)) {
-        const trimmedKey = key.slice(packagesPrefix.length);
-        const [org, repo, commit, ...packageNameParts] = trimmedKey.split(":");
-        const packageName = packageNameParts.join(":");
+        if (key.startsWith(packagesPrefix)) {
+          const trimmedKey = key.slice(packagesPrefix.length);
+          const [org, repo, commit, ...packageNameParts] =
+            trimmedKey.split(":");
+          const packageName = packageNameParts.join(":");
 
-        result = {
-          type: "package",
-          org: sha256(org),
-          repo: sha256(repo),
-          commit: sha256(commit),
-          packageName: sha256(packageName),
-        };
-      } else if (key.startsWith(cursorsPrefix)) {
-        const trimmedKey = key.slice(cursorsPrefix.length);
-        const parts = trimmedKey.split(":");
-        const ref = parts.slice(2).join(":");
+          result = {
+            type: "package",
+            org: sha256(org),
+            repo: sha256(repo),
+            commit: sha256(commit),
+            packageName: sha256(packageName),
+          };
+        } else if (key.startsWith(cursorsPrefix)) {
+          const trimmedKey = key.slice(cursorsPrefix.length);
+          const parts = trimmedKey.split(":");
+          const ref = parts.slice(2).join(":");
 
-        result = {
-          type: "cursor",
-          org: sha256(parts[0]),
-          repo: sha256(parts[1]),
-          ref: sha256(ref),
-        };
-      } else if (key.startsWith(templatesPrefix)) {
-        const trimmedKey = key.slice(templatesPrefix.length);
-        const template = trimmedKey;
+          result = {
+            type: "cursor",
+            org: sha256(parts[0]),
+            repo: sha256(parts[1]),
+            ref: sha256(ref),
+          };
+        } else if (key.startsWith(templatesPrefix)) {
+          const trimmedKey = key.slice(templatesPrefix.length);
+          const template = trimmedKey;
 
-        result = {
-          type: "template",
-          template: sha256(template),
-        };
+          result = {
+            type: "template",
+            template: sha256(template),
+          };
+        }
+
+        if (result) {
+          results.push(result);
+        }
       }
 
-      if (result) {
-        results.push(result);
+      nextCursor = response.truncated ? response.cursor : undefined;
+      if (!nextCursor) {
+        break;
       }
     }
 
-    const nextCursor = response.truncated ? response.cursor : null;
-
     return {
       data: results,
-      nextCursor,
+      nextCursor: nextCursor || null,
+      pages,
     };
   } catch (error) {
     throw createError({
