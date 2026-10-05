@@ -2,6 +2,7 @@ export interface WorkflowData {
   owner: string;
   repo: string;
   sha: string;
+  buildSha?: string;
   ref: string;
   headBranch?: string | null;
 }

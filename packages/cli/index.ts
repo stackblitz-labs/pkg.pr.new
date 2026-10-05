@@ -292,22 +292,21 @@ const main = defineCommand({
           }
 
           let { sha } = await checkResponse.json();
+          let buildSha = sha;
 
-          // on pull_request events, GitHub creates a virtual merge commit that doesn't
-          // actually belong to the PR, so we use the workflow's head_sha instead
-          if (process.env.GITHUB_EVENT_NAME !== "pull_request") {
-            try {
-              const { stdout: gitRevParseOutput } = await ezSpawn.async(
-                "git rev-parse HEAD",
-                { stdio: "overlapped" },
-              );
+          try {
+            const { stdout: gitRevParseOutput } = await ezSpawn.async(
+              "git rev-parse HEAD",
+              { stdio: "overlapped" },
+            );
 
-              sha = gitRevParseOutput.trim();
-            } catch {
-              // git rev-parse fails when the CLI runs outside a git repository
-              // (e.g. the checkout was done in a separate job and only artifacts were restored here)
-              // falling back to the workflow's head_sha from checkResponse
+            buildSha = gitRevParseOutput.trim();
+            // PR merge commits are ephemeral, so keep the stable head SHA as the URL.
+            if (process.env.GITHUB_EVENT_NAME !== "pull_request") {
+              sha = buildSha;
             }
+          } catch {
+            // Git may be unavailable when only build artifacts were restored.
           }
 
           const deps: Map<string, string> = new Map(); // pkg.pr.new versions of the package
@@ -823,6 +822,7 @@ const main = defineCommand({
             method: "POST",
             headers: {
               "sb-sha": sha,
+              "sb-build-sha": buildSha,
               "sb-comment": comment,
               "sb-compact": `${isCompact}`,
               "sb-key": key,

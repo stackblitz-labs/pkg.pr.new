@@ -29,6 +29,7 @@ export default eventHandler(async (event) => {
       "sb-comment-with-sha": commentWithShaHeader,
       "sb-comment-with-dev": commentWithDevHeader,
       "sb-sha": shaOverride,
+      "sb-build-sha": buildShaOverride,
     } = getHeaders(event);
     const compact = compactHeader === "true";
     const onlyTemplates = onlyTemplatesHeader === "true";
@@ -71,6 +72,15 @@ export default eventHandler(async (event) => {
         });
       }
       workflowData.sha = shaOverride;
+    }
+    if (buildShaOverride) {
+      if (!isValidGitHash(buildShaOverride)) {
+        throw createError({
+          statusCode: 400,
+          message: "Invalid sb-build-sha: must be a valid hexadecimal SHA",
+        });
+      }
+      workflowData.buildSha = buildShaOverride;
     }
 
     const whitelisted = await isWhitelisted(

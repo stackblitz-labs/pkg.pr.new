@@ -121,6 +121,10 @@ export function generatePullRequestPublishMessage(
     .join("\n");
 
   const templatesStr = generateTemplatesStr(templates);
+  const buildProvenance =
+    workflowData.buildSha && workflowData.buildSha !== workflowData.sha
+      ? `\n_built from checked-out commit: <code>${abbreviateCommitHash(workflowData.buildSha)}</code>_`
+      : "";
 
   return `
 ${templatesStr}
@@ -128,6 +132,7 @@ ${templatesStr}
 ${onlyTemplates ? "" : refMessages}
 
 _commit: <a href="${checkRunUrl}"><code>${abbreviateCommitHash(workflowData.sha)}</code></a>_
+${buildProvenance}
 `;
 }
 
