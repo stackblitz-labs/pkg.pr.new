@@ -11,9 +11,9 @@ interface PackageInfo {
   isOnNpm: boolean;
 }
 
-type PackageManager = "npm" | "yarn" | "pnpm" | "bun";
+type PackageManager = "npm" | "yarn" | "pnpm" | "bun" | "upm";
 
-const packageManagers: PackageManager[] = ["npm", "yarn", "pnpm", "bun"];
+const packageManagers: PackageManager[] = ["npm", "yarn", "pnpm", "bun", "upm"];
 const selectedPackageManager = ref<PackageManager>("npm");
 
 interface RepoCommitsResponse {
@@ -134,6 +134,7 @@ function getInstallCommand(pkg: PackageInfo) {
     yarn: "yarn add",
     pnpm: "pnpm add",
     bun: "bun add",
+    upm: "upm add",
   };
 
   return `${installCommand[selectedPackageManager.value]} ${descriptor}${props.withDev ? " -D" : ""}`;
