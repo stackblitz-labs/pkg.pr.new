@@ -13,7 +13,14 @@ interface PackageInfo {
 
 type PackageManager = "npm" | "yarn" | "pnpm" | "bun" | "upm" | "nub";
 
-const packageManagers: PackageManager[] = ["npm", "yarn", "pnpm", "bun", "upm", "nub"];
+const packageManagers: PackageManager[] = [
+  "npm",
+  "yarn",
+  "pnpm",
+  "bun",
+  "upm",
+  "nub",
+];
 const selectedPackageManager = ref<PackageManager>("npm");
 
 interface RepoCommitsResponse {
