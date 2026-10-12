@@ -180,7 +180,7 @@ npm i https://pkg.pr.new/tinybench@123
 
 **`--packageManager`**
 
-To customize which package manager is reflected in the comments, use the `--packageManager=XYZ` flag. XYZ can be one of the following: npm (default), pnpm, yarn, bun, upm, or nub. Multiple valid values can also be configured at the same time, such as `--packageManager=ABC,XYZ`. Note that `upm` and `nub` cannot be combined with `--bin`, since they have no run-command equivalent.
+To customize which package manager is reflected in the comments, use the `--packageManager=XYZ` flag. XYZ can be one of the following: npm (default), pnpm, yarn, bun, upm, or nub. Multiple valid values can also be configured at the same time, such as `--packageManager=ABC,XYZ`.
 
 **`--only-templates`**
 

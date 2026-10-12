@@ -11,11 +11,13 @@ const installCommands: Record<PackageManager, string> = {
   nub: "nub add",
 };
 
-const binCommands: Partial<Record<PackageManager, string>> = {
+const binCommands: Record<PackageManager, string> = {
   npm: "npx",
   pnpm: "pnpm dlx",
   yarn: "npx",
   bun: "bunx",
+  upm: "upx",
+  nub: "nubx",
 };
 const isMoreThanFourPackages = (
   packages: string[],
@@ -54,7 +56,7 @@ export function generateCommitPublishMessage(
 
           return `
   \`\`\`
-  ${(packageIsBin && binCommands[pm as PackageManager]) || installCommands[pm as PackageManager]} ${descriptor}
+  ${packageIsBin ? binCommands[pm as PackageManager] : installCommands[pm as PackageManager]} ${descriptor}
   \`\`\`
         `;
         })
@@ -109,7 +111,7 @@ export function generatePullRequestPublishMessage(
 
           return `
   \`\`\`
-  ${(packageIsBin && binCommands[pm as PackageManager]) || installCommands[pm as PackageManager]} ${refUrl + (commentWithDev ? " -D" : "")}
+  ${packageIsBin ? binCommands[pm as PackageManager] : installCommands[pm as PackageManager]} ${refUrl + (commentWithDev ? " -D" : "")}
   \`\`\`
   `;
         })

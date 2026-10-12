@@ -246,19 +246,6 @@ const main = defineCommand({
             }
           }
 
-          const noRunCommandManagers = selectedPackageManager.filter((pm) =>
-            ["upm", "nub"].includes(pm),
-          );
-          if (
-            (binAllPackages || binExplicitNames.length > 0) &&
-            noRunCommandManagers.length > 0
-          ) {
-            console.error(
-              `pkg-pr-new: --bin is not supported with --packageManager=${noRunCommandManagers.join(",")} because ${noRunCommandManagers.join(" and ")} ${noRunCommandManagers.length > 1 ? "have" : "has"} no run-command equivalent (npx, pnpm dlx, ...).`,
-            );
-            process.exit(1);
-          }
-
           if (!process.env.TEST && process.env.GITHUB_ACTIONS !== "true") {
             console.error(
               "Continuous Releases are only available in GitHub Actions.",
