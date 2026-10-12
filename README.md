@@ -103,20 +103,20 @@ pnpm exec pkg-pr-new publish './artifacts/*.tgz'
 
 Quick reference:
 
-| Flag                                    | Description                                                                                                             |
-| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `--comment=update\|create\|off`         | How PR comments are posted (default: `update`)                                                                          |
-| `--commentWithSha`                      | Use commit SHA URLs instead of PR number URLs in comments                                                               |
-| `--commentWithDev`                      | Add the `-D` flag to install commands in comments                                                                       |
-| `--packageManager=npm\|pnpm\|yarn\|bun` | Package manager(s) shown in comments; accepts comma-separated values                                                    |
-| `--only-templates`                      | Show only templates in comments                                                                                         |
-| `--template './examples/*'`             | Generate StackBlitz templates for the given directories (experimental)                                                  |
-| `--no-template`                         | Disable the default template                                                                                            |
-| `--no-compact`                          | Force long-form URLs instead of compact URLs                                                                            |
-| `--bin`                                 | Show `npx` instead of `npm i` in comments                                                                               |
-| `--previewVersion`                      | Rewrite package versions to `0.0.0-preview-<sha>` before packing                                                        |
-| `--pnpm` / `--yarn` / `--bun`           | Use `pnpm pack`, `yarn pack`, or `bun pm pack` instead of `npm pack`                                                    |
-| `--json <file>`                         | Write publish metadata to a JSON file (see [Custom GitHub Messages and Comments](#custom-github-messages-and-comments)) |
+| Flag                                              | Description                                                                                                             |
+| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `--comment=update\|create\|off`                   | How PR comments are posted (default: `update`)                                                                          |
+| `--commentWithSha`                                | Use commit SHA URLs instead of PR number URLs in comments                                                               |
+| `--commentWithDev`                                | Add the `-D` flag to install commands in comments                                                                       |
+| `--packageManager=npm\|pnpm\|yarn\|bun\|upm\|nub` | Package manager(s) shown in comments; accepts comma-separated values                                                    |
+| `--only-templates`                                | Show only templates in comments                                                                                         |
+| `--template './examples/*'`                       | Generate StackBlitz templates for the given directories (experimental)                                                  |
+| `--no-template`                                   | Disable the default template                                                                                            |
+| `--no-compact`                                    | Force long-form URLs instead of compact URLs                                                                            |
+| `--bin`                                           | Show `npx` instead of `npm i` in comments                                                                               |
+| `--previewVersion`                                | Rewrite package versions to `0.0.0-preview-<sha>` before packing                                                        |
+| `--pnpm` / `--yarn` / `--bun`                     | Use `pnpm pack`, `yarn pack`, or `bun pm pack` instead of `npm pack`                                                    |
+| `--json <file>`                                   | Write publish metadata to a JSON file (see [Custom GitHub Messages and Comments](#custom-github-messages-and-comments)) |
 
 #### Comment Options
 
@@ -180,7 +180,7 @@ npm i https://pkg.pr.new/tinybench@123
 
 **`--packageManager`**
 
-To customize which package manager is reflected in the comments, use the `--packageManager=XYZ` flag. XYZ can be one of the following: npm (default), pnpm, yarn, or bun. Multiple valid values can also be configured at the same time, such as `--packageManager=ABC,XYZ`.
+To customize which package manager is reflected in the comments, use the `--packageManager=XYZ` flag. XYZ can be one of the following: npm (default), pnpm, yarn, bun, upm, or nub. Multiple valid values can also be configured at the same time, such as `--packageManager=ABC,XYZ`. Note that `upm` and `nub` cannot be combined with `--bin`, since they have no run-command equivalent.
 
 **`--only-templates`**
 

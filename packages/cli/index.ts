@@ -7,7 +7,7 @@ import { hash } from "ohash";
 import ezSpawn from "@jsdevtools/ez-spawn";
 import { defineCommand, runMain } from "citty";
 import { getPackageManifest, type PackageManifest } from "query-registry";
-import type { Comment } from "@pkg-pr-new/utils";
+import type { Comment, PackageManager } from "@pkg-pr-new/utils";
 import {
   abbreviateCommitHash,
   extractOwnerAndRepo,
@@ -113,8 +113,8 @@ const main = defineCommand({
           packageManager: {
             type: "string",
             description:
-              "Specify the package manager to use (npm, bun, pnpm, yarn). Comma-separated values are supported.",
-            enum: ["npm", "bun", "pnpm", "yarn"],
+              "Specify the package manager to use (npm, bun, pnpm, yarn, upm, nub). Comma-separated values are supported.",
+            enum: ["npm", "bun", "pnpm", "yarn", "upm", "nub"],
             default: "npm",
           },
           bin: {
@@ -219,26 +219,44 @@ const main = defineCommand({
             ...new Set(
               (args.packageManager as string)
                 .split(",")
-                .filter((s) => s.trim()) as Array<
-                "npm" | "bun" | "pnpm" | "yarn"
-              >,
+                .filter((s) => s.trim()) as PackageManager[],
             ),
           ];
-          const packageManagers = ["npm", "bun", "pnpm", "yarn"];
+          const packageManagers: PackageManager[] = [
+            "npm",
+            "bun",
+            "pnpm",
+            "yarn",
+            "upm",
+            "nub",
+          ];
 
           if (!selectedPackageManager.length) {
             console.error(
-              `Unsupported package manager: ${args.packageManager}. Supported managers are npm, bun, pnpm, yarn.`,
+              `Unsupported package manager: ${args.packageManager}. Supported managers are npm, bun, pnpm, yarn, upm, nub.`,
             );
             process.exit(1);
           }
           for (let i = 0; i < selectedPackageManager.length; i++) {
             if (!packageManagers.includes(selectedPackageManager[i])) {
               console.error(
-                `Unsupported package manager: ${selectedPackageManager[i]}. Supported managers are npm, bun, pnpm, yarn.`,
+                `Unsupported package manager: ${selectedPackageManager[i]}. Supported managers are npm, bun, pnpm, yarn, upm, nub.`,
               );
               process.exit(1);
             }
+          }
+
+          const noRunCommandManagers = selectedPackageManager.filter((pm) =>
+            ["upm", "nub"].includes(pm),
+          );
+          if (
+            (binAllPackages || binExplicitNames.length > 0) &&
+            noRunCommandManagers.length > 0
+          ) {
+            console.error(
+              `pkg-pr-new: --bin is not supported with --packageManager=${noRunCommandManagers.join(",")} because ${noRunCommandManagers.join(" and ")} ${noRunCommandManagers.length > 1 ? "have" : "has"} no run-command equivalent (npx, pnpm dlx, ...).`,
+            );
+            process.exit(1);
           }
 
           if (!process.env.TEST && process.env.GITHUB_ACTIONS !== "true") {
