@@ -1,9 +1,10 @@
+import type { PackageManager } from "@pkg-pr-new/utils";
 import { installCommands } from "@pkg-pr-new/utils";
 
 function generateShellCommand(
   url: string,
   isCommentWithDev: boolean,
-  selectedPackageManager: ("npm" | "yarn" | "pnpm" | "bun")[],
+  selectedPackageManager: PackageManager[],
 ) {
   return selectedPackageManager
     .map(
@@ -16,7 +17,7 @@ function generateShellCommand(
 export const createDefaultTemplate = (
   dependencies: Record<string, string>,
   isCommentWithDev: boolean,
-  selectedPackageManager: ("npm" | "yarn" | "pnpm" | "bun")[],
+  selectedPackageManager: PackageManager[],
 ) => ({
   "index.js": "",
   "README.md": `

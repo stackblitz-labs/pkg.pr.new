@@ -52,13 +52,15 @@ export function isPullRequest(ref: string) {
 }
 
 export type Comment = "off" | "create" | "update";
-export type PackageManager = "npm" | "pnpm" | "yarn" | "bun";
+export type PackageManager = "npm" | "pnpm" | "yarn" | "bun" | "upm" | "nub";
 
 export const installCommands: Record<PackageManager, string> = {
   npm: "npm i",
   pnpm: "pnpm add",
   yarn: "yarn add",
   bun: "bun add",
+  upm: "upm add",
+  nub: "nub add",
 };
 
 const whitelist =

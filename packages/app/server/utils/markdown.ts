@@ -7,6 +7,8 @@ const installCommands: Record<PackageManager, string> = {
   pnpm: "pnpm add",
   yarn: "yarn add",
   bun: "bun add",
+  upm: "upm add",
+  nub: "nub add",
 };
 
 const binCommands: Record<PackageManager, string> = {
@@ -14,6 +16,8 @@ const binCommands: Record<PackageManager, string> = {
   pnpm: "pnpm dlx",
   yarn: "npx",
   bun: "bunx",
+  upm: "upx",
+  nub: "nubx",
 };
 const isMoreThanFourPackages = (
   packages: string[],
