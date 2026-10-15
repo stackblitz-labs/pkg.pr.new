@@ -358,8 +358,8 @@ importers:
         specifier: ^8.57.0
         version: 8.57.1
       fast-jwt:
-        specifier: ^6.2.2
-        version: 6.2.2
+        specifier: ^6.3.4
+        version: 6.3.4
       nitro-cloudflare-dev:
         specifier: ^0.2.2
         version: 0.2.2
@@ -5033,8 +5033,8 @@ packages:
   fast-json-stable-stringify@2.1.0:
     resolution: {integrity: sha512-lhd/wF+Lk98HZoTCtlVraHtfh5XYijIjalXck7saUtuanSDyLMxnHhSXEDJqHxD7msR8D0uCmqlkwjCV8xvwHw==}
 
-  fast-jwt@6.2.2:
-    resolution: {integrity: sha512-lzy+8JVyBOvwxjydFRBKLFVe1elRArL37pHRX1zHPt4T7FP7kNIpqauE1lOjZlD79DBzzRzQmp+28wbsY13weA==}
+  fast-jwt@6.3.4:
+    resolution: {integrity: sha512-wq1bK/Pi0OARHYrEkXyTH793Xbqx4dHxBVxYWWHymqFxSEmhllkDj5ZCvbYZcfwUQmitjnBKSgy7nv7Duxg2BQ==}
     engines: {node: '>=20'}
 
   fast-levenshtein@2.0.6:
@@ -14182,7 +14182,7 @@ snapshots:
 
   fast-json-stable-stringify@2.1.0: {}
 
-  fast-jwt@6.2.2:
+  fast-jwt@6.3.4:
     dependencies:
       '@lukeed/ms': 2.0.2
       asn1.js: 5.4.1
