@@ -18,19 +18,21 @@ function copyCode() {
 </script>
 
 <template>
-  <div class="relative group">
+  <div class="relative min-w-0 max-w-full">
     <pre
-      class="text-white bg-gray-500 dark:bg-black rounded-lg p-6"
-    ><code>{{ props.code }}</code></pre>
+      class="text-white bg-gray-500 dark:bg-black rounded-lg py-4 pr-14 pl-4 sm:py-6 sm:pr-16 sm:pl-6 overflow-x-auto overscroll-x-contain max-w-full"
+    ><code class="whitespace-pre">{{ props.code }}</code></pre>
 
-    <ClientOnly>
-      <UTooltip v-if="isSupported" text="Copy to clipboard">
-        <UButton
-          icon="ph-clipboard"
-          class="absolute top-2 right-2 not-group-hover:hidden"
-          @click="copyCode"
-        />
-      </UTooltip>
-    </ClientOnly>
+    <div class="absolute top-2 right-2">
+      <ClientOnly>
+        <UTooltip v-if="isSupported" text="Copy to clipboard">
+          <UButton
+            icon="ph-clipboard"
+            aria-label="Copy to clipboard"
+            @click="copyCode"
+          />
+        </UTooltip>
+      </ClientOnly>
+    </div>
   </div>
 </template>

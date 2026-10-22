@@ -1,7 +1,7 @@
 <script lang="ts" setup></script>
 
 <template>
-  <div class="flex flex-col gap-6">
+  <div class="flex flex-col gap-6 min-w-0 w-full">
     <GettingStartedStep step="1">
       First, install the GitHub application on your repositories.
 
@@ -11,6 +11,7 @@
           target="_blank"
           icon="mdi-github"
           trailing-icon="ph-arrow-square-out"
+          class="max-w-full whitespace-normal! h-auto text-left @max-md/step:w-full"
         >
           Install GitHub App
         </UButton>
@@ -31,6 +32,7 @@
           target="_blank"
           icon="ph-code-block"
           trailing-icon="ph-arrow-square-out"
+          class="max-w-full whitespace-normal! h-auto text-left @max-md/step:w-full"
         >
           See Workflow examples
         </UButton>
@@ -40,6 +42,7 @@
           target="_blank"
           icon="ph-notebook"
           trailing-icon="ph-arrow-square-out"
+          class="max-w-full whitespace-normal! h-auto text-left @max-md/step:w-full"
         >
           Learn more about pkg.pr.new setup
         </UButton>
@@ -49,15 +52,19 @@
     <GettingStartedStep step="3">
       <div>Done! Enjoy continuous releases on your Pull Requests!</div>
 
-      <img src="/pr-screenshot.png" alt="PR Screenshot" class="rounded-lg" />
+      <img
+        src="/pr-screenshot.png"
+        alt="PR Screenshot"
+        class="rounded-lg max-w-full h-auto"
+      />
     </GettingStartedStep>
 
     <GettingStartedStep step="4">
       <div>Promote pkg.pr.new by adding a badge to your repository README:</div>
 
-      <div class="w-[550px]">
+      <div class="w-full max-w-[550px] min-w-0">
         <CodeSnippet
-          class="text-[10px]"
+          class="text-xs lg:text-[10px]"
           code="[![pkg.pr.new](https://pkg.pr.new/badge/OWNER/REPO)](https://pkg.pr.new/~/OWNER/REPO)"
         />
       </div>
@@ -73,6 +80,7 @@
           target="_blank"
           icon="ph-badge"
           trailing-icon="ph-arrow-square-out"
+          class="max-w-full whitespace-normal! h-auto text-left @max-md/step:w-full"
         >
           Learn more about badge options
         </UButton>

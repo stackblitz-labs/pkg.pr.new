@@ -17,7 +17,8 @@ defineProps<{
         withDev: String(!!withDev),
       },
     }"
-    class="w-full"
+    class="w-full min-w-0"
+    :ui="{ base: 'min-w-0' }"
     size="lg"
     color="neutral"
     variant="ghost"
@@ -32,7 +33,7 @@ defineProps<{
       }"
     />
 
-    <div class="font-mono">
+    <div class="font-mono truncate min-w-0 text-left">
       <span>{{ owner }}</span>
       <span class="opacity-50">/</span>
       <span>{{ name }}</span>
