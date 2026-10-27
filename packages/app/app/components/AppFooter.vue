@@ -1,8 +1,10 @@
 <template>
   <footer
-    class="text-center p-12 opacity-100 flex flex-col items-center gap-3 text-xs"
+    class="safe-footer text-center opacity-100 flex flex-col items-center gap-3 text-xs"
   >
-    <div class="flex gap-6 items-center justify-center">
+    <div
+      class="flex max-w-full flex-wrap gap-x-6 gap-y-3 items-center justify-center"
+    >
       <div class="flex items-center">
         <a
           href="https://blog.stackblitz.com/posts/pkg-pr-new/"
@@ -43,7 +45,9 @@
       </div>
     </div>
 
-    <div class="flex gap-3 items-center">
+    <div
+      class="flex max-w-full flex-wrap items-center justify-center gap-x-3 gap-y-1"
+    >
       <div>
         Built in
         <a
@@ -53,7 +57,7 @@
           >StackBlitz Labs</a
         >
       </div>
-      <UIcon name="ph-dot" />
+      <UIcon name="ph-dot" class="max-sm:hidden" />
       <div>
         <a
           href="https://blog.stackblitz.com/posts/cloudflare-backing-pkg-pr-new-data-infrastructure/"
@@ -62,7 +66,7 @@
           >Backed by Cloudflare</a
         >
       </div>
-      <UIcon name="ph-dot" />
+      <UIcon name="ph-dot" class="max-sm:hidden" />
       <div>
         UI by
         <a href="https://github.com/Akryum" target="_blank" class="text-primary"

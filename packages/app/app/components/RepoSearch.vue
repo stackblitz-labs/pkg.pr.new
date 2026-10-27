@@ -143,7 +143,7 @@ function openFirstResult() {
 
     <div
       v-else-if="search && !isLoading"
-      class="text-gray-500 p-12 text-center"
+      class="text-gray-500 p-6 sm:p-12 text-center"
     >
       No repositories found
     </div>

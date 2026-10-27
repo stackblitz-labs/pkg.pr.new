@@ -58,7 +58,7 @@ defineOgImageComponent("Repo", {
           }"
         />
       </a>
-      <h1 class="text-2xl sm:text-3xl text-center">
+      <h1 class="text-2xl sm:text-3xl text-center break-words max-w-full px-2">
         <a :href="repository.url" target="_blank">
           {{ repository.owner.login }}
           <span class="opacity-50">/</span>
@@ -89,8 +89,10 @@ defineOgImageComponent("Repo", {
         />
       </div>
 
-      <div class="flex flex-col items-center justify-center mt-2">
-        <p class="text-sm mb-[10px]">
+      <div
+        class="flex flex-col items-center justify-center mt-2 max-w-full px-2"
+      >
+        <p class="text-sm mb-[10px] text-center text-balance">
           You can copy the badge and add it to your README!
         </p>
         <BadgeGenerator

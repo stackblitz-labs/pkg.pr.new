@@ -103,11 +103,62 @@
 }
 
 @utility my-container {
-  @apply flex-1 p-4 sm:p-6 lg:p-8 w-screen max-w-192 mx-auto;
+  @apply flex-1 p-4 sm:p-6 lg:p-8 w-full min-w-0 max-w-192 mx-auto;
 }
 
 body {
   @apply min-h-screen bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 font-sans;
+}
+
+@media (max-width: 1023px) {
+  body {
+    min-height: 100dvh;
+  }
+}
+
+.safe-header {
+  padding-block: 1rem;
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+
+@media (min-width: 640px) {
+  .safe-header {
+    padding-block: 1.5rem;
+    padding-left: max(1.5rem, env(safe-area-inset-left));
+    padding-right: max(1.5rem, env(safe-area-inset-right));
+  }
+}
+
+/* lg matches the previous p-12 footer when insets are 0. */
+.safe-footer {
+  padding-top: 2rem;
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+  padding-bottom: max(2rem, env(safe-area-inset-bottom));
+}
+
+@media (min-width: 640px) {
+  .safe-footer {
+    padding-top: 2.5rem;
+    padding-left: max(2.5rem, env(safe-area-inset-left));
+    padding-right: max(2.5rem, env(safe-area-inset-right));
+    padding-bottom: max(2.5rem, env(safe-area-inset-bottom));
+  }
+}
+
+@media (min-width: 1024px) {
+  .safe-footer {
+    padding-top: 3rem;
+    padding-left: max(3rem, env(safe-area-inset-left));
+    padding-right: max(3rem, env(safe-area-inset-right));
+    padding-bottom: max(3rem, env(safe-area-inset-bottom));
+  }
+}
+
+pre {
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 details {

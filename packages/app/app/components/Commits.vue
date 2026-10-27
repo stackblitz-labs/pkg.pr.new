@@ -259,7 +259,7 @@ async function goPrevPage() {
 </script>
 
 <template>
-  <div class="flex flex-col gap-6">
+  <div class="@container flex min-w-0 flex-col gap-6">
     <div
       v-if="showInitialLoading"
       class="flex flex-col items-center gap-3 py-12"
@@ -271,70 +271,78 @@ async function goPrevPage() {
       <div
         v-for="commit of commitsWithRelease"
         :key="commit.id"
-        class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer"
+        class="px-3 py-3 @2xl:px-4 @2xl:py-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer"
         :class="{
           'bg-gray-100 dark:bg-gray-800': selectedCommit === commit,
         }"
         aria-role="button"
         @click="selectedCommit = commit"
       >
-        <div class="flex items-center gap-2 min-w-0">
-          <UIcon name="i-ph-git-commit" class="opacity-50 flex-none" />
-          <span class="truncate min-w-0 flex-1">{{ commit.message }}</span>
-          <span class="opacity-50 flex-none whitespace-nowrap">
-            {{ useTimeAgo(commit.authoredDate) }}
-          </span>
-          <UIcon
-            v-if="commit.pinned"
-            name="i-ph-push-pin"
-            class="opacity-70 flex-none"
-            aria-label="Pinned release"
-          />
-          <UButton
-            v-if="commit.unverified && !commit.branch && !commit.pinned"
-            color="neutral"
-            variant="subtle"
-            size="xs"
-            :ui="{
-              base: 'font-mono pointer-events-none whitespace-nowrap',
-            }"
+        <div
+          class="flex min-w-0 flex-col gap-2 @2xl:flex-row @2xl:items-center @2xl:gap-2"
+        >
+          <div class="flex min-w-0 items-center gap-2 @2xl:flex-1">
+            <UIcon name="i-ph-git-commit" class="opacity-50 flex-none" />
+            <span class="truncate min-w-0 flex-1">{{ commit.message }}</span>
+          </div>
+          <div
+            class="flex min-w-0 flex-wrap items-center gap-2 @2xl:shrink-0 @2xl:flex-nowrap"
           >
-            External
-          </UButton>
-          <UButton
-            v-if="commit.branch"
-            color="neutral"
-            variant="subtle"
-            size="xs"
-            :ui="{
-              base: 'font-mono pointer-events-none whitespace-nowrap shrink-0 inline-flex items-center',
-            }"
-          >
-            <span class="block max-w-48 truncate whitespace-nowrap">
-              {{ commit.branch }}
+            <span class="opacity-50 flex-none whitespace-nowrap">
+              {{ useTimeAgo(commit.authoredDate) }}
             </span>
-          </UButton>
-          <UButton
-            :to="commit.url"
-            target="_blank"
-            color="neutral"
-            variant="subtle"
-            size="xs"
-            aria-label="View Commit"
-            :ui="{
-              base: 'font-mono whitespace-nowrap shrink-0 inline-flex items-center',
-            }"
-            @click.stop
-          >
-            {{ commit.abbreviatedOid }}
-          </UButton>
+            <UIcon
+              v-if="commit.pinned"
+              name="i-ph-push-pin"
+              class="opacity-70 flex-none"
+              aria-label="Pinned release"
+            />
+            <UButton
+              v-if="commit.unverified && !commit.branch && !commit.pinned"
+              color="neutral"
+              variant="subtle"
+              size="xs"
+              :ui="{
+                base: 'font-mono pointer-events-none whitespace-nowrap',
+              }"
+            >
+              External
+            </UButton>
+            <UButton
+              v-if="commit.branch"
+              color="neutral"
+              variant="subtle"
+              size="xs"
+              :ui="{
+                base: 'font-mono pointer-events-none whitespace-nowrap shrink-0 inline-flex items-center',
+              }"
+            >
+              <span class="block max-w-48 truncate whitespace-nowrap">
+                {{ commit.branch }}
+              </span>
+            </UButton>
+            <UButton
+              :to="commit.url"
+              target="_blank"
+              color="neutral"
+              variant="subtle"
+              size="xs"
+              aria-label="View Commit"
+              :ui="{
+                base: 'font-mono whitespace-nowrap shrink-0 inline-flex items-center',
+              }"
+              @click.stop
+            >
+              {{ commit.abbreviatedOid }}
+            </UButton>
+          </div>
         </div>
       </div>
     </div>
 
     <div
       v-if="commitsWithRelease.length && totalPages > 1"
-      class="flex justify-center items-center gap-1 flex-wrap"
+      class="flex max-w-full justify-center items-center gap-1 flex-wrap"
     >
       <UButton
         color="neutral"
@@ -342,9 +350,10 @@ async function goPrevPage() {
         icon="i-ph-caret-left"
         :disabled="!hasPrevPage"
         :loading="fetching"
+        class="@max-md:min-h-11 @max-md:min-w-11"
         @click="goPrevPage()"
       >
-        Prev
+        <span class="@max-md:sr-only">Prev</span>
       </UButton>
 
       <template v-for="(item, index) in paginationItems" :key="`page-${index}`">
@@ -354,6 +363,7 @@ async function goPrevPage() {
           :color="item === currentPage ? 'primary' : 'neutral'"
           :variant="item === currentPage ? 'solid' : 'subtle'"
           :disabled="fetching"
+          class="@max-md:min-h-11 @max-md:min-w-11"
           @click="fetchPage(item)"
         >
           {{ item }}
@@ -366,15 +376,16 @@ async function goPrevPage() {
         icon="i-ph-caret-right"
         :disabled="!hasNextPage"
         :loading="fetching"
+        class="@max-md:min-h-11 @max-md:min-w-11"
         @click="goNextPage()"
       >
-        Next
+        <span class="@max-md:sr-only">Next</span>
       </UButton>
     </div>
 
     <div
       v-if="!showInitialLoading && !commitsWithRelease.length"
-      class="flex flex-col items-center gap-4 border border-gray-100 dark:border-gray-800 rounded-xl p-8"
+      class="flex flex-col items-center gap-4 border border-gray-100 dark:border-gray-800 rounded-xl p-6 @lg:p-8"
     >
       <UIcon name="i-ph-crane-tower-light" class="text-6xl opacity-50" />
       <p class="text-center text-lg">No Continuous Releases found</p>
@@ -394,31 +405,35 @@ async function goPrevPage() {
     <USlideover
       :open="!!selectedCommit"
       :ui="{
-        content: 'w-screen max-w-[800px]',
+        content: 'w-full max-w-[800px]',
       }"
       @update:open="closeSelectedCommit"
     >
       <template #content>
         <div
           v-if="selectedCommit"
-          class="p-4 flex flex-col items-stretch gap-4 overflow-auto"
+          class="@container min-w-0 max-w-full p-4 flex flex-col items-stretch gap-4 overflow-auto"
         >
-          <div class="flex items-center gap-2">
+          <div
+            class="grid min-w-0 grid-cols-[auto_auto_minmax(0,1fr)] items-center gap-x-2 gap-y-2 @lg:flex @lg:flex-nowrap @lg:items-center"
+          >
             <UButton
               icon="ph-x"
               color="neutral"
               variant="subtle"
               size="sm"
-              class="mr-2"
+              class="mr-2 shrink-0 max-lg:min-h-11 max-lg:min-w-11"
               @click="closeSelectedCommit"
             />
 
             <UIcon name="i-ph-git-commit" class="opacity-50 flex-none" />
-            <span class="truncate">{{ selectedCommit.message }}</span>
-            <span class="opacity-50 flex-none">
+            <span class="truncate min-w-0">{{ selectedCommit.message }}</span>
+            <span
+              class="col-span-2 @lg:col-auto opacity-50 flex-none whitespace-nowrap"
+            >
               {{ useTimeAgo(selectedCommit.authoredDate) }}
             </span>
-            <span class="flex-1" />
+            <span class="hidden @lg:block @lg:flex-1" />
             <UButton
               :to="selectedCommit.url"
               target="_blank"
@@ -426,6 +441,7 @@ async function goPrevPage() {
               variant="subtle"
               size="sm"
               aria-label="View Commit"
+              class="shrink-0 justify-self-end max-lg:min-h-11"
               @click.stop
             >
               {{ selectedCommit.abbreviatedOid }}
@@ -433,11 +449,11 @@ async function goPrevPage() {
           </div>
 
           <div
-            class="max-w-full p-4 border border-gray-100 dark:border-gray-800 rounded-lg flex flex-col gap-3"
+            class="min-w-0 max-w-full p-3 @lg:p-4 border border-gray-100 dark:border-gray-800 rounded-lg flex flex-col gap-3"
           >
-            <div class="flex justify-end">
+            <div class="flex justify-end max-w-full">
               <div
-                class="inline-flex overflow-hidden rounded-md border border-gray-200 dark:border-gray-700"
+                class="flex max-w-full flex-wrap justify-end gap-1 @lg:inline-flex @lg:flex-nowrap @lg:gap-0 @lg:overflow-hidden @lg:rounded-md @lg:border @lg:border-gray-200 @lg:dark:border-gray-700"
                 role="group"
                 aria-label="Package manager"
               >
@@ -451,7 +467,8 @@ async function goPrevPage() {
                       : 'ghost'
                   "
                   size="xs"
-                  :ui="{ base: 'rounded-none font-mono' }"
+                  :ui="{ base: 'rounded-md font-mono @lg:rounded-none' }"
+                  class="@max-lg:min-h-11"
                   :aria-pressed="selectedPackageManager === packageManager"
                   @click="selectedPackageManager = packageManager"
                 >
@@ -462,7 +479,7 @@ async function goPrevPage() {
             <div
               v-for="pkg in selectedCommit.release.packages"
               :key="pkg.name"
-              class="relative group rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm"
+              class="relative group min-w-0 max-w-full rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm"
             >
               <div
                 class="flex items-center justify-between gap-2 px-4 py-1 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700"
@@ -493,6 +510,7 @@ async function goPrevPage() {
                         : 'i-ph-copy'
                     "
                     aria-label="Copy install command"
+                    class="@max-lg:min-h-11 @max-lg:min-w-11"
                     @click="copyInstallCommand(pkg)"
                   />
                 </div>
