@@ -25,6 +25,7 @@
     "@jsdevtools/ez-spawn": "^3.0.4",
     "@pkg-pr-new/utils": "workspace:^",
     "citty": "^0.1.6",
+    "confbox": "^0.2.4",
     "ignore": "^7.0.5",
     "isbinaryfile": "5.0.2",
     "nanotar": "^0.3.0",

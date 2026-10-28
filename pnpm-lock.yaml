@@ -387,6 +387,9 @@ importers:
       citty:
         specifier: ^0.1.6
         version: 0.1.6
+      confbox:
+        specifier: ^0.2.4
+        version: 0.2.4
       ignore:
         specifier: ^7.0.5
         version: 7.0.5
