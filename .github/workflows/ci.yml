@@ -88,25 +88,16 @@ jobs:
         env:
           API_URL: ${{ needs.deploy.outputs.deployment-url }}
 
-      - run: pnpm tsx script/ci.ts
-        working-directory: ./packages/app
-        env:
-          NITRO_WEBHOOK_SECRET: ${{ secrets.NITRO_WEBHOOK_SECRET }}
-          NITRO_APP_ID: ${{ secrets.NITRO_APP_ID }}
-          NITRO_PRIVATE_KEY: ${{ secrets.NITRO_PRIVATE_KEY }}
-          NITRO_RM_STALE_KEY: ${{ secrets.NITRO_RM_STALE_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+      # Points the staging app's webhook at the staging deployment. On tag
+      # releases the deploy job targets Production, but this job runs with the
+      # repo-level (staging app) secrets, so skip it there.
       - run: pnpm tsx script/update-webhook-url.ts
-        if: ${{ github.event_name != 'workflow_dispatch' }}
+        if: ${{ github.event_name != 'workflow_dispatch' && !startsWith(github.ref, 'refs/tags/') }}
         working-directory: ./packages/app
         env:
           API_URL: ${{ needs.deploy.outputs.deployment-url }}
-          # NITRO_WEBHOOK_SECRET: ${{ secrets.NITRO_WEBHOOK_SECRET }}
           NITRO_APP_ID: ${{ secrets.NITRO_APP_ID }}
           NITRO_PRIVATE_KEY: ${{ secrets.NITRO_PRIVATE_KEY }}
-          # NITRO_RM_STALE_KEY: ${{ secrets.NITRO_RM_STALE_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: dummy big file
         run: |
