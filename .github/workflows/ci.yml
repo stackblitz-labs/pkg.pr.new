@@ -30,7 +30,9 @@ jobs:
         id: deploy
         uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3
         with:
-          wranglerVersion: "* -w"
+          # Pinned: this step runs with CLOUDFLARE_API_TOKEN. `-w` is required
+          # by pnpm to add to the workspace root.
+          wranglerVersion: "3.109.1 -w"
           packageManager: pnpm # you can omit this if you use npm
           workingDirectory: "packages/app"
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
