@@ -22,6 +22,7 @@ import { isBinaryFile } from "isbinaryfile";
 import { writePackageJSON, type PackageJson } from "pkg-types";
 import pkg from "./package.json" with { type: "json" };
 import { createDefaultTemplate } from "./template";
+import { resolveCatalogs } from "./catalog";
 import * as core from "@actions/core";
 
 declare global {
@@ -534,6 +535,8 @@ const main = defineCommand({
             }
 
             console.warn("preparing template:", pJson.name);
+
+            await resolveCatalogs(templateDir, pJson);
 
             const restore = await writeDeps(
               templateDir,

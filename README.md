@@ -259,6 +259,8 @@ For templates (experimental):
 pnpm exec pkg-pr-new publish './packages/A' --template './examples/*'
 ```
 
+`catalog:` and `catalog:<name>` dependencies in a template's `package.json` are resolved from the nearest `pnpm-workspace.yaml`, so templates can use [pnpm catalogs](https://pnpm.io/catalogs).
+
 **`--no-template`**
 
 By default, pkg.pr.new will generate a template called "default" which includes each built package in the dependencies. This can be disabled with `--no-template`.
