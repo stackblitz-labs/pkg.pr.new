@@ -259,7 +259,7 @@ For templates (experimental):
 pnpm exec pkg-pr-new publish './packages/A' --template './examples/*'
 ```
 
-`catalog:` and `catalog:<name>` dependencies in a template's `package.json` are resolved from the nearest `pnpm-workspace.yaml`, so templates can use [pnpm catalogs](https://pnpm.io/catalogs).
+`catalog:` and `catalog:<name>` dependencies in a template's `package.json` are resolved from the nearest `pnpm-workspace.yaml`, so templates can use [pnpm catalogs](https://pnpm.io/catalogs). Catalogs delegated to other files through [`include`](https://pnpm.io/config-includes) are resolved as well. Catalogs owned by a config dependency cannot be resolved and are left as-is.
 
 **`--no-template`**
 
@@ -270,7 +270,7 @@ By default, pkg.pr.new will generate a template called "default" which includes 
 pkg.pr.new uses `npm pack --json` under the hood, in case you face issues, you can also use the `--pnpm`, `--yarn`, or `--bun` flag so it starts using `pnpm pack`, `yarn pack`, or `bun pm pack`. This is not necessary in most cases.
 
 > [!IMPORTANT]
-> If your workspace uses **pnpm catalogs** (the `catalog:` protocol in `package.json` dependencies, configured via `catalog` in `pnpm-workspace.yaml`), you **must** pass the `--pnpm` flag. `npm pack` does not understand the `catalog:` protocol and will fail to resolve those dependencies, whereas `pnpm pack` resolves them correctly.
+> If your workspace uses **pnpm catalogs** (the `catalog:` protocol in `package.json` dependencies, configured via `catalog` in `pnpm-workspace.yaml`, directly or through [`include`](https://pnpm.io/config-includes)), you **must** pass the `--pnpm` flag. `npm pack` does not understand the `catalog:` protocol and will fail to resolve those dependencies, whereas `pnpm pack` resolves them correctly.
 >
 > ```sh
 > pnpm exec pkg-pr-new publish --pnpm './packages/*'
