@@ -21,7 +21,6 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "@actions/core": "^3.0.1",
     "@jsdevtools/ez-spawn": "^3.0.4",
     "@pkg-pr-new/utils": "workspace:^",
     "citty": "^0.1.6",
