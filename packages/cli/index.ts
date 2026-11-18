@@ -23,7 +23,6 @@ import { writePackageJSON, type PackageJson } from "pkg-types";
 import pkg from "./package.json" with { type: "json" };
 import { createDefaultTemplate } from "./template";
 import { resolveCatalogs } from "./catalog";
-import * as core from "@actions/core";
 
 declare global {
   const API_URL: string;
@@ -867,9 +866,9 @@ const main = defineCommand({
             pkgPrNewVersion: pkg.version,
           });
 
-          core.startGroup("🔍 Info");
-          core.notice(JSON.stringify(debug, null, 2));
-          core.endGroup();
+          startGroup("🔍 Info");
+          notice(JSON.stringify(debug, null, 2));
+          endGroup();
 
           console.warn("\n");
           console.warn("⚡️ Your npm packages are published.\n");
@@ -1042,6 +1041,22 @@ function getFormEntrySize(entry: FormDataEntryValue) {
     return entry.length;
   }
   return entry.size;
+}
+
+function escapeWorkflowCommandData(s: string) {
+  return s.replace(/%/g, "%25").replace(/\r/g, "%0D").replace(/\n/g, "%0A");
+}
+
+function startGroup(name: string) {
+  console.log(`::group::${escapeWorkflowCommandData(name)}`);
+}
+
+function endGroup() {
+  console.log("::endgroup::");
+}
+
+function notice(message: string) {
+  console.log(`::notice::${escapeWorkflowCommandData(message)}`);
 }
 
 async function verifyCompactMode(packageName: string) {
