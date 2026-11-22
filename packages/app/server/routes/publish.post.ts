@@ -29,6 +29,8 @@ export default eventHandler(async (event) => {
       "sb-comment-with-sha": commentWithShaHeader,
       "sb-comment-with-dev": commentWithDevHeader,
       "sb-sha": shaOverride,
+      "sb-built-sha": builtShaHeader,
+      "sb-base-ref": baseRefHeader,
     } = getHeaders(event);
     const compact = compactHeader === "true";
     const onlyTemplates = onlyTemplatesHeader === "true";
@@ -72,6 +74,16 @@ export default eventHandler(async (event) => {
       }
       workflowData.sha = shaOverride;
     }
+
+    const builtFrom =
+      builtShaHeader &&
+      isValidGitHash(builtShaHeader) &&
+      builtShaHeader.toLowerCase() !== workflowData.sha.toLowerCase()
+        ? {
+            sha: builtShaHeader,
+            ...(baseRefHeader ? { baseRef: baseRefHeader } : {}),
+          }
+        : undefined;
 
     const whitelisted = await isWhitelisted(
       workflowData.owner,
@@ -334,6 +346,7 @@ export default eventHandler(async (event) => {
           commentWithSha || comment !== "update" ? "sha" : "ref",
           isBinPackage,
           commentWithDev,
+          builtFrom,
         );
 
         try {
