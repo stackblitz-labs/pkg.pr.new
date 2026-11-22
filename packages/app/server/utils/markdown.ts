@@ -90,6 +90,7 @@ export function generatePullRequestPublishMessage(
   base: "sha" | "ref",
   isBin: (packageName: string) => boolean,
   commentWithDev: boolean,
+  builtFrom?: { sha: string; baseRef?: string },
 ) {
   const isMoreThanFour = isMoreThanFourPackages(packages, packageManager);
   const refMessages = packages
@@ -125,14 +126,29 @@ export function generatePullRequestPublishMessage(
     .join("\n");
 
   const templatesStr = generateTemplatesStr(templates);
+  const builtFromNote = formatBuiltFromNote(workflowData.sha, builtFrom);
 
   return `
 ${templatesStr}
 
 ${onlyTemplates ? "" : refMessages}
 
-_commit: <a href="${checkRunUrl}"><code>${abbreviateCommitHash(workflowData.sha)}</code></a>_
+_commit: <a href="${checkRunUrl}"><code>${abbreviateCommitHash(workflowData.sha)}</code></a>_${builtFromNote}
 `;
+}
+
+function formatBuiltFromNote(
+  labelledSha: string,
+  builtFrom?: { sha: string; baseRef?: string },
+) {
+  if (!builtFrom || builtFrom.sha.toLowerCase() === labelledSha.toLowerCase()) {
+    return "";
+  }
+  const built = `<code>${abbreviateCommitHash(builtFrom.sha)}</code>`;
+  if (!builtFrom.baseRef) {
+    return `\n_built from ${built}_`;
+  }
+  return `\n_built from ${built} (merge of <code>${abbreviateCommitHash(labelledSha)}</code> into <code>${builtFrom.baseRef}</code>)_`;
 }
 
 function generateTemplatesStr(templates: Record<string, string>) {

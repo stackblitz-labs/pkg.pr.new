@@ -297,22 +297,39 @@ const main = defineCommand({
           }
 
           let { sha } = await checkResponse.json();
+          let builtSha: string | undefined;
+          let baseRef: string | undefined;
 
           // on pull_request events, GitHub creates a virtual merge commit that doesn't
-          // actually belong to the PR, so we use the workflow's head_sha instead
-          if (process.env.GITHUB_EVENT_NAME !== "pull_request") {
-            try {
-              const { stdout: gitRevParseOutput } = await ezSpawn.async(
-                "git rev-parse HEAD",
-                { stdio: "overlapped" },
-              );
+          // actually belong to the PR, so we keep the workflow's head_sha as the label.
+          // when the checkout is that merge commit, record it so the comment can say so.
+          try {
+            const { stdout: gitRevParseOutput } = await ezSpawn.async(
+              "git rev-parse HEAD",
+              { stdio: "overlapped" },
+            );
+            const head = gitRevParseOutput.trim();
 
-              sha = gitRevParseOutput.trim();
-            } catch {
-              // git rev-parse fails when the CLI runs outside a git repository
-              // (e.g. the checkout was done in a separate job and only artifacts were restored here)
-              // falling back to the workflow's head_sha from checkResponse
+            if (process.env.GITHUB_EVENT_NAME === "pull_request") {
+              if (head.toLowerCase() !== sha.toLowerCase()) {
+                builtSha = head;
+                // GITHUB_SHA is the merge commit on pull_request. Shallow
+                // checkouts do not have its parents, so match on that instead.
+                if (
+                  process.env.GITHUB_SHA?.toLowerCase() ===
+                    head.toLowerCase() &&
+                  process.env.GITHUB_BASE_REF
+                ) {
+                  baseRef = process.env.GITHUB_BASE_REF;
+                }
+              }
+            } else {
+              sha = head;
             }
+          } catch {
+            // git rev-parse fails when the CLI runs outside a git repository
+            // (e.g. the checkout was done in a separate job and only artifacts were restored here)
+            // falling back to the workflow's head_sha from checkResponse
           }
 
           const deps: Map<string, string> = new Map(); // pkg.pr.new versions of the package
@@ -841,6 +858,8 @@ const main = defineCommand({
               "sb-only-templates": `${isOnlyTemplates}`,
               "sb-comment-with-sha": `${isCommentWithSha}`,
               "sb-comment-with-dev": `${isCommentWithDev}`,
+              ...(builtSha ? { "sb-built-sha": builtSha } : {}),
+              ...(baseRef ? { "sb-base-ref": baseRef } : {}),
             },
             body: formData,
           });
