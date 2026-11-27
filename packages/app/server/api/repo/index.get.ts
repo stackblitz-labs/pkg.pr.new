@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { getRepoReleaseCount } from "../../utils/bucket";
+// Temporarily disabled to avoid a full R2 scan on every repo page load.
+// import { getRepoReleaseCount } from "../../utils/bucket";
 
 const querySchema = z.object({
   owner: z.string(),
@@ -11,17 +12,17 @@ export default defineEventHandler(async (event) => {
     const query = await getValidatedQuery(event, (data) =>
       querySchema.parse(data),
     );
-    let releaseCount = 0;
-    try {
-      releaseCount = await getRepoReleaseCount(event, query.owner, query.repo);
-    } catch (error) {
-      // Repository identity is derived from the route and does not depend on
-      // the release count. Keep the page available if R2 is temporarily down.
-      console.error(
-        `Error counting releases for ${query.owner}/${query.repo}:`,
-        error,
-      );
-    }
+    // Temporarily disabled: computing the release count scans every package
+    // object for the repo on each page load.
+    const releaseCount = 0;
+    // try {
+    //   releaseCount = await getRepoReleaseCount(event, query.owner, query.repo);
+    // } catch (error) {
+    //   console.error(
+    //     `Error counting releases for ${query.owner}/${query.repo}:`,
+    //     error,
+    //   );
+    // }
 
     setHeader(
       event,
